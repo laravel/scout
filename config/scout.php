@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'driver' => env('SLEUTH_DRIVER', 'null'),
+    'driver' => env('SCOUT_DRIVER', 'algolia'),
 
     /*
     |--------------------------------------------------------------------------
