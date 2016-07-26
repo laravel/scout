@@ -42,8 +42,8 @@ return [
     */
 
     'algolia' => [
-        'id' => env('SLEUTH_APP_ID'),
-        'secret' => env('SLEUTH_SECRET'),
+        'id' => env('SCOUT_APP_ID'),
+        'secret' => env('SCOUT_SECRET'),
     ],
 
 ];
