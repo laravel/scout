@@ -53,12 +53,7 @@ trait Searchable
      */
     public function queueRemoveFromSearch($models)
     {
-        if (! config('scout.queue')) {
-            return $models->first()->searchableUsing()->delete($models);
-        }
-
-        dispatch((new Jobs\RemoveFromSearch($models))
-                ->onConnection($models->first()->syncWithSearchUsing()));
+        return $models->first()->searchableUsing()->delete($models);
     }
 
     /**
