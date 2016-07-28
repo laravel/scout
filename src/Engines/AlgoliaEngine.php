@@ -126,6 +126,12 @@ class AlgoliaEngine extends Engine
         $keys = collect($results['hits'])
                         ->pluck('objectID')->values()->all();
 
-        return $model->whereIn($model->getKeyName(), $keys)->get();
+        $models = $model->whereIn(
+            $model->getKeyName(), $keys
+        )->get()->keyBy($model->getKeyName());
+
+        return collect($results['hits'])->map(function ($hit) use ($model, $models) {
+            return $models[$hit[$model->getKeyName()]];
+        });
     }
 }
