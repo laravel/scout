@@ -55,29 +55,29 @@ class AlgoliaEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  Builder  $query
+     * @param  Builder  $builder
      * @return mixed
      */
-    public function search(Builder $query)
+    public function search(Builder $builder)
     {
-        return $this->performSearch($query, array_filter([
-            'numericFilters' => $this->filters($query),
-            'hitsPerPage' => $query->limit,
+        return $this->performSearch($builder, array_filter([
+            'numericFilters' => $this->filters($builder),
+            'hitsPerPage' => $builder->limit,
         ]));
     }
 
     /**
      * Perform the given search on the engine.
      *
-     * @param  Builder  $query
+     * @param  Builder  $builder
      * @param  int  $perPage
      * @param  int  $page
      * @return mixed
      */
-    public function paginate(Builder $query, $perPage, $page)
+    public function paginate(Builder $builder, $perPage, $page)
     {
-        return $this->performSearch($query, [
-            'numericFilters' => $this->filters($query),
+        return $this->performSearch($builder, [
+            'numericFilters' => $this->filters($builder),
             'hitsPerPage' => $perPage,
             'page' => $page - 1,
         ]);
@@ -86,26 +86,26 @@ class AlgoliaEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  Builder  $query
+     * @param  Builder  $builder
      * @param  array  $options
      * @return mixed
      */
-    protected function performSearch(Builder $query, array $options = [])
+    protected function performSearch(Builder $builder, array $options = [])
     {
         return $this->algolia->initIndex(
-            $query->index ?: $query->model->searchableAs()
-        )->search($query->query, $options);
+            $builder->index ?: $builder->model->searchableAs()
+        )->search($builder->query, $options);
     }
 
     /**
      * Get the filter array for the query.
      *
-     * @param  Builder  $query
+     * @param  Builder  $builder
      * @return array
      */
-    protected function filters(Builder $query)
+    protected function filters(Builder $builder)
     {
-        return collect($query->wheres)->map(function ($value, $key) {
+        return collect($builder->wheres)->map(function ($value, $key) {
             return $key.'='.$value;
         })->values()->all();
     }
