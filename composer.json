@@ -19,6 +19,7 @@
         "mockery/mockery": "~0.9",
         "phpunit/phpunit": "~5.0",
         "algolia/algoliasearch-client-php": "^1.10",
+        "elasticsearch/elasticsearch": "^2.2",
         "illuminate/bus": "~5.3",
         "illuminate/pagination": "~5.3",
         "illuminate/queue": "~5.3"
@@ -34,7 +35,8 @@
         }
     },
     "suggest": {
-        "algolia/algoliasearch-client-php": "Required to use the Algolia engine."
+        "algolia/algoliasearch-client-php": "Required to use the Algolia engine.",
+        "elasticsearch/elasticsearch": "Required to use the Elasticsearch engine."
     },
     "minimum-stability": "dev",
     "prefer-stable": true

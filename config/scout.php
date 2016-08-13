@@ -46,4 +46,22 @@ return [
         'secret' => env('ALGOLIA_SECRET'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Elasticsearch Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure your Elasticsearch settings. Elasticsearch
+    | is a distributed, open source search and analytics engine, designed
+    | for horizontal scalability, reliability, and easy management. Just plug
+    | in your Elasticsearch servers to get started searching.
+    |
+    */
+
+    'elasticsearch' => [
+        'hosts' => [
+            env('ELASTICSEARCH_HOST')
+        ],
+    ],
+
 ];
