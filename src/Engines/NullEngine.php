@@ -32,7 +32,7 @@ class NullEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  Builder  $query
+     * @param  Builder  $builder
      * @return mixed
      */
     public function search(Builder $builder)
@@ -43,7 +43,7 @@ class NullEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  Builder  $query
+     * @param  Builder  $builder
      * @param  int  $perPage
      * @param  int  $page
      * @return mixed

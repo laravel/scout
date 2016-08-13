@@ -26,7 +26,7 @@ abstract class Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  Builder  $query
+     * @param  Builder  $builder
      * @return mixed
      */
     abstract public function search(Builder $builder);
@@ -34,7 +34,7 @@ abstract class Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  Builder  $query
+     * @param  Builder  $builder
      * @param  int  $perPage
      * @param  int  $page
      * @return mixed
@@ -56,10 +56,10 @@ abstract class Engine
      * @param  Builder  $builder
      * @return Collection
      */
-    public function get(Builder $query)
+    public function get(Builder $builder)
     {
         return Collection::make($this->map(
-            $this->search($query), $query->model
+            $this->search($builder), $builder->model
         ));
     }
 }
