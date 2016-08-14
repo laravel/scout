@@ -13,7 +13,8 @@
         "php": ">=5.6.4",
         "illuminate/contracts": "~5.3",
         "illuminate/database": "~5.3",
-        "illuminate/support": "~5.3"
+        "illuminate/support": "~5.3",
+        "teamtnt/tntsearch": "^0.8.0"
     },
     "require-dev": {
         "mockery/mockery": "~0.9",
@@ -34,7 +35,8 @@
         }
     },
     "suggest": {
-        "algolia/algoliasearch-client-php": "Required to use the Algolia engine."
+        "algolia/algoliasearch-client-php": "Required to use the Algolia engine.",
+        "teamtnt/tntsearch": "Required to use the TNTSerach engine."
     },
     "minimum-stability": "dev",
     "prefer-stable": true
