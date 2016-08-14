@@ -2,8 +2,9 @@
 
 namespace Laravel\Scout;
 
-use Illuminate\Support\Manager;
 use AlgoliaSearch\Client as Algolia;
+use Illuminate\Support\Manager;
+use TeamTNT\TNTSearch\TNTSearch;
 
 class EngineManager extends Manager
 {
@@ -28,6 +29,16 @@ class EngineManager extends Manager
         return new Engines\AlgoliaEngine(new Algolia(
             config('scout.algolia.id'), config('scout.algolia.secret')
         ));
+    }
+
+    /**
+     * Create a TNTSearch engine instance.
+     *
+     * @return Engines\TNTSearchEngine
+     */
+    public function createTNTSearchDriver()
+    {
+        return new Engines\TNTSearchEngine(new TNTSearch);
     }
 
     /**
