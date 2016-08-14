@@ -25,8 +25,7 @@ class ImportCommand extends Command
     /**
      * Execute the console command.
      *
-     * @param  PerformanceIndicatorsRepository  $indicators
-     * @return mixed
+     * @param  Dispatcher $events
      */
     public function handle(Dispatcher $events)
     {
