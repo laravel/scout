@@ -28,14 +28,14 @@ class ElasticsearchEngine extends Engine
      */
     public function update($models)
     {
-        foreach($models as $model) {
+        $models->each(function ($model) {
             $this->elasticsearch->index([
-                'index' =>  'laravel',
-                'type'  =>  $model->searchableAs(),
-                'id'    =>  $model->getKey(),
-                'body'  =>  $model->toSearchableArray(),
+                'index' => 'laravel',
+                'type' => $model->searchableAs(),
+                'id' => $model->getKey(),
+                'body' => $model->toSearchableArray(),
             ]);
-        }
+        });
     }
 
     /**
@@ -46,13 +46,13 @@ class ElasticsearchEngine extends Engine
      */
     public function delete($models)
     {
-        foreach($models as $model) {
+        $models->each(function ($model) {
             $this->elasticsearch->delete([
                 'index' => 'laravel',
                 'type' => $model->searchableAs(),
                 'id'  => $model->getKey(),
             ]);
-        }
+        });
     }
 
     /**
