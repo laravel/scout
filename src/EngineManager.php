@@ -11,7 +11,7 @@ class EngineManager extends Manager
     /**
      * Get a driver instance.
      *
-     * @param  string  $driver
+     * @param  string  $name
      * @return mixed
      */
     public function engine($name = null)
@@ -31,6 +31,11 @@ class EngineManager extends Manager
         ));
     }
 
+    /**
+     * Create an Elasticsearch engine instance.
+     *
+     * @return Engines\ElasticsearchEngine
+     */
     public function createElasticsearchDriver()
     {
         return new Engines\ElasticsearchEngine(
