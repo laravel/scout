@@ -1,7 +1,7 @@
 {
     "name": "laravel/scout",
     "description": "Laravel Scout provides a driver based solution to searching your Eloquent models.",
-    "keywords": ["laravel", "search", "algolia"],
+    "keywords": ["laravel", "search", "algolia", "tntsearch"],
     "license": "MIT",
     "authors": [
         {
@@ -13,7 +13,7 @@
         "php": ">=5.6.4",
         "illuminate/contracts": "~5.3",
         "illuminate/database": "~5.3",
-        "illuminate/support": "~5.3"
+        "illuminate/support": "~5.3",
     },
     "require-dev": {
         "mockery/mockery": "~0.9",
@@ -21,7 +21,8 @@
         "algolia/algoliasearch-client-php": "^1.10",
         "illuminate/bus": "~5.3",
         "illuminate/pagination": "~5.3",
-        "illuminate/queue": "~5.3"
+        "illuminate/queue": "~5.3",
+        "teamtnt/tntsearch": "^0.8.0"
     },
     "autoload": {
         "psr-4": {
@@ -34,7 +35,8 @@
         }
     },
     "suggest": {
-        "algolia/algoliasearch-client-php": "Required to use the Algolia engine."
+        "algolia/algoliasearch-client-php": "Required to use the Algolia engine.",
+        "teamtnt/tntsearch": "Required to use the TNTSerach engine."
     },
     "minimum-stability": "dev",
     "prefer-stable": true
