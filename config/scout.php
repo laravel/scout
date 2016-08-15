@@ -56,12 +56,17 @@ return [
     | for horizontal scalability, reliability, and easy management. Just plug
     | in your Elasticsearch servers to get started searching.
     |
+    | Notice that the config key is passed to the ClientBuilder as it is, so
+    | only add configs that the Elasticsearch can handle.
+    |
     */
 
     'elasticsearch' => [
         'index' => env('ELASTICSEARCH_INDEX', 'laravel'),
-        'hosts' => [
-            env('ELASTICSEARCH_HOST')
+        'config' => [
+            'hosts' => [
+                env('ELASTICSEARCH_HOST')
+            ],
         ],
     ],
 
