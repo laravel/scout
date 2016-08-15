@@ -4,6 +4,7 @@ namespace Laravel\Scout;
 
 use Illuminate\Support\Manager;
 use AlgoliaSearch\Client as Algolia;
+use Elasticsearch\ClientBuilder as ElasticBuilder;
 
 class EngineManager extends Manager
 {
@@ -28,6 +29,20 @@ class EngineManager extends Manager
         return new Engines\AlgoliaEngine(new Algolia(
             config('scout.algolia.id'), config('scout.algolia.secret')
         ));
+    }
+
+    /**
+     * Create an Algolia engine instance.
+     *
+     * @return Engines\AlgoliaEngine
+     */
+    public function createElasticsearchDriver()
+    {
+        return new Engines\ElasticsearchEngine(ElasticBuilder::create()
+            ->setHosts(config('scout.elastic.hosts'))
+            ->build(),
+            config('scout.elasticsearch.index')
+        );
     }
 
     /**
