@@ -1,7 +1,7 @@
 {
     "name": "laravel/scout",
     "description": "Laravel Scout provides a driver based solution to searching your Eloquent models.",
-    "keywords": ["laravel", "search", "algolia"],
+    "keywords": ["laravel", "search", "algolia", "tntsearch"],
     "license": "MIT",
     "authors": [
         {
