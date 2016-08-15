@@ -14,7 +14,6 @@
         "illuminate/contracts": "~5.3",
         "illuminate/database": "~5.3",
         "illuminate/support": "~5.3",
-        "teamtnt/tntsearch": "^0.8.0"
     },
     "require-dev": {
         "mockery/mockery": "~0.9",
@@ -22,7 +21,8 @@
         "algolia/algoliasearch-client-php": "^1.10",
         "illuminate/bus": "~5.3",
         "illuminate/pagination": "~5.3",
-        "illuminate/queue": "~5.3"
+        "illuminate/queue": "~5.3",
+        "teamtnt/tntsearch": "^0.8.0"
     },
     "autoload": {
         "psr-4": {
