@@ -72,7 +72,7 @@ class ElasticsearchEngine extends Engine
     {
         return $this->performSearch($query, array_filter([
             'filters' => $this->filters($query),
-            'size' => $query->limit,
+            'size' => $query->limit ?: 10000,
         ]));
     }
 
