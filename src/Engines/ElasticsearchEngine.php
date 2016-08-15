@@ -10,14 +10,21 @@ use Illuminate\Support\Collection as BaseCollection;
 class ElasticsearchEngine extends Engine
 {
     /**
+     * @var string $index
+     */
+    protected $index;
+
+    /**
      * Create a new engine instance.
      *
      * @param  \Elasticsearch\Client  $elasticsearch
      * @return void
      */
-    public function __construct(Elasticsearch $elasticsearch)
+    public function __construct(Elasticsearch $elasticsearch, $index)
     {
         $this->elasticsearch = $elasticsearch;
+
+        $this->index = $index;
     }
 
     /**
@@ -30,7 +37,7 @@ class ElasticsearchEngine extends Engine
     {
         $models->each(function ($model) {
             $this->elasticsearch->index([
-                'index' => 'laravel',
+                'index' => $this->index,
                 'type' => $model->searchableAs(),
                 'id' => $model->getKey(),
                 'body' => $model->toSearchableArray(),
@@ -48,7 +55,7 @@ class ElasticsearchEngine extends Engine
     {
         $models->each(function ($model) {
             $this->elasticsearch->delete([
-                'index' => 'laravel',
+                'index' => $this->index,
                 'type' => $model->searchableAs(),
                 'id'  => $model->getKey(),
             ]);
@@ -118,7 +125,7 @@ class ElasticsearchEngine extends Engine
         }
 
         $searchQuery = [
-            'index' =>  'laravel',
+            'index' =>  $this->index,
             'type'  =>  $query->model->searchableAs(),
             'body' => [
                 'query' => [
