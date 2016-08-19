@@ -25,8 +25,10 @@ class EngineManager extends Manager
      */
     public function createAlgoliaDriver()
     {
+        $driver = config('scout.drivers.algolia');
+
         return new Engines\AlgoliaEngine(new Algolia(
-            config('scout.algolia.id'), config('scout.algolia.secret')
+            $driver['id'], $driver['secret']
         ));
     }
 
@@ -47,6 +49,6 @@ class EngineManager extends Manager
      */
     public function getDefaultDriver()
     {
-        return $this->app['config']['scout.driver'];
+        return $this->app['config']['scout.default'];
     }
 }
