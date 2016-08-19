@@ -19,14 +19,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Index Namespace
+    | Index Prefix
     |--------------------------------------------------------------------------
     |
-    | Specify a namespace to support more than 1 scout instance.
+    | Here you may specify a prefix that will be applied to all search index
+    | names used by Scout. This prefix may be useful if you have multiple
+    | "tenants" or applications sharing the same search infrastructure.
     |
     */
 
-    'namespace' => env('SCOUT_INDEX_NAMESPACE', ''),
+    'prefix' => env('SCOUT_PREFIX', ''),
 
     /*
     |--------------------------------------------------------------------------

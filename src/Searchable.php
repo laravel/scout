@@ -159,7 +159,7 @@ trait Searchable
      */
     public function searchableAs()
     {
-        return config('scout.namespace') . $this->getTable();
+        return config('scout.prefix').$this->getTable();
     }
 
     /**
