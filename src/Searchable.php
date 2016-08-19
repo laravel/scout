@@ -28,12 +28,14 @@ trait Searchable
      */
     public function registerSearchableMacros()
     {
-        BaseCollection::macro('searchable', function () {
-            $this->queueMakeSearchable($this);
+        $self = $this;
+
+        BaseCollection::macro('searchable', function () use ($self) {
+            $self->queueMakeSearchable($this);
         });
 
         BaseCollection::macro('unsearchable', function () {
-            $this->queueRemoveFromSearch($this);
+            $self->queueRemoveFromSearch($this);
         });
     }
 
