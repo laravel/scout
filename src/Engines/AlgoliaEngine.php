@@ -2,12 +2,16 @@
 
 namespace Laravel\Scout\Engines;
 
+use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Builder;
 use AlgoliaSearch\Client as Algolia;
 use Illuminate\Database\Eloquent\Collection;
 
 class AlgoliaEngine extends Engine
 {
+    /** @var \AlgoliaSearch\Client */
+    private $algolia;
+
     /**
      * Create a new engine instance.
      *
@@ -17,6 +21,16 @@ class AlgoliaEngine extends Engine
     public function __construct(Algolia $algolia)
     {
         $this->algolia = $algolia;
+    }
+
+    /**
+     * Gets instance of Algolia's API Client
+     *
+     * @return \AlgoliaSearch\Client
+     */
+    public function getAlgoliaClient()
+    {
+        return $this->algolia;
     }
 
     /**
@@ -154,5 +168,43 @@ class AlgoliaEngine extends Engine
     public function getTotalCount($results)
     {
         return $results['nbHits'];
+    }
+
+    /**
+     * Sets settings to Algolia index.
+     * https://www.algolia.com/doc/api-client/php/settings#set-settings
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  mixed  $settings
+     * @return void
+     */
+    public function setSettings(Model $model, $settings)
+    {
+        $index = $this->algolia->initIndex($model->searchableAs());
+
+        if (isset($settings['synonyms'])) {
+            foreach (array_chunk($settings['synonyms'], 100) as $synonyms) {
+                $index->batchSynonyms($synonyms, true, true);
+            }
+
+            unset($settings['synonyms']);
+        }
+
+        $slavesSettings = [];
+        if (isset($settings['slaves'])) {
+            $slavesSettings = $settings['slaves'];
+            $settings['slaves'] = array_keys($slavesSettings);
+        }
+
+        $index->setSettings($settings, true);
+
+        if (!empty($slavesSettings)) {
+            unset($settings['slaves']);
+
+            foreach ($slavesSettings as $slaveName => $slaveSettings) {
+                $slaveSettings = array_merge($settings, $slavesSettings[$slaveName]);
+                $this->algolia->initIndex($slaveName)->setSettings($slaveSettings);
+            }
+        }
     }
 }

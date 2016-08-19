@@ -3,6 +3,7 @@
 namespace Laravel\Scout;
 
 use Laravel\Scout\Jobs\MakeSearchable;
+use BadMethodCallException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
 
@@ -86,6 +87,24 @@ trait Searchable
     public static function makeAllSearchable()
     {
         (new static)->newQuery()->searchable();
+    }
+
+    /**
+     * Save settings to search engine
+     *
+     * @return void
+     * @throws \BadMethodCallException
+     */
+    public static function setSettings()
+    {
+        $model = new static();
+        $engine = $model->searchableUsing();
+
+        if (!method_exists($engine, 'setSettings')) {
+            throw new BadMethodCallException('Search engine "'.get_class($engine).'" does not support setSettings() call.');
+        }
+
+        $engine->setSettings($model, property_exists($model, 'searchSettings') ? $model->searchSettings : []);
     }
 
     /**
