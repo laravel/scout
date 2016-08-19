@@ -14,18 +14,26 @@ trait Searchable
      */
     public static function bootSearchable()
     {
-        $self = new static;
-
         static::addGlobalScope(new SearchableScope);
 
         static::observe(new ModelObserver);
 
-        BaseCollection::macro('searchable', function () use ($self) {
-            $self->queueMakeSearchable($this);
+        (new static)->registerSearchableMacros();
+    }
+
+    /**
+     * Register the searchable macros.
+     *
+     * @return void
+     */
+    public function registerSearchableMacros()
+    {
+        BaseCollection::macro('searchable', function () {
+            $this->queueMakeSearchable($this);
         });
 
-        BaseCollection::macro('unsearchable', function () use ($self) {
-            $self->queueRemoveFromSearch($this);
+        BaseCollection::macro('unsearchable', function () {
+            $this->queueRemoveFromSearch($this);
         });
     }
 

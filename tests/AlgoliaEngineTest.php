@@ -53,12 +53,12 @@ class AlgoliaEngineTest extends PHPUnit_Framework_TestCase
         $engine = new AlgoliaEngine($client);
 
         $model = Mockery::mock('StdClass');
-        $model->shouldReceive('getKeyName')->andReturn('key');
-        $model->shouldReceive('whereIn')->once()->with('key', [1])->andReturn($model);
+        $model->shouldReceive('getKeyName')->andReturn('id');
+        $model->shouldReceive('whereIn')->once()->with('id', [1])->andReturn($model);
         $model->shouldReceive('get')->once()->andReturn(Collection::make([new AlgoliaEngineTestModel]));
 
         $results = $engine->map(['nbHits' => 1, 'hits' => [
-            ['objectID' => 1],
+            ['objectID' => 1, 'id' => 1],
         ]], $model);
 
         $this->assertEquals(1, count($results));
@@ -67,6 +67,7 @@ class AlgoliaEngineTest extends PHPUnit_Framework_TestCase
 
 class AlgoliaEngineTestModel
 {
+    public $id = 1;
     public function searchableAs()
     {
         return 'table';
@@ -74,7 +75,7 @@ class AlgoliaEngineTestModel
 
     public function getKey()
     {
-        return 1;
+        return $this->id;
     }
 
     public function toSearchableArray()
