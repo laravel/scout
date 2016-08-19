@@ -39,10 +39,11 @@ class AlgoliaEngineTest extends PHPUnit_Framework_TestCase
         $client->shouldReceive('initIndex')->with('table')->andReturn($index = Mockery::mock('StdClass'));
         $index->shouldReceive('search')->with('zonda', [
             'numericFilters' => ['foo=1'],
+            'filters' => 'foo:bar AND baz>10',
         ]);
 
         $engine = new AlgoliaEngine($client);
-        $builder = new Laravel\Scout\Builder(new AlgoliaEngineTestModel, 'zonda');
+        $builder = new Laravel\Scout\Builder(new AlgoliaEngineTestModel, 'zonda', ['filters' => 'foo:bar AND baz>10']);
         $builder->where('foo', 1);
         $engine->search($builder);
     }
