@@ -34,7 +34,7 @@ trait Searchable
             $self->queueMakeSearchable($this);
         });
 
-        BaseCollection::macro('unsearchable', function () {
+        BaseCollection::macro('unsearchable', function () use ($self) {
             $self->queueRemoveFromSearch($this);
         });
     }
