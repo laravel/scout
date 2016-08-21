@@ -22,6 +22,13 @@ class Builder
     public $query;
 
     /**
+     * Additional search arguments
+     *
+     * @var array
+     */
+    public $args;
+
+    /**
      * The custom index specified for the search.
      *
      * @var string
@@ -47,12 +54,14 @@ class Builder
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @param  string  $query
+     * @param  array   $args
      * @return void
      */
-    public function __construct($model, $query)
+    public function __construct($model, $query, array $args = [])
     {
         $this->model = $model;
         $this->query = $query;
+        $this->args = $args;
     }
 
     /**

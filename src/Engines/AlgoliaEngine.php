@@ -92,6 +92,8 @@ class AlgoliaEngine extends Engine
      */
     protected function performSearch(Builder $builder, array $options = [])
     {
+        $options = array_merge($options, $builder->args);
+
         return $this->algolia->initIndex(
             $builder->index ?: $builder->model->searchableAs()
         )->search($builder->query, $options);
