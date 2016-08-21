@@ -1,15 +1,15 @@
 <?php
 
+namespace Tests;
+
+use Mockery;
+use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\AlgoliaEngine;
+use Tests\Fixtures\AlgoliaEngineTestModel;
 use Illuminate\Database\Eloquent\Collection;
 
-class AlgoliaEngineTest extends PHPUnit_Framework_TestCase
+class AlgoliaEngineTest extends AbstractTestCase
 {
-    public function tearDown()
-    {
-        Mockery::close();
-    }
-
     public function test_update_adds_objects_to_index()
     {
         $client = Mockery::mock('AlgoliaSearch\Client');
@@ -42,7 +42,7 @@ class AlgoliaEngineTest extends PHPUnit_Framework_TestCase
         ]);
 
         $engine = new AlgoliaEngine($client);
-        $builder = new Laravel\Scout\Builder(new AlgoliaEngineTestModel, 'zonda');
+        $builder = new Builder(new AlgoliaEngineTestModel, 'zonda');
         $builder->where('foo', 1);
         $engine->search($builder);
     }
@@ -62,24 +62,5 @@ class AlgoliaEngineTest extends PHPUnit_Framework_TestCase
         ]], $model);
 
         $this->assertEquals(1, count($results));
-    }
-}
-
-class AlgoliaEngineTestModel
-{
-    public $id = 1;
-    public function searchableAs()
-    {
-        return 'table';
-    }
-
-    public function getKey()
-    {
-        return $this->id;
-    }
-
-    public function toSearchableArray()
-    {
-        return ['id' => 1];
     }
 }
