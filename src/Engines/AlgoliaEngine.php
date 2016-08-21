@@ -5,7 +5,6 @@ namespace Laravel\Scout\Engines;
 use Laravel\Scout\Builder;
 use AlgoliaSearch\Client as Algolia;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Collection as BaseCollection;
 
 class AlgoliaEngine extends Engine
 {
