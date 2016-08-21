@@ -1,7 +1,11 @@
 {
     "name": "laravel/scout",
     "description": "Laravel Scout provides a driver based solution to searching your Eloquent models.",
-    "keywords": ["laravel", "search", "algolia"],
+    "keywords": [
+        "algolia",
+        "laravel",
+        "search"
+    ],
     "license": "MIT",
     "authors": [
         {
@@ -16,12 +20,12 @@
         "illuminate/support": "~5.3"
     },
     "require-dev": {
-        "mockery/mockery": "~0.9",
-        "phpunit/phpunit": "~5.0",
         "algolia/algoliasearch-client-php": "^1.10",
         "illuminate/bus": "~5.3",
         "illuminate/pagination": "~5.3",
-        "illuminate/queue": "~5.3"
+        "illuminate/queue": "~5.3",
+        "mockery/mockery": "~0.9",
+        "phpunit/phpunit": "~5.0"
     },
     "autoload": {
         "psr-4": {
