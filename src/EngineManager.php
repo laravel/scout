@@ -12,7 +12,7 @@ class EngineManager extends Manager
     /**
      * Get a driver instance.
      *
-     * @param  string  $driver
+     * @param  string|null  $name
      * @return mixed
      */
     public function engine($name = null)
@@ -23,7 +23,7 @@ class EngineManager extends Manager
     /**
      * Create an Algolia engine instance.
      *
-     * @return Engines\AlgoliaEngine
+     * @return \Laravel\Scout\Engines\AlgoliaEngine
      */
     public function createAlgoliaDriver()
     {
@@ -35,7 +35,7 @@ class EngineManager extends Manager
     /**
      * Create a Null engine instance.
      *
-     * @return Engines\NullEngine
+     * @return \Laravel\Scout\Engines\NullEngine
      */
     public function createNullDriver()
     {

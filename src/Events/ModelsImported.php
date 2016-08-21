@@ -7,7 +7,7 @@ class ModelsImported
     /**
      * The model collection.
      *
-     * @var  \Illuminate\Database\Eloquent\Collection
+     * @var \Illuminate\Database\Eloquent\Collection
      */
     public $models;
 
