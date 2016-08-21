@@ -29,7 +29,7 @@ class SearchableScope implements Scope
      */
     public function extend(EloquentBuilder $builder)
     {
-        $builder->macro('searchable', function (Builder $builder) {
+        $builder->macro('searchable', function (EloquentBuilder $builder) {
             $builder->chunk(100, function ($models) use ($builder) {
                 $models->searchable();
 
@@ -37,7 +37,7 @@ class SearchableScope implements Scope
             });
         });
 
-        $builder->macro('unsearchable', function (Builder $builder) {
+        $builder->macro('unsearchable', function (EloquentBuilder $builder) {
             $builder->chunk(100, function ($models) use ($builder) {
                 $models->unsearchable();
             });
