@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout;
 
+use Laravel\Scout\Jobs\MakeSearchable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
 
@@ -51,7 +52,7 @@ trait Searchable
             return $models->first()->searchableUsing()->update($models);
         }
 
-        dispatch((new Jobs\MakeSearchable($models))
+        dispatch((new MakeSearchable($models))
                 ->onConnection($models->first()->syncWithSearchUsing()));
     }
 
