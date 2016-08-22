@@ -43,7 +43,7 @@ trait Searchable
     /**
      * Dispatch the job to make the given models searchable.
      *
-     * @param  Collection  $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
     public function queueMakeSearchable($models)
@@ -59,7 +59,7 @@ trait Searchable
     /**
      * Dispatch the job to make the given models unsearchable.
      *
-     * @param  Collection  $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
     public function queueRemoveFromSearch($models)

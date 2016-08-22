@@ -25,7 +25,7 @@ class ImportCommand extends Command
     /**
      * Execute the console command.
      *
-     * @param  Dispatcher  $events
+     * @param  \Illuminate\Contracts\Events\Dispatcher  $events
      * @return void
      */
     public function handle(Dispatcher $events)
