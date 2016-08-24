@@ -70,10 +70,10 @@ class ElasticsearchEngine extends Engine
      */
     public function search(Builder $query)
     {
-        return $this->performSearch($query, array_filter([
+        return $this->performSearch($query, [
             'filters' => $this->filters($query),
             'size' => $query->limit ?: 10000,
-        ]));
+        ]);
     }
 
     /**
@@ -174,7 +174,9 @@ class ElasticsearchEngine extends Engine
         }
 
         $keys = collect($results['hits']['hits'])
-                        ->pluck('_id')->values()->all();
+                    ->pluck('_id')
+                    ->values()
+                    ->all();
 
         $models = $model->whereIn(
             $model->getKeyName(), $keys
@@ -182,7 +184,6 @@ class ElasticsearchEngine extends Engine
 
 
         return collect($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
-
             return $models[$hit['_source'][$model->getKeyName()]];
         });
     }
