@@ -35,17 +35,14 @@ class ElasticsearchEngine extends Engine
      */
     public function update($models)
     {
-        $bulk = ['body' => []];
         $models->each(function ($model) {
-            $bulk['body'] = [[
-                'index' => [
-                    '_index' => $this->index,
-                    '_type' => $model->searchableAs(),
-                    '_id' => $model->getKey()
-                ]
-            ], [$model->toSearchableArray()]];
+            $this->elasticsearch->index([
+                'index' => $this->index,
+                'type' => $model->searchableAs(),
+                'id' => $model->getKey(),
+                'body' => $model->toSearchableArray(),
+            ]);
         });
-        $this->elasticsearch->bulk($bulk);
     }
 
     /**
@@ -56,17 +53,13 @@ class ElasticsearchEngine extends Engine
      */
     public function delete($models)
     {
-        $bulk = ['body' => []];
         $models->each(function ($model) {
-            $bulk['body'] = [[
-                'delete' => [
-                    '_index' => $this->index,
-                    '_type' => $model->searchableAs(),
-                    '_id' => $model->getKey()
-                ]
-            ]];
+            $this->elasticsearch->delete([
+                'index' => $this->index,
+                'type' => $model->searchableAs(),
+                'id'  => $model->getKey(),
+            ]);
         });
-        $this->elasticsearch->bulk($bulk);
     }
 
     /**
@@ -79,7 +72,7 @@ class ElasticsearchEngine extends Engine
     {
         return $this->performSearch($query, [
             'filters' => $this->filters($query),
-            'size' => $query->limit ?: 1000,
+            'size' => $query->limit ?: 10000,
         ]);
     }
 
