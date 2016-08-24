@@ -5,7 +5,6 @@ namespace Laravel\Scout\Engines;
 use Laravel\Scout\Builder;
 use AlgoliaSearch\Client as Algolia;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Collection as BaseCollection;
 
 class AlgoliaEngine extends Engine
 {
@@ -23,7 +22,8 @@ class AlgoliaEngine extends Engine
     /**
      * Update the given model in the index.
      *
-     * @param  Collection  $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
+     * @throws \AlgoliaSearch\AlgoliaException
      * @return void
      */
     public function update($models)
@@ -38,7 +38,7 @@ class AlgoliaEngine extends Engine
     /**
      * Remove the given model from the index.
      *
-     * @param  Collection  $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
     public function delete($models)
@@ -55,7 +55,7 @@ class AlgoliaEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  Builder  $builder
+     * @param  \Laravel\Scout\Builder  $builder
      * @return mixed
      */
     public function search(Builder $builder)
@@ -69,7 +69,7 @@ class AlgoliaEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  Builder  $builder
+     * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $perPage
      * @param  int  $page
      * @return mixed
@@ -86,7 +86,7 @@ class AlgoliaEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  Builder  $builder
+     * @param  \Laravel\Scout\Builder  $builder
      * @param  array  $options
      * @return mixed
      */
@@ -100,7 +100,7 @@ class AlgoliaEngine extends Engine
     /**
      * Get the filter array for the query.
      *
-     * @param  Builder  $builder
+     * @param  \Laravel\Scout\Builder  $builder
      * @return array
      */
     protected function filters(Builder $builder)
@@ -115,7 +115,7 @@ class AlgoliaEngine extends Engine
      *
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @return Collection
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public function map($results, $model)
     {

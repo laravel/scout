@@ -5,13 +5,16 @@ namespace Laravel\Scout;
 use Illuminate\Support\Manager;
 use AlgoliaSearch\Client as Algolia;
 use Elasticsearch\ClientBuilder as Elasticsearch;
+use Laravel\Scout\Engines\NullEngine;
+use Laravel\Scout\Engines\AlgoliaEngine;
+use Laravel\Scout\Engines\ElasticsearchEngine;
 
 class EngineManager extends Manager
 {
     /**
      * Get a driver instance.
      *
-     * @param  string  $name
+     * @param  string|null  $name
      * @return mixed
      */
     public function engine($name = null)
@@ -22,11 +25,11 @@ class EngineManager extends Manager
     /**
      * Create an Algolia engine instance.
      *
-     * @return Engines\AlgoliaEngine
+     * @return \Laravel\Scout\Engines\AlgoliaEngine
      */
     public function createAlgoliaDriver()
     {
-        return new Engines\AlgoliaEngine(new Algolia(
+        return new AlgoliaEngine(new Algolia(
             config('scout.algolia.id'), config('scout.algolia.secret')
         ));
     }
@@ -38,7 +41,7 @@ class EngineManager extends Manager
      */
     public function createElasticsearchDriver()
     {
-        return new Engines\ElasticsearchEngine(
+        return new ElasticsearchEngine(
             Elasticsearch::fromConfig(config('scout.elasticsearch.config')),
             config('scout.elasticsearch.index')
         );
@@ -47,11 +50,11 @@ class EngineManager extends Manager
     /**
      * Create a Null engine instance.
      *
-     * @return Engines\NullEngine
+     * @return \Laravel\Scout\Engines\NullEngine
      */
     public function createNullDriver()
     {
-        return new Engines\NullEngine;
+        return new NullEngine;
     }
 
     /**

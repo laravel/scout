@@ -10,7 +10,7 @@ abstract class Engine
     /**
      * Update the given model in the index.
      *
-     * @param  Collection  $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
     abstract public function update($models);
@@ -18,7 +18,7 @@ abstract class Engine
     /**
      * Remove the given model from the index.
      *
-     * @param  Collection  $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
     abstract public function delete($models);
@@ -26,7 +26,7 @@ abstract class Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  Builder  $builder
+     * @param  \Laravel\Scout\Builder  $builder
      * @return mixed
      */
     abstract public function search(Builder $builder);
@@ -34,7 +34,7 @@ abstract class Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  Builder  $builder
+     * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $perPage
      * @param  int  $page
      * @return mixed
@@ -53,7 +53,7 @@ abstract class Engine
     /**
      * Get the results of the given query mapped onto models.
      *
-     * @param  Builder  $builder
+     * @param  \Laravel\Scout\Builder  $builder
      * @return Collection
      */
     public function get(Builder $builder)

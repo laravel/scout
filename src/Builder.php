@@ -10,7 +10,7 @@ class Builder
     /**
      * The model instance.
      *
-     * @var  \Illuminate\Database\Eloquent\Model
+     * @var \Illuminate\Database\Eloquent\Model
      */
     public $model;
 
@@ -139,7 +139,7 @@ class Builder
         ]));
 
         return $paginator->appends('query', $this->query)
-                         ->hasMorePagesWhen($rawResults['nbPages'] > $page);
+                         ->hasMorePagesWhen(($results->count() / $perPage) > $page);
     }
 
     /**

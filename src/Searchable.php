@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout;
 
+use Laravel\Scout\Jobs\MakeSearchable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
 
@@ -14,11 +15,21 @@ trait Searchable
      */
     public static function bootSearchable()
     {
-        $self = new static;
-
         static::addGlobalScope(new SearchableScope);
 
         static::observe(new ModelObserver);
+
+        (new static)->registerSearchableMacros();
+    }
+
+    /**
+     * Register the searchable macros.
+     *
+     * @return void
+     */
+    public function registerSearchableMacros()
+    {
+        $self = $this;
 
         BaseCollection::macro('searchable', function () use ($self) {
             $self->queueMakeSearchable($this);
@@ -32,7 +43,7 @@ trait Searchable
     /**
      * Dispatch the job to make the given models searchable.
      *
-     * @param  Collection  $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
     public function queueMakeSearchable($models)
@@ -41,14 +52,14 @@ trait Searchable
             return $models->first()->searchableUsing()->update($models);
         }
 
-        dispatch((new Jobs\MakeSearchable($models))
+        dispatch((new MakeSearchable($models))
                 ->onConnection($models->first()->syncWithSearchUsing()));
     }
 
     /**
      * Dispatch the job to make the given models unsearchable.
      *
-     * @param  Collection  $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
     public function queueRemoveFromSearch($models)
@@ -149,7 +160,7 @@ trait Searchable
      */
     public function searchableAs()
     {
-        return $this->getTable();
+        return config('scout.prefix').$this->getTable();
     }
 
     /**

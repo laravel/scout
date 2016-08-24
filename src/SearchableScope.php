@@ -4,8 +4,8 @@ namespace Laravel\Scout;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Laravel\Scout\Events\ModelsImported;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 
 class SearchableScope implements Scope
 {
