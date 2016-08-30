@@ -131,7 +131,11 @@ class AlgoliaEngine extends Engine
         )->get()->keyBy($model->getKeyName());
 
         return collect($results['hits'])->map(function ($hit) use ($model, $models) {
-            return $models[$hit[$model->getKeyName()]];
-        });
+            $key = $hit[$model->getKeyName()];
+
+            if (isset($models[$key])) {
+                return $models[$key];
+            }
+        })->filter();
     }
 }
