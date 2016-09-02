@@ -60,17 +60,23 @@ class ElasticsearchEngineTest extends AbstractTestCase
                 'type' => 'table',
                 'body' => [
                     'query' => [
-                        'bool' => [
+                        'filtered' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        'match' => [
+                                            'foo' => 1,
+                                        ],
+                                    ],
+                                ]
+                            ],
                             'filter' => [
-                                'query_string' => [
-                                    'query' => '*zonda*',
-                                ],
-                            ],
-                            'must' => [
-                                'match' => [
-                                    'foo' => 1,
-                                ],
-                            ],
+                                'multi_match' => [
+                                    'query' => 'zonda',
+                                    'fields' => '*',
+                                    'lenient' => true
+                                ]
+                            ]
                         ],
                     ],
                 ],
