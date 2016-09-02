@@ -4,10 +4,10 @@ namespace Laravel\Scout;
 
 use Illuminate\Support\Manager;
 use AlgoliaSearch\Client as Algolia;
-use Elasticsearch\ClientBuilder as Elasticsearch;
 use Laravel\Scout\Engines\NullEngine;
 use Laravel\Scout\Engines\AlgoliaEngine;
 use Laravel\Scout\Engines\ElasticsearchEngine;
+use Elasticsearch\ClientBuilder as Elasticsearch;
 
 class EngineManager extends Manager
 {

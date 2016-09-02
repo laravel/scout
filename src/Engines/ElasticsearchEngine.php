@@ -129,7 +129,7 @@ class ElasticsearchEngine extends Engine
             'type'  =>  $query->model->searchableAs(),
             'body' => [
                 'query' => [
-                    "bool" => $filterQuery,
+                    'bool' => $filterQuery,
                 ],
             ],
         ];

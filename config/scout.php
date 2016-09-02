@@ -64,18 +64,15 @@ return [
     | Elasticsearch Configuration
     |--------------------------------------------------------------------------
     |
-    | Here you may configure your Elasticsearch settings. Elasticsearch
-    | is a distributed, open source search and analytics engine, designed
-    | for horizontal scalability, reliability, and easy management. Just plug
-    | in your Elasticsearch servers to get started searching.
-    |
-    | Notice that the config key is passed to the ClientBuilder as it is, so
-    | only add configs that the Elasticsearch can handle.
+    | Here you may configure your settings for Elasticsearch, which is a
+    | distributed, open source search and analytics engine. Feel free
+    | to add as many Elasticsearch servers as required by your app.
     |
     */
 
     'elasticsearch' => [
         'index' => env('ELASTICSEARCH_INDEX', 'laravel'),
+
         'config' => [
             'hosts' => [
                 env('ELASTICSEARCH_HOST')
