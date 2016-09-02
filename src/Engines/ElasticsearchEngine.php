@@ -131,14 +131,6 @@ class ElasticsearchEngine extends Engine
      */
     protected function performSearch(Builder $query, array $options = [])
     {
-        $filterQuery = [
-            "multi_match" => [
-                "query" => $query->query,
-                "fields" => "*",
-                "lenient" => true,
-            ],
-        ];
-
         $searchQuery = [];
 
         if (array_key_exists('filters', $options) && $options['filters']) {
@@ -153,6 +145,9 @@ class ElasticsearchEngine extends Engine
             $searchQuery = [
                 'bool' => $searchQuery
             ];
+        } else {
+
+
         }
 
         $searchQuery = [
@@ -161,7 +156,13 @@ class ElasticsearchEngine extends Engine
             'body' => [
                 'query' => [
                     'filtered' => [
-                        'filter' => $filterQuery,
+                        'filter' => [
+                            "query" => [
+                                "query_string" => [
+                                    "query" => $query->query,
+                                ]
+                            ],
+                        ],
                         'query' => $searchQuery,
                     ],
                 ],

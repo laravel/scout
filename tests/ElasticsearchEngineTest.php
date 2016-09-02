@@ -71,10 +71,10 @@ class ElasticsearchEngineTest extends AbstractTestCase
                                 ]
                             ],
                             'filter' => [
-                                'multi_match' => [
-                                    'query' => 'zonda',
-                                    'fields' => '*',
-                                    'lenient' => true
+                                'query' => [
+                                    'query_string' => [
+                                        'query' => 'zonda',
+                                    ]
                                 ]
                             ]
                         ],
@@ -127,13 +127,13 @@ class ElasticsearchEngineTest extends AbstractTestCase
 
         $expected = [
             'total' => 1,
-            'max_score' => 0,
+            'max_score' => 1.0,
             'hits' => [
                 [
                     '_index' => 'index_name',
                     '_type' => 'table',
                     '_id' => '1',
-                    '_score' => 0,
+                    '_score' => 1.0,
                     '_source' => [
                         'id' => 1,
                     ],
