@@ -199,7 +199,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
     }
 
     /**
-     * @param  \Elasticsearch\Client $client [description]
+     * @param  \Elasticsearch\Client $client
      */
     protected function markSkippedIfMissingElasticsearch(\Elasticsearch\Client $client)
     {
