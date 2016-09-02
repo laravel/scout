@@ -13,27 +13,39 @@ class ElasticsearchEngineTest extends AbstractTestCase
     public function test_update_adds_objects_to_index()
     {
         $client = Mockery::mock('Elasticsearch\Client');
-        $client->shouldReceive('index')->with([
-            'index' => 'index_name',
-            'type' => 'table',
-            'id' => 1,
-            'body' => ['id' => 1],
+        $client->shouldReceive('bulk')->with([
+            'body' => [
+                [
+                    'index' => [
+                        '_index' => 'index_name',
+                        '_type' => 'table',
+                        '_id' => 1,
+                    ],
+                ],
+                [
+                    'id' => 1,
+                ],
+            ],
         ]);
 
         $engine = new ElasticsearchEngine($client, 'index_name');
         $engine->update(Collection::make([new ElasticsearchEngineTestModel]));
     }
 
-
     public function test_delete_removes_objects_to_index()
     {
         $client = Mockery::mock('Elasticsearch\Client');
-        $client->shouldReceive('delete')->with([
-            'index' => 'index_name',
-            'type' => 'table',
-            'id' => 1,
+        $client->shouldReceive('bulk')->with([
+            'body' => [
+                [
+                    'delete' => [
+                        '_index' => 'index_name',
+                        '_type' => 'table',
+                        '_id' => 1,
+                    ],
+                ],
+            ],
         ]);
-
 
         $engine = new ElasticsearchEngine($client, 'index_name');
         $engine->delete(Collection::make([new ElasticsearchEngineTestModel]));
@@ -44,18 +56,18 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $client = Mockery::mock('Elasticsearch\Client');
         $client->shouldReceive('search')
             ->with([
-                'index' =>  'index_name',
-                'type'  =>  'table',
+                'index' => 'index_name',
+                'type' => 'table',
                 'body' => [
                     'query' => [
-                        "bool" => [
-                            "filter" => [
-                                "query_string" => [
-                                    "query" => "*zonda*",
+                        'bool' => [
+                            'filter' => [
+                                'query_string' => [
+                                    'query' => '*zonda*',
                                 ],
                             ],
-                            "must" => [
-                                "match" => [
+                            'must' => [
+                                'match' => [
                                     'foo' => 1,
                                 ],
                             ],
@@ -86,12 +98,114 @@ class ElasticsearchEngineTest extends AbstractTestCase
                 'hits' => [
                     [
                         '_id' => 1,
-                        '_source' => ['id' => 1]
+                        '_source' => ['id' => 1],
                     ],
-                ]
-            ]
+                ],
+            ],
         ], $model);
 
         $this->assertEquals(1, count($results));
+    }
+
+    public function test_real_elasticsearch_update()
+    {
+        $engine = $this->getRealElasticsearchEngine();
+
+        $engine->update(Collection::make([new ElasticsearchEngineTestModel]));
+
+        // Sleep so elasticsearch processes bulk request
+        sleep(1);
+
+        $builder = new Builder(new ElasticsearchEngineTestModel, '1');
+        $results = $engine->search($builder);
+
+        $expected = [
+            'total' => 1,
+            'max_score' => 0,
+            'hits' => [
+                [
+                    '_index' => 'index_name',
+                    '_type' => 'table',
+                    '_id' => '1',
+                    '_score' => 0,
+                    '_source' => [
+                        'id' => 1,
+                    ],
+                ],
+            ],
+        ];
+
+        $this->assertEquals($expected, $results['hits']);
+    }
+
+    public function test_real_elasticsearch_delete()
+    {
+        $engine = $this->getRealElasticsearchEngine();
+        $collection = Collection::make([new ElasticsearchEngineTestModel]);
+
+        $engine->update($collection);
+        $builder = new Builder(new ElasticsearchEngineTestModel, '1');
+
+        // Sleep so elastichsearch processes bulk request
+        sleep(1);
+
+        $engine->delete($collection);
+
+        // Sleep so elastichsearch processes bulk request
+        sleep(1);
+
+        $builder = new Builder(new ElasticsearchEngineTestModel, '1');
+        $results = $engine->search($builder);
+
+        $this->assertEquals($results['hits']['total'], 0);
+    }
+
+    /**
+     * @return \Laravel\Scout\Engines\ElasticsearchEngine
+     */
+    protected function getRealElasticsearchEngine()
+    {
+        $client = $this->getRealElasticsearchClient();
+        $this->markSkippedIfMissingElasticsearch($client);
+        $this->resetIndex($client);
+
+        return new ElasticsearchEngine($client, 'index_name');
+    }
+
+    /**
+     * @return \Elasticsearch\Client
+     */
+    protected function getRealElasticsearchClient()
+    {
+        return \Elasticsearch\ClientBuilder::create()
+            ->setHosts(['127.0.0.1:9200'])
+            ->setRetries(0)
+            ->build();
+    }
+
+    /**
+     * @param  \Elasticsearch\Client $client
+     */
+    protected function resetIndex(\Elasticsearch\Client $client)
+    {
+        $data = ['index' => 'index_name'];
+
+        if ($client->indices()->exists($data)) {
+            $client->indices()->delete($data);
+        }
+
+        $client->indices()->create($data);
+    }
+
+    /**
+     * @param  \Elasticsearch\Client $client [description]
+     */
+    protected function markSkippedIfMissingElasticsearch(\Elasticsearch\Client $client)
+    {
+        try {
+            $client->cluster()->health();
+        } catch (\Elasticsearch\Common\Exceptions\Curl\CouldNotConnectToHost $e) {
+            $this->markTestSkipped('Could not connect to elasticsearch');
+        }
     }
 }

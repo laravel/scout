@@ -15,6 +15,12 @@ class ElasticsearchEngine extends Engine
     protected $index;
 
     /**
+     * Elasticsearch client instance
+     * @var \Elasticsearch\Client
+     */
+    protected $elasticsearch;
+
+    /**
      * Create a new engine instance.
      *
      * @param  \Elasticsearch\Client  $elasticsearch
@@ -35,14 +41,23 @@ class ElasticsearchEngine extends Engine
      */
     public function update($models)
     {
-        $models->each(function ($model) {
-            $this->elasticsearch->index([
-                'index' => $this->index,
-                'type' => $model->searchableAs(),
-                'id' => $model->getKey(),
-                'body' => $model->toSearchableArray(),
+        $body = new BaseCollection();
+
+        $models->each(function ($model) use ($body) {
+            $body->push([
+                'index' => [
+                    '_index' => $this->index,
+                    '_type' => $model->searchableAs(),
+                    '_id' => $model->getKey(),
+                ]
             ]);
+
+            $body->push($model->toSearchableArray());
         });
+
+        $this->elasticsearch->bulk([
+            'body' => $body->all()
+        ]);
     }
 
     /**
@@ -53,13 +68,21 @@ class ElasticsearchEngine extends Engine
      */
     public function delete($models)
     {
-        $models->each(function ($model) {
-            $this->elasticsearch->delete([
-                'index' => $this->index,
-                'type' => $model->searchableAs(),
-                'id'  => $model->getKey(),
+        $body = new BaseCollection();
+
+        $models->each(function ($model) use ($body) {
+            $body->push([
+                'delete' => [
+                    '_index' => $this->index,
+                    '_type' => $model->searchableAs(),
+                    '_id'  => $model->getKey(),
+                ]
             ]);
         });
+
+        $this->elasticsearch->bulk([
+            'body' => $body->all()
+        ]);
     }
 
     /**
