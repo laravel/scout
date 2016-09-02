@@ -64,9 +64,11 @@ class ElasticsearchEngineTest extends AbstractTestCase
                             'query' => [
                                 'bool' => [
                                     'must' => [
-                                        'match' => [
-                                            'foo' => 1,
-                                        ],
+                                        [
+                                            'match' => [
+                                                'foo' => 1,
+                                            ],
+                                        ]
                                     ],
                                 ]
                             ],
@@ -113,7 +115,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $this->assertEquals(1, count($results));
     }
 
-    public function test_real_elasticsearch_update()
+    public function test_real_elasticsearch_update_and_search()
     {
         $engine = $this->getRealElasticsearchEngine();
 
@@ -123,6 +125,8 @@ class ElasticsearchEngineTest extends AbstractTestCase
         sleep(1);
 
         $builder = new Builder(new ElasticsearchEngineTestModel, '1');
+        $builder->where('id', 1);
+
         $results = $engine->search($builder);
 
         $expected = [
@@ -142,6 +146,11 @@ class ElasticsearchEngineTest extends AbstractTestCase
         ];
 
         $this->assertEquals($expected, $results['hits']);
+
+        $builder->where('title', 'zonda');
+        $results = $engine->search($builder);
+
+        $this->assertEquals(0, $results['hits']['total']);
     }
 
     public function test_real_elasticsearch_delete()

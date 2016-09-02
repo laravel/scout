@@ -134,19 +134,21 @@ class ElasticsearchEngine extends Engine
         $searchQuery = [];
 
         if (array_key_exists('filters', $options) && $options['filters']) {
-            $searchQuery = array_merge($searchQuery, [
-                "must" => [
-                    "match" => $options['filters'],
-                ],
-            ]);
+            foreach ($options['filters'] as $field => $value) {
+                $searchQuery[] = [
+                    "match" => [
+                        $field => $value
+                    ],
+                ];
+            }
         }
 
         if ($searchQuery) {
             $searchQuery = [
-                'bool' => $searchQuery
+                'bool' => [
+                    'must' => $searchQuery
+                ]
             ];
-        } else {
-
 
         }
 
