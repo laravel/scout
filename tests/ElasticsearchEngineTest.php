@@ -129,23 +129,9 @@ class ElasticsearchEngineTest extends AbstractTestCase
 
         $results = $engine->search($builder);
 
-        $expected = [
-            'total' => 1,
-            'max_score' => 1.0,
-            'hits' => [
-                [
-                    '_index' => 'index_name',
-                    '_type' => 'table',
-                    '_id' => '1',
-                    '_score' => 1.0,
-                    '_source' => [
-                        'id' => 1,
-                    ],
-                ],
-            ],
-        ];
-
-        $this->assertEquals($expected, $results['hits']);
+        $this->assertEquals(1, $results['hits']['total']);
+        $this->assertEquals('1', $results['hits']['hits'][0]['_id']);
+        $this->assertEquals(['id' => 1], $results['hits']['hits'][0]['_source']);
 
         $builder->where('title', 'zonda');
         $results = $engine->search($builder);
