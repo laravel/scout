@@ -43,7 +43,6 @@ class AlgoliaEngine extends Engine
             if (empty($array)) {
                 return;
             }
-            g
             return array_merge(['objectID' => $model->getSearchableKey()], $array);
         })->filter()->values()->all());
     }
