@@ -58,7 +58,7 @@ class ElasticsearchEngine extends Engine
                     '_index' => $this->index,
                     '_type' => $model->searchableAs(),
                     '_id' => $model->getSearchableKey(),
-                ]
+                ],
             ]);
 
             $body->push($array);
@@ -86,7 +86,7 @@ class ElasticsearchEngine extends Engine
                     '_index' => $this->index,
                     '_type' => $model->searchableAs(),
                     '_id'  => $model->getSearchableKey(),
-                ]
+                ],
             ]);
         });
 
