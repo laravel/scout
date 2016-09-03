@@ -20,13 +20,13 @@ class AlgoliaEngine extends Engine
     }
 
     /**
-     * Get Elasticsearch client instance.
+     * Get AlgoliaSearch client instance.
      *
-     * @return \Elasticsearch\Client
+     * @return \AlgoliaSearch\Client
      */
     public function getClient()
     {
-        return $this->elasticsearch;
+        return $this->algolia;
     }
 
     /**
