@@ -26,6 +26,16 @@ class ElasticsearchEngine extends Engine
 
         $this->index = $index;
     }
+    
+    /**
+     * Get Elasticsearch client instance.
+     *
+     * @return \Elasticsearch\Client
+     */
+    public function getClient()
+    {
+        return $this->elasticsearch;
+    }
 
     /**
      * Update the given model in the index.
@@ -72,7 +82,7 @@ class ElasticsearchEngine extends Engine
     {
         return $this->performSearch($query, [
             'filters' => $this->filters($query),
-            'size' => $query->limit ?: 10000,
+            'size' => $query->limit ?: 1000,
         ]);
     }
 

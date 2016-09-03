@@ -20,6 +20,16 @@ class AlgoliaEngine extends Engine
     }
 
     /**
+     * Get AlgoliaSearch client instance.
+     *
+     * @return \AlgoliaSearch\Client
+     */
+    public function getClient()
+    {
+        return $this->algolia;
+    }
+
+    /**
      * Update the given model in the index.
      *
      * @param  \Illuminate\Database\Eloquent\Collection  $models
