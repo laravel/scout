@@ -57,7 +57,7 @@ class ElasticsearchEngine extends Engine
                 'index' => [
                     '_index' => $this->index,
                     '_type' => $model->searchableAs(),
-                    '_id' => $model->getKey(),
+                    '_id' => $model->getSearchableKey(),
                 ],
             ]);
 
@@ -85,7 +85,7 @@ class ElasticsearchEngine extends Engine
                 'delete' => [
                     '_index' => $this->index,
                     '_type' => $model->searchableAs(),
-                    '_id'  => $model->getKey(),
+                    '_id'  => $model->getSearchableKey(),
                 ],
             ]);
         });
@@ -233,6 +233,9 @@ class ElasticsearchEngine extends Engine
         $keys = collect($results['hits']['hits'])
                     ->pluck('_id')
                     ->values()
+                    ->map(function($objectID) use ($model) {
+                        return $model->getReverseSearchableKey($objectID);
+                    })
                     ->all();
 
         $models = $model->whereIn(
