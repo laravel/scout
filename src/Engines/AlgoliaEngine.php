@@ -44,7 +44,7 @@ class AlgoliaEngine extends Engine
                 return;
             }
 
-            return array_merge(['objectID' => $model->getKey()], $array);
+            return array_merge(['objectID' => $model->getSearchableKey()], $array);
         })->filter()->values()->all());
     }
 
@@ -60,7 +60,7 @@ class AlgoliaEngine extends Engine
 
         $index->deleteObjects(
             $models->map(function ($model) {
-                return $model->getKey();
+                return $model->getSearchableKey();
             })->values()->all()
         );
     }
@@ -137,7 +137,12 @@ class AlgoliaEngine extends Engine
         }
 
         $keys = collect($results['hits'])
-                        ->pluck('objectID')->values()->all();
+                    ->pluck('objectID')
+                    ->map(function($objectID) use ($model) {
+                       return $model->getReverseSearchableKey($objectID);
+                    })
+                    ->values()
+                    ->all();
 
         $models = $model->whereIn(
             $model->getKeyName(), $keys

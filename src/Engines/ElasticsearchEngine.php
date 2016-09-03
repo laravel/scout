@@ -57,8 +57,8 @@ class ElasticsearchEngine extends Engine
                 'index' => [
                     '_index' => $this->index,
                     '_type' => $model->searchableAs(),
-                    '_id' => $model->getKey(),
-                ],
+                    '_id' => $model->getSearchableKey(),
+                ]
             ]);
 
             $body->push($array);
@@ -85,8 +85,8 @@ class ElasticsearchEngine extends Engine
                 'delete' => [
                     '_index' => $this->index,
                     '_type' => $model->searchableAs(),
-                    '_id'  => $model->getKey(),
-                ],
+                    '_id'  => $model->getSearchableKey(),
+                ]
             ]);
         });
 
@@ -140,38 +140,25 @@ class ElasticsearchEngine extends Engine
      */
     protected function performSearch(Builder $query, array $options = [])
     {
-        $termFilters = [];
-
-        $matchQueries[] = [
-            'match' => [
-                '_all' => [
-                    'query' => $query->query,
-                    'fuzziness' => 1
-                ]
-            ]
-        ];
+        $searchQuery = [];
 
         if (array_key_exists('filters', $options) && $options['filters']) {
             foreach ($options['filters'] as $field => $value) {
-
-                if(is_numeric($value)) {
-                    $termFilters[] = [
-                        'term' => [
-                            $field => $value,
-                        ],
-                    ];
-                } elseif(is_string($value)) {
-                    $matchQueries[] = [
-                        'match' => [
-                            $field => [
-                                'query' => $value,
-                                'operator' => 'and'
-                            ]
-                        ]
-                    ];
-                }
-
+                $searchQuery[] = [
+                    "match" => [
+                        $field => $value
+                    ],
+                ];
             }
+        }
+
+        if ($searchQuery) {
+            $searchQuery = [
+                'bool' => [
+                    'must' => $searchQuery
+                ]
+            ];
+
         }
 
         $searchQuery = [
@@ -180,12 +167,14 @@ class ElasticsearchEngine extends Engine
             'body' => [
                 'query' => [
                     'filtered' => [
-                        'filter' => $termFilters,
-                        'query' => [
-                            'bool' => [
-                                'must' => $matchQueries
-                            ]
+                        'filter' => [
+                            "query" => [
+                                "query_string" => [
+                                    "query" => "*{$query->query}*",
+                                ]
+                            ],
                         ],
+                        'query' => $searchQuery,
                     ],
                 ],
             ],
@@ -233,13 +222,17 @@ class ElasticsearchEngine extends Engine
         $keys = collect($results['hits']['hits'])
                     ->pluck('_id')
                     ->values()
+                    ->map(function($objectID) use ($model) {
+                        return $model->getReverseSearchableKey($objectID);
+                    })
                     ->all();
 
         $models = $model->whereIn(
             $model->getKeyName(), $keys
         )->get()->keyBy($model->getKeyName());
 
-        return Collection::make($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
+
+        return collect($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
             return $models[$hit['_source'][$model->getKeyName()]];
         });
     }

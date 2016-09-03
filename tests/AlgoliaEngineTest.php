@@ -7,6 +7,7 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\AlgoliaEngine;
 use Tests\Fixtures\AlgoliaEngineTestModel;
 use Illuminate\Database\Eloquent\Collection;
+use Tests\Fixtures\AlgoliaEngineTestModelCustomKey;
 
 class AlgoliaEngineTest extends AbstractTestCase
 {
@@ -23,7 +24,20 @@ class AlgoliaEngineTest extends AbstractTestCase
         $engine->update(Collection::make([new AlgoliaEngineTestModel]));
     }
 
-    public function test_delete_removes_objects_to_index()
+    public function test_update_adds_objects_with_custom_keys_to_index()
+    {
+        $client = Mockery::mock('AlgoliaSearch\Client');
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = Mockery::mock('StdClass'));
+        $index->shouldReceive('addObjects')->with([[
+            'id' => 1,
+            'objectID' => 'custom-1',
+        ]]);
+
+        $engine = new AlgoliaEngine($client);
+        $engine->update(Collection::make([new AlgoliaEngineTestModelCustomKey]));
+    }
+
+    public function test_delete_removes_objects_from_index()
     {
         $client = Mockery::mock('AlgoliaSearch\Client');
         $client->shouldReceive('initIndex')->with('table')->andReturn($index = Mockery::mock('StdClass'));
@@ -31,6 +45,16 @@ class AlgoliaEngineTest extends AbstractTestCase
 
         $engine = new AlgoliaEngine($client);
         $engine->delete(Collection::make([new AlgoliaEngineTestModel]));
+    }
+
+    public function test_delete_removes_objects_with_custom_keys_from_index()
+    {
+        $client = Mockery::mock('AlgoliaSearch\Client');
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = Mockery::mock('StdClass'));
+        $index->shouldReceive('deleteObjects')->with(['custom-1']);
+
+        $engine = new AlgoliaEngine($client);
+        $engine->delete(Collection::make([new AlgoliaEngineTestModelCustomKey]));
     }
 
     public function test_search_sends_correct_parameters_to_algolia()
@@ -54,11 +78,30 @@ class AlgoliaEngineTest extends AbstractTestCase
 
         $model = Mockery::mock('StdClass');
         $model->shouldReceive('getKeyName')->andReturn('id');
+        $model->shouldReceive('getReverseSearchableKey')->andReturn(1);
         $model->shouldReceive('whereIn')->once()->with('id', [1])->andReturn($model);
         $model->shouldReceive('get')->once()->andReturn(Collection::make([new AlgoliaEngineTestModel]));
 
         $results = $engine->map(['nbHits' => 1, 'hits' => [
             ['objectID' => 1, 'id' => 1],
+        ]], $model);
+
+        $this->assertEquals(1, count($results));
+    }
+
+    public function test_map_correctly_maps_results_to_models_with_custom_keys()
+    {
+        $client = Mockery::mock('AlgoliaSearch\Client');
+        $engine = new AlgoliaEngine($client);
+
+        $model = Mockery::mock('StdClass');
+        $model->shouldReceive('getKeyName')->andReturn('id');
+        $model->shouldReceive('getReverseSearchableKey')->andReturn(1);
+        $model->shouldReceive('whereIn')->once()->with('id', [1])->andReturn($model);
+        $model->shouldReceive('get')->once()->andReturn(Collection::make([new AlgoliaEngineTestModelCustomKey]));
+
+        $results = $engine->map(['nbHits' => 1, 'hits' => [
+            ['objectID' => 'custom-1', 'id' => 1],
         ]], $model);
 
         $this->assertEquals(1, count($results));
