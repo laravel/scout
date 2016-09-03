@@ -161,7 +161,7 @@ class ElasticsearchEngine extends Engine
                         'filter' => [
                             "query" => [
                                 "query_string" => [
-                                    "query" => $query->query,
+                                    "query" => "*{$query->query}*",
                                 ]
                             ],
                         ],

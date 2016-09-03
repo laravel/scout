@@ -75,7 +75,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
                             'filter' => [
                                 'query' => [
                                     'query_string' => [
-                                        'query' => 'zonda',
+                                        'query' => '*zonda*',
                                     ]
                                 ]
                             ]
@@ -121,9 +121,6 @@ class ElasticsearchEngineTest extends AbstractTestCase
 
         $engine->update(Collection::make([new ElasticsearchEngineTestModel]));
 
-        // Sleep so elasticsearch processes bulk request
-        sleep(1);
-
         $builder = new Builder(new ElasticsearchEngineTestModel, '1');
         $builder->where('id', 1);
 
@@ -147,13 +144,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $engine->update($collection);
         $builder = new Builder(new ElasticsearchEngineTestModel, '1');
 
-        // Sleep so elastichsearch processes bulk request
-        sleep(1);
-
         $engine->delete($collection);
-
-        // Sleep so elastichsearch processes bulk request
-        sleep(1);
 
         $builder = new Builder(new ElasticsearchEngineTestModel, '1');
         $results = $engine->search($builder);
