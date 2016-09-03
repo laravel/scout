@@ -14,6 +14,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
     {
         $client = Mockery::mock('Elasticsearch\Client');
         $client->shouldReceive('bulk')->with([
+            'refresh' => true,
             'body' => [
                 [
                     'index' => [
@@ -36,6 +37,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
     {
         $client = Mockery::mock('Elasticsearch\Client');
         $client->shouldReceive('bulk')->with([
+            'refresh' => true,
             'body' => [
                 [
                     'delete' => [

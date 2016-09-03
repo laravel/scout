@@ -56,7 +56,8 @@ class ElasticsearchEngine extends Engine
         });
 
         $this->elasticsearch->bulk([
-            'body' => $body->all()
+            'refresh' => true,
+            'body' => $body->all(),
         ]);
     }
 
@@ -81,7 +82,8 @@ class ElasticsearchEngine extends Engine
         });
 
         $this->elasticsearch->bulk([
-            'body' => $body->all()
+            'refresh' => true,
+            'body' => $body->all(),
         ]);
     }
 
