@@ -89,7 +89,7 @@ class ElasticsearchEngine extends Engine
         $result = $this->performSearch($query, [
             'filters' => $this->filters($query),
             'size' => $perPage,
-            'from' => (1 - $page) * $perPage,
+            'from' => (($page * $perPage) - $perPage),
         ]);
 
         $result['nbPages'] = (int) ceil($result['hits']['total'] / $perPage);
