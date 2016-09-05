@@ -10,7 +10,16 @@ use Illuminate\Support\Collection as BaseCollection;
 class ElasticsearchEngine extends Engine
 {
     /**
-     * @var string $index
+     * The Elasticsearch client instance.
+     *
+     * @var \Elasticsearch\Client
+     */
+    protected $elasticsearch;
+
+    /**
+     * The index name.
+     *
+     * @var string
      */
     protected $index;
 
@@ -35,20 +44,32 @@ class ElasticsearchEngine extends Engine
      */
     public function update($models)
     {
+        $body = new BaseCollection();
+
         $models->filter(function ($model) {
             if (method_exists($model, 'indexOnly')) {
-                return $model->indexOnly($model->searchableAs());
+                    return $model->indexOnly($model->searchableAs());
             }
 
             return true;
-        })->each(function ($model) {
-            $this->elasticsearch->index([
-                'index' => $this->index,
-                'type' => $model->searchableAs(),
-                'id' => $model->getKey(),
-                'body' => $model->toSearchableArray(),
+        })->each(function ($model) use ($body) {
+            $body->push([
+                'index' => [
+                    '_index' => $this->index,
+                    '_type' => $model->searchableAs(),
+                    '_id' => $model->getKey(),
+                ]
             ]);
+
+            $body->push($model->toSearchableArray());
         });
+
+        if($body->count() > 0) {
+            $this->elasticsearch->bulk([
+                'refresh' => true,
+                'body' => $body->all(),
+            ]);
+        }
     }
 
     /**
@@ -59,13 +80,22 @@ class ElasticsearchEngine extends Engine
      */
     public function delete($models)
     {
-        $models->each(function ($model) {
-            $this->elasticsearch->delete([
-                'index' => $this->index,
-                'type' => $model->searchableAs(),
-                'id'  => $model->getKey(),
+        $body = new BaseCollection();
+
+        $models->each(function ($model) use ($body) {
+            $body->push([
+                'delete' => [
+                    '_index' => $this->index,
+                    '_type' => $model->searchableAs(),
+                    '_id'  => $model->getKey(),
+                ]
             ]);
         });
+
+        $this->elasticsearch->bulk([
+            'refresh' => true,
+            'body' => $body->all(),
+        ]);
     }
 
     /**
@@ -92,12 +122,10 @@ class ElasticsearchEngine extends Engine
      */
     public function paginate(Builder $query, $perPage, $page)
     {
-        $from = (($page * $perPage) - $perPage);
-
         $result = $this->performSearch($query, [
             'filters' => $this->filters($query),
             'size' => $perPage,
-            'from' => $from,
+            'from' => (($page * $perPage) - $perPage),
         ]);
 
         $result['nbPages'] = (int) ceil($result['hits']['total'] / $perPage);
@@ -114,20 +142,25 @@ class ElasticsearchEngine extends Engine
      */
     protected function performSearch(Builder $query, array $options = [])
     {
-        $filterQuery = [
-            "filter" => [
-                "query_string" => [
-                    "query" => "*{$query->query}*",
-                ],
-            ]
-        ];
+        $searchQuery = [];
 
         if (array_key_exists('filters', $options) && $options['filters']) {
-            $filterQuery = array_merge($filterQuery, [
-                "must" => [
-                    "match" => $options['filters'],
-                ],
-            ]);
+            foreach ($options['filters'] as $field => $value) {
+                $searchQuery[] = [
+                    "match" => [
+                        $field => $value
+                    ],
+                ];
+            }
+        }
+
+        if ($searchQuery) {
+            $searchQuery = [
+                'bool' => [
+                    'must' => $searchQuery
+                ]
+            ];
+
         }
 
         $searchQuery = [
@@ -135,7 +168,16 @@ class ElasticsearchEngine extends Engine
             'type'  =>  $query->model->searchableAs(),
             'body' => [
                 'query' => [
-                    'bool' => $filterQuery,
+                    'filtered' => [
+                        'filter' => [
+                            "query" => [
+                                "query_string" => [
+                                    "query" => "*{$query->query}*",
+                                ]
+                            ],
+                        ],
+                        'query' => $searchQuery,
+                    ],
                 ],
             ],
         ];

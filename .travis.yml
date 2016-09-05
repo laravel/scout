@@ -7,6 +7,12 @@ php:
 
 sudo: false
 
+services:
+    - elasticsearch
+
 install: travis_retry composer install --no-interaction --prefer-dist
+
+before_script:
+    - sleep 10
 
 script: vendor/bin/phpunit --verbose
