@@ -10,15 +10,18 @@ use Illuminate\Support\Collection as BaseCollection;
 class ElasticsearchEngine extends Engine
 {
     /**
-     * @var string $index
-     */
-    protected $index;
-
-    /**
-     * Elasticsearch client instance
+     * The Elasticsearch client instance.
+     *
      * @var \Elasticsearch\Client
      */
     protected $elasticsearch;
+
+    /**
+     * The index name.
+     *
+     * @var string
+     */
+    protected $index;
 
     /**
      * Create a new engine instance.
