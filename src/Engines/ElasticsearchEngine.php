@@ -86,12 +86,10 @@ class ElasticsearchEngine extends Engine
      */
     public function paginate(Builder $query, $perPage, $page)
     {
-        $from = (($page * $perPage) - $perPage);
-
         $result = $this->performSearch($query, [
             'filters' => $this->filters($query),
             'size' => $perPage,
-            'from' => $from,
+            'from' => (1 - $page) * $perPage,
         ]);
 
         $result['nbPages'] = (int) ceil($result['hits']['total'] / $perPage);
