@@ -7,6 +7,7 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\ElasticsearchEngine;
 use Tests\Fixtures\ElasticsearchEngineTestModel;
 use Illuminate\Database\Eloquent\Collection;
+use Tests\Fixtures\NotIndexableElasticsearchEngineTestModel;
 
 class ElasticsearchEngineTest extends AbstractTestCase
 {
@@ -93,5 +94,19 @@ class ElasticsearchEngineTest extends AbstractTestCase
         ], $model);
 
         $this->assertEquals(1, count($results));
+    }
+
+    public function test_update_doesnt_adds_objects_to_index_when_index_only_returns_false()
+    {
+        $client = Mockery::mock('Elasticsearch\Client');
+        $client->shouldNotReceive('index')->with([
+            'index' => 'index_name',
+            'type' => 'table',
+            'id' => 1,
+            'body' => ['id' => 1],
+        ]);
+
+        $engine = new ElasticsearchEngine($client, 'index_name');
+        $engine->update(Collection::make([new NotIndexableElasticsearchEngineTestModel]));
     }
 }

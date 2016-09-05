@@ -35,7 +35,13 @@ class ElasticsearchEngine extends Engine
      */
     public function update($models)
     {
-        $models->each(function ($model) {
+        $models->filter(function ($model) {
+            if (method_exists($model, 'indexOnly')) {
+                return $model->indexOnly($model->searchableAs());
+            }
+
+            return true;
+        })->each(function ($model) {
             $this->elasticsearch->index([
                 'index' => $this->index,
                 'type' => $model->searchableAs(),
