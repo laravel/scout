@@ -30,9 +30,25 @@ class AlgoliaEngine extends Engine
     {
         $index = $this->algolia->initIndex($models->first()->searchableAs());
 
-        $index->addObjects($models->map(function ($model) {
-            return array_merge(['objectID' => $model->getKey()], $model->toSearchableArray());
-        })->values()->all());
+        $counter = $models->filter(function ($model) {
+            if (method_exists($model, 'indexOnly')) {
+                return $model->indexOnly($model->searchableAs());
+            }
+
+            return true;
+        })->count();
+
+        if ($counter > 0) {
+            $index->addObjects($models->filter(function ($model) {
+                if (method_exists($model, 'indexOnly')) {
+                    return $model->indexOnly($model->searchableAs());
+                }
+
+                return true;
+            })->map(function ($model) {
+                return array_merge(['objectID' => $model->getKey()], $model->toSearchableArray());
+            })->values()->all());
+        }
     }
 
     /**

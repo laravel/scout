@@ -46,7 +46,13 @@ class ElasticsearchEngine extends Engine
     {
         $body = new BaseCollection();
 
-        $models->each(function ($model) use ($body) {
+        $models->filter(function ($model) {
+            if (method_exists($model, 'indexOnly')) {
+                    return $model->indexOnly($model->searchableAs());
+            }
+
+            return true;
+        })->each(function ($model) use ($body) {
             $body->push([
                 'index' => [
                     '_index' => $this->index,
@@ -58,10 +64,12 @@ class ElasticsearchEngine extends Engine
             $body->push($model->toSearchableArray());
         });
 
-        $this->elasticsearch->bulk([
-            'refresh' => true,
-            'body' => $body->all(),
-        ]);
+        if($body->count() > 0) {
+            $this->elasticsearch->bulk([
+                'refresh' => true,
+                'body' => $body->all(),
+            ]);
+        }
     }
 
     /**
