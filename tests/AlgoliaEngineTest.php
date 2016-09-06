@@ -65,7 +65,7 @@ class AlgoliaEngineTest extends AbstractTestCase
         $this->assertEquals(1, count($results));
     }
 
-    public function test_update_doesnt_adds_objects_to_index_when_index_only_returns_false()
+    public function test_update_doesnt_adds_objects_to_index_when_searchableAs_returns_empty_array()
     {
         $client = Mockery::mock('AlgoliaSearch\Client');
         $client->shouldReceive('initIndex')->with('table')->andReturn($index = Mockery::mock('StdClass'));

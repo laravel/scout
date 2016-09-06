@@ -47,8 +47,8 @@ class ElasticsearchEngine extends Engine
         $body = new BaseCollection();
 
         $models->filter(function ($model) {
-            if (method_exists($model, 'indexOnly')) {
-                    return $model->indexOnly($model->searchableAs());
+            if (is_array($model->searchableAs()) && empty($model->searchableAs())) {
+                return false;
             }
 
             return true;
