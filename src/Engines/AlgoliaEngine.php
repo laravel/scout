@@ -116,7 +116,7 @@ class AlgoliaEngine extends Engine
     /**
      * Get the filter array for the query.
      *
-     * @param  \Laravel\Scout\Builder $builder
+     * @param  \Laravel\Scout\Builder  $builder
      * @return array
      */
     protected function filters(Builder $builder)
@@ -129,8 +129,8 @@ class AlgoliaEngine extends Engine
     /**
      * Map the given results to instances of the given model.
      *
-     * @param  mixed $results
-     * @param  \Illuminate\Database\Eloquent\Model $model
+     * @param  mixed  $results
+     * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function map($results, $model)
@@ -140,7 +140,7 @@ class AlgoliaEngine extends Engine
         }
 
         $keys = collect($results['hits'])
-                ->pluck('objectID')->values()->all();
+                    ->pluck('objectID')->values()->all();
 
         $models = $model->whereIn(
             $model->getKeyName(), $keys
