@@ -139,7 +139,7 @@ class Builder
         ]));
 
         return $paginator->appends('query', $this->query)
-                         ->hasMorePagesWhen(($results->count() / $perPage) > $page);
+                         ->hasMorePagesWhen(($engine->getTotalCount($rawResults) / $perPage) > $page);
     }
 
     /**

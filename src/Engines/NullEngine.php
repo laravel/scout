@@ -64,4 +64,15 @@ class NullEngine extends Engine
     {
         return Collection::make();
     }
+
+    /**
+     * Get the total count from a raw result returned by the engine.
+     *
+     * @param  mixed  $results
+     * @return int
+     */
+    public function getTotalCount($results)
+    {
+        return count($results);
+    }
 }

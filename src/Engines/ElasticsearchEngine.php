@@ -233,4 +233,15 @@ class ElasticsearchEngine extends Engine
             return $models[$hit['_source'][$model->getKeyName()]];
         });
     }
+
+    /**
+     * Get the total count from a raw result returned by the engine.
+     *
+     * @param  mixed  $results
+     * @return int
+     */
+    public function getTotalCount($results)
+    {
+        return $results['hits']['total'];
+    }
 }
