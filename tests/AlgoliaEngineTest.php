@@ -7,6 +7,7 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\AlgoliaEngine;
 use Tests\Fixtures\AlgoliaEngineTestModel;
 use Illuminate\Database\Eloquent\Collection;
+use Tests\Fixtures\NotIndexableAlgoliaEngineTestModel;
 
 class AlgoliaEngineTest extends AbstractTestCase
 {
@@ -62,5 +63,18 @@ class AlgoliaEngineTest extends AbstractTestCase
         ]], $model);
 
         $this->assertEquals(1, count($results));
+    }
+
+    public function test_update_doesnt_adds_objects_to_index_when_searchableAs_returns_empty_array()
+    {
+        $client = Mockery::mock('AlgoliaSearch\Client');
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = Mockery::mock('StdClass'));
+        $index->shouldNotReceive('addObjects')->with([[
+            'id' => 1,
+            'objectID' => 1,
+        ]]);
+
+        $engine = new AlgoliaEngine($client);
+        $engine->update(Collection::make([new NotIndexableAlgoliaEngineTestModel]));
     }
 }

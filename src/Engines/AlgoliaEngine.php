@@ -28,11 +28,27 @@ class AlgoliaEngine extends Engine
      */
     public function update($models)
     {
-        $index = $this->algolia->initIndex($models->first()->searchableAs());
+        $counter = $models->filter(function ($model) {
+            if (is_array($model->searchableAs()) && empty($model->searchableAs())) {
+                return false;
+            }
 
-        $index->addObjects($models->map(function ($model) {
-            return array_merge(['objectID' => $model->getKey()], $model->toSearchableArray());
-        })->values()->all());
+            return true;
+        })->count();
+
+        if ($counter > 0) {
+            $index = $this->algolia->initIndex($models->first()->searchableAs());
+
+            $index->addObjects($models->filter(function ($model) {
+                if (is_array($model->searchableAs()) && empty($model->searchableAs())) {
+                    return false;
+                }
+
+                return true;
+            })->map(function ($model) {
+                return array_merge(['objectID' => $model->getKey()], $model->toSearchableArray());
+            })->values()->all());
+        }
     }
 
     /**

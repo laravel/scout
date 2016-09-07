@@ -7,6 +7,7 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\ElasticsearchEngine;
 use Tests\Fixtures\ElasticsearchEngineTestModel;
 use Illuminate\Database\Eloquent\Collection;
+use Tests\Fixtures\NotIndexableElasticsearchEngineTestModel;
 
 class ElasticsearchEngineTest extends AbstractTestCase
 {
@@ -201,5 +202,28 @@ class ElasticsearchEngineTest extends AbstractTestCase
         } catch (\Elasticsearch\Common\Exceptions\Curl\CouldNotConnectToHost $e) {
             $this->markTestSkipped('Could not connect to elasticsearch');
         }
+    }
+
+    public function test_update_doesnt_adds_objects_to_index_when_searchableAs_returns_empty_array()
+    {
+        $client = Mockery::mock('Elasticsearch\Client');
+        $client->shouldReceive('bulk')->with([
+            'refresh' => true,
+            'body' => [
+                [
+                    'index' => [
+                        '_index' => 'index_name',
+                        '_type' => 'table',
+                        '_id' => 1,
+                    ],
+                ],
+                [
+                    'id' => 1,
+                ],
+            ],
+        ]);
+
+        $engine = new ElasticsearchEngine($client, 'index_name');
+        $engine->update(Collection::make([new NotIndexableElasticsearchEngineTestModel]));
     }
 }
