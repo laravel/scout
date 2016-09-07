@@ -140,7 +140,7 @@ class AlgoliaEngine extends Engine
         }
 
         $keys = collect($results['hits'])
-                    ->pluck('objectID')->values()->all();
+                        ->pluck('objectID')->values()->all();
 
         $models = $model->whereIn(
             $model->getKeyName(), $keys
