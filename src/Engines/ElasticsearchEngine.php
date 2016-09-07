@@ -47,6 +47,12 @@ class ElasticsearchEngine extends Engine
         $body = new BaseCollection();
 
         $models->each(function ($model) use ($body) {
+            $array = $model->toSearchableArray();
+
+            if (empty($array)) {
+                return;
+            }
+
             $body->push([
                 'index' => [
                     '_index' => $this->index,
@@ -55,7 +61,7 @@ class ElasticsearchEngine extends Engine
                 ]
             ]);
 
-            $body->push($model->toSearchableArray());
+            $body->push($array);
         });
 
         $this->elasticsearch->bulk([
