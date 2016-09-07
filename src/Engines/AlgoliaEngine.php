@@ -11,7 +11,7 @@ class AlgoliaEngine extends Engine
     /**
      * Create a new engine instance.
      *
-     * @param  \AlgoliaSearch\Client $algolia
+     * @param  \AlgoliaSearch\Client  $algolia
      * @return void
      */
     public function __construct(Algolia $algolia)
@@ -22,7 +22,7 @@ class AlgoliaEngine extends Engine
     /**
      * Update the given model in the index.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @throws \AlgoliaSearch\AlgoliaException
      * @return void
      */
@@ -54,7 +54,7 @@ class AlgoliaEngine extends Engine
     /**
      * Remove the given model from the index.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
     public function delete($models)
@@ -71,7 +71,7 @@ class AlgoliaEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  \Laravel\Scout\Builder $builder
+     * @param  \Laravel\Scout\Builder  $builder
      * @return mixed
      */
     public function search(Builder $builder)
@@ -85,9 +85,9 @@ class AlgoliaEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  \Laravel\Scout\Builder $builder
-     * @param  int $perPage
-     * @param  int $page
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  int  $perPage
+     * @param  int  $page
      * @return mixed
      */
     public function paginate(Builder $builder, $perPage, $page)
@@ -102,8 +102,8 @@ class AlgoliaEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  \Laravel\Scout\Builder $builder
-     * @param  array $options
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  array  $options
      * @return mixed
      */
     protected function performSearch(Builder $builder, array $options = [])
@@ -122,7 +122,7 @@ class AlgoliaEngine extends Engine
     protected function filters(Builder $builder)
     {
         return collect($builder->wheres)->map(function ($value, $key) {
-            return $key . '=' . $value;
+            return $key.'='.$value;
         })->values()->all();
     }
 
@@ -140,7 +140,7 @@ class AlgoliaEngine extends Engine
         }
 
         $keys = collect($results['hits'])
-            ->pluck('objectID')->values()->all();
+                ->pluck('objectID')->values()->all();
 
         $models = $model->whereIn(
             $model->getKeyName(), $keys
