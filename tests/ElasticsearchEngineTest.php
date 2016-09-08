@@ -119,7 +119,6 @@ class ElasticsearchEngineTest extends AbstractTestCase
                 ],
                 'size' => 10000,
             ]);
-
         $engine = new ElasticsearchEngine($client, 'index_name');
         $builder = new Builder(new ElasticsearchEngineTestModel, 'zonda');
         $builder->where('foo', 1);

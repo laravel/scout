@@ -155,29 +155,6 @@ class ElasticsearchEngine extends Engine
             foreach ($options['filters'] as $field => $value) {
                 $searchQuery[] = [
                     'match' => [
-                        $field => $value,
-                    ],
-                ];
-
-                if (is_numeric($value)) {
-                    $termFilters[] = [
-                        'term' => [
-                            $field => $value,
-                        ],
-                    ];
-                } elseif (is_string($value)) {
-                    $matchQueries[] = [
-                        'match' => [
-                            $field => [
-                                'query' => $value,
-                                'operator' => 'and'
-                            ]
-                        ]
-                    ];
-                }
-
-                $searchQuery[] = [
-                    'match' => [
                         $field => $value
                     ],
                 ];
@@ -271,8 +248,7 @@ class ElasticsearchEngine extends Engine
             $model->getKeyName(), $keys
         )->get()->keyBy($model->getKeyName());
 
-
-        return collect($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
+        return Collection::make($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
             return $models[$hit['_source'][$model->getKeyName()]];
         });
     }
