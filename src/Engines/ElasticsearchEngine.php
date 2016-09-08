@@ -153,6 +153,11 @@ class ElasticsearchEngine extends Engine
 
         if (array_key_exists('filters', $options) && $options['filters']) {
             foreach ($options['filters'] as $field => $value) {
+                $searchQuery[] = [
+                    'match' => [
+                        $field => $value
+                    ],
+                ];
 
                 if(is_numeric($value)) {
                     $termFilters[] = [
@@ -180,11 +185,12 @@ class ElasticsearchEngine extends Engine
             'body' => [
                 'query' => [
                     'filtered' => [
-                        'filter' => $termFilters,
-                        'query' => [
-                            'bool' => [
-                                'must' => $matchQueries
-                            ]
+                        'filter' => [
+                            'query' => [
+                                'simple_query_string' => [
+                                    'query' => $query->query,
+                                ],
+                            ],
                         ],
                     ],
                 ],
