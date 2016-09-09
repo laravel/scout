@@ -164,7 +164,7 @@ class ElasticsearchEngine extends Engine
                 //if filter val is numeric, add a term filter to the filter clause
                 if(is_numeric($filter))
                 {
-                    $searchQuery['filter'][] =  [
+                    $searchQuery['must'][] =  [
                         "term" => [$field => $filter],
                     ];
                 }
