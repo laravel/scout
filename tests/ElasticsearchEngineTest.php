@@ -71,9 +71,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
                                             'fuzziness' => 2
                                         ],
                                     ],
-                                ]
-                            ],
-                            'filter' => [
+                                ],
                                 [
                                     'term' => [
                                         'foo' => 1
