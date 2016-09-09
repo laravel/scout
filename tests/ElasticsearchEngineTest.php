@@ -68,7 +68,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
                                     'match' => [
                                         '_all' => [
                                             'query' => 'zonda',
-                                            'fuzzyness' => 2
+                                            'fuzziness' => 2
                                         ],
                                     ],
                                 ]
