@@ -18,8 +18,8 @@ class ElasticsearchEngineTest extends AbstractTestCase
             'body' => [
                 [
                     'index' => [
-                        '_index' => 'index_name',
-                        '_type' => 'table',
+                        '_index' => 'index_name_table',
+                        '_type' => 'docs',
                         '_id' => 1,
                     ],
                 ],
@@ -41,8 +41,8 @@ class ElasticsearchEngineTest extends AbstractTestCase
             'body' => [
                 [
                     'delete' => [
-                        '_index' => 'index_name',
-                        '_type' => 'table',
+                        '_index' => 'index_name_table',
+                        '_type' => 'docs',
                         '_id' => 1,
                     ],
                 ],
@@ -58,26 +58,22 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $client = Mockery::mock('Elasticsearch\Client');
         $client->shouldReceive('search')
             ->with([
-                'index' => 'index_name',
-                'type' => 'table',
+                'index' => 'index_name_table',
+                'type' => 'docs',
                 'body' => [
                     'query' => [
-                        'filtered' => [
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        [
-                                            'match' => [
-                                                'foo' => 1,
-                                            ],
-                                        ]
+                        'bool' => [
+                            'must' => [
+                                [
+                                    'match' => [
+                                        '_all' => 'zonda',
                                     ],
                                 ]
                             ],
                             'filter' => [
-                                'query' => [
-                                    'query_string' => [
-                                        'query' => '*zonda*',
+                                [
+                                    'term' => [
+                                        'foo' => 1
                                     ]
                                 ]
                             ]
