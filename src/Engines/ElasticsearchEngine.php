@@ -149,7 +149,6 @@ class ElasticsearchEngine extends Engine
                 "match" => [
                     "_all" => [
                         "query" => $query->query,
-                        "operator" => "and",
                         "fuzziness" => 2
                     ]
                 ]
