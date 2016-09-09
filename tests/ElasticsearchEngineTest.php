@@ -66,7 +66,10 @@ class ElasticsearchEngineTest extends AbstractTestCase
                             'must' => [
                                 [
                                     'match' => [
-                                        '_all' => 'zonda',
+                                        '_all' => [
+                                            'query' => 'zonda',
+                                            'fuzzyness' => 2
+                                        ],
                                     ],
                                 ]
                             ],
@@ -178,7 +181,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
      */
     protected function resetIndex(\Elasticsearch\Client $client)
     {
-        $data = ['index' => 'index_name'];
+        $data = ['index' => 'index_name_table'];
 
         if ($client->indices()->exists($data)) {
             $client->indices()->delete($data);
