@@ -55,8 +55,8 @@ class ElasticsearchEngine extends Engine
 
             $body->push([
                 'index' => [
-                    '_index' => $this->index,
-                    '_type' => $model->searchableAs(),
+                    'index' =>  $this->index.'_'.$model->searchableAs(),
+                    'type'  =>  'docs',
                     '_id' => $model->getKey(),
                 ]
             ]);
@@ -83,8 +83,8 @@ class ElasticsearchEngine extends Engine
         $models->each(function ($model) use ($body) {
             $body->push([
                 'delete' => [
-                    '_index' => $this->index,
-                    '_type' => $model->searchableAs(),
+                    'index' =>  $this->index.'_'.$model->searchableAs(),
+                    'type'  =>  'docs',
                     '_id'  => $model->getKey(),
                 ]
             ]);
@@ -140,42 +140,59 @@ class ElasticsearchEngine extends Engine
      */
     protected function performSearch(Builder $query, array $options = [])
     {
-        $searchQuery = [];
+         $searchQuery = [];
+
+        //match against all fields with the initial keyword string
+        if(!empty($query->query))
+        {
+            $searchQuery['must'][] = [
+                "match" => [
+                    "_all" => [
+                        "query" => $query->query,
+                        "operator" => "and",
+                        "fuzziness" => 2
+                    ]
+                ]
+            ];
+        }
 
         if (array_key_exists('filters', $options) && $options['filters']) {
-            foreach ($options['filters'] as $field => $value) {
-                $searchQuery[] = [
-                    "match" => [
-                        $field => $value
-                    ],
-                ];
+
+            //loop through all various filters
+            foreach($options['filters'] as $field=>$filter)
+            {
+
+                //if filter val is numeric, add a term filter to the filter clause
+                if(is_numeric($filter))
+                {
+                    $searchQuery['filter'][] =  [
+                        "term" => [$field => $filter],
+                    ];
+                }
+
+                //else its a string so add a match query to the must clause
+                else
+                {
+                    $searchQuery['must'][] =  [
+                        "match" => [
+                            $field => [
+                                "query" => $filter,
+                                "operator" => "and"
+                            ]
+                        ],
+                    ];
+                }
+
             }
         }
 
-        if ($searchQuery) {
-            $searchQuery = [
-                'bool' => [
-                    'must' => $searchQuery
-                ]
-            ];
-
-        }
-
+        //construct the final bool query
         $searchQuery = [
-            'index' =>  $this->index,
-            'type'  =>  $query->model->searchableAs(),
+            'index' =>  $this->index.'_'.$query->model->searchableAs(),
+            'type'  =>  'docs',
             'body' => [
                 'query' => [
-                    'filtered' => [
-                        'filter' => [
-                            "query" => [
-                                "query_string" => [
-                                    "query" => "*{$query->query}*",
-                                ]
-                            ],
-                        ],
-                        'query' => $searchQuery,
-                    ],
+                    'bool' => $searchQuery,
                 ],
             ],
         ];
