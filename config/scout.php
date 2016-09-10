@@ -71,12 +71,8 @@ return [
     */
 
     'elasticsearch' => [
-        'index' => env('ELASTICSEARCH_INDEX', 'laravel'),
-
         'config' => [
-            'hosts' => [
-                env('ELASTICSEARCH_HOST')
-            ],
+            'hosts' => explode(',',env('ELASTICSEARCH_HOST','localhost')),
         ],
     ],
 

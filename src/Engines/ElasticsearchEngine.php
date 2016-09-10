@@ -17,23 +17,14 @@ class ElasticsearchEngine extends Engine
     protected $elasticsearch;
 
     /**
-     * The index name.
-     *
-     * @var string
-     */
-    protected $index;
-
-    /**
      * Create a new engine instance.
      *
      * @param  \Elasticsearch\Client  $elasticsearch
      * @return void
      */
-    public function __construct(Elasticsearch $elasticsearch, $index)
+    public function __construct(Elasticsearch $elasticsearch)
     {
         $this->elasticsearch = $elasticsearch;
-
-        $this->index = $index;
     }
 
     /**
@@ -55,7 +46,7 @@ class ElasticsearchEngine extends Engine
 
             $body->push([
                 'index' => [
-                    '_index' =>  $this->index.'_'.$model->searchableAs(),
+                    '_index' =>  $model->searchableAs(),
                     '_type'  =>  'docs',
                     '_id' => $model->getKey(),
                 ]
@@ -83,7 +74,7 @@ class ElasticsearchEngine extends Engine
         $models->each(function ($model) use ($body) {
             $body->push([
                 'delete' => [
-                    '_index' =>  $this->index.'_'.$model->searchableAs(),
+                    '_index' =>  $model->searchableAs(),
                     '_type'  =>  'docs',
                     '_id'  => $model->getKey(),
                 ]
@@ -149,7 +140,7 @@ class ElasticsearchEngine extends Engine
                 "match" => [
                     "_all" => [
                         "query" => $query->query,
-                        "fuzziness" => 2
+                        "fuzziness" => 1
                     ]
                 ]
             ];
@@ -176,7 +167,7 @@ class ElasticsearchEngine extends Engine
                         "match" => [
                             $field => [
                                 "query" => $filter,
-                                "operator" => "and"
+                                "operator" => "and" //force all terms to match
                             ]
                         ],
                     ];
@@ -187,7 +178,7 @@ class ElasticsearchEngine extends Engine
 
         //construct the final bool query
         $searchQuery = [
-            'index' =>  $this->index.'_'.$query->model->searchableAs(),
+            'index' =>  $query->model->searchableAs(),
             'type'  =>  'docs',
             'body' => [
                 'query' => [
