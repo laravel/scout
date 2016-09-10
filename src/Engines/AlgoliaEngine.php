@@ -136,7 +136,7 @@ class AlgoliaEngine extends Engine
             $model->getKeyName(), $keys
         )->get()->keyBy($model->getKeyName());
 
-        return collect($results['hits'])->map(function ($hit) use ($model, $models) {
+        return Collection::make($results['hits'])->map(function ($hit) use ($model, $models) {
             $key = $hit[$model->getKeyName()];
 
             if (isset($models[$key])) {
