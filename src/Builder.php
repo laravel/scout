@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout;
 
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -121,7 +122,7 @@ class Builder
      * @param  int  $perPage
      * @param  string  $pageName
      * @param  int|null  $page
-     * @return \Illuminate\Contracts\Pagination\Paginator
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function paginate($perPage = 15, $pageName = 'page', $page = null)
     {
@@ -133,13 +134,12 @@ class Builder
             $rawResults = $engine->paginate($this, $perPage, $page), $this->model
         ));
 
-        $paginator = (new Paginator($results, $perPage, $page, [
+        $paginator = (new LengthAwarePaginator($results, $engine->getTotalCount($rawResults), $perPage, $page, [
             'path' => Paginator::resolveCurrentPath(),
             'pageName' => $pageName,
         ]));
 
-        return $paginator->appends('query', $this->query)
-                         ->hasMorePagesWhen(($engine->getTotalCount($rawResults) / $perPage) > $page);
+        return $paginator->appends('query', $this->query);
     }
 
     /**
