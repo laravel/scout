@@ -46,8 +46,8 @@ class ElasticsearchEngine extends Engine
 
             $body->push([
                 'index' => [
-                    '_index' =>  $model->searchableAs(),
-                    '_type'  =>  'docs',
+                    '_index' => $model->searchableAs(),
+                    '_type' => 'docs',
                     '_id' => $model->getKey(),
                 ]
             ]);
@@ -74,9 +74,9 @@ class ElasticsearchEngine extends Engine
         $models->each(function ($model) use ($body) {
             $body->push([
                 'delete' => [
-                    '_index' =>  $model->searchableAs(),
-                    '_type'  =>  'docs',
-                    '_id'  => $model->getKey(),
+                    '_index' => $model->searchableAs(),
+                    '_type' => 'docs',
+                    '_id' => $model->getKey(),
                 ]
             ]);
         });
