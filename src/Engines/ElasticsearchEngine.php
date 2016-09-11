@@ -155,17 +155,17 @@ class ElasticsearchEngine extends Engine
             foreach ($options['filters'] as $field => $value) {
                 $searchQuery[] = [
                     'match' => [
-                        $field => $value
+                        $field => $value,
                     ],
                 ];
 
-                if(is_numeric($value)) {
+                if (is_numeric($value)) {
                     $termFilters[] = [
                         'term' => [
                             $field => $value,
                         ],
                     ];
-                } elseif(is_string($value)) {
+                } elseif (is_string($value)) {
                     $matchQueries[] = [
                         'match' => [
                             $field => [
@@ -175,8 +175,15 @@ class ElasticsearchEngine extends Engine
                         ]
                     ];
                 }
-
             }
+        }
+
+        if ($searchQuery) {
+            $searchQuery = [
+                'bool' => [
+                    'must' => $searchQuery,
+                ],
+            ];
         }
 
         $searchQuery = [
@@ -248,7 +255,8 @@ class ElasticsearchEngine extends Engine
             $model->getKeyName(), $keys
         )->get()->keyBy($model->getKeyName());
 
-        return Collection::make($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
+
+        return collect($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
             return $models[$hit['_source'][$model->getKeyName()]];
         });
     }
