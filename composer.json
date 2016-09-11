@@ -15,16 +15,16 @@
     ],
     "require": {
         "php": ">=5.6.4",
+        "illuminate/bus": "~5.3",
         "illuminate/contracts": "~5.3",
         "illuminate/database": "~5.3",
+        "illuminate/pagination": "~5.3",
+        "illuminate/queue": "~5.3",
         "illuminate/support": "~5.3"
     },
     "require-dev": {
         "algolia/algoliasearch-client-php": "^1.10",
         "elasticsearch/elasticsearch": "^2.2",
-        "illuminate/bus": "~5.3",
-        "illuminate/pagination": "~5.3",
-        "illuminate/queue": "~5.3",
         "mockery/mockery": "~0.9",
         "phpunit/phpunit": "~5.0"
     },
