@@ -53,7 +53,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $engine->delete(Collection::make([new ElasticsearchEngineTestModel]));
     }
 
-    public function test_search_sends_correct_parameters_to_algolia()
+    public function test_search_sends_correct_parameters_to_index()
     {
         $client = Mockery::mock('Elasticsearch\Client');
         $client->shouldReceive('search')
@@ -62,19 +62,23 @@ class ElasticsearchEngineTest extends AbstractTestCase
                 'type' => 'docs',
                 'body' => [
                     'query' => [
-                        'bool' => [
-                            'must' => [
-                                [
-                                    'match' => [
-                                        '_all' => [
-                                            'query' => 'zonda',
-                                            'fuzziness' => 1
-                                        ],
+                        'filtered' => [
+                            'query' => [
+                                'match' => [
+                                    '_all' => [
+                                        'query' => 'zonda',
+                                        'fuzziness' => 1
                                     ],
-                                ],
-                                [
-                                    'term' => [
-                                        'foo' => 1
+                                ]
+                            ],
+                            'filter' => [
+                                'bool' => [
+                                    'must' => [
+                                        [
+                                            'term' => [
+                                                'foo' => 1
+                                            ]
+                                        ]
                                     ]
                                 ]
                             ]

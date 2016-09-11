@@ -111,10 +111,12 @@ class ElasticsearchEngine extends Engine
      */
     public function paginate(Builder $query, $perPage, $page)
     {
+        $from = (($page * $perPage) - $perPage);
         $result = $this->performSearch($query, [
             'filters' => $this->filters($query),
             'size' => $perPage,
-            'from' => (($page * $perPage) - $perPage),
+            //from+size cannot be gt 10000
+            'from' => $from+$perPage<10000 ? $from : 10000-$perPage,
         ]);
 
         $result['nbPages'] = (int) ceil($result['hits']['total'] / $perPage);
@@ -134,9 +136,8 @@ class ElasticsearchEngine extends Engine
          $searchQuery = [];
 
         //match against all fields with the initial keyword string
-        if(!empty($query->query))
-        {
-            $searchQuery['must'][] = [
+        if(!empty($query->query)) {
+            $searchQuery['query'] = [
                 "match" => [
                     "_all" => [
                         "query" => $query->query,
@@ -149,21 +150,16 @@ class ElasticsearchEngine extends Engine
         if (array_key_exists('filters', $options) && $options['filters']) {
 
             //loop through all various filters
-            foreach($options['filters'] as $field=>$filter)
-            {
+            foreach($options['filters'] as $field=>$filter) {
 
                 //if filter val is numeric, add a term filter to the filter clause
-                if(is_numeric($filter))
-                {
-                    $searchQuery['must'][] =  [
+                if(is_numeric($filter)) {
+                    $searchQuery['filter']['bool']['must'][] =  [
                         "term" => [$field => $filter],
                     ];
-                }
-
-                //else its a string so add a match query to the must clause
-                else
-                {
-                    $searchQuery['must'][] =  [
+                } else {
+                    //else its a string so add a match query to the must clause
+                    $searchQuery['filter']['bool']['must'][] =  [
                         "match" => [
                             $field => [
                                 "query" => $filter,
@@ -182,7 +178,7 @@ class ElasticsearchEngine extends Engine
             'type'  =>  'docs',
             'body' => [
                 'query' => [
-                    'bool' => $searchQuery,
+                    'filtered' => $searchQuery,
                 ],
             ],
         ];
