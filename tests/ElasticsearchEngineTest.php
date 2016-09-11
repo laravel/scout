@@ -76,8 +76,8 @@ class ElasticsearchEngineTest extends AbstractTestCase
                             ],
                             'filter' => [
                                 'query' => [
-                                    'query_string' => [
-                                        'query' => '*zonda*',
+                                    'simple_query_string' => [
+                                        'query' => 'zonda',
                                     ]
                                 ]
                             ]

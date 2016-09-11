@@ -145,7 +145,7 @@ class ElasticsearchEngine extends Engine
         if (array_key_exists('filters', $options) && $options['filters']) {
             foreach ($options['filters'] as $field => $value) {
                 $searchQuery[] = [
-                    "match" => [
+                    'match' => [
                         $field => $value
                     ],
                 ];
@@ -168,10 +168,10 @@ class ElasticsearchEngine extends Engine
                 'query' => [
                     'filtered' => [
                         'filter' => [
-                            "query" => [
-                                "query_string" => [
-                                    "query" => "*{$query->query}*",
-                                ]
+                            'query' => [
+                                'simple_query_string' => [
+                                    'query' => $query->query,
+                                ],
                             ],
                         ],
                         'query' => $searchQuery,
