@@ -69,11 +69,7 @@ class ModelObserver
      */
     public function updated($model)
     {
-        if (static::syncingDisabledFor($model)) {
-            return;
-        }
-
-        $model->searchable();
+        $this->created($model);
     }
 
     /**
@@ -99,10 +95,6 @@ class ModelObserver
      */
     public function restored($model)
     {
-        if (static::syncingDisabledFor($model)) {
-            return;
-        }
-
-        $model->searchable();
+        $this->created($model);
     }
 }
