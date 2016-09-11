@@ -146,7 +146,7 @@ class ElasticsearchEngine extends Engine
             foreach ($options['filters'] as $field => $value) {
                 $searchQuery[] = [
                     'match' => [
-                        $field => $value
+                        $field => $value,
                     ],
                 ];
             }
@@ -155,10 +155,9 @@ class ElasticsearchEngine extends Engine
         if ($searchQuery) {
             $searchQuery = [
                 'bool' => [
-                    'must' => $searchQuery
-                ]
+                    'must' => $searchQuery,
+                ],
             ];
-
         }
 
         $searchQuery = [
@@ -230,7 +229,6 @@ class ElasticsearchEngine extends Engine
         $models = $model->whereIn(
             $model->getKeyName(), $keys
         )->get()->keyBy($model->getKeyName());
-
 
         return collect($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
             return $models[$hit['_source'][$model->getKeyName()]];

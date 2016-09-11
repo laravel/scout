@@ -116,17 +116,17 @@ class ElasticsearchEngineTest extends AbstractTestCase
                                             'match' => [
                                                 'foo' => 1,
                                             ],
-                                        ]
+                                        ],
                                     ],
-                                ]
+                                ],
                             ],
                             'filter' => [
                                 'query' => [
                                     'simple_query_string' => [
                                         'query' => 'zonda',
-                                    ]
-                                ]
-                            ]
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
                 ],
