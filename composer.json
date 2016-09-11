@@ -44,8 +44,8 @@
         }
     },
     "suggest": {
-        "algolia/algoliasearch-client-php": "Required to use the Algolia engine.",
-        "elasticsearch/elasticsearch": "Required to use the Elasticsearch engine."
+        "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^1.10).",
+        "elasticsearch/elasticsearch": "Required to use the Elasticsearch engine (^2.2)."
     },
     "minimum-stability": "dev",
     "prefer-stable": true
