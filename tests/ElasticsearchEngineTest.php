@@ -124,11 +124,19 @@ class ElasticsearchEngineTest extends AbstractTestCase
                                 ],
                             ],
                             'filter' => [
+<<<<<<< 2a60154cb90e26a7aae0c6718b81ee724ce5ee4a
                                 [
                                     'term' => [
                                         'foo' => 1,
                                     ],
                                 ]
+=======
+                                'query' => [
+                                    'simple_query_string' => [
+                                        'query' => 'zonda',
+                                    ],
+                                ],
+>>>>>>> Add missing EOA commas.
                             ],
                         ],
                     ],
