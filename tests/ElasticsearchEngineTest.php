@@ -64,11 +64,17 @@ class ElasticsearchEngineTest extends AbstractTestCase
                     'query' => [
                         'filtered' => [
                             'query' => [
-                                'match' => [
-                                    '_all' => [
-                                        'query' => 'zonda',
-                                        'fuzziness' => 1
-                                    ],
+                                'bool' => [
+                                    'must' => [
+                                        [
+                                            'match' => [
+                                                '_all' => [
+                                                    'query' => 'zonda',
+                                                    'fuzziness' => 1
+                                                ],
+                                            ]
+                                        ]
+                                    ]
                                 ]
                             ],
                             'filter' => [

@@ -133,11 +133,11 @@ class ElasticsearchEngine extends Engine
      */
     protected function performSearch(Builder $query, array $options = [])
     {
-         $searchQuery = [];
+        $searchQuery = [];
 
         //match against all fields with the initial keyword string
         if(!empty($query->query)) {
-            $searchQuery['query'] = [
+            $searchQuery['query']['bool']['must'][] = [
                 "match" => [
                     "_all" => [
                         "query" => $query->query,
@@ -159,7 +159,7 @@ class ElasticsearchEngine extends Engine
                     ];
                 } else {
                     //else its a string so add a match query to the must clause
-                    $searchQuery['filter']['bool']['must'][] =  [
+                    $searchQuery['query']['bool']['must'][] =  [
                         "match" => [
                             $field => [
                                 "query" => $filter,
@@ -223,9 +223,9 @@ class ElasticsearchEngine extends Engine
         }
 
         $keys = collect($results['hits']['hits'])
-                    ->pluck('_id')
-                    ->values()
-                    ->all();
+            ->pluck('_id')
+            ->values()
+            ->all();
 
         $models = $model->whereIn(
             $model->getKeyName(), $keys
