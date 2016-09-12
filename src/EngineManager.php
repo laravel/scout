@@ -37,7 +37,7 @@ class EngineManager extends Manager
     /**
      * Create an Elasticsearch engine instance.
      *
-     * @return Engines\ElasticsearchEngine
+     * @return \Laravel\Scout\Engines\ElasticsearchEngine
      */
     public function createElasticsearchDriver()
     {
