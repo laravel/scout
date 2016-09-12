@@ -49,7 +49,7 @@ class ElasticsearchEngine extends Engine
                     '_index' => $model->searchableAs(),
                     '_type' => 'docs',
                     '_id' => $model->getKey(),
-                ]
+                ],
             ]);
 
             $body->push($array);
@@ -230,7 +230,6 @@ class ElasticsearchEngine extends Engine
         $models = $model->whereIn(
             $model->getKeyName(), $keys
         )->get()->keyBy($model->getKeyName());
-
 
         return collect($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
             return $models[$hit['_source'][$model->getKeyName()]];

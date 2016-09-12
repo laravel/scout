@@ -15,16 +15,16 @@
     ],
     "require": {
         "php": ">=5.6.4",
+        "illuminate/bus": "~5.3",
         "illuminate/contracts": "~5.3",
         "illuminate/database": "~5.3",
+        "illuminate/pagination": "~5.3",
+        "illuminate/queue": "~5.3",
         "illuminate/support": "~5.3"
     },
     "require-dev": {
         "algolia/algoliasearch-client-php": "^1.10",
         "elasticsearch/elasticsearch": "^2.2",
-        "illuminate/bus": "~5.3",
-        "illuminate/pagination": "~5.3",
-        "illuminate/queue": "~5.3",
         "mockery/mockery": "~0.9",
         "phpunit/phpunit": "~5.0"
     },
@@ -44,8 +44,8 @@
         }
     },
     "suggest": {
-        "algolia/algoliasearch-client-php": "Required to use the Algolia engine.",
-        "elasticsearch/elasticsearch": "Required to use the Elasticsearch engine."
+        "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^1.10).",
+        "elasticsearch/elasticsearch": "Required to use the Elasticsearch engine (^2.2)."
     },
     "minimum-stability": "dev",
     "prefer-stable": true
