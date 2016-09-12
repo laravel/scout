@@ -9,6 +9,13 @@ use Illuminate\Database\Eloquent\Collection;
 class AlgoliaEngine extends Engine
 {
     /**
+     * The Algolia client.
+     *
+     * @var \AlgoliaSearch\Client
+     */
+    protected $algolia;
+
+    /**
      * Create a new engine instance.
      *
      * @param  \AlgoliaSearch\Client  $algolia
