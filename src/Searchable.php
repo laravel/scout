@@ -71,7 +71,7 @@ trait Searchable
      * Perform a search against the model's indexed data.
      *
      * @param  string  $query
-     * @return \Illuminate\Support\Collection
+     * @return \Laravel\Scout\Builder
      */
     public static function search($query)
     {
