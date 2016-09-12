@@ -75,7 +75,7 @@ return [
 
         'config' => [
             'hosts' => [
-                env('ELASTICSEARCH_HOST')
+                env('ELASTICSEARCH_HOST'),
             ],
         ],
     ],
