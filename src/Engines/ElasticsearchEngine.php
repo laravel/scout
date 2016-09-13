@@ -17,11 +17,9 @@ class ElasticsearchEngine extends Engine
     protected $elasticsearch;
 
     /**
-     * The index name.
-     *
      * @var string
      */
-    protected $index;
+    protected $type = 'doc';
 
     /**
      * Create a new engine instance.
@@ -29,11 +27,9 @@ class ElasticsearchEngine extends Engine
      * @param  \Elasticsearch\Client  $elasticsearch
      * @return void
      */
-    public function __construct(Elasticsearch $elasticsearch, $index)
+    public function __construct(Elasticsearch $elasticsearch)
     {
         $this->elasticsearch = $elasticsearch;
-
-        $this->index = $index;
     }
 
     /**
@@ -55,8 +51,8 @@ class ElasticsearchEngine extends Engine
 
             $body->push([
                 'index' => [
-                    '_index' => $this->index,
-                    '_type' => $model->searchableAs(),
+                    '_index' => $model->searchableAs(),
+                    '_type' => $this->type,
                     '_id' => $model->getKey(),
                 ],
             ]);
@@ -83,8 +79,8 @@ class ElasticsearchEngine extends Engine
         $models->each(function ($model) use ($body) {
             $body->push([
                 'delete' => [
-                    '_index' => $this->index,
-                    '_type' => $model->searchableAs(),
+                    '_index' => $model->searchableAs(),
+                    '_type' => $this->type,
                     '_id'  => $model->getKey(),
                 ],
             ]);
@@ -161,8 +157,8 @@ class ElasticsearchEngine extends Engine
         }
 
         $searchQuery = [
-            'index' =>  $this->index,
-            'type'  =>  $query->model->searchableAs(),
+            'index' =>  $query->model->searchableAs(),
+            'type'  =>  $this->type,
             'body' => [
                 'query' => [
                     'filtered' => [
