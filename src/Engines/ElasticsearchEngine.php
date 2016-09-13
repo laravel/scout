@@ -140,24 +140,38 @@ class ElasticsearchEngine extends Engine
      */
     protected function performSearch(Builder $query, array $options = [])
     {
-        $searchQuery = [];
+        $termFilters = [];
+
+        $matchQueries[] = [
+            'match' => [
+                '_all' => [
+                    'query' => $query->query,
+                    'fuzziness' => 1
+                ]
+            ]
+        ];
 
         if (array_key_exists('filters', $options) && $options['filters']) {
             foreach ($options['filters'] as $field => $value) {
-                $searchQuery[] = [
-                    'match' => [
-                        $field => $value,
-                    ],
-                ];
-            }
-        }
 
-        if ($searchQuery) {
-            $searchQuery = [
-                'bool' => [
-                    'must' => $searchQuery,
-                ],
-            ];
+                if(is_numeric($value)) {
+                    $termFilters[] = [
+                        'term' => [
+                            $field => $value,
+                        ],
+                    ];
+                } elseif(is_string($value)) {
+                    $matchQueries[] = [
+                        'match' => [
+                            $field => [
+                                'query' => $value,
+                                'operator' => 'and'
+                            ]
+                        ]
+                    ];
+                }
+
+            }
         }
 
         $searchQuery = [
@@ -166,14 +180,12 @@ class ElasticsearchEngine extends Engine
             'body' => [
                 'query' => [
                     'filtered' => [
-                        'filter' => [
-                            'query' => [
-                                'simple_query_string' => [
-                                    'query' => $query->query,
-                                ],
-                            ],
+                        'filter' => $termFilters,
+                        'query' => [
+                            'bool' => [
+                                'must' => $matchQueries
+                            ]
                         ],
-                        'query' => $searchQuery,
                     ],
                 ],
             ],

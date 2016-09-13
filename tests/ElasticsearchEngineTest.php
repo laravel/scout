@@ -77,7 +77,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $engine = new ElasticsearchEngine($client, 'index_name');
         $engine->delete(Collection::make([new ElasticsearchEngineTestModel]));
     }
-
+    
     public function test_delete_removes_objects_with_custom_keys_from_index()
     {
         $client = Mockery::mock('Elasticsearch\Client');
@@ -99,7 +99,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $engine->delete(Collection::make([new ElasticsearchEngineTestModelCustomKey]));
     }
 
-    public function test_search_sends_correct_parameters_to_elastic_search()
+    public function test_search_sends_correct_parameters_to_index()
     {
         $client = Mockery::mock('Elasticsearch\Client');
         $client->shouldReceive('search')
@@ -114,18 +114,21 @@ class ElasticsearchEngineTest extends AbstractTestCase
                                     'must' => [
                                         [
                                             'match' => [
-                                                'foo' => 1,
+                                                '_all' => [
+                                                    'query' => 'zonda',
+                                                    'fuzziness' => 1,
+                                                ],
                                             ],
                                         ],
                                     ],
                                 ],
                             ],
                             'filter' => [
-                                'query' => [
-                                    'simple_query_string' => [
-                                        'query' => 'zonda',
+                                [
+                                    'term' => [
+                                        'foo' => 1,
                                     ],
-                                ],
+                                ]
                             ],
                         ],
                     ],
