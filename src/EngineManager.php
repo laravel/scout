@@ -42,8 +42,7 @@ class EngineManager extends Manager
     public function createElasticsearchDriver()
     {
         return new ElasticsearchEngine(
-            Elasticsearch::fromConfig(config('scout.elasticsearch.config')),
-            config('scout.elasticsearch.index')
+            Elasticsearch::fromConfig(config('scout.elasticsearch.config'))
         );
     }
 

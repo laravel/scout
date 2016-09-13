@@ -17,23 +17,14 @@ class ElasticsearchEngine extends Engine
     protected $elasticsearch;
 
     /**
-     * The index name.
-     *
-     * @var string
-     */
-    protected $index;
-
-    /**
      * Create a new engine instance.
      *
      * @param  \Elasticsearch\Client  $elasticsearch
      * @return void
      */
-    public function __construct(Elasticsearch $elasticsearch, $index)
+    public function __construct(Elasticsearch $elasticsearch)
     {
         $this->elasticsearch = $elasticsearch;
-
-        $this->index = $index;
     }
 
     /**
@@ -55,8 +46,8 @@ class ElasticsearchEngine extends Engine
 
             $body->push([
                 'index' => [
-                    '_index' => $this->index,
-                    '_type' => $model->searchableAs(),
+                    '_index' => $model->searchableAs(),
+                    '_type' => 'docs',
                     '_id' => $model->getKey(),
                 ],
             ]);
@@ -83,10 +74,10 @@ class ElasticsearchEngine extends Engine
         $models->each(function ($model) use ($body) {
             $body->push([
                 'delete' => [
-                    '_index' => $this->index,
-                    '_type' => $model->searchableAs(),
-                    '_id'  => $model->getKey(),
-                ],
+                    '_index' => $model->searchableAs(),
+                    '_type' => 'docs',
+                    '_id' => $model->getKey(),
+                ]
             ]);
         });
 
@@ -120,10 +111,12 @@ class ElasticsearchEngine extends Engine
      */
     public function paginate(Builder $query, $perPage, $page)
     {
+        $from = (($page * $perPage) - $perPage);
         $result = $this->performSearch($query, [
             'filters' => $this->filters($query),
             'size' => $perPage,
-            'from' => (($page * $perPage) - $perPage),
+            //from+size cannot be gt 10000
+            'from' => $from+$perPage<10000 ? $from : 10000-$perPage,
         ]);
 
         $result['nbPages'] = (int) ceil($result['hits']['total'] / $perPage);
@@ -142,39 +135,50 @@ class ElasticsearchEngine extends Engine
     {
         $searchQuery = [];
 
-        if (array_key_exists('filters', $options) && $options['filters']) {
-            foreach ($options['filters'] as $field => $value) {
-                $searchQuery[] = [
-                    'match' => [
-                        $field => $value,
-                    ],
-                ];
-            }
-        }
-
-        if ($searchQuery) {
-            $searchQuery = [
-                'bool' => [
-                    'must' => $searchQuery,
-                ],
+        //match against all fields with the initial keyword string
+        if(!empty($query->query)) {
+            $searchQuery['query']['bool']['must'][] = [
+                "match" => [
+                    "_all" => [
+                        "query" => $query->query,
+                        "fuzziness" => 1
+                    ]
+                ]
             ];
         }
 
+        if (array_key_exists('filters', $options) && $options['filters']) {
+
+            //loop through all various filters
+            foreach($options['filters'] as $field=>$filter) {
+
+                //if filter val is numeric, add a term filter to the filter clause
+                if(is_numeric($filter)) {
+                    $searchQuery['filter']['bool']['must'][] =  [
+                        "term" => [$field => $filter],
+                    ];
+                } else {
+                    //else its a string so add a match query to the must clause
+                    $searchQuery['query']['bool']['must'][] =  [
+                        "match" => [
+                            $field => [
+                                "query" => $filter,
+                                "operator" => "and" //force all terms to match
+                            ]
+                        ],
+                    ];
+                }
+
+            }
+        }
+
+        //construct the final bool query
         $searchQuery = [
-            'index' =>  $this->index,
-            'type'  =>  $query->model->searchableAs(),
+            'index' =>  $query->model->searchableAs(),
+            'type'  =>  'docs',
             'body' => [
                 'query' => [
-                    'filtered' => [
-                        'filter' => [
-                            'query' => [
-                                'simple_query_string' => [
-                                    'query' => $query->query,
-                                ],
-                            ],
-                        ],
-                        'query' => $searchQuery,
-                    ],
+                    'filtered' => $searchQuery,
                 ],
             ],
         ];
@@ -219,9 +223,9 @@ class ElasticsearchEngine extends Engine
         }
 
         $keys = collect($results['hits']['hits'])
-                    ->pluck('_id')
-                    ->values()
-                    ->all();
+            ->pluck('_id')
+            ->values()
+            ->all();
 
         $models = $model->whereIn(
             $model->getKeyName(), $keys

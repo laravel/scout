@@ -18,8 +18,8 @@ class ElasticsearchEngineTest extends AbstractTestCase
             'body' => [
                 [
                     'index' => [
-                        '_index' => 'index_name',
-                        '_type' => 'table',
+                        '_index' => 'table',
+                        '_type' => 'docs',
                         '_id' => 1,
                     ],
                 ],
@@ -29,7 +29,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
             ],
         ]);
 
-        $engine = new ElasticsearchEngine($client, 'index_name');
+        $engine = new ElasticsearchEngine($client);
         $engine->update(Collection::make([new ElasticsearchEngineTestModel]));
     }
 
@@ -41,25 +41,25 @@ class ElasticsearchEngineTest extends AbstractTestCase
             'body' => [
                 [
                     'delete' => [
-                        '_index' => 'index_name',
-                        '_type' => 'table',
+                        '_index' => 'table',
+                        '_type' => 'docs',
                         '_id' => 1,
                     ],
                 ],
             ],
         ]);
 
-        $engine = new ElasticsearchEngine($client, 'index_name');
+        $engine = new ElasticsearchEngine($client);
         $engine->delete(Collection::make([new ElasticsearchEngineTestModel]));
     }
 
-    public function test_search_sends_correct_parameters_to_algolia()
+    public function test_search_sends_correct_parameters_to_index()
     {
         $client = Mockery::mock('Elasticsearch\Client');
         $client->shouldReceive('search')
             ->with([
-                'index' => 'index_name',
-                'type' => 'table',
+                'index' => 'table',
+                'type' => 'docs',
                 'body' => [
                     'query' => [
                         'filtered' => [
@@ -68,26 +68,33 @@ class ElasticsearchEngineTest extends AbstractTestCase
                                     'must' => [
                                         [
                                             'match' => [
-                                                'foo' => 1,
-                                            ],
-                                        ],
-                                    ],
-                                ],
+                                                '_all' => [
+                                                    'query' => 'zonda',
+                                                    'fuzziness' => 1
+                                                ],
+                                            ]
+                                        ]
+                                    ]
+                                ]
                             ],
                             'filter' => [
-                                'query' => [
-                                    'simple_query_string' => [
-                                        'query' => 'zonda',
-                                    ],
-                                ],
-                            ],
+                                'bool' => [
+                                    'must' => [
+                                        [
+                                            'term' => [
+                                                'foo' => 1
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
                         ],
                     ],
                 ],
                 'size' => 10000,
             ]);
 
-        $engine = new ElasticsearchEngine($client, 'index_name');
+        $engine = new ElasticsearchEngine($client);
         $builder = new Builder(new ElasticsearchEngineTestModel, 'zonda');
         $builder->where('foo', 1);
         $engine->search($builder);
@@ -96,7 +103,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
     public function test_map_correctly_maps_results_to_models()
     {
         $client = Mockery::mock('Elasticsearch\Client');
-        $engine = new ElasticsearchEngine($client, 'index_name');
+        $engine = new ElasticsearchEngine($client);
 
         $model = Mockery::mock('StdClass');
         $model->shouldReceive('getKeyName')->andReturn('id');
@@ -163,7 +170,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $this->markSkippedIfMissingElasticsearch($client);
         $this->resetIndex($client);
 
-        return new ElasticsearchEngine($client, 'index_name');
+        return new ElasticsearchEngine($client);
     }
 
     /**
@@ -182,7 +189,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
      */
     protected function resetIndex(\Elasticsearch\Client $client)
     {
-        $data = ['index' => 'index_name'];
+        $data = ['index' => 'table'];
 
         if ($client->indices()->exists($data)) {
             $client->indices()->delete($data);
