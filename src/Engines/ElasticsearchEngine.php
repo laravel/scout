@@ -175,15 +175,25 @@ class ElasticsearchEngine extends Engine
                         ]
                     ];
                 }
-            }
-        }
 
-        if ($searchQuery) {
-            $searchQuery = [
-                'bool' => [
-                    'must' => $searchQuery,
-                ],
-            ];
+                if(is_numeric($value)) {
+                    $termFilters[] = [
+                        'term' => [
+                            $field => $value,
+                        ],
+                    ];
+                } elseif(is_string($value)) {
+                    $matchQueries[] = [
+                        'match' => [
+                            $field => [
+                                'query' => $value,
+                                'operator' => 'and'
+                            ]
+                        ]
+                    ];
+                }
+
+            }
         }
 
         $searchQuery = [
@@ -192,12 +202,11 @@ class ElasticsearchEngine extends Engine
             'body' => [
                 'query' => [
                     'filtered' => [
-                        'filter' => [
-                            'query' => [
-                                'simple_query_string' => [
-                                    'query' => $query->query,
-                                ],
-                            ],
+                        'filter' => $termFilters,
+                        'query' => [
+                            'bool' => [
+                                'must' => $matchQueries
+                            ]
                         ],
                     ],
                 ],
