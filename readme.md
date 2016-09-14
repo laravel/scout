@@ -8,7 +8,7 @@
 
 ## Introduction
 
-Laravel Scout provides a simple, driver based solution for adding full-text search to your Eloquent models.
+Laravel Scout provides a simple, driver-based solution for adding full-text search to your Eloquent models.
 
 ## Official Documentation
 
