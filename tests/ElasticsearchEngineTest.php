@@ -124,19 +124,11 @@ class ElasticsearchEngineTest extends AbstractTestCase
                                 ],
                             ],
                             'filter' => [
-<<<<<<< 2a60154cb90e26a7aae0c6718b81ee724ce5ee4a
                                 [
                                     'term' => [
                                         'foo' => 1,
                                     ],
                                 ]
-=======
-                                'query' => [
-                                    'simple_query_string' => [
-                                        'query' => 'zonda',
-                                    ],
-                                ],
->>>>>>> Add missing EOA commas.
                             ],
                         ],
                     ],
@@ -148,7 +140,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $builder->where('foo', 1);
         $engine->search($builder);
     }
-
+    
     public function test_map_correctly_maps_results_to_models_with_custom_keys()
     {
         $client = Mockery::mock('Elasticsearch\Client');
