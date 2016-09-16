@@ -37,11 +37,20 @@ class ElasticsearchEngineTest extends AbstractTestCase
     public function test_update_adds_objects_with_custom_keys_to_index()
     {
         $client = Mockery::mock('Elasticsearch\Client');
-        $client->shouldReceive('index')->with([
-            'index' => 'index_name',
-            'type' => 'table',
-            'id' => 'custom-1',
-            'body' => ['id' => 1],
+        $client->shouldReceive('bulk')->with([
+            'refresh' => true,
+            'body' => [
+                [
+                    'index' => [
+                        '_index' => 'index_name',
+                        '_type' => 'table',
+                        '_id' => 'custom-1',
+                    ],
+                ],
+                [
+                    'id' => 1,
+                ],
+            ],
         ]);
 
         $engine = new ElasticsearchEngine($client, 'index_name');
@@ -72,10 +81,17 @@ class ElasticsearchEngineTest extends AbstractTestCase
     public function test_delete_removes_objects_with_custom_keys_from_index()
     {
         $client = Mockery::mock('Elasticsearch\Client');
-        $client->shouldReceive('delete')->with([
-            'index' => 'index_name',
-            'type' => 'table',
-            'id' => 'custom-1',
+        $client->shouldReceive('bulk')->with([
+            'refresh' => true,
+            'body' => [
+                [
+                    'delete' => [
+                        '_index' => 'index_name',
+                        '_type' => 'table',
+                        '_id' => 'custom-1',
+                    ],
+                ],
+            ],
         ]);
 
 

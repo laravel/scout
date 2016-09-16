@@ -141,7 +141,6 @@ class ElasticsearchEngine extends Engine
     protected function performSearch(Builder $query, array $options = [])
     {
         $termFilters = [];
-
         $matchQueries[] = [
             'match' => [
                 '_all' => [
@@ -150,15 +149,8 @@ class ElasticsearchEngine extends Engine
                 ]
             ]
         ];
-
         if (array_key_exists('filters', $options) && $options['filters']) {
             foreach ($options['filters'] as $field => $value) {
-                $searchQuery[] = [
-                    'match' => [
-                        $field => $value
-                    ],
-                ];
-
                 if(is_numeric($value)) {
                     $termFilters[] = [
                         'term' => [
@@ -175,40 +167,34 @@ class ElasticsearchEngine extends Engine
                         ]
                     ];
                 }
-
             }
         }
-
         $searchQuery = [
             'index' =>  $this->index,
             'type'  =>  $query->model->searchableAs(),
             'body' => [
                 'query' => [
                     'filtered' => [
-                        'filter' => [
-                            'query' => [
-                                'simple_query_string' => [
-                                    'query' => $query->query,
-                                ],
-                            ],
+                        'filter' => $termFilters,
+                        'query' => [
+                            'bool' => [
+                                'must' => $matchQueries
+                            ]
                         ],
                     ],
                 ],
             ],
         ];
-
         if (array_key_exists('size', $options)) {
             $searchQuery = array_merge($searchQuery, [
                 'size' => $options['size'],
             ]);
         }
-
         if (array_key_exists('from', $options)) {
             $searchQuery = array_merge($searchQuery, [
                 'from' => $options['from'],
             ]);
         }
-
         return $this->elasticsearch->search($searchQuery);
     }
 
