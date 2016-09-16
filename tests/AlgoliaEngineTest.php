@@ -88,22 +88,4 @@ class AlgoliaEngineTest extends AbstractTestCase
 
         $this->assertEquals(1, count($results));
     }
-
-    public function test_map_correctly_maps_results_to_models_with_custom_keys()
-    {
-        $client = Mockery::mock('AlgoliaSearch\Client');
-        $engine = new AlgoliaEngine($client);
-
-        $model = Mockery::mock('StdClass');
-        $model->shouldReceive('getKeyName')->andReturn('id');
-        $model->shouldReceive('getReverseSearchableKey')->andReturn(1);
-        $model->shouldReceive('whereIn')->once()->with('id', [1])->andReturn($model);
-        $model->shouldReceive('get')->once()->andReturn(Collection::make([new AlgoliaEngineTestModelCustomKey]));
-
-        $results = $engine->map(['nbHits' => 1, 'hits' => [
-            ['objectID' => 'custom-1', 'id' => 1],
-        ]], $model);
-
-        $this->assertEquals(1, count($results));
-    }
 }
