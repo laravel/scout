@@ -186,6 +186,30 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $engine->update(Collection::make([$model]));
     }
 
+    function test_returned_nonexisting_indices()
+    {
+        $client = Mockery::mock('Elasticsearch\Client');
+        $engine = new ElasticsearchEngine($client, 'index_name');
+
+        $model = Mockery::mock('StdClass');
+        $model->shouldReceive('getKeyName')->andReturn('id');
+        $model->shouldReceive('whereIn')->once()->with('id', [2])->andReturn($model);
+        $model->shouldReceive('get')->once()->andReturn(Collection::make([new ElasticsearchEngineTestModel]));
+
+        $results = $engine->map([
+            'hits' => [
+                'hits' => [
+                    [
+                        '_id' => 2,
+                        '_source' => ['name' => 'value'],
+                    ],
+                ],
+            ],
+        ], $model);
+
+        $this->assertEquals(0, count($results));
+    }
+
     /**
      * @return \Laravel\Scout\Engines\ElasticsearchEngine
      */
