@@ -2,11 +2,11 @@
 
 namespace Tests;
 
-use Mockery;
+use Illuminate\Database\Eloquent\Collection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\ElasticsearchEngine;
+use Mockery;
 use Tests\Fixtures\ElasticsearchEngineTestModel;
-use Illuminate\Database\Eloquent\Collection;
 
 class ElasticsearchEngineTest extends AbstractTestCase
 {
@@ -111,7 +111,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
                 'hits' => [
                     [
                         '_id' => 1,
-                        '_source' => ['id' => 1],
+                        '_source' => ['name' => 'value'],
                     ],
                 ],
             ],
@@ -155,6 +155,35 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $results = $engine->search($builder);
 
         $this->assertEquals($results['hits']['total'], 0);
+    }
+
+    public function test_indexing_id_from_model_key()
+    {
+
+        $client = Mockery::mock('Elasticsearch\Client');
+        $client->shouldReceive('bulk')->with([
+            'refresh' => true,
+            'body' => [
+                [
+                    'index' => [
+                        '_index' => 'index_name',
+                        '_type' => 'table',
+                        '_id' => 1,
+                    ],
+                ],
+                [
+                    'name' => 'value',
+                ],
+            ],
+        ]);
+
+        $engine = new ElasticsearchEngine($client, 'index_name');
+
+        $model = new ElasticsearchEngineTestModel;
+
+        $model->setSearchableArray(['name' => 'value']);
+
+        $engine->update(Collection::make([$model]));
     }
 
     /**
