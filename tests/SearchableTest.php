@@ -5,7 +5,7 @@ namespace Tests;
 use Mockery;
 use Tests\Fixtures\SearchableTestModel;
 
-class SearchableText extends AbstractTestCase
+class SearchableTest extends AbstractTestCase
 {
     public function test_searchable_using_update_is_called_on_collection()
     {
