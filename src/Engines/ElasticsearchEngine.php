@@ -240,7 +240,7 @@ class ElasticsearchEngine extends Engine
         )->get()->keyBy($model->getKeyName());
 
         return Collection::make($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
-            return $models[$hit['_source'][$model->getKeyName()]];
+            return $models[$hit['_id']];
         });
     }
 
