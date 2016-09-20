@@ -120,6 +120,48 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $this->assertEquals(1, count($results));
     }
 
+    public function test_map_correctly_maps_without_key_in_searchable_array()
+    {
+        $client = Mockery::mock('Elasticsearch\Client');
+        $engine = new ElasticsearchEngine($client, 'index_name');
+
+        $model = Mockery::mock('StdClass');
+        $model->shouldReceive('getKeyName')->andReturn('id');
+        $model->shouldReceive('whereIn')->once()->with('id', [1])->andReturn($model);
+        $model->shouldReceive('get')->once()->andReturn(Collection::make([new ElasticsearchEngineTestModel]));
+
+        $client->shouldReceive('bulk')->with([
+            'refresh' => true,
+            'body' => [
+                [
+                    'index' => [
+                        '_index' => 'index_name',
+                        '_type' => 'table',
+                        '_id' => 1,
+                    ],
+                ],
+                [
+                    'name' => 'value',
+                ],
+            ],
+        ]);
+
+
+        $results = $engine->map([
+            'hits' => [
+                'hits' => [
+                    [
+                        '_id' => 1,
+                        '_source' => ['name' => 'value'],
+                    ],
+                ],
+            ],
+        ], $model);
+
+        $this->assertEquals(1, count($results));
+    }
+
+
     public function test_real_elasticsearch_update_and_search()
     {
         $engine = $this->getRealElasticsearchEngine();
@@ -156,6 +198,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
 
         $this->assertEquals($results['hits']['total'], 0);
     }
+
 
     /**
      * @return \Laravel\Scout\Engines\ElasticsearchEngine
