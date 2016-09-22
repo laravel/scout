@@ -44,16 +44,25 @@ class Builder
     public $limit;
 
     /**
+     * Options that should be passed to the engine.
+     *
+     * @var array
+     */
+    public $options;
+
+    /**
      * Create a new search builder instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @param  string  $query
+     * @param  array $options
      * @return void
      */
-    public function __construct($model, $query)
+    public function __construct($model, $query, array $options = [])
     {
         $this->model = $model;
         $this->query = $query;
+        $this->options = $options;
     }
 
     /**

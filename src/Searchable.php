@@ -78,12 +78,13 @@ trait Searchable
     /**
      * Perform a search against the model's indexed data.
      *
-     * @param  string  $query
+     * @param  string $query
+     * @param  array $options
      * @return \Laravel\Scout\Builder
      */
-    public static function search($query)
+    public static function search($query, array $options = [])
     {
-        return new Builder(new static, $query);
+        return new Builder(new static, $query, $options);
     }
 
     /**
