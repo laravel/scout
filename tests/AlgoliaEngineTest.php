@@ -47,6 +47,22 @@ class AlgoliaEngineTest extends AbstractTestCase
         $engine->search($builder);
     }
 
+    public function test_location_search_sends_correct_parameters_to_algolia()
+    {
+        $client = Mockery::mock('AlgoliaSearch\Client');
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = Mockery::mock('StdClass'));
+        $index->shouldReceive('search')->with('zonda', [
+            'numericFilters' => ['foo=1'],
+            'aroundLatLng' => '38.437916,-18.529170',
+            'aroundRadius' => 10000
+        ]);
+
+        $engine = new AlgoliaEngine($client);
+        $builder = new Builder(new AlgoliaEngineTestModel, 'zonda');
+        $builder->where('foo', 1)->withinLocation('38.437916', '-18.529170', 10);
+        $engine->search($builder);
+    }
+
     public function test_map_correctly_maps_results_to_models()
     {
         $client = Mockery::mock('AlgoliaSearch\Client');

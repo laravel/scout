@@ -96,6 +96,58 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $engine->search($builder);
     }
 
+    public function test_location_search_sends_correct_parameters_to_elasticsearch()
+    {
+       $client = Mockery::mock('Elasticsearch\Client');
+        $client->shouldReceive('search')
+            ->with([
+                'index' => 'index_name',
+                'type' => 'table',
+                'body' => [
+                    'query' => [
+                        'filtered' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        [
+                                            'match' => [
+                                                '_all' => [
+                                                    'query' => 'zonda',
+                                                    'fuzziness' => 1,
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            'filter' => [
+                                [
+                                    'term' => [
+                                        'foo' => 1,
+                                    ]
+                                ],
+                                [
+                                    'geo_distance' => [
+                                        'distance' => '10km',
+                                        'location' => [
+                                            'lat' => 38.437916,
+                                            'lon' => -18.529170
+                                        ]
+                                    ]
+                                ]
+                            ],
+                        ],
+                    ],
+                ],
+                'size' => 10000,
+            ]);
+
+        $engine = new ElasticsearchEngine($client, 'index_name');
+        $builder = new Builder(new ElasticsearchEngineTestModel, 'zonda');
+        $builder->where('foo', 1)->withinLocation('38.437916', '-18.529170', 10);
+        $engine->search($builder);
+    }
+
     public function test_map_correctly_maps_results_to_models()
     {
         $client = Mockery::mock('Elasticsearch\Client');
