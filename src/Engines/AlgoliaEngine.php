@@ -73,10 +73,10 @@ class AlgoliaEngine extends Engine
      */
     public function search(Builder $builder)
     {
-        return $this->performSearch($builder, array_filter([
+        return $this->performSearch($builder, array_merge(array_filter([
             'numericFilters' => $this->filters($builder),
             'hitsPerPage' => $builder->limit,
-        ]));
+        ]), $builder->options));
     }
 
     /**
@@ -89,11 +89,11 @@ class AlgoliaEngine extends Engine
      */
     public function paginate(Builder $builder, $perPage, $page)
     {
-        return $this->performSearch($builder, [
+        return $this->performSearch($builder, array_merge([
             'numericFilters' => $this->filters($builder),
             'hitsPerPage' => $perPage,
             'page' => $page - 1,
-        ]);
+        ], $builder->options));
     }
 
     /**
