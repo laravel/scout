@@ -128,20 +128,22 @@ class AlgoliaEngine extends Engine
      *
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  array  $relations
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function map($results, $model)
+    public function map($results, $model, $relations = [])
     {
         if (count($results['hits']) === 0) {
             return Collection::make();
         }
 
         $keys = collect($results['hits'])
-                        ->pluck('objectID')->values()->all();
+            ->pluck('objectID')->values()->all();
 
         $models = $model->whereIn(
             $model->getKeyName(), $keys
-        )->get()->keyBy($model->getKeyName());
+        )->with($relations)->get()->keyBy($model->getKeyName());
 
         return Collection::make($results['hits'])->map(function ($hit) use ($model, $models) {
             $key = $hit[$model->getKeyName()];

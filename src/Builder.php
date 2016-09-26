@@ -16,6 +16,13 @@ class Builder
     public $model;
 
     /**
+     * Relations of the $model
+     *
+     * @var array
+     */
+    public $relations;
+
+    /**
      * The query expression.
      *
      * @var string
@@ -54,6 +61,20 @@ class Builder
     {
         $this->model = $model;
         $this->query = $query;
+    }
+
+    /**
+     * Add relations for the model to be mapped
+     *
+     * @param $relations
+     *
+     * @return $this
+     */
+    public function with($relations)
+    {
+        $this->relations = $relations;
+
+        return $this;
     }
 
     /**
@@ -131,7 +152,9 @@ class Builder
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
         $results = Collection::make($engine->map(
-            $rawResults = $engine->paginate($this, $perPage, $page), $this->model
+            $rawResults = $engine->paginate($this, $perPage, $page),
+            $this->model,
+            $this->relations
         ));
 
         $paginator = (new LengthAwarePaginator($results, $engine->getTotalCount($rawResults), $perPage, $page, [
