@@ -122,9 +122,10 @@ class Builder
      * @param  int  $perPage
      * @param  string  $pageName
      * @param  int|null  $page
+     * @param  string  $queryName
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginate($perPage = null, $pageName = 'page', $page = null)
+    public function paginate($perPage = null, $pageName = 'page', $page = null, $queryName = 'query')
     {
         $engine = $this->engine();
 
@@ -141,7 +142,7 @@ class Builder
             'pageName' => $pageName,
         ]));
 
-        return $paginator->appends('query', $this->query);
+        return $paginator->appends($queryName, $this->query);
     }
 
     /**
