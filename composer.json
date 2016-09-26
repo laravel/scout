@@ -3,6 +3,7 @@
     "description": "Laravel Scout provides a driver based solution to searching your Eloquent models.",
     "keywords": [
         "algolia",
+        "elasticsearch",
         "laravel",
         "search"
     ],
