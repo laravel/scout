@@ -16,6 +16,13 @@ class Builder
     public $model;
 
     /**
+     * Relations of the $model
+     *
+     * @var array
+     */
+    public $relations;
+
+    /**
      * The query expression.
      *
      * @var string
@@ -54,6 +61,20 @@ class Builder
     {
         $this->model = $model;
         $this->query = $query;
+    }
+
+    /**
+     * Add relations for the model to be mapped
+     *
+     * @param $relations
+     *
+     * @return $this
+     */
+    public function with($relations)
+    {
+        $this->relations = $relations;
+
+        return $this;
     }
 
     /**
@@ -119,10 +140,10 @@ class Builder
     /**
      * Paginate the given query into a simple paginator.
      *
-     * @param  int  $perPage
-     * @param  string  $pageName
-     * @param  int|null  $page
-     * @param  string  $queryName
+     * @param  int           $perPage
+     * @param  string        $pageName
+     * @param  int|null      $page
+     * @param  string        $queryName
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function paginate($perPage = null, $pageName = 'page', $page = null, $queryName = 'query')
@@ -135,7 +156,8 @@ class Builder
 
         $results = Collection::make($engine->map(
             $rawResults = $engine->paginate($this, $perPage, $page),
-            $this->model
+            $this->model,
+            $this->relations
         ));
 
         $paginator = (new LengthAwarePaginator($results, $engine->getTotalCount($rawResults), $perPage, $page, [
