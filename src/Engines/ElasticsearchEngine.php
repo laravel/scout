@@ -57,7 +57,7 @@ class ElasticsearchEngine extends Engine
                 'index' => [
                     '_index' => $this->index,
                     '_type' => $model->searchableAs(),
-                    '_id' => $model->getKey(),
+                    '_id' => $model->getSearchableKey(),
                 ],
             ]);
 
@@ -85,7 +85,7 @@ class ElasticsearchEngine extends Engine
                 'delete' => [
                     '_index' => $this->index,
                     '_type' => $model->searchableAs(),
-                    '_id'  => $model->getKey(),
+                    '_id'  => $model->getSearchableKey(),
                 ],
             ]);
         });
@@ -141,7 +141,6 @@ class ElasticsearchEngine extends Engine
     protected function performSearch(Builder $query, array $options = [])
     {
         $termFilters = [];
-
         $matchQueries[] = [
             'match' => [
                 '_all' => [
@@ -150,10 +149,8 @@ class ElasticsearchEngine extends Engine
                 ]
             ]
         ];
-
         if (array_key_exists('filters', $options) && $options['filters']) {
             foreach ($options['filters'] as $field => $value) {
-
                 if(is_numeric($value)) {
                     $termFilters[] = [
                         'term' => [
@@ -170,10 +167,8 @@ class ElasticsearchEngine extends Engine
                         ]
                     ];
                 }
-
             }
         }
-
         $searchQuery = [
             'index' =>  $this->index,
             'type'  =>  $query->model->searchableAs(),
@@ -190,19 +185,16 @@ class ElasticsearchEngine extends Engine
                 ],
             ],
         ];
-
         if (array_key_exists('size', $options)) {
             $searchQuery = array_merge($searchQuery, [
                 'size' => $options['size'],
             ]);
         }
-
         if (array_key_exists('from', $options)) {
             $searchQuery = array_merge($searchQuery, [
                 'from' => $options['from'],
             ]);
         }
-
         return $this->elasticsearch->search($searchQuery);
     }
 
@@ -233,6 +225,9 @@ class ElasticsearchEngine extends Engine
         $keys = collect($results['hits']['hits'])
                     ->pluck('_id')
                     ->values()
+                    ->map(function($objectID) use ($model) {
+                        return $model->getReverseSearchableKey($objectID);
+                    })
                     ->all();
 
         $models = $model->whereIn(

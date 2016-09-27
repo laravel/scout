@@ -18,6 +18,11 @@ class TestModel extends Model
         return $this->id;
     }
 
+    public function getSearchableKey()
+    {
+        return $this->getKey();
+    }
+
     public function toSearchableArray()
     {
         return ['id' => 1];

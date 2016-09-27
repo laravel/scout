@@ -7,6 +7,7 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\ElasticsearchEngine;
 use Tests\Fixtures\ElasticsearchEngineTestModel;
 use Illuminate\Database\Eloquent\Collection;
+use Tests\Fixtures\ElasticsearchEngineTestModelCustomKey;
 
 class ElasticsearchEngineTest extends AbstractTestCase
 {
@@ -33,7 +34,31 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $engine->update(Collection::make([new ElasticsearchEngineTestModel]));
     }
 
-    public function test_delete_removes_objects_to_index()
+    public function test_update_adds_objects_with_custom_keys_to_index()
+    {
+        $client = Mockery::mock('Elasticsearch\Client');
+        $client->shouldReceive('bulk')->with([
+            'refresh' => true,
+            'body' => [
+                [
+                    'index' => [
+                        '_index' => 'index_name',
+                        '_type' => 'table',
+                        '_id' => 'custom-1',
+                    ],
+                ],
+                [
+                    'id' => 1,
+                ],
+            ],
+        ]);
+
+        $engine = new ElasticsearchEngine($client, 'index_name');
+        $engine->update(Collection::make([new ElasticsearchEngineTestModelCustomKey]));
+    }
+
+
+    public function test_delete_removes_objects_from_index()
     {
         $client = Mockery::mock('Elasticsearch\Client');
         $client->shouldReceive('bulk')->with([
@@ -51,6 +76,27 @@ class ElasticsearchEngineTest extends AbstractTestCase
 
         $engine = new ElasticsearchEngine($client, 'index_name');
         $engine->delete(Collection::make([new ElasticsearchEngineTestModel]));
+    }
+    
+    public function test_delete_removes_objects_with_custom_keys_from_index()
+    {
+        $client = Mockery::mock('Elasticsearch\Client');
+        $client->shouldReceive('bulk')->with([
+            'refresh' => true,
+            'body' => [
+                [
+                    'delete' => [
+                        '_index' => 'index_name',
+                        '_type' => 'table',
+                        '_id' => 'custom-1',
+                    ],
+                ],
+            ],
+        ]);
+
+
+        $engine = new ElasticsearchEngine($client, 'index_name');
+        $engine->delete(Collection::make([new ElasticsearchEngineTestModelCustomKey]));
     }
 
     public function test_search_sends_correct_parameters_to_index()
@@ -89,29 +135,29 @@ class ElasticsearchEngineTest extends AbstractTestCase
                 ],
                 'size' => 10000,
             ]);
-
         $engine = new ElasticsearchEngine($client, 'index_name');
         $builder = new Builder(new ElasticsearchEngineTestModel, 'zonda');
         $builder->where('foo', 1);
         $engine->search($builder);
     }
 
-    public function test_map_correctly_maps_results_to_models()
+    public function test_map_correctly_maps_results_to_models_with_custom_keys()
     {
         $client = Mockery::mock('Elasticsearch\Client');
         $engine = new ElasticsearchEngine($client, 'index_name');
 
         $model = Mockery::mock('StdClass');
         $model->shouldReceive('getKeyName')->andReturn('id');
+        $model->shouldReceive('getReverseSearchableKey')->andReturn(1);
         $model->shouldReceive('whereIn')->once()->with('id', [1])->andReturn($model);
-        $model->shouldReceive('get')->once()->andReturn(Collection::make([new ElasticsearchEngineTestModel]));
+        $model->shouldReceive('get')->once()->andReturn(Collection::make([new ElasticsearchEngineTestModelCustomKey]));
 
         $results = $engine->map([
             'hits' => [
                 'hits' => [
                     [
-                        '_id' => 1,
-                        '_source' => ['id' => 1],
+                        '_id' => 'custom-1',
+                        '_source' => ['id' => 1]
                     ],
                 ],
             ],

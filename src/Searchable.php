@@ -200,4 +200,25 @@ trait Searchable
     {
         return config('queue.default');
     }
+
+    /**
+     * Get the searchable ID of the object
+     *
+     * @return string|integer
+     */
+    public function getSearchableKey()
+    {
+        return $this->getKey();
+    }
+
+    /**
+     * Get the original ID of the object
+     *
+     * @param string $key
+     * @return int
+     */
+    public function getReverseSearchableKey($key = '')
+    {
+        return $this->getKey();
+    }
 }
