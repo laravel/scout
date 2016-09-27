@@ -222,9 +222,10 @@ class ElasticsearchEngine extends Engine
      *
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  array  $relations
      * @return Collection
      */
-    public function map($results, $model)
+    public function map($results, $model, $relations = [])
     {
         if (count($results['hits']) === 0) {
             return Collection::make();
@@ -237,7 +238,7 @@ class ElasticsearchEngine extends Engine
 
         $models = $model->whereIn(
             $model->getKeyName(), $keys
-        )->get()->keyBy($model->getKeyName());
+        )->with($relations)->get()->keyBy($model->getKeyName());
 
         return Collection::make($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
             return $models[$hit['_source'][$model->getKeyName()]];
