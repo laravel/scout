@@ -122,16 +122,19 @@ class Builder
      * @param  int  $perPage
      * @param  string  $pageName
      * @param  int|null  $page
+     * @param  string  $queryName
+     *
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginate($perPage = 15, $pageName = 'page', $page = null)
+    public function paginate($perPage = 15, $pageName = 'page', $page = null, $queryName = 'query')
     {
         $engine = $this->engine();
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
         $results = Collection::make($engine->map(
-            $rawResults = $engine->paginate($this, $perPage, $page), $this->model
+            $rawResults = $engine->paginate($this, $perPage, $page),
+            $this->model
         ));
 
         $paginator = (new LengthAwarePaginator($results, $engine->getTotalCount($rawResults), $perPage, $page, [
@@ -139,7 +142,7 @@ class Builder
             'pageName' => $pageName,
         ]));
 
-        return $paginator->appends('query', $this->query);
+        return $paginator->appends($queryName, $this->query);
     }
 
     /**
