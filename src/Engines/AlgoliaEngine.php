@@ -172,7 +172,7 @@ class AlgoliaEngine extends Engine
      * @param array $options
      * @return array
      */
-    private function mergeLocation (Builder $builder, array $options)
+    private function mergeLocation(Builder $builder, array $options)
     {
         return empty(array_filter($builder->location)) ? $options : array_merge($options, [
             'aroundLatLng' => $builder->location['lat'] . ',' . $builder->location['lng'],
