@@ -12,14 +12,17 @@ class BuilderTest extends AbstractTestCase
 {
     public function test_pagination_correctly_handles_paginated_results()
     {
-        $builder = new Builder($model = Mockery::mock(), 'zonda');
-        $model->shouldReceive('searchableUsing')->andReturn($engine = Mockery::mock());
         Paginator::currentPageResolver(function () {
             return 1;
         });
         Paginator::currentPathResolver(function () {
             return 'http://localhost/foo';
         });
+
+        $builder = new Builder($model = Mockery::mock(), 'zonda');
+        $model->shouldReceive('getPerPage')->andReturn(15);
+        $model->shouldReceive('searchableUsing')->andReturn($engine = Mockery::mock());
+
         $engine->shouldReceive('paginate');
         $engine->shouldReceive('map')->andReturn(Collection::make([new StdClass]));
         $engine->shouldReceive('getTotalCount');
