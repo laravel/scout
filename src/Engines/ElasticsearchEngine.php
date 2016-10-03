@@ -142,14 +142,20 @@ class ElasticsearchEngine extends Engine
     {
         $termFilters = [];
 
-        $matchQueries[] = [
-            'match' => [
-                '_all' => [
-                    'query' => $query->query,
-                    'fuzziness' => 1
+        if (is_null($query->query)) {
+            $matchQueries[] = [
+                'match_all' => []
+            ];
+        } else {
+            $matchQueries[] = [
+                'match' => [
+                    '_all' => [
+                        'query' => $query->query,
+                        'fuzziness' => 1
+                    ]
                 ]
-            ]
-        ];
+            ];
+        }
 
         if (array_key_exists('filters', $options) && $options['filters']) {
             foreach ($options['filters'] as $field => $value) {
