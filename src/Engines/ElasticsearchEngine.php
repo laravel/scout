@@ -174,6 +174,18 @@ class ElasticsearchEngine extends Engine
             }
         }
 
+        if(!empty(array_filter($query->location))) {
+            $termFilters[] = [
+                'geo_distance' => [
+                    'distance' => $query->location['radius'] . 'km',
+                    'location' => [
+                        'lat' => $query->location['lat'],
+                        'lon' => $query->location['lng']
+                    ]
+                ]
+            ];
+        }
+
         $searchQuery = [
             'index' =>  $this->index,
             'type'  =>  $query->model->searchableAs(),

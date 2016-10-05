@@ -44,6 +44,13 @@ class Builder
     public $limit;
 
     /**
+     * The location constraint added to the query.
+     *
+     * @var array
+     */
+    public $location = [];
+
+    /**
      * Create a new search builder instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -79,6 +86,21 @@ class Builder
     public function where($field, $value)
     {
         $this->wheres[$field] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Add location constraint to the query
+     *
+     * @param float $lat
+     * @param float $lng
+     * @param int $radius Radius in km
+     * @return $this
+     */
+    public function withinLocation($lat, $lng, $radius = 10)
+    {
+        $this->location = compact('lat', 'lng', 'radius');
 
         return $this;
     }

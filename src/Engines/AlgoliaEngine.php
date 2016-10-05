@@ -105,6 +105,8 @@ class AlgoliaEngine extends Engine
      */
     protected function performSearch(Builder $builder, array $options = [])
     {
+        $options = $this->mergeLocation($builder, $options);
+
         return $this->algolia->initIndex(
             $builder->index ?: $builder->model->searchableAs()
         )->search($builder->query, $options);
@@ -161,5 +163,20 @@ class AlgoliaEngine extends Engine
     public function getTotalCount($results)
     {
         return $results['nbHits'];
+    }
+
+    /**
+     * Merge location data with options array to pass to Algolia.
+     *
+     * @param \Laravel\Scout\Builder $builder
+     * @param array $options
+     * @return array
+     */
+    private function mergeLocation(Builder $builder, array $options)
+    {
+        return empty(array_filter($builder->location)) ? $options : array_merge($options, [
+            'aroundLatLng' => $builder->location['lat'] . ',' . $builder->location['lng'],
+            'aroundRadius' => $builder->location['radius']*1000 // Algolia requires metres to be passed
+        ]);
     }
 }
