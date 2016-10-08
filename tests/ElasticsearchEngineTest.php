@@ -101,9 +101,12 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $client = Mockery::mock('Elasticsearch\Client');
         $engine = new ElasticsearchEngine($client, 'index_name');
 
-        $model = Mockery::mock('StdClass');
+        $builder = Mockery::mock('Laravel\Scout\Builder');
+        $builder->shouldReceive('getQuery')
+                ->andReturn($queryBuilder = Mockery::mock('Illuminate\Database\Eloquent\Builder'));
+        $queryBuilder->shouldReceive('whereIn')->once()->with('id', [1])->andReturn($model = Mockery::mock('StdClass'));
+
         $model->shouldReceive('getKeyName')->andReturn('id');
-        $model->shouldReceive('whereIn')->once()->with('id', [1])->andReturn($model);
         $model->shouldReceive('get')->once()->andReturn(Collection::make([new ElasticsearchEngineTestModel]));
 
         $results = $engine->map([
@@ -115,7 +118,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
                     ],
                 ],
             ],
-        ], $model);
+        ], $model, $builder);
 
         $this->assertEquals(1, count($results));
     }

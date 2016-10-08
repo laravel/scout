@@ -52,14 +52,17 @@ class AlgoliaEngineTest extends AbstractTestCase
         $client = Mockery::mock('AlgoliaSearch\Client');
         $engine = new AlgoliaEngine($client);
 
-        $model = Mockery::mock('StdClass');
+        $builder = Mockery::mock('Laravel\Scout\Builder');
+        $builder->shouldReceive('getQuery')
+                ->andReturn($queryBuilder = Mockery::mock('Illuminate\Database\Eloquent\Builder'));
+        $queryBuilder->shouldReceive('whereIn')->once()->with('id', [1])->andReturn($model = Mockery::mock('StdClass'));
+
         $model->shouldReceive('getKeyName')->andReturn('id');
-        $model->shouldReceive('whereIn')->once()->with('id', [1])->andReturn($model);
         $model->shouldReceive('get')->once()->andReturn(Collection::make([new AlgoliaEngineTestModel]));
 
         $results = $engine->map(['nbHits' => 1, 'hits' => [
             ['objectID' => 1, 'id' => 1],
-        ]], $model);
+        ]], $model, $builder);
 
         $this->assertEquals(1, count($results));
     }
