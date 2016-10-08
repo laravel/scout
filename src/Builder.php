@@ -16,6 +16,13 @@ class Builder
     public $model;
 
     /**
+     * The relationships that should be eager loaded.
+     *
+     * @var array
+     */
+    protected $eagerLoads = [];
+
+    /**
      * The query expression.
      *
      * @var string
@@ -54,6 +61,23 @@ class Builder
     {
         $this->model = $model;
         $this->query = $query;
+    }
+
+    /**
+     * Set the relationships that should be eager loaded.
+     *
+     * @param  mixed $relations
+     * @return $this
+     */
+    public function with($relations)
+    {
+        if (is_string($relations)) {
+            $relations = func_get_args();
+        }
+
+        $this->eagerLoads = $relations;
+
+        return $this;
     }
 
     /**
@@ -142,6 +166,40 @@ class Builder
         ]));
 
         return $paginator->appends('query', $this->query);
+    }
+
+    /**
+     * Determine if there are relationships to be eagerly loaded.
+     *
+     * @return bool
+     */
+    public function hasEagerLoads()
+    {
+        return !!count($this->eagerLoads);
+    }
+
+    /**
+     * Get the relationships to be eagerly loaded.
+     *
+     * @return array
+     */
+    public function getEagerLoads()
+    {
+        return $this->eagerLoads;
+    }
+
+    /**
+     * Get the underlying query builder instance for the given model.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function getQuery()
+    {
+        if ($this->hasEagerLoads()) {
+            return $this->model->with($this->eagerLoads);
+        }
+
+        return $this->model->newQuery();
     }
 
     /**

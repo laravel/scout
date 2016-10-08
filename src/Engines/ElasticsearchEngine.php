@@ -222,9 +222,10 @@ class ElasticsearchEngine extends Engine
      *
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  \Laravel\Scout\Builder  $builder
      * @return Collection
      */
-    public function map($results, $model)
+    public function map($results, $model, Builder $builder)
     {
         if (count($results['hits']) === 0) {
             return Collection::make();
@@ -235,7 +236,7 @@ class ElasticsearchEngine extends Engine
                     ->values()
                     ->all();
 
-        $models = $model->whereIn(
+        $models = $builder->getQuery()->whereIn(
             $model->getKeyName(), $keys
         )->get()->keyBy($model->getKeyName());
 
