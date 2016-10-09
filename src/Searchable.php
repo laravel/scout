@@ -156,9 +156,11 @@ trait Searchable
     {
         static::disableSearchSyncing();
 
-        $callback();
-
-        static::enableSearchSyncing();
+        try {
+            $callback();
+        } finally {
+            static::enableSearchSyncing();   
+        }
     }
 
     /**
