@@ -73,7 +73,7 @@ class ModelObserver
     }
 
     /**
-     * Handle the updated event for the model.
+     * Handle the deleted event for the model.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return void
