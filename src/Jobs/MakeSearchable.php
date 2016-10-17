@@ -35,6 +35,10 @@ class MakeSearchable implements ShouldQueue
      */
     public function handle()
     {
+        if (empty($this->models)) {
+            return;
+        }
+
         $this->models->first()->searchableUsing()->update($this->models);
     }
 }
