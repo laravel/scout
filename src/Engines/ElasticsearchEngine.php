@@ -236,7 +236,7 @@ class ElasticsearchEngine extends Engine
                     ->all();
 
         $models = $model->whereIn(
-            $model->getKeyName(), $keys
+            $model->getQualifiedKeyName(), $keys
         )->get()->keyBy($model->getKeyName());
 
         return Collection::make($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
