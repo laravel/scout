@@ -239,9 +239,13 @@ class ElasticsearchEngine extends Engine
             $model->getQualifiedKeyName(), $keys
         )->get()->keyBy($model->getKeyName());
 
-        return Collection::make($results['hits']['hits'])->map(function ($hit) use ($model, $models) {
-            return $models[$hit['_source'][$model->getKeyName()]];
-        });
+        return Collection::make($results['hits']['hits'])
+            ->map(function ($hit) use ($model, $models) {
+                return isset($models[$hit['_source'][$model->getKeyName()]]) ? $models[$hit['_source'][$model->getKeyName()]] : null;
+            })
+            ->filter(function ($value, $key) {
+                return $value !== null;
+            })->values();
     }
 
     /**
