@@ -110,7 +110,12 @@ class AlgoliaEngine extends Engine
         );
 
         if ($builder->callback) {
-            return call_user_func($builder->callback, $agolia, $options);
+            return call_user_func(
+                $builder->callback,
+                $agolia,
+                $builder->query,
+                $options
+            );
         }
 
         return $agolia->search($builder->query, $options);
