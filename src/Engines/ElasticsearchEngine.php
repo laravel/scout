@@ -134,18 +134,18 @@ class ElasticsearchEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param  Builder  $query
+     * @param  Builder  $builder
      * @param  array  $options
      * @return mixed
      */
-    protected function performSearch(Builder $query, array $options = [])
+    protected function performSearch(Builder $builder, array $options = [])
     {
-        $termFilters = [];
+        $filters = [];
 
-        $matchQueries[] = [
+        $matches[] = [
             'match' => [
                 '_all' => [
-                    'query' => $query->query,
+                    'query' => $builder->query,
                     'fuzziness' => 1
                 ]
             ]
@@ -155,13 +155,13 @@ class ElasticsearchEngine extends Engine
             foreach ($options['filters'] as $field => $value) {
 
                 if(is_numeric($value)) {
-                    $termFilters[] = [
+                    $filters[] = [
                         'term' => [
                             $field => $value,
                         ],
                     ];
                 } elseif(is_string($value)) {
-                    $matchQueries[] = [
+                    $matches[] = [
                         'match' => [
                             $field => [
                                 'query' => $value,
@@ -170,20 +170,19 @@ class ElasticsearchEngine extends Engine
                         ]
                     ];
                 }
-
             }
         }
 
-        $searchQuery = [
+        $query = [
             'index' =>  $this->index,
-            'type'  =>  $query->model->searchableAs(),
+            'type'  =>  $builder->model->searchableAs(),
             'body' => [
                 'query' => [
                     'filtered' => [
-                        'filter' => $termFilters,
+                        'filter' => $filters,
                         'query' => [
                             'bool' => [
-                                'must' => $matchQueries
+                                'must' => $matches
                             ]
                         ],
                     ],
@@ -192,18 +191,22 @@ class ElasticsearchEngine extends Engine
         ];
 
         if (array_key_exists('size', $options)) {
-            $searchQuery = array_merge($searchQuery, [
-                'size' => $options['size'],
-            ]);
+            $query['size'] = $options['size'];
         }
 
         if (array_key_exists('from', $options)) {
-            $searchQuery = array_merge($searchQuery, [
-                'from' => $options['from'],
-            ]);
+            $query['from'] = $options['from'];
         }
 
-        return $this->elasticsearch->search($searchQuery);
+        if ($builder->callback) {
+            return call_user_func(
+                $builder->callback,
+                $this->elasticsearch,
+                $query
+            );
+        }
+
+        return $this->elasticsearch->search($query);
     }
 
     /**

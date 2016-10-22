@@ -79,11 +79,12 @@ trait Searchable
      * Perform a search against the model's indexed data.
      *
      * @param  string  $query
+     * @param  Closure  $callback
      * @return \Laravel\Scout\Builder
      */
-    public static function search($query)
+    public static function search($query, $callback = null)
     {
-        return new Builder(new static, $query);
+        return new Builder(new static, $query, $callback);
     }
 
     /**
