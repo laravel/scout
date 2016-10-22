@@ -24,10 +24,15 @@ class ScoutServiceProvider extends ServiceProvider
                 ImportCommand::class,
                 FlushCommand::class,
             ]);
-
-            $this->publishes([
-                __DIR__.'/../config/scout.php' => config_path('scout.php'),
-            ]);
         }
+
+        $this->publishes([
+            __DIR__.'/../config/scout.php' => config_path('scout.php'),
+        ]);
+
+        $this->mergeConfigFrom(
+            realpath(__DIR__ . '/../config/scout.php'),
+            'scout'
+        );
     }
 }
