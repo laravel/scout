@@ -158,7 +158,7 @@ class AlgoliaEngine extends Engine
             $key = $hit[$model->getKeyName()];
 
             if (isset($models[$key])) {
-                if($model->enableSearchHighlights && !empty($hit['_highlightResult'])) {
+                if(isset($model->enableSearchHighlights) && $model->enableSearchHighlights && !empty($hit['_highlightResult'])) {
                     $models[$key]['_highlightResult'] = $hit['_highlightResult'];
                 }
 
