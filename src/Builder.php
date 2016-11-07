@@ -51,6 +51,13 @@ class Builder
     public $limit;
 
     /**
+     * The "order" that should be applied to the search.
+     *
+     * @var int
+     */
+    public $orders = [];
+
+    /**
      * Create a new search builder instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -101,6 +108,23 @@ class Builder
     public function take($limit)
     {
         $this->limit = $limit;
+
+        return $this;
+    }
+
+    /**
+     * Add an "order" for the search query.
+     *
+     * @param  string  $column
+     * @param  string  $direction
+     * @return $this
+     */
+    public function orderBy($column, $direction = 'asc')
+    {
+        $this->orders[] = [
+            'column' => $column,
+            'direction' => strtolower($direction) == 'asc' ? 'asc' : 'desc',
+        ];
 
         return $this;
     }
