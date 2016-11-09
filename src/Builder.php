@@ -53,7 +53,7 @@ class Builder
     /**
      * The "order" that should be applied to the search.
      *
-     * @var int
+     * @var array[]
      */
     public $orders = [];
 
