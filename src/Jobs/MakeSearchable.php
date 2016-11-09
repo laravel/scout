@@ -24,7 +24,7 @@ class MakeSearchable implements ShouldQueue
      * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
-    public function __construct(Collection $models)
+    public function __construct($models)
     {
         $this->models = $models;
     }
@@ -36,7 +36,7 @@ class MakeSearchable implements ShouldQueue
      */
     public function handle()
     {
-        if ($this->models->isEmpty()) {
+        if (count($this->models) === 0) {
             return;
         }
 
