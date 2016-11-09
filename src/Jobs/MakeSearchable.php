@@ -14,14 +14,14 @@ class MakeSearchable implements ShouldQueue
     /**
      * The models to be made searchable.
      *
-     * @var Collection
+     * @var \Illuminate\Database\Eloquent\Collection
      */
     public $models;
 
     /**
      * Create a new job instance.
      *
-     * @param Collection  $models
+     * @param \Illuminate\Database\Eloquent\Collection $models
      * @return void
      */
     public function __construct(Collection $models)
@@ -36,7 +36,7 @@ class MakeSearchable implements ShouldQueue
      */
     public function handle()
     {
-        if (!$this->models->count()) {
+        if ($this->models->isEmpty()) {
             return;
         }
 
