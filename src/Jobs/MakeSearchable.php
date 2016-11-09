@@ -5,7 +5,7 @@ namespace Laravel\Scout\Jobs;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
-
+use Illuminate\Database\Eloquent\Collection;
 class MakeSearchable implements ShouldQueue
 {
     use Queueable, SerializesModels;
@@ -13,17 +13,17 @@ class MakeSearchable implements ShouldQueue
     /**
      * The models to be made searchable.
      *
-     * @var \Illuminate\Database\Eloquent\Collection
+     * @var Collection
      */
     public $models;
 
     /**
      * Create a new job instance.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $models
+     * @param Collection  $models
      * @return void
      */
-    public function __construct($models)
+    public function __construct(Collection $models)
     {
         $this->models = $models;
     }
