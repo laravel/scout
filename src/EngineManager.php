@@ -43,7 +43,8 @@ class EngineManager extends Manager
     {
         return new ElasticsearchEngine(
             Elasticsearch::fromConfig(config('scout.elasticsearch.config')),
-            config('scout.elasticsearch.index')
+            config('scout.elasticsearch.index'),
+            config('scout.elasticsearch.version')
         );
     }
 
