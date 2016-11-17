@@ -30,6 +30,13 @@ class Builder
     public $query;
 
     /**
+     * Optional callback before search execution.
+     *
+     * @var string
+     */
+    public $callback;
+
+    /**
      * The custom index specified for the search.
      *
      * @var string
@@ -51,16 +58,25 @@ class Builder
     public $limit;
 
     /**
+     * The "order" that should be applied to the search.
+     *
+     * @var int
+     */
+    public $orders = [];
+
+    /**
      * Create a new search builder instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @param  string  $query
+     * @param  Closure  $callback
      * @return void
      */
-    public function __construct($model, $query)
+    public function __construct($model, $query, $callback = null)
     {
         $this->model = $model;
         $this->query = $query;
+        $this->callback = $callback;
     }
 
     /**
@@ -113,6 +129,23 @@ class Builder
     public function take($limit)
     {
         $this->limit = $limit;
+
+        return $this;
+    }
+
+    /**
+     * Add an "order" for the search query.
+     *
+     * @param  string  $column
+     * @param  string  $direction
+     * @return $this
+     */
+    public function orderBy($column, $direction = 'asc')
+    {
+        $this->orders[] = [
+            'column' => $column,
+            'direction' => strtolower($direction) == 'asc' ? 'asc' : 'desc',
+        ];
 
         return $this;
     }

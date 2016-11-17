@@ -79,11 +79,12 @@ trait Searchable
      * Perform a search against the model's indexed data.
      *
      * @param  string  $query
+     * @param  Closure  $callback
      * @return \Laravel\Scout\Builder
      */
-    public static function search($query)
+    public static function search($query, $callback = null)
     {
-        return new Builder(new static, $query);
+        return new Builder(new static, $query, $callback);
     }
 
     /**
@@ -93,7 +94,11 @@ trait Searchable
      */
     public static function makeAllSearchable()
     {
-        (new static)->newQuery()->searchable();
+        $self = new static();
+
+        $self->newQuery()
+            ->orderBy($self->getKeyName())
+            ->searchable();
     }
 
     /**
@@ -113,7 +118,11 @@ trait Searchable
      */
     public static function removeAllFromSearch()
     {
-        (new static)->newQuery()->unsearchable();
+        $self = new static();
+
+        $self->newQuery()
+            ->orderBy($self->getKeyName())
+            ->unsearchable();
     }
 
     /**
@@ -156,9 +165,11 @@ trait Searchable
     {
         static::disableSearchSyncing();
 
-        $callback();
-
-        static::enableSearchSyncing();
+        try {
+            $callback();
+        } finally {
+            static::enableSearchSyncing();   
+        }
     }
 
     /**
