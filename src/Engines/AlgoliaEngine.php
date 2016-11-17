@@ -67,6 +67,8 @@ class AlgoliaEngine extends Engine
 
     /**
      * Perform the given search on the engine.
+     * Search: https://www.algolia.com/doc/api-client/php/search#search-in-an-index
+     * Filters: https://www.algolia.com/doc/api-client/php/parameters#filters
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @return mixed
@@ -75,6 +77,7 @@ class AlgoliaEngine extends Engine
     {
         return $this->performSearch($builder, array_filter([
             'numericFilters' => $this->filters($builder),
+            'filters' => $builder->filters,
             'hitsPerPage' => $builder->limit,
         ]));
     }
