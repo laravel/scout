@@ -1,14 +1,14 @@
 language: php
 
 php:
-  - 5.6.6
+  - 5.6
   - 7.0
   - 7.1
 
 sudo: false
 
 before_install:
-  - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.0.1.deb && sudo dpkg -i --force-confnew elasticsearch-1.2.4.deb && sudo service elasticsearch restart
+  - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.0.1.deb && dpkg -i --force-confnew elasticsearch-1.2.4.deb && sudo service elasticsearch restart
 
 install: travis_retry composer install --no-interaction --prefer-dist
 
