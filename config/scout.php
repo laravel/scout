@@ -45,6 +45,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Define a Custom Queue
+    |--------------------------------------------------------------------------
+    |
+    | This option allows you to define on which queue MakeSearchable
+    | should run. By default, it will run on the "default" queue.
+    | You can change that setting by changing the value below.
+    |
+    */
+
+    'on_queue' => 'default',
+
+    /*
+    |--------------------------------------------------------------------------
     | Algolia Configuration
     |--------------------------------------------------------------------------
     |

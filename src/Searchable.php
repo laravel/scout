@@ -57,6 +57,7 @@ trait Searchable
         }
 
         dispatch((new MakeSearchable($models))
+                ->onQueue(config('scout.on_queue'))
                 ->onConnection($models->first()->syncWithSearchUsing()));
     }
 
