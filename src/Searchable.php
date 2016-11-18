@@ -57,6 +57,7 @@ trait Searchable
         }
 
         dispatch((new MakeSearchable($models))
+                ->onQueue($models->first()->syncWithSearchOnQueue())
                 ->onConnection($models->first()->syncWithSearchUsing()));
     }
 
@@ -210,5 +211,15 @@ trait Searchable
     public function syncWithSearchUsing()
     {
         return config('queue.default');
+    }
+
+    /**
+     * Get the queue that should be used with syncing
+     * 
+     * @return  string
+     */
+    public function syncWithSearchOnQueue()
+    {
+        return 'default';
     }
 }
