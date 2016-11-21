@@ -57,7 +57,7 @@ trait Searchable
         }
 
         dispatch((new MakeSearchable($models))
-                ->onQueue($models->first()->syncWithSearchOnQueue())
+                ->onQueue($models->first()->syncWithSearchUsingQueue())
                 ->onConnection($models->first()->syncWithSearchUsing()));
     }
 
@@ -72,7 +72,7 @@ trait Searchable
         if ($models->isEmpty()) {
             return;
         }
-        
+
         return $models->first()->searchableUsing()->delete($models);
     }
 
@@ -169,7 +169,7 @@ trait Searchable
         try {
             $callback();
         } finally {
-            static::enableSearchSyncing();   
+            static::enableSearchSyncing();
         }
     }
 
@@ -215,11 +215,11 @@ trait Searchable
 
     /**
      * Get the queue that should be used with syncing
-     * 
-     * @return  string
+     *
+     * @return  string|null
      */
-    public function syncWithSearchOnQueue()
+    public function syncWithSearchUsingQueue()
     {
-        return 'default';
+        return null;
     }
 }
