@@ -72,7 +72,7 @@ return [
 
     'elasticsearch' => [
         'index' => env('ELASTICSEARCH_INDEX', 'laravel'),
-
+        'version' => '5.0.0',
         'config' => [
             'hosts' => [
                 env('ELASTICSEARCH_HOST', 'localhost'),

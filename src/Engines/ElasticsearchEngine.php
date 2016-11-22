@@ -24,15 +24,22 @@ class ElasticsearchEngine extends Engine
     protected $index;
 
     /**
+     * The Elasticsearch server version
+     *
+     * @var string
+     */
+    protected $version;
+
+    /**
      * Create a new engine instance.
      *
      * @param  \Elasticsearch\Client  $elasticsearch
      * @return void
      */
-    public function __construct(Elasticsearch $elasticsearch, $index)
+    public function __construct(Elasticsearch $elasticsearch, $index, $version = '2.4.1')
     {
         $this->elasticsearch = $elasticsearch;
-
+        $this->version = $version;
         $this->index = $index;
     }
 
@@ -173,20 +180,32 @@ class ElasticsearchEngine extends Engine
             }
         }
 
+        $querybody =  [];
+        if(preg_match('/^[0-2]{1}\./', $this->version) == 1) {
+            $querybody = [
+                'filtered' => [
+                    'filter' => $filters,
+                    'query' => [
+                        'bool' => [
+                            'must' => $matches
+                        ]
+                    ],
+                ],
+            ];
+        }else{
+            $querybody = [
+                'bool' => [
+                    'filter' => $filters,
+                     'must' => $matches,
+                ],
+            ];
+        }
+
         $query = [
             'index' =>  $this->index,
             'type'  =>  $builder->model->searchableAs(),
             'body' => [
-                'query' => [
-                    'filtered' => [
-                        'filter' => $filters,
-                        'query' => [
-                            'bool' => [
-                                'must' => $matches
-                            ]
-                        ],
-                    ],
-                ],
+                'query' => $querybody,
             ],
         ];
 

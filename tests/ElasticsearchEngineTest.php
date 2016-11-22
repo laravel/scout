@@ -62,17 +62,13 @@ class ElasticsearchEngineTest extends AbstractTestCase
                 'type' => 'table',
                 'body' => [
                     'query' => [
-                        'filtered' => [
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        [
-                                            'match' => [
-                                                '_all' => [
-                                                    'query' => 'zonda',
-                                                    'fuzziness' => 1,
-                                                ],
-                                            ],
+                        'bool' => [
+                            'must' => [
+                                [
+                                    'match' => [
+                                        '_all' => [
+                                            'query' => 'zonda',
+                                            'fuzziness' => 1,
                                         ],
                                     ],
                                 ],
@@ -84,13 +80,14 @@ class ElasticsearchEngineTest extends AbstractTestCase
                                     ],
                                 ]
                             ],
+                            
                         ],
                     ],
                 ],
                 'size' => 10000,
             ]);
 
-        $engine = new ElasticsearchEngine($client, 'index_name');
+        $engine = new ElasticsearchEngine($client, 'index_name', '5.0.0');
         $builder = new Builder(new ElasticsearchEngineTestModel, 'zonda');
         $builder->where('foo', 1);
         $engine->search($builder);
