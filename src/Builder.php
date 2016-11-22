@@ -16,6 +16,13 @@ class Builder
     public $model;
 
     /**
+     * Relations of the $model
+     *
+     * @var array
+     */
+    public $relations;
+
+    /**
      * The query expression.
      *
      * @var string
@@ -42,6 +49,13 @@ class Builder
      * @var array
      */
     public $wheres = [];
+
+    /**
+    * The "filters" constraints added to the query.
+    *
+    * @var string
+    */
+    public $filters = '';
 
     /**
      * The "limit" that should be applied to the search.
@@ -73,6 +87,20 @@ class Builder
     }
 
     /**
+     * Add relations for the model to be mapped
+     *
+     * @param $relations
+     *
+     * @return $this
+     */
+    public function with($relations)
+    {
+        $this->relations = $relations;
+
+        return $this;
+    }
+
+    /**
      * Specify a custom index to perform this search on.
      *
      * @param  string  $index
@@ -95,6 +123,19 @@ class Builder
     public function where($field, $value)
     {
         $this->wheres[$field] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Add a constraints to the search query.
+     *
+     * @param  string  $filters
+     * @return $this
+     */
+    public function filters($filters)
+    {
+        $this->filters = $filters;
 
         return $this;
     }
@@ -152,12 +193,13 @@ class Builder
     /**
      * Paginate the given query into a simple paginator.
      *
-     * @param  int  $perPage
-     * @param  string  $pageName
-     * @param  int|null  $page
+     * @param  int           $perPage
+     * @param  string        $pageName
+     * @param  int|null      $page
+     * @param  string        $queryName
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginate($perPage = null, $pageName = 'page', $page = null)
+    public function paginate($perPage = null, $pageName = 'page', $page = null, $queryName = 'query')
     {
         $engine = $this->engine();
 
@@ -166,7 +208,9 @@ class Builder
         $perPage = $perPage ?: $this->model->getPerPage();
 
         $results = Collection::make($engine->map(
-            $rawResults = $engine->paginate($this, $perPage, $page), $this->model
+            $rawResults = $engine->paginate($this, $perPage, $page),
+            $this->model,
+            $this->relations
         ));
 
         $paginator = (new LengthAwarePaginator($results, $engine->getTotalCount($rawResults), $perPage, $page, [
@@ -174,7 +218,7 @@ class Builder
             'pageName' => $pageName,
         ]));
 
-        return $paginator->appends('query', $this->query);
+        return $paginator->appends($queryName, $this->query);
     }
 
     /**

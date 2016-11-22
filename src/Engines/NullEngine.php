@@ -58,9 +58,10 @@ class NullEngine extends Engine
      *
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  array  $relations
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function map($results, $model)
+    public function map($results, $model, $relations = [])
     {
         return Collection::make();
     }

@@ -67,6 +67,8 @@ class AlgoliaEngine extends Engine
 
     /**
      * Perform the given search on the engine.
+     * Search: https://www.algolia.com/doc/api-client/php/search#search-in-an-index
+     * Filters: https://www.algolia.com/doc/api-client/php/parameters#filters
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @return mixed
@@ -75,6 +77,7 @@ class AlgoliaEngine extends Engine
     {
         return $this->performSearch($builder, array_filter([
             'numericFilters' => $this->filters($builder),
+            'filters' => $builder->filters,
             'hitsPerPage' => $builder->limit,
         ]));
     }
@@ -139,20 +142,22 @@ class AlgoliaEngine extends Engine
      *
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  array  $relations
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function map($results, $model)
+    public function map($results, $model, $relations = [])
     {
         if (count($results['hits']) === 0) {
             return Collection::make();
         }
 
         $keys = collect($results['hits'])
-                        ->pluck('objectID')->values()->all();
+            ->pluck('objectID')->values()->all();
 
         $models = $model->whereIn(
-            $model->getQualifiedKeyName(), $keys
-        )->get()->keyBy($model->getKeyName());
+            $model->getKeyName(), $keys // getQualifiedKeyName()?
+        )->with($relations)->get()->keyBy($model->getKeyName());
 
         return Collection::make($results['hits'])->map(function ($hit) use ($model, $models) {
             $key = $hit['objectID'];
