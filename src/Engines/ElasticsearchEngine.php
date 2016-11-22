@@ -173,18 +173,15 @@ class ElasticsearchEngine extends Engine
             }
         }
 
+
         $query = [
             'index' =>  $this->index,
             'type'  =>  $builder->model->searchableAs(),
             'body' => [
                 'query' => [
-                    'filtered' => [
+                    'bool' => [
                         'filter' => $filters,
-                        'query' => [
-                            'bool' => [
-                                'must' => $matches
-                            ]
-                        ],
+                        'must' => $matches,
                     ],
                 ],
             ],
