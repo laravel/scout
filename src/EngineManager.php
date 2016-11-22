@@ -7,6 +7,7 @@ use AlgoliaSearch\Client as Algolia;
 use Laravel\Scout\Engines\NullEngine;
 use Laravel\Scout\Engines\AlgoliaEngine;
 use Laravel\Scout\Engines\ElasticsearchEngine;
+use Laravel\Scout\Engines\Elasticsearch5Engine;
 use Elasticsearch\ClientBuilder as Elasticsearch;
 
 class EngineManager extends Manager
@@ -42,6 +43,19 @@ class EngineManager extends Manager
     public function createElasticsearchDriver()
     {
         return new ElasticsearchEngine(
+            Elasticsearch::fromConfig(config('scout.elasticsearch.config')),
+            config('scout.elasticsearch.index')
+        );
+    }
+
+    /**
+     * Create an Elasticsearch engine instance.
+     *
+     * @return \Laravel\Scout\Engines\Elasticsearch5Engine
+     */
+    public function createElasticsearch5Driver()
+    {
+        return new Elasticsearch5Engine(
             Elasticsearch::fromConfig(config('scout.elasticsearch.config')),
             config('scout.elasticsearch.index')
         );
