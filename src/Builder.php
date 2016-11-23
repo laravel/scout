@@ -230,4 +230,14 @@ class Builder
     {
         return $this->model->searchableUsing();
     }
+
+    /**
+     * Get the model instance being queried.
+     *
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function getModel()
+    {
+        return $this->model;
+    }
 }
