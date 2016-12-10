@@ -150,6 +150,17 @@ class Builder
     }
 
     /**
+     * Get the keys of search results.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getKeys()
+    {
+        return $this->engine()->getKeys($this);
+    }
+
+
+    /**
      * Paginate the given query into a simple paginator.
      *
      * @param  int  $perPage

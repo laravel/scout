@@ -70,4 +70,15 @@ abstract class Engine
             $this->search($builder), $builder->model
         ));
     }
+
+    /**
+     * Get the results of the query as a Collection of keys.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return \Illuminate\Support\Collection
+     */
+    public function getKeys(Builder $builder)
+    {
+        return $this->getIds($this->search($builder));
+    }
 }
