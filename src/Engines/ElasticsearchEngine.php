@@ -253,7 +253,7 @@ class ElasticsearchEngine extends Engine
      * Pluck and return the primary keys of the results.
      *
      * @param  mixed  $results
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return \Illuminate\Support\Collection
      */
     public function getIds($results) {
 
