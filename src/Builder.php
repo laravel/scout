@@ -152,7 +152,7 @@ class Builder
     /**
      * Get the keys of search results.
      *
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return \Illuminate\Support\Collection
      */
     public function getKeys()
     {
