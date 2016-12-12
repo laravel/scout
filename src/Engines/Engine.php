@@ -59,6 +59,17 @@ abstract class Engine
     abstract public function getTotalCount($results);
 
     /**
+     * Get the results of the query as a Collection of primary keys.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return \Illuminate\Support\Collection
+     */
+    public function keys(Builder $builder)
+    {
+        return $this->getIds($this->search($builder));
+    }
+
+    /**
      * Get the results of the given query mapped onto models.
      *
      * @param  \Laravel\Scout\Builder  $builder
@@ -69,16 +80,5 @@ abstract class Engine
         return Collection::make($this->map(
             $this->search($builder), $builder->model
         ));
-    }
-
-    /**
-     * Get the results of the query as a Collection of keys.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @return \Illuminate\Support\Collection
-     */
-    public function getKeys(Builder $builder)
-    {
-        return $this->getIds($this->search($builder));
     }
 }

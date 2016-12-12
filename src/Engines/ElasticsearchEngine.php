@@ -258,9 +258,9 @@ class ElasticsearchEngine extends Engine
     public function getIds($results) {
 
         return collect($results['hits']['hits'])
-            ->pluck('_id')
-            ->values()
-            ->all();
+                        ->pluck('_id')
+                        ->values()
+                        ->all();
 
     }
 
