@@ -159,10 +159,10 @@ class Builder
      * Add a "where in" constraint for the query.
      *
      * @param  string $field
-     * @param  mixed  $value
+     * @param  array  $value
      * @return $this
      */
-    public function whereIn($field, $value)
+    public function whereIn($field, array $value)
     {
         $this->wheres['in'][] = [$field => $value];
 
@@ -187,10 +187,10 @@ class Builder
      * Add a "where not in" constraint for the query.
      *
      * @param  string $field
-     * @param  mixed  $value
+     * @param  array  $value
      * @return $this
      */
-    public function whereNotIn($field, $value)
+    public function whereNotIn($field, array $value)
     {
         $this->wheres['not_in'][] = [$field => $value];
 
