@@ -7,9 +7,6 @@ php:
 
 sudo: false
 
-services:
-    - elasticsearch
-
 install: travis_retry composer install --no-interaction --prefer-dist
 
 before_script:
