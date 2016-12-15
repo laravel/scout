@@ -239,7 +239,7 @@ class Builder
     }
 
     /**
-     * Add an "order" for the search query.
+     * Add an "order" for the query.
      *
      * @param  string  $column
      * @param  string  $direction
@@ -247,10 +247,7 @@ class Builder
      */
     public function orderBy($column, $direction = 'asc')
     {
-        $this->orders[] = [
-            'column' => $column,
-            'direction' => strtolower($direction) == 'asc' ? 'asc' : 'desc',
-        ];
+        $this->orders[$column] = strtolower($direction) == 'asc' ? 'asc' : 'desc';
 
         return $this;
     }
