@@ -60,7 +60,7 @@ class AlgoliaEngineTest extends AbstractTestCase
 
         $results = $engine->map(['nbHits' => 1, 'hits' => [
             ['objectID' => 1, 'id' => 1],
-        ]], $model);
+        ]], $model, true, false);
 
         $this->assertEquals(1, count($results));
     }
