@@ -130,6 +130,16 @@ class Builder
     }
 
     /**
+     * Get the keys of search results.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function keys()
+    {
+        return $this->engine()->keys($this);
+    }
+
+    /**
      * Get the first result from the search.
      *
      * @return \Illuminate\Database\Eloquent\Model
@@ -148,6 +158,7 @@ class Builder
     {
         return $this->engine()->get($this);
     }
+
 
     /**
      * Paginate the given query into a simple paginator.

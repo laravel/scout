@@ -249,6 +249,22 @@ class ElasticsearchEngine extends Engine
     }
 
     /**
+     *
+     * Pluck and return the primary keys of the results.
+     *
+     * @param  mixed  $results
+     * @return \Illuminate\Support\Collection
+     */
+    public function getIds($results) {
+
+        return collect($results['hits']['hits'])
+                        ->pluck('_id')
+                        ->values()
+                        ->all();
+
+    }
+
+    /**
      * Get the total count from a raw result returned by the engine.
      *
      * @param  mixed  $results
