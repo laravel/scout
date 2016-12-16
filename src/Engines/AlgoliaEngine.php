@@ -135,6 +135,17 @@ class AlgoliaEngine extends Engine
     }
 
     /**
+     * Pluck and return the primary keys of the given results.
+     *
+     * @param  mixed  $results
+     * @return \Illuminate\Support\Collection
+     */
+    public function mapIds($results)
+    {
+        return collect($results['hits'])->pluck('objectID')->values();
+    }
+
+    /**
      * Map the given results to instances of the given model.
      *
      * @param  mixed  $results
@@ -161,21 +172,6 @@ class AlgoliaEngine extends Engine
                 return $models[$key];
             }
         })->filter();
-    }
-
-    /**
-     * Pluck and return the primary keys of the results.
-     *
-     * @param  mixed  $results
-     * @return \Illuminate\Support\Collection
-     */
-    public function getIds($results) {
-
-        return collect($results['hits'])
-                        ->pluck('objectID')
-                        ->values()
-                        ->all();
-
     }
 
     /**

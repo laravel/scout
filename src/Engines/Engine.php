@@ -42,6 +42,14 @@ abstract class Engine
     abstract public function paginate(Builder $builder, $perPage, $page);
 
     /**
+     * Pluck and return the primary keys of the given results.
+     *
+     * @param  mixed  $results
+     * @return \Illuminate\Support\Collection
+     */
+    abstract public function mapIds($results);
+
+    /**
      * Map the given results to instances of the given model.
      *
      * @param  mixed  $results
@@ -66,7 +74,7 @@ abstract class Engine
      */
     public function keys(Builder $builder)
     {
-        return $this->getIds($this->search($builder));
+        return $this->mapIds($this->search($builder));
     }
 
     /**

@@ -54,6 +54,17 @@ class NullEngine extends Engine
     }
 
     /**
+     * Pluck and return the primary keys of the given results.
+     *
+     * @param  mixed  $results
+     * @return \Illuminate\Support\Collection
+     */
+    public function mapIds($results)
+    {
+        return Collection::make();
+    }
+
+    /**
      * Map the given results to instances of the given model.
      *
      * @param  mixed  $results
