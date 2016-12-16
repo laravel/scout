@@ -59,25 +59,4 @@ return [
         'secret' => env('ALGOLIA_SECRET', ''),
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Elasticsearch Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure your settings for Elasticsearch, which is a
-    | distributed, open source search and analytics engine. Feel free
-    | to add as many Elasticsearch servers as required by your app.
-    |
-    */
-
-    'elasticsearch' => [
-        'index' => env('ELASTICSEARCH_INDEX', 'laravel'),
-
-        'config' => [
-            'hosts' => [
-                env('ELASTICSEARCH_HOST', 'localhost'),
-            ],
-        ],
-    ],
-
 ];
