@@ -56,11 +56,13 @@ class AlgoliaEngineTest extends AbstractTestCase
         $model->shouldReceive('getKeyName')->andReturn('id');
         $model->shouldReceive('getQualifiedKeyName')->andReturn('id');
         $model->shouldReceive('whereIn')->once()->with('id', [1])->andReturn($model);
+        $model->shouldReceive('withTrashed')->andReturn(false);
+        $model->shouldReceive('onlyTrashed')->andReturn(false);
         $model->shouldReceive('get')->once()->andReturn(Collection::make([new AlgoliaEngineTestModel]));
 
         $results = $engine->map(['nbHits' => 1, 'hits' => [
             ['objectID' => 1, 'id' => 1],
-        ]], $model, true, false);
+        ]], $model, false, false);
 
         $this->assertEquals(1, count($results));
     }
