@@ -3,7 +3,6 @@
     "description": "Laravel Scout provides a driver based solution to searching your Eloquent models.",
     "keywords": [
         "algolia",
-        "elasticsearch",
         "laravel",
         "search"
     ],
@@ -44,8 +43,7 @@
         }
     },
     "suggest": {
-        "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^1.10).",
-        "elasticsearch/elasticsearch": "Required to use the Elasticsearch engine (^2.2)."
+        "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^1.10)."
     },
     "minimum-stability": "dev",
     "prefer-stable": true
