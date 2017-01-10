@@ -13,9 +13,9 @@ return [
     |
     | Supported: "algolia", "null"
     |
-    */
+     */
 
-    'driver' => env('SCOUT_DRIVER', 'algolia'),
+    'driver'     => env('SCOUT_DRIVER', 'algolia'),
 
     /*
     |--------------------------------------------------------------------------
@@ -26,9 +26,9 @@ return [
     | names used by Scout. This prefix may be useful if you have multiple
     | "tenants" or applications sharing the same search infrastructure.
     |
-    */
+     */
 
-    'prefix' => env('SCOUT_PREFIX', ''),
+    'prefix'     => env('SCOUT_PREFIX', ''),
 
     /*
     |--------------------------------------------------------------------------
@@ -39,9 +39,31 @@ return [
     | with your search engines are queued. When this is set to "true" then
     | all automatic data syncing will get queued for better performance.
     |
-    */
+     */
 
-    'queue' => false,
+    'queue'      => false,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Queue Connection
+    |--------------------------------------------------------------------------
+    |
+    | This option allows you to control the queue connection that should be used when syncing.
+    |
+     */
+
+    'connection' => '',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Queue Name
+    |--------------------------------------------------------------------------
+    |
+    | This option allows you to control the queue that should be used with syncing.
+    |
+     */
+
+    'queue_name' => '',
 
     /*
     |--------------------------------------------------------------------------
@@ -52,10 +74,10 @@ return [
     | search engine which works great with Scout out of the box. Just plug
     | in your application ID and admin API key to get started searching.
     |
-    */
+     */
 
-    'algolia' => [
-        'id' => env('ALGOLIA_APP_ID', ''),
+    'algolia'    => [
+        'id'     => env('ALGOLIA_APP_ID', ''),
         'secret' => env('ALGOLIA_SECRET', ''),
     ],
 
