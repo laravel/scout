@@ -2,9 +2,9 @@
 
 namespace Laravel\Scout;
 
-use Laravel\Scout\Jobs\MakeSearchable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
+use Laravel\Scout\Jobs\MakeSearchable;
 
 trait Searchable
 {
@@ -19,7 +19,7 @@ trait Searchable
 
         static::observe(new ModelObserver);
 
-        (new static)->registerSearchableMacros();
+        (new static )->registerSearchableMacros();
     }
 
     /**
@@ -52,7 +52,7 @@ trait Searchable
             return;
         }
 
-        if (! config('scout.queue')) {
+        if (!config('scout.queue')) {
             return $models->first()->searchableUsing()->update($models);
         }
 
@@ -85,7 +85,7 @@ trait Searchable
      */
     public static function search($query, $callback = null)
     {
-        return new Builder(new static, $query, $callback);
+        return new Builder(new static , $query, $callback);
     }
 
     /**
@@ -180,7 +180,7 @@ trait Searchable
      */
     public function searchableAs()
     {
-        return config('scout.prefix').$this->getTable();
+        return config('scout.prefix') . $this->getTable();
     }
 
     /**
@@ -210,16 +210,16 @@ trait Searchable
      */
     public function syncWithSearchUsing()
     {
-        return config('queue.default');
+        return config('scout.connection') ?: config('queue.default');
     }
 
     /**
      * Get the queue that should be used with syncing
      *
-     * @return  string|null
+     * @return  string
      */
     public function syncWithSearchUsingQueue()
     {
-        return null;
+        return config('scout.queue_name');
     }
 }
