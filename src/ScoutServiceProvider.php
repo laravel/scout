@@ -2,9 +2,12 @@
 
 namespace Laravel\Scout;
 
+use Illuminate\Foundation\Application as LaravelApplication;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Lumen\Application as LumenApplication;
 use Laravel\Scout\Console\FlushCommand;
 use Laravel\Scout\Console\ImportCommand;
+
 
 class ScoutServiceProvider extends ServiceProvider
 {
@@ -24,10 +27,16 @@ class ScoutServiceProvider extends ServiceProvider
                 ImportCommand::class,
                 FlushCommand::class,
             ]);
-
-            $this->publishes([
-                __DIR__.'/../config/scout.php' => config_path('scout.php'),
-            ]);
         }
+
+        $config = realpath(__DIR__ . '/../config/scout.php');
+
+        if ($this->app instanceof LaravelApplication) {
+            $this->publishes([$config => config_path('scout.php')]);
+        } elseif ($this->app instanceof LumenApplication) {
+            $this->app->configure('scout');
+        }
+
+        $this->mergeConfigFrom($config, 'scout');
     }
 }
