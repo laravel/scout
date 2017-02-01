@@ -85,7 +85,11 @@ trait Searchable
      */
     public static function search($query, $callback = null)
     {
-        return new Builder(new static, $query, $callback);
+        if (!empty($query)) {
+            return new Builder(new static, $query, $callback);
+        }
+
+        return (new static)->newQuery();
     }
 
     /**
