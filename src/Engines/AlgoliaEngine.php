@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Collection;
 
 class AlgoliaEngine extends Engine
 {
+    /** @var \AlgoliaSearch\Client */
+    private $algolia;
+
     /**
      * The Algolia client.
      *
@@ -67,6 +70,8 @@ class AlgoliaEngine extends Engine
 
     /**
      * Perform the given search on the engine.
+     * Search: https://www.algolia.com/doc/api-client/php/search#search-in-an-index
+     * Filters: https://www.algolia.com/doc/api-client/php/parameters#filters
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @return mixed
@@ -75,12 +80,15 @@ class AlgoliaEngine extends Engine
     {
         return $this->performSearch($builder, array_filter([
             'numericFilters' => $this->filters($builder),
+            'filters' => $builder->filters,
             'hitsPerPage' => $builder->limit,
         ]));
     }
 
     /**
      * Perform the given search on the engine.
+     * Search: https://www.algolia.com/doc/api-client/php/search#search-in-an-index
+     * Filters: https://www.algolia.com/doc/api-client/php/parameters#filters
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $perPage
@@ -91,6 +99,7 @@ class AlgoliaEngine extends Engine
     {
         return $this->performSearch($builder, [
             'numericFilters' => $this->filters($builder),
+            'filters' => $builder->filters,
             'hitsPerPage' => $perPage,
             'page' => $page - 1,
         ]);
@@ -183,5 +192,49 @@ class AlgoliaEngine extends Engine
     public function getTotalCount($results)
     {
         return $results['nbHits'];
+    }
+
+    /**
+     * Sets settings to Algolia index.
+     * https://www.algolia.com/doc/api-client/php/settings#set-settings
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  mixed  $settings
+     * @return void
+     */
+    public function setSettings($model, $settings)
+    {
+        $index = $this->algolia->initIndex($model->searchableAs());
+
+        if (isset($settings['synonyms'])) {
+            foreach (array_chunk($settings['synonyms'], 100) as $synonyms) {
+                $index->batchSynonyms($synonyms, true, true);
+            }
+
+            unset($settings['synonyms']);
+        }
+
+        $slavesSettings = [];
+        if (isset($settings['slaves'])) {
+            $slaveNames = [];
+
+            foreach ($settings['slaves'] as $slaveName => $slaveSettings) {
+                $slaveNames[] = $slaveName;
+                $slavesSettings[$slaveName] = $slaveSettings;
+            }
+
+            $settings['slaves'] = $slaveNames;
+        }
+
+        $index->setSettings($settings, true);
+
+        if (!empty($slavesSettings)) {
+            unset($settings['slaves']);
+
+            foreach ($slavesSettings as $slaveName => $slaveSettings) {
+                $slaveSettings = array_merge($settings, $slavesSettings[$slaveName]);
+                $this->algolia->initIndex($slaveName)->setSettings($slaveSettings);
+            }
+        }
     }
 }

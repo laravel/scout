@@ -103,6 +103,23 @@ trait Searchable
     }
 
     /**
+     * Save settings to search engine
+     *
+     * @return void
+     */
+    public static function setSettings()
+    {
+        $model = new static();
+        $engine = $model->searchableUsing();
+
+        if (!method_exists($engine, 'setSettings')) {
+            throw new \BadMethodCallException('Search engine "'.get_class($engine).'" does not support setSettings() call.');
+        }
+
+        $engine->setSettings($model, property_exists($model, 'searchSettings') ? $model->searchSettings : []);
+    }
+
+    /**
      * Make the given model instance searchable.
      *
      * @return void
