@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout;
 
+use Illuminate\Config\Repository as ConfigRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 use Laravel\Scout\Events\ModelsImported;
@@ -29,16 +30,18 @@ class SearchableScope implements Scope
      */
     public function extend(EloquentBuilder $builder)
     {
-        $builder->macro('searchable', function (EloquentBuilder $builder) {
-            $builder->chunk(100, function ($models) use ($builder) {
+        $chunkSize = app(ConfigRepository::class)->get('scout.searchableChunkSize', 100);
+        
+        $builder->macro('searchable', function (EloquentBuilder $builder) use ($chunkSize) {
+            $builder->chunk($chunkSize, function ($models) use ($builder) {
                 $models->searchable();
 
                 event(new ModelsImported($models));
             });
         });
 
-        $builder->macro('unsearchable', function (EloquentBuilder $builder) {
-            $builder->chunk(100, function ($models) use ($builder) {
+        $builder->macro('unsearchable', function (EloquentBuilder $builder) use ($chunkSize) {
+            $builder->chunk($chunkSize, function ($models) use ($builder) {
                 $models->unsearchable();
             });
         });
