@@ -2,9 +2,9 @@
 
 namespace Laravel\Scout;
 
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class Builder
 {
@@ -67,7 +67,7 @@ class Builder
     /**
      * The "order" that should be applied to the search.
      *
-     * @var int
+     * @var array
      */
     public $orders = [];
 
@@ -171,6 +171,16 @@ class Builder
     }
 
     /**
+     * Get the keys of search results.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function keys()
+    {
+        return $this->engine()->keys($this);
+    }
+
+    /**
      * Get the first result from the search.
      *
      * @return \Illuminate\Database\Eloquent\Model
@@ -189,6 +199,7 @@ class Builder
     {
         return $this->engine()->get($this);
     }
+
 
     /**
      * Paginate the given query into a simple paginator.

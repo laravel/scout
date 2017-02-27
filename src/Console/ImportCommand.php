@@ -42,6 +42,8 @@ class ImportCommand extends Command
 
         $model::makeAllSearchable();
 
+        $events->forget(ModelsImported::class);
+
         $this->info('All ['.$class.'] records have been imported.');
     }
 }

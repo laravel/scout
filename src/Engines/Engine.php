@@ -42,6 +42,14 @@ abstract class Engine
     abstract public function paginate(Builder $builder, $perPage, $page);
 
     /**
+     * Pluck and return the primary keys of the given results.
+     *
+     * @param  mixed  $results
+     * @return \Illuminate\Support\Collection
+     */
+    abstract public function mapIds($results);
+
+    /**
      * Map the given results to instances of the given model.
      *
      * @param  mixed  $results
@@ -58,6 +66,17 @@ abstract class Engine
      * @return int
      */
     abstract public function getTotalCount($results);
+
+    /**
+     * Get the results of the query as a Collection of primary keys.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return \Illuminate\Support\Collection
+     */
+    public function keys(Builder $builder)
+    {
+        return $this->mapIds($this->search($builder));
+    }
 
     /**
      * Get the results of the given query mapped onto models.
