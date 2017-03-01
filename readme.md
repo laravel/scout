@@ -1,4 +1,4 @@
-<p align="center"><img src="https://laravel.com/assets/img/components/logo-scout.svg"></p>
+<p align="center"><img src="https://laravel.com/assets/img/components/logo-scout-bust.svg"></p>
 
 <p align="center">
 <a href="https://travis-ci.org/laravel/scout"><img src="https://travis-ci.org/laravel/scout.svg" alt="Build Status"></a>
