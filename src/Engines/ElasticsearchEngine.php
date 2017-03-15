@@ -64,10 +64,12 @@ class ElasticsearchEngine extends Engine
             $body->push($array);
         });
 
-        $this->elasticsearch->bulk([
-            'refresh' => true,
-            'body' => $body->all(),
-        ]);
+        if ($body->count()) {
+            $this->elasticsearch->bulk([
+                'refresh' => true,
+                'body' => $body->all(),
+            ]);
+        }
     }
 
     /**
@@ -90,10 +92,12 @@ class ElasticsearchEngine extends Engine
             ]);
         });
 
-        $this->elasticsearch->bulk([
-            'refresh' => true,
-            'body' => $body->all(),
-        ]);
+        if ($body->count()) {
+            $this->elasticsearch->bulk([
+                'refresh' => true,
+                'body' => $body->all(),
+            ]);
+        }
     }
 
     /**
