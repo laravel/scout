@@ -156,22 +156,22 @@ class ElasticsearchEngine extends Engine
         ];
 
         if (array_key_exists('filters', $options) && $options['filters']) {
-            foreach ($options['filters'] as $field => $value) {
+            foreach ($options['filters'] as $filter) {
 
-                if(is_numeric($value)) {
+                if(is_numeric($filter[key($filter)])) {
                     $filters[] = [
                         'term' => [
-                            $field => $value,
+                            key($filter) => $filter[key($filter)],
                         ],
                     ];
-                } elseif(is_string($value)) {
+                } elseif(is_string($filter[key($filter)])) {
                     $matches[] = [
                         'match' => [
-                            $field => [
-                                'query' => $value,
+                            key($filter) => [
+                                'query' => $filter[key($filter)],
                                 'operator' => 'and'
-                            ]
-                        ]
+                            ],
+                        ],
                     ];
                 }
             }
@@ -221,7 +221,7 @@ class ElasticsearchEngine extends Engine
      */
     protected function filters(Builder $query)
     {
-        return $query->wheres;
+        return $query->wheres['and'];
     }
 
     /**

@@ -37,11 +37,21 @@ class Builder
     public $index;
 
     /**
-     * The "where" constraints added to the query.
+     * The "where" constraints that should be applied to the query.
      *
      * @var array
      */
-    public $wheres = [];
+    public $wheres = [
+        'and' => [],
+        'between' => [],
+        'in' => [],
+        'not' => [],
+        'not_in' => [],
+        'not_null' => [],
+        'null' => [],
+        'or' => [],
+        'or_between' => [],
+    ];
 
     /**
      * The "limit" that should be applied to the search.
@@ -86,15 +96,131 @@ class Builder
     }
 
     /**
-     * Add a constraint to the search query.
+     * Add a "where" constraint for the query.
      *
-     * @param  string  $field
+     * @param  string $field
      * @param  mixed  $value
      * @return $this
      */
     public function where($field, $value)
     {
-        $this->wheres[$field] = $value;
+        if (is_null($value)) {
+            return $this->whereNull($field);
+        }
+
+        $this->wheres['and'][] = [$field => $value];
+
+        return $this;
+    }
+
+    /**
+     * Add an "or where" constraint for the query.
+     *
+     * @param  string $field
+     * @param  mixed  $value
+     * @return $this
+     */
+    public function orWhere($field, $value)
+    {
+        $this->wheres['or'][] = [$field => $value];
+
+        return $this;
+    }
+
+    /**
+     * Add a "where between" constraint for the query.
+     *
+     * @param  string $field
+     * @param  array  $value
+     * @return $this
+     */
+    public function whereBetween($field, array $value)
+    {
+        $this->wheres['between'][] = [$field => $value];
+
+        return $this;
+    }
+
+    /**
+     * Add an "or where between" constraint for the query.
+     *
+     * @param  string $field
+     * @param  array  $value
+     * @return $this
+     */
+    public function orWhereBetween($field, array $value)
+    {
+        $this->wheres['or_between'][] = [$field => $value];
+
+        return $this;
+    }
+
+    /**
+     * Add a "where in" constraint for the query.
+     *
+     * @param  string $field
+     * @param  array  $value
+     * @return $this
+     */
+    public function whereIn($field, array $value)
+    {
+        $this->wheres['in'][] = [$field => $value];
+
+        return $this;
+    }
+
+    /**
+     * Add a "where not" constraint for the query.
+     *
+     * @param  string $field
+     * @param  mixed  $value
+     * @return $this
+     */
+    public function whereNot($field, $value)
+    {
+        $this->wheres['not'][] = [$field => $value];
+
+        return $this;
+    }
+
+    /**
+     * Add a "where not in" constraint for the query.
+     *
+     * @param  string $field
+     * @param  array  $value
+     * @return $this
+     */
+    public function whereNotIn($field, array $value)
+    {
+        $this->wheres['not_in'][] = [$field => $value];
+
+        return $this;
+    }
+
+    /**
+     * Add a "where null" constraint for the query.
+     *
+     * @param  string $field
+     * @param  mixed  $value
+     * @return $this
+     */
+    public function whereNull($field)
+    {
+        $this->wheres['null'][] = $field;
+
+        return $this;
+    }
+
+    /**
+     * Add a "where not null" constraint for the query.
+     *
+     * @param  string $field
+     * @param  mixed  $value
+     * @return $this
+     */
+    public function whereNotNull($field)
+    {
+        $this->wheres['not_null'][] = $field;
 
         return $this;
     }
@@ -113,7 +239,7 @@ class Builder
     }
 
     /**
-     * Add an "order" for the search query.
+     * Add an "order" for the query.
      *
      * @param  string  $column
      * @param  string  $direction
@@ -121,10 +247,7 @@ class Builder
      */
     public function orderBy($column, $direction = 'asc')
     {
-        $this->orders[] = [
-            'column' => $column,
-            'direction' => strtolower($direction) == 'asc' ? 'asc' : 'desc',
-        ];
+        $this->orders[$column] = strtolower($direction) == 'asc' ? 'asc' : 'desc';
 
         return $this;
     }
@@ -158,7 +281,6 @@ class Builder
     {
         return $this->engine()->get($this);
     }
-
 
     /**
      * Paginate the given query into a simple paginator.
