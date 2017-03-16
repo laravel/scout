@@ -102,6 +102,7 @@ class ElasticsearchEngineTest extends AbstractTestCase
         $engine = new ElasticsearchEngine($client, 'index_name');
 
         $model = Mockery::mock('StdClass');
+        $model->shouldReceive('with')->once()->with([])->andReturn($model);
         $model->shouldReceive('getKeyName')->andReturn('id');
         $model->shouldReceive('getQualifiedKeyName')->andReturn('id');
         $model->shouldReceive('whereIn')->once()->with('id', [1])->andReturn($model);
