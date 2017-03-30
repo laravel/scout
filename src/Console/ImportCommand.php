@@ -13,7 +13,9 @@ class ImportCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'scout:import {model}';
+    protected $signature = 'scout:import
+                            {model}
+                            {--withTrashed : Whether soft deleted models should be included}';
 
     /**
      * The console command description.
@@ -40,7 +42,7 @@ class ImportCommand extends Command
             $this->line('<comment>Imported ['.$class.'] models up to ID:</comment> '.$key);
         });
 
-        $model::makeAllSearchable();
+        $model::makeAllSearchable($this->option('withTrashed'));
 
         $events->forget(ModelsImported::class);
 
