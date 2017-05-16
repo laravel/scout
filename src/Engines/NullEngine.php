@@ -41,6 +41,17 @@ class NullEngine extends Engine
     }
 
     /**
+     * Retrieve number of search results from the the engine
+     *
+     * @param \Laravel\Scout\Builder $builder
+     * @return mixed Number of results
+     */
+    public function count(Builder $builder)
+    {
+        return 0;
+    }
+
+    /**
      * Perform the given search on the engine.
      *
      * @param  \Laravel\Scout\Builder  $builder

@@ -159,6 +159,16 @@ class Builder
         return $this->engine()->get($this);
     }
 
+    /**
+     * Retrieve the number of matching results.
+     *
+     * @return int Number of results
+     */
+    public function count()
+    {
+        return (int) $this->engine()->count($this);
+    }
+
 
     /**
      * Paginate the given query into a simple paginator.
