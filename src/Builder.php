@@ -58,6 +58,13 @@ class Builder
     public $orders = [];
 
     /**
+     * The class thats is going to be added in.
+     *
+     * @var mixed
+     */
+    protected $extension;
+
+    /**
      * Create a new search builder instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -189,6 +196,17 @@ class Builder
     }
 
     /**
+     * extendWith adds in another class
+     * @param  object $extension
+     * @return $this
+     */
+    public function extendWith($extension)
+    {
+      $this->extension = $extension;
+      return $this;
+    }
+
+    /**
      * Get the engine that should handle the query.
      *
      * @return mixed
@@ -196,5 +214,35 @@ class Builder
     protected function engine()
     {
         return $this->model->searchableUsing();
+    }
+
+    /**
+     * Dynamically access the underlying extension information or default to current class.
+     *
+     * @param  string  $key
+     * @return mixed
+     */
+    public function __get($key)
+    {
+        if(property_exists($this->extension, $key))
+        {
+          return $this->extension->{$key};
+        }
+
+        return $this->{$key};
+    }
+
+    /* Dynamically pass method calls to the target.
+     *
+     * @param  string  $method
+     * @param  array  $parameters
+     * @return mixed
+     */
+    public function __call($method, $parameters)
+    {
+        if(method_exists($this->extension, $method))
+        {
+          return $this->extension->{$method}(...$parameters);
+        }
     }
 }
