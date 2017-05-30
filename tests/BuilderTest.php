@@ -6,6 +6,7 @@ use Mockery;
 use StdClass;
 use Laravel\Scout\Builder;
 use Illuminate\Pagination\Paginator;
+use Tests\Fixtures\AdditionalActions;
 use Illuminate\Database\Eloquent\Collection;
 
 class BuilderTest extends AbstractTestCase
@@ -28,5 +29,15 @@ class BuilderTest extends AbstractTestCase
         $engine->shouldReceive('getTotalCount');
 
         $builder->paginate();
+    }
+
+    public function test_that_builder_can_be_extended()
+    {
+      $builder = new Builder($model = Mockery::mock(), 'zonda');
+      $builder->extendWith(new AdditionalActions);
+      $builder->whereIn('id', [1,2,3,4]);
+
+      $this->assertTrue(array_key_exists('id', $builder->whereIns));
+      $this->assertCount(4, $builder->whereIns['id']);
     }
 }
