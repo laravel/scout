@@ -80,6 +80,21 @@ class AlgoliaEngine extends Engine
     }
 
     /**
+     * Retrieve number of search results from the the engine
+     *
+     * @param \Laravel\Scout\Builder $builder
+     * @return mixed Number of results
+     */
+    public function count(Builder $builder)
+    {
+        $results =  $this->performSearch($builder, [
+            'responseFields' => ['nbHits'],
+        ]);
+
+        return $results['nbHits'];
+    }
+
+    /**
      * Perform the given search on the engine.
      *
      * @param  \Laravel\Scout\Builder  $builder

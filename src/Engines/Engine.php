@@ -32,6 +32,14 @@ abstract class Engine
     abstract public function search(Builder $builder);
 
     /**
+     * Retrieve number of search results from the the engine
+     *
+     * @param \Laravel\Scout\Builder $builder
+     * @return mixed Number of results
+     */
+    abstract public function count(Builder $builder);
+
+    /**
      * Perform the given search on the engine.
      *
      * @param  \Laravel\Scout\Builder  $builder
