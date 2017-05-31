@@ -29,4 +29,16 @@ class BuilderTest extends AbstractTestCase
 
         $builder->paginate();
     }
+
+    public function testMacroable()
+    {
+        Builder::macro('foo', function () {
+            return 'bar';
+        });
+
+        $builder = new Builder($model = Mockery::mock(), 'zonda');
+        $this->assertEquals(
+            'bar', $builder->foo()
+        );
+    }
 }

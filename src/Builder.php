@@ -3,11 +3,14 @@
 namespace Laravel\Scout;
 
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Traits\Macroable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class Builder
 {
+    use Macroable;
+
     /**
      * The model instance.
      *
