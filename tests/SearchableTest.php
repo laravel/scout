@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Stub;
 use Mockery;
 use Tests\Fixtures\SearchableTestModel;
@@ -52,6 +53,16 @@ class SearchableTest extends AbstractTestCase
     {
         ModelStubForMakeAllSearchable::makeAllSearchable();
     }
+
+    public function test_make_all_searchable_with_trashed()
+    {
+        ModelStubForMakeAllSearchableWithTrashed::makeAllSearchableWithTrashed();
+    }
+
+    public function test_make_all_searchable_with_trashed_fails_silently()
+    {
+        ModelStubForMakeAllSearchable::makeAllSearchableWithTrashed();
+    }
 }
 
 class ModelStubForMakeAllSearchable extends SearchableTestModel
@@ -62,6 +73,25 @@ class ModelStubForMakeAllSearchable extends SearchableTestModel
 
         $mock->shouldReceive('orderBy')
             ->with('id')
+            ->andReturnSelf()
+            ->shouldReceive('searchable');
+
+        return $mock;
+    }
+}
+
+class ModelStubForMakeAllSearchableWithTrashed extends SearchableTestModel
+{
+    use SoftDeletes;
+
+    public function newQuery()
+    {
+        $mock = \Mockery::mock('Illuminate\Database\Eloquent\Builder');
+
+        $mock->shouldReceive('orderBy')
+            ->with('id')
+            ->andReturnSelf()
+            ->shouldReceive('withTrashed')
             ->andReturnSelf()
             ->shouldReceive('searchable');
 

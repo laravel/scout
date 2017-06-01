@@ -91,15 +91,35 @@ trait Searchable
     /**
      * Make all instances of the model searchable.
      *
+     * @param bool $withTrashed
+     *
      * @return void
      */
-    public static function makeAllSearchable()
+    public static function makeAllSearchable($withTrashed = false)
     {
         $self = new static();
 
-        $self->newQuery()
-            ->orderBy($self->getKeyName())
-            ->searchable();
+        $builder = $self->newQuery()->orderBy($self->getKeyName());
+
+        if ($withTrashed) {
+            try {
+                $builder->withTrashed();
+            } catch (\BadMethodCallException $err) {
+                // If the model does not use soft deletes we fail silently...
+            }
+        }
+
+        $builder->searchable();
+    }
+
+    /**
+     * Make all instances including trashed models searchable.
+     *
+     * @return void
+     */
+    public static function makeAllSearchableWithTrashed()
+    {
+        self::makeAllSearchable(true);
     }
 
     /**
