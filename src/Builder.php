@@ -133,6 +133,16 @@ class Builder
     }
 
     /**
+     * Get the raw results of the search.
+     *
+     * @return mixed
+     */
+    public function raw()
+    {
+        return $this->engine()->search($this);
+    }
+
+    /**
      * Get the keys of search results.
      *
      * @return \Illuminate\Support\Collection
@@ -161,7 +171,6 @@ class Builder
     {
         return $this->engine()->get($this);
     }
-
 
     /**
      * Paginate the given query into a simple paginator.
