@@ -159,6 +159,15 @@ class Builder
         return $this->engine()->get($this);
     }
 
+    /**
+     * Get the raw results of the search, not mapped onto models.
+     *
+     * @return mixed
+     */
+    public function getSearchResults()
+    {
+        return $this->engine()->search($this);
+    }
 
     /**
      * Paginate the given query into a simple paginator.
