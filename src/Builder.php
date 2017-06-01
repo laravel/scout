@@ -130,6 +130,16 @@ class Builder
     }
 
     /**
+     * Get the raw results of the search.
+     *
+     * @return mixed
+     */
+    public function raw()
+    {
+        return $this->engine()->search($this);
+    }
+
+    /**
      * Get the keys of search results.
      *
      * @return \Illuminate\Support\Collection
@@ -157,16 +167,6 @@ class Builder
     public function get()
     {
         return $this->engine()->get($this);
-    }
-
-    /**
-     * Get the raw results of the search, not mapped onto models.
-     *
-     * @return mixed
-     */
-    public function getSearchResults()
-    {
-        return $this->engine()->search($this);
     }
 
     /**
