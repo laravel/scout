@@ -15,12 +15,12 @@
     ],
     "require": {
         "php": ">=5.6.4",
-        "illuminate/bus": "~5.3",
-        "illuminate/contracts": "~5.3",
-        "illuminate/database": "~5.3",
-        "illuminate/pagination": "~5.3",
-        "illuminate/queue": "~5.3",
-        "illuminate/support": "~5.3"
+        "illuminate/bus": "~5.4",
+        "illuminate/contracts": "~5.4",
+        "illuminate/database": "~5.4",
+        "illuminate/pagination": "~5.4",
+        "illuminate/queue": "~5.4",
+        "illuminate/support": "~5.4"
     },
     "require-dev": {
         "algolia/algoliasearch-client-php": "^1.10",
@@ -39,7 +39,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "2.0-dev"
+            "dev-master": "3.0-dev"
         }
     },
     "suggest": {

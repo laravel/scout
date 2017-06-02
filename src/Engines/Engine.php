@@ -54,9 +54,10 @@ abstract class Engine
      *
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  array  $relations
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    abstract public function map($results, $model);
+    abstract public function map($results, $model, $relations);
 
     /**
      * Get the total count from a raw result returned by the engine.
@@ -81,12 +82,13 @@ abstract class Engine
      * Get the results of the given query mapped onto models.
      *
      * @param  \Laravel\Scout\Builder  $builder
+     * @param  array  $relations
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function get(Builder $builder)
+    public function get(Builder $builder, $relations = [])
     {
         return Collection::make($this->map(
-            $this->search($builder), $builder->model
+            $this->search($builder), $builder->model, $relations
         ));
     }
 }
