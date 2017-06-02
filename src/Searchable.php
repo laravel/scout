@@ -89,6 +89,16 @@ trait Searchable
     }
 
     /**
+     * Closure that decides whether or not a Searchable model should be indexed by the Scout Engine.
+     *
+     * @return bool     true if it should be included in the index, false if it should be excluded
+     */
+    protected function shouldBeSearchable()
+    {
+        return true;
+    }
+
+    /**
      * Make all instances of the model searchable.
      *
      * @return void
@@ -99,6 +109,10 @@ trait Searchable
 
         $self->newQuery()
             ->orderBy($self->getKeyName())
+            ->filter(function($model)
+            {
+                return $model->shouldBeSearchable();
+            })
             ->searchable();
     }
 
@@ -109,7 +123,14 @@ trait Searchable
      */
     public function searchable()
     {
-        Collection::make([$this])->searchable();
+        if($this->shouldBeSearchable())
+        {
+            Collection::make([$this])->searchable();
+        }
+        else
+        {
+            $this->unsearchable();
+        }
     }
 
     /**
