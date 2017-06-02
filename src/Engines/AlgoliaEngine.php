@@ -74,7 +74,8 @@ class AlgoliaEngine extends Engine
     public function search(Builder $builder)
     {
         return $this->performSearch($builder, array_filter([
-            'numericFilters' => $this->filters($builder),
+            'numericFilters' => $this->numericFilters($builder),
+            'facetFilters' => $this->facetFilters($builder),
             'hitsPerPage' => $builder->limit,
         ]));
     }
@@ -90,7 +91,8 @@ class AlgoliaEngine extends Engine
     public function paginate(Builder $builder, $perPage, $page)
     {
         return $this->performSearch($builder, [
-            'numericFilters' => $this->filters($builder),
+            'numericFilters' => $this->numericFilters($builder),
+            'facetFilters' => $this->facetFilters($builder),
             'hitsPerPage' => $perPage,
             'page' => $page - 1,
         ]);
@@ -131,6 +133,40 @@ class AlgoliaEngine extends Engine
     {
         return collect($builder->wheres)->map(function ($value, $key) {
             return $key.'='.$value;
+        })->values()->all();
+    }
+
+    /**
+     * Get the numeric filter array for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
+     */
+    protected function numericFilters(Builder $builder)
+    {
+        $collection = collect($builder->wheres)->filter(function ($where) {
+            return is_numeric($where);
+        });
+
+        return $collection->map(function ($value, $key) {
+            return $key.'='.$value;
+        })->values()->all();
+    }
+
+    /**
+     * Get the facet filter array for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
+     */
+    protected function facetFilters(Builder $builder)
+    {
+        $collection = collect($builder->wheres)->filter(function ($where) {
+            return is_string($where);
+        });
+
+        return $collection->map(function ($value, $key) {
+            return $key.':'.$value;
         })->values()->all();
     }
 
