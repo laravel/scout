@@ -74,8 +74,8 @@ class AlgoliaEngine extends Engine
     public function search(Builder $builder)
     {
         return $this->performSearch($builder, array_filter([
-            'facetFilters' => $this->facetFilters($builder),
             'numericFilters' => $this->numericFilters($builder),
+            'facetFilters' => $this->facetFilters($builder),
             'hitsPerPage' => $builder->limit,
         ]));
     }
@@ -91,8 +91,8 @@ class AlgoliaEngine extends Engine
     public function paginate(Builder $builder, $perPage, $page)
     {
         return $this->performSearch($builder, [
-            'facetFilters' => $this->facetFilters($builder),
             'numericFilters' => $this->numericFilters($builder),
+            'facetFilters' => $this->facetFilters($builder),
             'hitsPerPage' => $perPage,
             'page' => $page - 1,
         ]);
