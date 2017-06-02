@@ -166,7 +166,7 @@ class AlgoliaEngine extends Engine
         });
 
         return $collection->map(function ($value, $key) {
-            return $key.'='.$value;
+            return $key.':'.$value;
         })->values()->all();
     }
 
