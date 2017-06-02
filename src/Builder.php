@@ -61,6 +61,20 @@ class Builder
     public $orders = [];
 
     /**
+     * If the search should include soft deleted models.
+     *
+     * @var boolean
+     */
+    public $withTrashed = false;
+
+    /**
+     * If the search should only include soft deleted models.
+     *
+     * @var boolean
+     */
+    public $onlyTrashed = false;
+
+    /**
      * Create a new search builder instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -173,6 +187,30 @@ class Builder
     }
 
     /**
+     * Specify the search should include soft deletes.
+     * 
+     * @return $this
+     */
+    public function withTrashed()
+    {
+        $this->withTrashed = true;
+
+        return $this;
+    }
+
+    /**
+     * Specify the search should only include soft deletes.
+     *
+     * @return $this
+     */
+    public function onlyTrashed()
+    {
+        $this->onlyTrashed = true;
+
+        return $this;
+    }
+
+    /**
      * Paginate the given query into a simple paginator.
      *
      * @param  int  $perPage
@@ -189,7 +227,7 @@ class Builder
         $perPage = $perPage ?: $this->model->getPerPage();
 
         $results = Collection::make($engine->map(
-            $rawResults = $engine->paginate($this, $perPage, $page), $this->model
+            $rawResults = $engine->paginate($this, $perPage, $page), $this->model, $this->withTrashed, $this->onlyTrashed
         ));
 
         $paginator = (new LengthAwarePaginator($results, $engine->getTotalCount($rawResults), $perPage, $page, [

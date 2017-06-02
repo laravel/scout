@@ -150,9 +150,11 @@ class AlgoliaEngine extends Engine
      *
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  bool  $withTrashed
+     * @param  bool  $onlyTrashed
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function map($results, $model)
+    public function map($results, $model, $withTrashed, $onlyTrashed)
     {
         if (count($results['hits']) === 0) {
             return Collection::make();
@@ -161,9 +163,15 @@ class AlgoliaEngine extends Engine
         $keys = collect($results['hits'])
                         ->pluck('objectID')->values()->all();
 
-        $models = $model->whereIn(
+        $modelQuery = $model->whereIn(
             $model->getQualifiedKeyName(), $keys
-        )->get()->keyBy($model->getKeyName());
+        );
+
+        if ($withTrashed && !$onlyTrashed) $modelQuery->withTrashed();
+        
+        if ($onlyTrashed) $modelQuery->onlyTrashed();
+
+        $models = $modelQuery->get()->keyBy($model->getKeyName());
 
         return Collection::make($results['hits'])->map(function ($hit) use ($model, $models) {
             $key = $hit['objectID'];

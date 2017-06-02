@@ -69,9 +69,11 @@ class NullEngine extends Engine
      *
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  bool  $withTrashed
+     * @param  bool  $onlyTrashed
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function map($results, $model)
+    public function map($results, $model, $withTrashed, $onlyTrashed)
     {
         return Collection::make();
     }

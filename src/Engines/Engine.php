@@ -54,9 +54,11 @@ abstract class Engine
      *
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  bool  $withTrashed
+     * @param  bool  $onlyTrashed
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    abstract public function map($results, $model);
+    abstract public function map($results, $model, $withTrashed, $onlyTrashed);
 
     /**
      * Get the total count from a raw result returned by the engine.
@@ -86,7 +88,7 @@ abstract class Engine
     public function get(Builder $builder)
     {
         return Collection::make($this->map(
-            $this->search($builder), $builder->model
+            $this->search($builder), $builder->model, $builder->withTrashed, $builder->onlyTrashed
         ));
     }
 }
