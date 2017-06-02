@@ -145,7 +145,7 @@ class AlgoliaEngine extends Engine
     protected function numericFilters(Builder $builder)
     {
         $collection = collect($builder->wheres)->filter(function ($where) {
-            return is_int($where);
+            return is_numeric($where);
         });
 
         return $collection->map(function ($value, $key) {
