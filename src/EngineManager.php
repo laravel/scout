@@ -4,6 +4,7 @@ namespace Laravel\Scout;
 
 use Illuminate\Support\Manager;
 use AlgoliaSearch\Client as Algolia;
+use AlgoliaSearch\Version as AlgoliaUserAgent;
 use Laravel\Scout\Engines\NullEngine;
 use Laravel\Scout\Engines\AlgoliaEngine;
 use AlgoliaSearch\Version as AlgoliaUserAgent;
