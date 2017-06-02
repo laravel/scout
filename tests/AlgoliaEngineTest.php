@@ -39,7 +39,6 @@ class AlgoliaEngineTest extends AbstractTestCase
         $client->shouldReceive('initIndex')->with('table')->andReturn($index = Mockery::mock('StdClass'));
         $index->shouldReceive('search')->with('zonda', [
             'numericFilters' => ['foo=1'],
-            'facetFilters' => ['bar:baz'],
         ]);
 
         $engine = new AlgoliaEngine($client);
