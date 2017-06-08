@@ -40,6 +40,11 @@
     "extra": {
         "branch-alias": {
             "dev-master": "3.0-dev"
+        },
+        "laravel": {
+            "providers": [
+                "Laravel\\Scout\\ScoutServiceProvider"
+            ]
         }
     },
     "suggest": {
