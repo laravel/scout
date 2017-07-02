@@ -171,7 +171,7 @@ class AlgoliaEngine extends Engine
             if (isset($models[$key])) {
                 return $models[$key];
             }
-        })->filter();
+        })->filter()->values();
     }
 
     /**
