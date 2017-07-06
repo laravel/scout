@@ -7,6 +7,10 @@
         "search"
     ],
     "license": "MIT",
+    "support": {
+        "issues": "https://github.com/laravel/scout/issues",
+        "source": "https://github.com/laravel/scout"
+    },
     "authors": [
         {
             "name": "Taylor Otwell",
@@ -49,6 +53,9 @@
     },
     "suggest": {
         "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^1.10)."
+    },
+    "config": {
+        "sort-packages": true
     },
     "minimum-stability": "dev",
     "prefer-stable": true
