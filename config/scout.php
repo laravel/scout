@@ -30,22 +30,6 @@ return [
 
     'prefix' => env('SCOUT_PREFIX', ''),
 
-	/*
-	|--------------------------------------------------------------------------
-	| Data Chuck Size
-	|--------------------------------------------------------------------------
-	|
-	| This option allows you to control if the size of the data that syncs
-	| with your search engine. This chuck (page) size allows you to 
-	| optimize the bulk data for both searchable and unsearchable methods.
-	|
-	*/
-
-    'chunk' => [
-	    'searchable' => env('SCOUT_CHUNK_SEARCHABLE', 500),
-	    'unsearchable' => env('SCOUT_CHUNK_UNSEARCHABLE', 500)
-    ],
-
     /*
     |--------------------------------------------------------------------------
     | Queue Data Syncing
@@ -58,6 +42,22 @@ return [
     */
 
     'queue' => env('SCOUT_QUEUE', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Chuck Sizes
+    |--------------------------------------------------------------------------
+    |
+    | These options allow you to control the maximum chunk size when you are
+    | mass importing data into the search engine. This allows you to fine
+    | tune these chunk sizes based on the capabilites of your machines.
+    |
+    */
+
+    'chunk' => [
+        'searchable' => 500,
+        'unsearchable' => 500,
+    ],
 
     /*
     |--------------------------------------------------------------------------
