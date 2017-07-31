@@ -45,7 +45,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Chuck Sizes
+    | Chunk Sizes
     |--------------------------------------------------------------------------
     |
     | These options allow you to control the maximum chunk size when you are
