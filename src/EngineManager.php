@@ -28,7 +28,7 @@ class EngineManager extends Manager
      */
     public function createAlgoliaDriver()
     {
-        AlgoliaUserAgent::$custom_value = '; Laravel Scout integration';
+        AlgoliaUserAgent::addSuffixUserAgentSegment('Laravel Scout', '3.0.7');
 
         return new AlgoliaEngine(new Algolia(
             config('scout.algolia.id'), config('scout.algolia.secret')
