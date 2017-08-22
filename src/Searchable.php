@@ -5,9 +5,12 @@ namespace Laravel\Scout;
 use Laravel\Scout\Jobs\MakeSearchable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
+use Laravel\Scout\ModelObserver;
+use Laravel\Scout\SearchableScope;
 
 trait Searchable
 {
+
     /**
      * Boot the trait.
      *
@@ -57,8 +60,8 @@ trait Searchable
         }
 
         dispatch((new MakeSearchable($models))
-                ->onQueue($models->first()->syncWithSearchUsingQueue())
-                ->onConnection($models->first()->syncWithSearchUsing()));
+            ->onQueue($models->first()->syncWithSearchUsingQueue())
+            ->onConnection($models->first()->syncWithSearchUsing()));
     }
 
     /**
@@ -184,14 +187,25 @@ trait Searchable
     }
 
     /**
-     * Get the indexable data array for the model.
+     * Get the indexable data array for the model and its searchable relations.
      *
      * @return array
      */
     public function toSearchableArray()
     {
-        return $this->toArray();
+        $indices=[];
+        if(empty(self::$searchableAttributes)){
+            $indices = $this->toArray();
+        }
+        else {
+            $indices=array_only($this->toArray(), self::$searchableAttributes);
+        }
+        if(!empty(self::$searchableRelationAttributes)){
+            $indices = array_merge($indices, $this->relationToSearchableArray());
+        }
+        return $indices;
     }
+
 
     /**
      * Get the Scout engine for the model.
@@ -221,5 +235,82 @@ trait Searchable
     public function syncWithSearchUsingQueue()
     {
         return config('scout.queue.queue');
+    }
+
+    /**
+     * Index all indexable relationships
+     *
+     * @return array
+     */
+    private function relationToSearchableArray() {
+        $extraData = [];
+        //load all relations
+        $this->loadRelationTree(array_keys(self::$searchableRelationAttributes));
+
+        foreach (self::$searchableRelationAttributes as $relation=>$fields){
+
+
+            $extraData= array_merge($this->relationDataArray($relation, $fields), $extraData);
+
+
+        }
+
+        return $extraData;
+    }
+
+    /**
+     * Load all searchable relations
+     *
+     * @param array $relationList
+     */
+    public function loadRelationTree(array $relationList){
+        $relations = [];
+        foreach ($relationList as $relation){
+            $relationNodes=[];
+            $position = 0;
+            $needle='.';
+            while(strpos($relation, $needle, $position) > -1){
+                $index = strpos($relation, '.', $position);
+                $relationNodes[] = substr($relation,0,$index);
+                $position = $index + strlen($needle);
+            }
+
+            $relationNodes[]=$relation;
+            $relations=array_unique(array_merge($relations,$relationNodes));
+
+        }
+
+        $this->load($relations);
+    }
+
+    /**
+     * Index all indexable relationship data of a relation
+     *
+     * @param $relation
+     * @param $fields
+     *
+     * @return array
+     */
+    private function relationDataArray($relation, $fields){
+        $extraData=[];
+        $data = $this->toArray();
+        foreach (explode('.', $relation) as $node){
+            $data=$data[$node];
+        }
+
+        if(!is_null($data)) {
+            if(!empty($fields)){
+                $data = array_only($data, $fields);
+            }
+            foreach ($data as $key => $value) {
+                if (!is_array($value)) {
+                    $extraData[str_replace('.', '_', $relation) . '_'
+                    . $key]
+                        = $value;
+                }
+            }
+        }
+
+        return $extraData;
     }
 }
