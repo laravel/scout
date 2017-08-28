@@ -178,21 +178,19 @@ class Builder
      * @param  int  $perPage
      * @param  string  $pageName
      * @param  int|null  $page
-     * @param  bool  $isRaw
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginate($perPage = null, $pageName = 'page', $page = null, $isRaw = false)
+    public function paginate($perPage = null, $pageName = 'page', $page = null)
     {
         $engine = $this->engine();
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
         $perPage = $perPage ?: $this->model->getPerPage();
-        $rawResults = $engine->paginate($this, $perPage, $page);
-        $results = $isRaw ? $rawResults :
-            Collection::make($engine->map(
-            $rawResults, $this->model
-            ))  ;
+
+        $results = Collection::make($engine->map(
+            $rawResults = $engine->paginate($this, $perPage, $page), $this->model
+        ));
 
         $paginator = (new LengthAwarePaginator($results, $engine->getTotalCount($rawResults), $perPage, $page, [
             'path' => Paginator::resolveCurrentPath(),
@@ -200,16 +198,6 @@ class Builder
         ]));
 
         return $paginator->appends('query', $this->query);
-    }
-
-    /**
-     * Paginate the given query into a raw data paginator.
-     *
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
-     */
-    public function paginateRaw()
-    {
-        return $this->paginate($perPage = null, $pageName = 'page', $page = null, $isRaw = true);
     }
 
     /**
