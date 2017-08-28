@@ -201,6 +201,32 @@ class Builder
     }
 
     /**
+     * Paginate the given query into a simple paginator with raw data.
+     *
+     * @param  int  $perPage
+     * @param  string  $pageName
+     * @param  int|null  $page
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function paginateRaw($perPage = null, $pageName = 'page', $page = null)
+    {
+        $engine = $this->engine();
+
+        $page = $page ?: Paginator::resolveCurrentPage($pageName);
+
+        $perPage = $perPage ?: $this->model->getPerPage();
+
+        $results =  $engine->paginate($this, $perPage, $page);
+
+        $paginator = (new LengthAwarePaginator($results, $engine->getTotalCount($results), $perPage, $page, [
+            'path' => Paginator::resolveCurrentPath(),
+            'pageName' => $pageName,
+        ]));
+
+        return $paginator->appends('query', $this->query);
+    }
+
+    /**
      * Get the engine that should handle the query.
      *
      * @return mixed
