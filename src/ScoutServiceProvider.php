@@ -3,7 +3,9 @@
 namespace Laravel\Scout;
 
 use Illuminate\Support\ServiceProvider;
+use Laravel\Scout\Console\FlushAllCommand;
 use Laravel\Scout\Console\FlushCommand;
+use Laravel\Scout\Console\ImportAllCommand;
 use Laravel\Scout\Console\ImportCommand;
 
 class ScoutServiceProvider extends ServiceProvider
@@ -21,7 +23,9 @@ class ScoutServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
+                ImportAllCommand::class,
                 ImportCommand::class,
+                FlushAllCommand::class,
                 FlushCommand::class,
             ]);
 
