@@ -59,4 +59,17 @@ return [
         'secret' => env('ALGOLIA_SECRET', ''),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | List of searchable models
+    |--------------------------------------------------------------------------
+    |
+    | Here you may list models that should be searchable.
+    | Models array should contain model name or path to it without
+    | default path \App.
+    |
+    */
+
+    'models' => [],
+
 ];
