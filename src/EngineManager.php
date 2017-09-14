@@ -52,6 +52,10 @@ class EngineManager extends Manager
      */
     public function getDefaultDriver()
     {
-        return $this->app['config']['scout.driver'] ?? 'null';
+        if (is_null($this->app['config']['scout.driver'])) {
+            return 'null';
+        }
+
+        return $this->app['config']['scout.driver'];
     }
 }
