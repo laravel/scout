@@ -5,6 +5,7 @@ namespace Laravel\Scout;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 use Laravel\Scout\Events\ModelsImported;
+use Laravel\Scout\Events\ModelsFlushed;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 
 class SearchableScope implements Scope
@@ -40,6 +41,8 @@ class SearchableScope implements Scope
         $builder->macro('unsearchable', function (EloquentBuilder $builder, $chunk = null) {
             $builder->chunk($chunk ?: config('scout.chunk.unsearchable', 500), function ($models) use ($builder) {
                 $models->unsearchable();
+
+                event(new ModelsFlushed($models));
             });
         });
     }
