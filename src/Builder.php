@@ -172,7 +172,7 @@ class Builder
     {
         if( $columns ){
             return $this->engine()->get($this)->map(function($model) use($columns){
-                return $model->whereId($model->id)->first($columns);
+                return $model->only($columns);
             });
         }
         return $this->engine()->get($this);
