@@ -165,10 +165,16 @@ class Builder
     /**
      * Get the results of the search.
      *
+     * @param  array $columns
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function get()
+    public function get($columns = null)
     {
+        if( $columns ){
+            return $this->engine()->get($this)->map(function($model) use($columns){
+                return $model->only($columns);
+            });
+        }
         return $this->engine()->get($this);
     }
 
