@@ -58,6 +58,13 @@ class Builder
     public $orders = [];
 
     /**
+     * The "restricted searchable attributes" that should be applied to the search.
+     *
+     * @var array
+     */
+    public $searchableAttributes = [];
+
+    /**
      * Create a new search builder instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -86,15 +93,41 @@ class Builder
     }
 
     /**
+     * Specify the attribute to search on.
+     *
+     * @param  string $attribute
+     */
+    public function onAttribute(string $attribute)
+    {
+        $this->searchableAttributes = [$attribute];
+
+        return $this;
+    }
+
+    /**
+     * Specify the attributes to search on.
+     *
+     * @param  mixed $attribute
+     */
+    public function onAttributes($attributes)
+    {
+        $this->searchableAttributes = is_array($attributes) ? $attributes : func_get_args();
+
+        return $this;
+    }
+
+
+    /**
      * Add a constraint to the search query.
      *
      * @param  string  $field
+     * @param  mixed  $operator
      * @param  mixed  $value
      * @return $this
      */
-    public function where($field, $value)
+    public function where($field, $operator, $value = null)
     {
-        $this->wheres[$field] = $value;
+        $this->wheres[$field] = $value === null ? ['=', $operator] : [$operator, $value];
 
         return $this;
     }

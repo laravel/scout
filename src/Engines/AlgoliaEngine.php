@@ -76,6 +76,7 @@ class AlgoliaEngine extends Engine
         return $this->performSearch($builder, array_filter([
             'numericFilters' => $this->filters($builder),
             'hitsPerPage' => $builder->limit,
+            'restrictSearchableAttributes' => $this->searchableAttributes($builder),
         ]));
     }
 
@@ -91,6 +92,7 @@ class AlgoliaEngine extends Engine
     {
         return $this->performSearch($builder, [
             'numericFilters' => $this->filters($builder),
+            'restrictSearchableAttributes' => $this->searchableAttributes($builder),
             'hitsPerPage' => $perPage,
             'page' => $page - 1,
         ]);
@@ -130,8 +132,25 @@ class AlgoliaEngine extends Engine
     protected function filters(Builder $builder)
     {
         return collect($builder->wheres)->map(function ($value, $key) {
-            return $key.'='.$value;
+            $operator = '=';
+
+            if (is_array($value)) {
+                list($operator, $value) = $value;
+            }
+
+            return $key.$operator.$value;
         })->values()->all();
+    }
+
+    /**
+     * Get the searchable attributes array for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
+     */
+    protected function searchableAttributes(Builder $builder)
+    {
+        return $builder->searchableAttributes;
     }
 
     /**
