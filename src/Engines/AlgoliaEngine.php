@@ -38,7 +38,7 @@ class AlgoliaEngine extends Engine
         $index = $this->algolia->initIndex($models->first()->searchableAs());
 
         $index->addObjects($models->map(function ($model) {
-            $array = $model->toSearchableArray();
+            $array = array_merge($model->toSearchableArray(), $model->scoutMetadata());
 
             if (empty($array)) {
                 return;
@@ -161,7 +161,10 @@ class AlgoliaEngine extends Engine
         $keys = collect($results['hits'])
                         ->pluck('objectID')->values()->all();
 
-        $models = $model->whereIn(
+        $builder = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses_recursive($model))
+                    ? $model->withTrashed() : $model->newQuery();
+
+        $models = $builder->whereIn(
             $model->getQualifiedKeyName(), $keys
         )->get()->keyBy($model->getKeyName());
 

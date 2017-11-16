@@ -84,7 +84,13 @@ class ModelObserver
             return;
         }
 
-        $model->unsearchable();
+        if ($this->usesSoftDelete($model) && config('scout.soft_delete', false)) {
+            $model->setScoutMeta('__soft_deleted', 1);
+
+            $this->created($model);
+        } else {
+            $model->unsearchable();
+        }
     }
 
     /**
@@ -95,6 +101,21 @@ class ModelObserver
      */
     public function restored($model)
     {
+        if ($this->usesSoftDelete($model) && config('scout.soft_delete', false)) {
+            $model->setScoutMeta('__soft_deleted', 0);
+        }
+
         $this->created($model);
+    }
+
+    /**
+     * Determine if the given model uses soft deletes.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return bool
+     */
+    private function usesSoftDelete($model)
+    {
+        return in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses_recursive($model));
     }
 }

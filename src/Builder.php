@@ -73,6 +73,10 @@ class Builder
         $this->model = $model;
         $this->query = $query;
         $this->callback = $callback;
+
+        if (config('scout.soft_delete', false)) {
+            $this->wheres['__soft_deleted'] = 0;
+        }
     }
 
     /**
@@ -98,6 +102,20 @@ class Builder
     public function where($field, $value)
     {
         $this->wheres[$field] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Add a constraint to the search query.
+     *
+     * @param  string  $field
+     * @param  mixed  $value
+     * @return $this
+     */
+    public function withTrashed()
+    {
+        unset($this->wheres['__soft_deleted']);
 
         return $this;
     }
