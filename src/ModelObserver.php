@@ -2,6 +2,8 @@
 
 namespace Laravel\Scout;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class ModelObserver
 {
     /**
@@ -85,9 +87,7 @@ class ModelObserver
         }
 
         if ($this->usesSoftDelete($model) && config('scout.soft_delete', false)) {
-            $model->setScoutMeta('__soft_deleted', 1);
-
-            $this->created($model);
+            $this->updated($model->withScoutMetadata('__soft_deleted', 1));
         } else {
             $model->unsearchable();
         }
@@ -102,7 +102,7 @@ class ModelObserver
     public function restored($model)
     {
         if ($this->usesSoftDelete($model) && config('scout.soft_delete', false)) {
-            $model->setScoutMeta('__soft_deleted', 0);
+            $model->withScoutMetadata('__soft_deleted', 0);
         }
 
         $this->created($model);
@@ -116,6 +116,6 @@ class ModelObserver
      */
     private function usesSoftDelete($model)
     {
-        return in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses_recursive($model));
+        return in_array(SoftDeletes::class, class_uses_recursive($model));
     }
 }

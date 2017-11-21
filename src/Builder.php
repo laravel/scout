@@ -107,7 +107,7 @@ class Builder
     }
 
     /**
-     * Add a constraint to the search query.
+     * Include soft deleted records in the results.
      *
      * @param  string  $field
      * @param  mixed  $value

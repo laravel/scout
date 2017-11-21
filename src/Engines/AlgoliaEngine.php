@@ -5,6 +5,7 @@ namespace Laravel\Scout\Engines;
 use Laravel\Scout\Builder;
 use AlgoliaSearch\Client as Algolia;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AlgoliaEngine extends Engine
 {
@@ -38,7 +39,9 @@ class AlgoliaEngine extends Engine
         $index = $this->algolia->initIndex($models->first()->searchableAs());
 
         $index->addObjects($models->map(function ($model) {
-            $array = array_merge($model->toSearchableArray(), $model->scoutMetadata());
+            $array = array_merge(
+                $model->toSearchableArray(), $model->scoutMetadata()
+            );
 
             if (empty($array)) {
                 return;
@@ -161,8 +164,8 @@ class AlgoliaEngine extends Engine
         $keys = collect($results['hits'])
                         ->pluck('objectID')->values()->all();
 
-        $builder = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses_recursive($model))
-                    ? $model->withTrashed() : $model->newQuery();
+        $builder = in_array(SoftDeletes::class, class_uses_recursive($model))
+                        ? $model->withTrashed() : $model->newQuery();
 
         $models = $builder->whereIn(
             $model->getQualifiedKeyName(), $keys
