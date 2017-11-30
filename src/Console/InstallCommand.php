@@ -37,8 +37,8 @@ class InstallCommand extends Command
 
         $manager = realpath(__DIR__ . '/../EngineManager.php');
 
-        $content = str_replace(
-            'const VERSION = null;',
+        $content = preg_replace(
+            "/const VERSION = [^;]+;/",
             "const VERSION = '{$version}';",
             file_get_contents($manager)
         );
