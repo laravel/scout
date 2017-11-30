@@ -52,8 +52,8 @@
         }
     },
     "scripts": {
-        "post-update-cmd": "Laravel\\Scout\\Console\\InstallCommand::handle",
-        "post-install-cmd": "Laravel\\Scout\\Console\\InstallCommand::handle"
+        "post-update-cmd": "Laravel\\Scout\\ComposerScripts::postInstall",
+        "post-install-cmd": "Laravel\\Scout\\ComposerScripts::postUpdate"
     },
     "suggest": {
         "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^1.10)."
