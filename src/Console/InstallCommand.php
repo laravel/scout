@@ -32,7 +32,7 @@ class InstallCommand extends Command
         $this->info('Setting Laravel Scout version...');
 
         $version = collect(
-            json_decode(file_get_contents(realpath(__DIR__ . '/../../../../composer/installed.json')))
+            json_decode(file_get_contents(base_path('vendor/composer/installed.json')))
         )->where('name', 'laravel/scout')->first()->version;
 
         $manager = realpath(__DIR__ . '/../EngineManager.php');
