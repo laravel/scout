@@ -10,6 +10,8 @@ use AlgoliaSearch\Version as AlgoliaUserAgent;
 
 class EngineManager extends Manager
 {
+    const VERSION = null;
+
     /**
      * Get a driver instance.
      *
@@ -28,7 +30,7 @@ class EngineManager extends Manager
      */
     public function createAlgoliaDriver()
     {
-        AlgoliaUserAgent::addSuffixUserAgentSegment('Laravel Scout', '3.0.10');
+        AlgoliaUserAgent::addSuffixUserAgentSegment('Laravel Scout', self::VERSION);
 
         return new AlgoliaEngine(new Algolia(
             config('scout.algolia.id'), config('scout.algolia.secret')

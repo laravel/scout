@@ -11,7 +11,7 @@ sudo: false
 services:
     - elasticsearch
 
-install: travis_retry composer install --no-interaction --prefer-dist
+install: travis_retry composer install --no-interaction --prefer-dist --no-scripts
 
 before_script:
     - sleep 10
