@@ -114,7 +114,7 @@ class ModelObserver
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return bool
      */
-    private function usesSoftDelete($model)
+    protected function usesSoftDelete($model)
     {
         return in_array(SoftDeletes::class, class_uses_recursive($model));
     }
