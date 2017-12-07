@@ -161,14 +161,12 @@ class AlgoliaEngine extends Engine
             return Collection::make();
         }
 
-        $keys = collect($results['hits'])
-                        ->pluck('objectID')->values()->all();
-
         $builder = in_array(SoftDeletes::class, class_uses_recursive($model))
-                        ? $model->withTrashed() : $model->newQuery();
+                    ? $model->withTrashed() : $model->newQuery();
 
         $models = $builder->whereIn(
-            $model->getQualifiedKeyName(), $keys
+            $model->getQualifiedKeyName(),
+            collect($results['hits'])->pluck('objectID')->values()->all()
         )->get()->keyBy($model->getKeyName());
 
         return Collection::make($results['hits'])->map(function ($hit) use ($model, $models) {
