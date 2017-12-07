@@ -22,4 +22,9 @@ class TestModel extends Model
     {
         return ['id' => 1];
     }
+
+    public function scoutMetadata()
+    {
+        return [];
+    }
 }

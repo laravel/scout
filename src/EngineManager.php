@@ -6,6 +6,7 @@ use Illuminate\Support\Manager;
 use AlgoliaSearch\Client as Algolia;
 use Laravel\Scout\Engines\NullEngine;
 use Laravel\Scout\Engines\AlgoliaEngine;
+use AlgoliaSearch\Version as AlgoliaUserAgent;
 
 class EngineManager extends Manager
 {
@@ -27,6 +28,8 @@ class EngineManager extends Manager
      */
     public function createAlgoliaDriver()
     {
+        AlgoliaUserAgent::addSuffixUserAgentSegment('Laravel Scout', '3.0.10');
+
         return new AlgoliaEngine(new Algolia(
             config('scout.algolia.id'), config('scout.algolia.secret')
         ));
@@ -49,6 +52,10 @@ class EngineManager extends Manager
      */
     public function getDefaultDriver()
     {
+        if (is_null($this->app['config']['scout.driver'])) {
+            return 'null';
+        }
+
         return $this->app['config']['scout.driver'];
     }
 }

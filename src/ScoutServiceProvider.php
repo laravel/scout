@@ -26,7 +26,7 @@ class ScoutServiceProvider extends ServiceProvider
             ]);
 
             $this->publishes([
-                __DIR__.'/../config/scout.php' => config_path('scout.php'),
+                __DIR__.'/../config/scout.php' => $this->app['path.config'].DIRECTORY_SEPARATOR.'scout.php',
             ]);
         }
     }

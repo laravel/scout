@@ -3,11 +3,14 @@
 namespace Laravel\Scout;
 
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Traits\Macroable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class Builder
 {
+    use Macroable;
+
     /**
      * The model instance.
      *
@@ -70,6 +73,10 @@ class Builder
         $this->model = $model;
         $this->query = $query;
         $this->callback = $callback;
+
+        if (config('scout.soft_delete', false)) {
+            $this->wheres['__soft_deleted'] = 0;
+        }
     }
 
     /**
@@ -95,6 +102,20 @@ class Builder
     public function where($field, $value)
     {
         $this->wheres[$field] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Include soft deleted records in the results.
+     *
+     * @param  string  $field
+     * @param  mixed  $value
+     * @return $this
+     */
+    public function withTrashed()
+    {
+        unset($this->wheres['__soft_deleted']);
 
         return $this;
     }
@@ -130,6 +151,16 @@ class Builder
     }
 
     /**
+     * Get the raw results of the search.
+     *
+     * @return mixed
+     */
+    public function raw()
+    {
+        return $this->engine()->search($this);
+    }
+
+    /**
      * Get the keys of search results.
      *
      * @return \Illuminate\Support\Collection
@@ -159,7 +190,6 @@ class Builder
         return $this->engine()->get($this);
     }
 
-
     /**
      * Paginate the given query into a simple paginator.
      *
@@ -181,6 +211,32 @@ class Builder
         ));
 
         $paginator = (new LengthAwarePaginator($results, $engine->getTotalCount($rawResults), $perPage, $page, [
+            'path' => Paginator::resolveCurrentPath(),
+            'pageName' => $pageName,
+        ]));
+
+        return $paginator->appends('query', $this->query);
+    }
+
+    /**
+     * Paginate the given query into a simple paginator with raw data.
+     *
+     * @param  int  $perPage
+     * @param  string  $pageName
+     * @param  int|null  $page
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function paginateRaw($perPage = null, $pageName = 'page', $page = null)
+    {
+        $engine = $this->engine();
+
+        $page = $page ?: Paginator::resolveCurrentPage($pageName);
+
+        $perPage = $perPage ?: $this->model->getPerPage();
+
+        $results =  $engine->paginate($this, $perPage, $page);
+
+        $paginator = (new LengthAwarePaginator($results, $engine->getTotalCount($results), $perPage, $page, [
             'path' => Paginator::resolveCurrentPath(),
             'pageName' => $pageName,
         ]));
