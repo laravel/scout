@@ -104,7 +104,13 @@ trait Searchable
     {
         $self = new static();
 
+        $softDeletes = in_array(SoftDeletes::class, class_uses_recursive(get_called_class())) &&
+                       config('scout.soft_delete', false);
+
         $self->newQuery()
+            ->when($softDeletes, function ($query) {
+                $query->withTrashed();
+            })
             ->orderBy($self->getKeyName())
             ->searchable();
     }

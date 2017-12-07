@@ -65,6 +65,8 @@ class ModelStubForMakeAllSearchable extends SearchableTestModel
             ->andReturnSelf()
             ->shouldReceive('searchable');
 
+        $mock->shouldReceive('when')->andReturnSelf();
+
         return $mock;
     }
 }
