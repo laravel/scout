@@ -36,7 +36,15 @@ class AlgoliaEngine extends Engine
      */
     public function update($models)
     {
+        if ($models->isEmpty()) {
+            return;
+        }
+
         $index = $this->algolia->initIndex($models->first()->searchableAs());
+
+        if ($this->usesSoftDelete($models->first()) && config('scout.soft_delete', false)) {
+            $models->each->pushSoftDeleteMetadata();
+        }
 
         $index->addObjects($models->map(function ($model) {
             $array = array_merge(
@@ -161,14 +169,12 @@ class AlgoliaEngine extends Engine
             return Collection::make();
         }
 
-        $keys = collect($results['hits'])
-                        ->pluck('objectID')->values()->all();
-
         $builder = in_array(SoftDeletes::class, class_uses_recursive($model))
-                        ? $model->withTrashed() : $model->newQuery();
+                    ? $model->withTrashed() : $model->newQuery();
 
         $models = $builder->whereIn(
-            $model->getQualifiedKeyName(), $keys
+            $model->getQualifiedKeyName(),
+            collect($results['hits'])->pluck('objectID')->values()->all()
         )->get()->keyBy($model->getKeyName());
 
         return Collection::make($results['hits'])->map(function ($hit) use ($model, $models) {
@@ -189,5 +195,16 @@ class AlgoliaEngine extends Engine
     public function getTotalCount($results)
     {
         return $results['nbHits'];
+    }
+
+    /**
+     * Determine if the given model uses soft deletes.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return bool
+     */
+    protected function usesSoftDelete($model)
+    {
+        return in_array(SoftDeletes::class, class_uses_recursive($model));
     }
 }

@@ -121,6 +121,20 @@ class Builder
     }
 
     /**
+     * Include only soft deleted records in the results.
+     *
+     * @param  string  $field
+     * @param  mixed  $value
+     * @return $this
+     */
+    public function onlyTrashed()
+    {
+        return tap($this->withTrashed(), function () {
+            $this->wheres['__soft_deleted'] = 1;
+        });
+    }
+
+    /**
      * Set the "limit" for the search query.
      *
      * @param  int  $limit

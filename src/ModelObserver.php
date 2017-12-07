@@ -87,7 +87,7 @@ class ModelObserver
         }
 
         if ($this->usesSoftDelete($model) && config('scout.soft_delete', false)) {
-            $this->updated($model->withScoutMetadata('__soft_deleted', 1));
+            $this->updated($model);
         } else {
             $model->unsearchable();
         }
@@ -101,10 +101,6 @@ class ModelObserver
      */
     public function restored($model)
     {
-        if ($this->usesSoftDelete($model) && config('scout.soft_delete', false)) {
-            $model->withScoutMetadata('__soft_deleted', 0);
-        }
-
         $this->created($model);
     }
 
@@ -114,7 +110,7 @@ class ModelObserver
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return bool
      */
-    private function usesSoftDelete($model)
+    protected function usesSoftDelete($model)
     {
         return in_array(SoftDeletes::class, class_uses_recursive($model));
     }

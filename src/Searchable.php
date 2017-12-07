@@ -231,6 +231,16 @@ trait Searchable
     }
 
     /**
+     * Sync the soft deleted status for this model into the metadata.
+     *
+     * @return $this
+     */
+    public function pushSoftDeleteMetadata()
+    {
+        return $this->withScoutMetadata('__soft_deleted', $this->trashed() ? 1 : 0);
+    }
+
+    /**
      * Get all Scout related metadata.
      *
      * @return array
