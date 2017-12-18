@@ -11,6 +11,7 @@ class ModelObserverTest extends AbstractTestCase
     {
         $observer = new ModelObserver;
         $model = Mockery::mock();
+        $model->shouldReceive('shouldBeSearchable')->andReturn(true);
         $model->shouldReceive('searchable');
         $observer->created($model);
     }
@@ -24,10 +25,20 @@ class ModelObserverTest extends AbstractTestCase
         $observer->created($model);
     }
 
+    public function test_created_handler_doesnt_make_model_searchable_when_disabled_per_model_rule()
+    {
+        $observer = new ModelObserver;
+        $model = Mockery::mock();
+        $model->shouldReceive('shouldBeSearchable')->andReturn(false);
+        $model->shouldReceive('searchable')->never();
+        $observer->created($model);
+    }
+
     public function test_updated_handler_makes_model_searchable()
     {
         $observer = new ModelObserver;
         $model = Mockery::mock();
+        $model->shouldReceive('shouldBeSearchable')->andReturn(true);
         $model->shouldReceive('searchable');
         $observer->updated($model);
     }
@@ -44,6 +55,7 @@ class ModelObserverTest extends AbstractTestCase
     {
         $observer = new ModelObserver;
         $model = Mockery::mock();
+        $model->shouldReceive('shouldBeSearchable')->andReturn(true);
         $model->shouldReceive('searchable');
         $observer->restored($model);
     }

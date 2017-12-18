@@ -197,6 +197,16 @@ trait Searchable
     }
 
     /**
+     * Determine if the model should be searchable.
+     * 
+     * @return boolean
+     */
+    public function shouldBeSearchable()
+    {
+        return true;
+    }
+
+    /**
      * Get the indexable data array for the model.
      *
      * @return array

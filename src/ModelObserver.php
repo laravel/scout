@@ -59,6 +59,10 @@ class ModelObserver
         if (static::syncingDisabledFor($model)) {
             return;
         }
+        
+        if (! $model->shouldBeSearchable()) {
+            return;
+        }
 
         $model->searchable();
     }
