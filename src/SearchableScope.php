@@ -32,7 +32,7 @@ class SearchableScope implements Scope
     {
         $builder->macro('searchable', function (EloquentBuilder $builder, $chunk = null) {
             $builder->chunk($chunk ?: config('scout.chunk.searchable', 500), function ($models) use ($builder) {
-                $models->searchable();
+                $models->filter->shouldBeSearchable()->searchable();
 
                 event(new ModelsImported($models));
             });
