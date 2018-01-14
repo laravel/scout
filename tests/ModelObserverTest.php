@@ -7,40 +7,31 @@ use Laravel\Scout\ModelObserver;
 
 class ModelObserverTest extends AbstractTestCase
 {
-    public function test_created_handler_makes_model_searchable()
+    public function test_saved_handler_makes_model_searchable()
     {
         $observer = new ModelObserver;
         $model = Mockery::mock();
         $model->shouldReceive('shouldBeSearchable')->andReturn(true);
         $model->shouldReceive('searchable');
-        $observer->created($model);
+        $observer->saved($model);
     }
 
-    public function test_created_handler_doesnt_make_model_searchable_when_disabled()
+    public function test_saved_handler_doesnt_make_model_searchable_when_disabled()
     {
         $observer = new ModelObserver;
         $model = Mockery::mock();
         $observer->disableSyncingFor(get_class($model));
         $model->shouldReceive('searchable')->never();
-        $observer->created($model);
+        $observer->saved($model);
     }
 
-    public function test_created_handler_doesnt_make_model_searchable_when_disabled_per_model_rule()
+    public function test_saved_handler_doesnt_make_model_searchable_when_disabled_per_model_rule()
     {
         $observer = new ModelObserver;
         $model = Mockery::mock();
         $model->shouldReceive('shouldBeSearchable')->andReturn(false);
         $model->shouldReceive('searchable')->never();
-        $observer->created($model);
-    }
-
-    public function test_updated_handler_makes_model_searchable()
-    {
-        $observer = new ModelObserver;
-        $model = Mockery::mock();
-        $model->shouldReceive('shouldBeSearchable')->andReturn(true);
-        $model->shouldReceive('searchable');
-        $observer->updated($model);
+        $observer->saved($model);
     }
 
     public function test_deleted_handler_makes_model_unsearchable()
