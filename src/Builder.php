@@ -109,8 +109,6 @@ class Builder
     /**
      * Include soft deleted records in the results.
      *
-     * @param  string  $field
-     * @param  mixed  $value
      * @return $this
      */
     public function withTrashed()
@@ -123,8 +121,6 @@ class Builder
     /**
      * Include only soft deleted records in the results.
      *
-     * @param  string  $field
-     * @param  mixed  $value
      * @return $this
      */
     public function onlyTrashed()
