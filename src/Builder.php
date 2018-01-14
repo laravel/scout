@@ -65,7 +65,7 @@ class Builder
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @param  string  $query
-     * @param  Closure  $callback
+     * @param  \Closure  $callback
      * @return void
      */
     public function __construct($model, $query, $callback = null)
