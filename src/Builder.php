@@ -63,18 +63,18 @@ class Builder
     /**
      * Create a new search builder instance.
      *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @param  string  $query
-     * @param  \Closure  $callback
-     * @return void
+     * @param  \Illuminate\Database\Eloquent\Model $model
+     * @param  string $query
+     * @param  \Closure $callback
+     * @param bool $soft_delete
      */
-    public function __construct($model, $query, $callback = null)
+    public function __construct($model, $query, $callback = null, $soft_delete = false)
     {
         $this->model = $model;
         $this->query = $query;
         $this->callback = $callback;
 
-        if (config('scout.soft_delete', false)) {
+        if ($soft_delete) {
             $this->wheres['__soft_deleted'] = 0;
         }
     }

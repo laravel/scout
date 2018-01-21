@@ -50,7 +50,7 @@ return [
     |
     | These options allow you to control the maximum chunk size when you are
     | mass importing data into the search engine. This allows you to fine
-    | tune these chunk sizes based on the capabilites of your machines.
+    | tune these chunk sizes based on the capabilities of your machines.
     |
     */
 
@@ -58,6 +58,16 @@ return [
         'searchable' => 500,
         'unsearchable' => 500,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Soft Deletes
+    |--------------------------------------------------------------------------
+    |
+    | This option allows to control whether to keep soft deleted records.
+    |
+    */
+    'soft_delete' => false,
 
     /*
     |--------------------------------------------------------------------------
