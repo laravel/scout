@@ -63,10 +63,11 @@ class Builder
     /**
      * Create a new search builder instance.
      *
-     * @param  \Illuminate\Database\Eloquent\Model $model
-     * @param  string $query
-     * @param  \Closure $callback
-     * @param bool $soft_delete
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  string  $query
+     * @param  \Closure  $callback
+     * @param  bool  $softDelete
+     * @return void
      */
     public function __construct($model, $query, $callback = null, $softDelete = false)
     {
