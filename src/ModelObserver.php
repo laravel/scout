@@ -128,7 +128,7 @@ class ModelObserver
     /**
      * Sync the unsearchable model if configured to do so.
      *
-     * @param \Illuminate\Database\Eloquent\Model  $model
+     * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return void
      */
     protected function syncUnsearchable($model)
