@@ -25,16 +25,7 @@ class ModelObserverTest extends AbstractTestCase
         $observer->saved($model);
     }
 
-    public function test_saved_handler_doesnt_make_model_searchable_when_disabled_per_model_rule()
-    {
-        $observer = new ModelObserver;
-        $model = Mockery::mock();
-        $model->shouldReceive('shouldBeSearchable')->andReturn(false);
-        $model->shouldReceive('searchable')->never();
-        $observer->saved($model);
-    }
-
-    public function test_saved_handler_makes_model_unsearchable_when_disabled_per_model_rule_and_configured_to_sync()
+    public function test_saved_handler_makes_model_unsearchable_when_disabled_per_model_rule()
     {
         $observer = new ModelObserver;
         $model = Mockery::mock();
