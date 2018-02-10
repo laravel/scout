@@ -61,6 +61,8 @@ class ModelObserver
         }
 
         if (! $model->shouldBeSearchable()) {
+            $this->syncUnsearchable($model);
+
             return;
         }
 
@@ -79,7 +81,7 @@ class ModelObserver
             return;
         }
 
-        if ($this->usesSoftDelete($model) && config('scout.soft_delete', false)) {
+        if ($this->shouldSyncSoftDeletes($model)) {
             $this->saved($model);
         } else {
             $model->unsearchable();
@@ -121,5 +123,46 @@ class ModelObserver
     protected function usesSoftDelete($model)
     {
         return in_array(SoftDeletes::class, class_uses_recursive($model));
+    }
+
+    /**
+     * Sync the unsearchable model if configured to do so.
+     *
+     * @param \Illuminate\Database\Eloquent\Model  $model
+     * @return void
+     */
+    protected function syncUnsearchable($model)
+    {
+        if (! $this->shouldSyncUnsearchable($model)) {
+            return;
+        }
+
+        $this->deleted($model);
+    }
+
+    /**
+     * Determine if soft deletes should be synced for the given model.
+     *
+     * @param \Illuminate\Database\Eloquent\Model  $model
+     * @return bool
+     */
+    protected function shouldSyncSoftDeletes($model)
+    {
+        return $this->usesSoftDelete($model) && config('scout.soft_delete', false);
+    }
+
+    /**
+     * Determine if unsearchable models should be synced.
+     *
+     * @param \Illuminate\Database\Eloquent\Model  $model
+     * @return bool
+     */
+    protected function shouldSyncUnsearchable($model)
+    {
+        if (! config('scout.sync_unsearchables', false)) {
+            return false;
+        }
+
+        return ! $this->shouldSyncSoftDeletes($model);
     }
 }

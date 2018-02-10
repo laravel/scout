@@ -74,6 +74,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Sync unsearchables
+    |--------------------------------------------------------------------------
+    |
+    | This option allows you to control whether to make the model unsearchable
+    | in case a model should not be searchable anymore. This can be helpful
+    | when an entity was active, but deactivated when saving for example.
+    |
+    */
+
+    'sync_unsearchables' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Algolia Configuration
     |--------------------------------------------------------------------------
     |
