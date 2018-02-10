@@ -61,7 +61,7 @@ class ModelObserver
         }
 
         if (! $model->shouldBeSearchable()) {
-            $this->syncUnsearchable($model);
+            $model->unsearchable();
 
             return;
         }
@@ -123,20 +123,5 @@ class ModelObserver
     protected function usesSoftDelete($model)
     {
         return in_array(SoftDeletes::class, class_uses_recursive($model));
-    }
-
-    /**
-     * Sync the unsearchable model if configured to do so.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @return void
-     */
-    protected function syncUnsearchable($model)
-    {
-        if (! config('scout.sync_unsearchables', false)) {
-            return;
-        }
-
-        $model->unsearchable();
     }
 }
