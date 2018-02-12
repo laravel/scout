@@ -61,6 +61,8 @@ class ModelObserver
         }
 
         if (! $model->shouldBeSearchable()) {
+            $model->unsearchable();
+
             return;
         }
 
