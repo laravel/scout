@@ -18,6 +18,15 @@ class TestModel extends Model
         return $this->id;
     }
 
+    /**
+     * The default key of Models with Searchable-Trait
+     * @return mixed
+     */
+    public function getScoutKey()
+    {
+        return $this->getKey();
+    }
+
     public function toSearchableArray()
     {
         return ['id' => 1];

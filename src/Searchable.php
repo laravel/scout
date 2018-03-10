@@ -281,4 +281,14 @@ trait Searchable
 
         return $this;
     }
+
+    /**
+     * Gets the key which is used to index the model
+     * Override this method to use an other key than the eloquent key
+     *
+     * @return void
+     */
+    public function getScoutKey(){
+        return $this->getKey();
+    }
 }

@@ -55,7 +55,7 @@ class AlgoliaEngine extends Engine
                 return;
             }
 
-            return array_merge(['objectID' => $model->getKey()], $array);
+            return array_merge(['objectID' => $model->getScoutKey()], $array);
         })->filter()->values()->all());
     }
 
@@ -71,7 +71,7 @@ class AlgoliaEngine extends Engine
 
         $index->deleteObjects(
             $models->map(function ($model) {
-                return $model->getKey();
+                return $model->getScoutKey();
             })->values()->all()
         );
     }

@@ -5,6 +5,7 @@ namespace Tests;
 use Mockery;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\AlgoliaEngine;
+use Tests\Fixtures\AlgoliaEngineTestCustomKeyModel;
 use Tests\Fixtures\AlgoliaEngineTestModel;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -64,5 +65,28 @@ class AlgoliaEngineTest extends AbstractTestCase
         ]], $model);
 
         $this->assertEquals(1, count($results));
+    }
+
+    public function test_a_model_is_indexed_with_a_custom_algolia_key()
+    {
+        $client = Mockery::mock('AlgoliaSearch\Client');
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = Mockery::mock('StdClass'));
+        $index->shouldReceive('addObjects')->with([[
+            'id' => 1,
+            'objectID' => 'my-algolia-key.1',
+        ]]);
+
+        $engine = new AlgoliaEngine($client);
+        $engine->update(Collection::make([new AlgoliaEngineTestCustomKeyModel()]));
+    }
+
+    public function test_a_model_is_removed_with_a_custom_algolia_key()
+    {
+        $client = Mockery::mock('AlgoliaSearch\Client');
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = Mockery::mock('StdClass'));
+        $index->shouldReceive('deleteObjects')->with(['my-algolia-key.1']);
+
+        $engine = new AlgoliaEngine($client);
+        $engine->delete(Collection::make([new AlgoliaEngineTestCustomKeyModel()]));
     }
 }
