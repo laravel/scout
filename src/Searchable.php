@@ -4,6 +4,7 @@ namespace Laravel\Scout;
 
 use Laravel\Scout\Jobs\MakeSearchable;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
 
 trait Searchable
