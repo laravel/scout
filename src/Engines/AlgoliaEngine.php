@@ -169,7 +169,7 @@ class AlgoliaEngine extends Engine
             return Collection::make();
         }
 
-        $models = $model->mapScoutSearchResults(
+        $models = $model->getScoutModelsByIds(
             collect($results['hits'])->pluck('objectID')->values()->all()
         )->keyBy(function ($model) {
             return $model->getScoutKey();
