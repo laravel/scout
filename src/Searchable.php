@@ -292,4 +292,27 @@ trait Searchable
     {
         return $this->getKey();
     }
+
+    /**
+     * Get the key name used to index the model.
+     *
+     * @return mixed
+     */
+    public function getScoutKeyName()
+    {
+        return $this->getQualifiedKeyName();
+    }
+
+    /**
+     * Hydrate the models from an array of objectIds;
+     *
+     * @return mixed
+     */
+    public function mapScoutSearchResults(array $objectIds)
+    {
+        $builder = in_array(SoftDeletes::class, class_uses_recursive($this))
+                    ? $this->withTrashed() : $this->newQuery();
+
+        return $builder->whereIn($this->getScoutKeyName(), $objectIds)->get();
+    }
 }
