@@ -176,11 +176,11 @@ class AlgoliaEngine extends Engine
         )->keyBy($modelKey);
 
         return Collection::make($results['hits'])->map(function ($hit) use ($models, $modelKey) {
-            $key = $hit[$modelKey];
+            $key = $hit['objectID'];
 
-            if (isset($models[$key])) {
-                return $models[$key];
-            }
+            return $models->first(function ($model) use ($key) {
+                return $model->getScoutKey() === $key;
+            });
         })->filter()->values();
     }
 
