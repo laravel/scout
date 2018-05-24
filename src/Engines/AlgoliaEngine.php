@@ -169,18 +169,16 @@ class AlgoliaEngine extends Engine
             return Collection::make();
         }
 
-        $modelKey = $model->getKeyName();
-
         $models = $model->mapScoutSearchResults(
             collect($results['hits'])->pluck('objectID')->values()->all()
-        )->keyBy($modelKey);
+        )->keyBy(function ($model) {
+            return $model->getScoutKey();
+        });
 
-        return Collection::make($results['hits'])->map(function ($hit) use ($models, $modelKey) {
-            $key = $hit['objectID'];
-
-            return $models->first(function ($model) use ($key) {
-                return $model->getScoutKey() === $key;
-            });
+        return Collection::make($results['hits'])->map(function ($hit) use ($models) {
+            if (isset($models[$hit['objectID']])) {
+                return $models[$hit['objectID']];
+            }
         })->filter()->values();
     }
 
