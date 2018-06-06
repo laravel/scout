@@ -66,7 +66,9 @@ class ModelObserver
             return;
         }
 
-        $model->searchable();
+        if ($model->isDirty()) {
+            $model->searchable();
+        }
     }
 
     /**

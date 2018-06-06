@@ -12,6 +12,7 @@ class ModelObserverTest extends AbstractTestCase
         $observer = new ModelObserver;
         $model = Mockery::mock();
         $model->shouldReceive('shouldBeSearchable')->andReturn(true);
+        $model->shouldReceive('isDirty')->andReturn(true);
         $model->shouldReceive('searchable');
         $observer->saved($model);
     }
