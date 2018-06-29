@@ -17,6 +17,13 @@ trait Searchable
     protected $scoutMetadata = [];
 
     /**
+     * Callback to customize query when fetching models from database
+     *
+     * @var \Closure
+     */
+    public $getScoutModelsUsing;
+
+    /**
      * Boot the trait.
      *
      * @return void
@@ -172,6 +179,10 @@ trait Searchable
     {
         $builder = in_array(SoftDeletes::class, class_uses_recursive($this))
                             ? $this->withTrashed() : $this->newQuery();
+
+        if ($this->getScoutModelsUsing) {
+            call_user_func($this->getScoutModelsUsing, $builder);
+        }
 
         return $builder->whereIn(
             $this->getScoutKeyName(), $ids
