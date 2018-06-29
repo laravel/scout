@@ -162,6 +162,18 @@ class Builder
     }
 
     /**
+     * Add a callback to apply on query used to fetch models from database
+     *
+     * @param \Closure $callback
+     * @return $this
+     */
+    public function mapUsing($callback) {
+        $this->model->getScoutModelsUsing = $callback;
+
+        return $this;
+    }
+
+    /**
      * Get the raw results of the search.
      *
      * @return mixed
