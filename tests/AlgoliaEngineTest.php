@@ -58,7 +58,9 @@ class AlgoliaEngineTest extends AbstractTestCase
         $model->shouldReceive('getKeyName')->andReturn('id');
         $model->shouldReceive('getScoutModelsByIds')->andReturn(Collection::make([new AlgoliaEngineTestModel]));
 
-        $results = $engine->map(['nbHits' => 1, 'hits' => [
+        $builder = Mockery::mock(Builder::class);
+
+        $results = $engine->map($builder, ['nbHits' => 1, 'hits' => [
             ['objectID' => 1, 'id' => 1],
         ]], $model);
 

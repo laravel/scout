@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout;
 
+use Laravel\Scout\Builder;
 use Laravel\Scout\Jobs\MakeSearchable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -165,15 +166,20 @@ trait Searchable
     /**
      * Get the requested models from an array of object IDs;
      *
+     * @param  \Laravel\Scout\Builder  $builder
      * @param  array  $ids
      * @return mixed
      */
-    public function getScoutModelsByIds(array $ids)
+    public function getScoutModelsByIds(Builder $builder, array $ids)
     {
-        $builder = in_array(SoftDeletes::class, class_uses_recursive($this))
-                            ? $this->withTrashed() : $this->newQuery();
+        $query = in_array(SoftDeletes::class, class_uses_recursive($this))
+                        ? $this->withTrashed() : $this->newQuery();
 
-        return $builder->whereIn(
+        if ($builder->queryCallback) {
+            call_user_func($builder->queryCallback, $query);
+        }
+
+        return $query->whereIn(
             $this->getScoutKeyName(), $ids
         )->get();
     }

@@ -52,11 +52,12 @@ abstract class Engine
     /**
      * Map the given results to instances of the given model.
      *
+     * @param  \Laravel\Scout\Builder  $builder
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    abstract public function map($results, $model);
+    abstract public function map(Builder $builder, $results, $model);
 
     /**
      * Get the total count from a raw result returned by the engine.
@@ -86,7 +87,7 @@ abstract class Engine
     public function get(Builder $builder)
     {
         return Collection::make($this->map(
-            $this->search($builder), $builder->model
+            $builder, $this->search($builder), $builder->model
         ));
     }
 }
