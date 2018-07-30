@@ -33,7 +33,7 @@ class Builder
     public $callback;
 
     /**
-     * Optional callback for modifying query
+     * Optional callback before model query execution.
      *
      * @var \Closure|null
      */
