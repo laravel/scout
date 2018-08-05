@@ -206,7 +206,7 @@ class Builder
      */
     public function query($callback)
     {
-        $this->queryCallback = $queryCallback;
+        $this->queryCallback = $callback;
 
         return $this;
     }
