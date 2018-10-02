@@ -17,4 +17,4 @@ Documentation for Scout can be found on the [Laravel website](https://laravel.co
 
 ## License
 
-Laravel Scout is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT)
+Laravel Scout is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
