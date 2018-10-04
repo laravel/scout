@@ -102,7 +102,7 @@ trait Searchable
      * @param  Closure  $callback
      * @return \Laravel\Scout\Builder
      */
-    public static function search($query, $callback = null)
+    public static function search($query = '', $callback = null)
     {
         return new Builder(
             new static, $query, $callback, config('scout.soft_delete', false)
