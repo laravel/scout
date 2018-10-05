@@ -13,8 +13,8 @@ Laravel Scout provides a simple, driver-based solution for adding full-text sear
 
 ## Official Documentation
 
-Documentation for Scout can be found on the [Laravel website](http://laravel.com/docs/master/scout).
+Documentation for Scout can be found on the [Laravel website](https://laravel.com/docs/master/scout).
 
 ## License
 
-Laravel Scout is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT)
+Laravel Scout is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT)
