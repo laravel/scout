@@ -148,9 +148,7 @@ trait Searchable
     {
         $self = new static();
 
-        $self->newQuery()
-            ->orderBy($self->getKeyName())
-            ->unsearchable();
+        $self->searchableUsing()->flush($self);
     }
 
     /**
@@ -264,7 +262,7 @@ trait Searchable
     /**
      * Get the queue that should be used with syncing
      *
-     * @return  string
+     * @return string
      */
     public function syncWithSearchUsingQueue()
     {

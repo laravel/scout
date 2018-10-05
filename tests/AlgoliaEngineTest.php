@@ -89,4 +89,14 @@ class AlgoliaEngineTest extends AbstractTestCase
         $engine = new AlgoliaEngine($client);
         $engine->delete(Collection::make([new AlgoliaEngineTestCustomKeyModel()]));
     }
+
+    public function test_flush_a_model()
+    {
+        $client = Mockery::mock('AlgoliaSearch\Client');
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = Mockery::mock('StdClass'));
+        $index->shouldReceive('clearIndex');
+
+        $engine = new AlgoliaEngine($client);
+        $engine->flush(new AlgoliaEngineTestCustomKeyModel());
+    }
 }

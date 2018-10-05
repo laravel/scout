@@ -68,6 +68,14 @@ abstract class Engine
     abstract public function getTotalCount($results);
 
     /**
+     * Flush all of the model's records from the engine.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return void
+     */
+    abstract public function flush($model);
+
+    /**
      * Get the results of the query as a Collection of primary keys.
      *
      * @param  \Laravel\Scout\Builder  $builder

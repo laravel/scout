@@ -34,12 +34,6 @@ class FlushCommand extends Command
 
         $model = new $class;
 
-        $events->listen(ModelsFlushed::class, function ($event) use ($class) {
-            $key = $event->models->last()->getScoutKey();
-
-            $this->line('<comment>Flushed ['.$class.'] models up to ID:</comment> '.$key);
-        });
-
         $model::removeAllFromSearch();
 
         $events->forget(ModelsFlushed::class);
