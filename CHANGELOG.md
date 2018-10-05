@@ -1,6 +1,6 @@
 # Release Notes
 
-## [v5.0.3 (2018-08-05)](https://github.com/laravel/framework/compare/v5.0.2...v5.0.3)
+## [v5.0.3 (2018-08-05)](https://github.com/laravel/scout/compare/v5.0.2...v5.0.3)
 
 ### Added
 - `tap` & `when` methods in Builder ([#297](https://github.com/laravel/scout/pull/297))
