@@ -3,7 +3,6 @@
 namespace Laravel\Scout\Console;
 
 use Illuminate\Console\Command;
-use Laravel\Scout\Events\ModelsFlushed;
 use Illuminate\Contracts\Events\Dispatcher;
 
 class FlushCommand extends Command
@@ -34,16 +33,8 @@ class FlushCommand extends Command
 
         $model = new $class;
 
-        $events->listen(ModelsFlushed::class, function ($event) use ($class) {
-            $key = $event->models->last()->getScoutKey();
-
-            $this->line('<comment>Flushed ['.$class.'] models up to ID:</comment> '.$key);
-        });
-
         $model::removeAllFromSearch();
-
-        $events->forget(ModelsFlushed::class);
-
+        
         $this->info('All ['.$class.'] records have been flushed.');
     }
 }

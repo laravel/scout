@@ -87,4 +87,15 @@ class NullEngine extends Engine
     {
         return count($results);
     }
+
+    /**
+     * Flush all of the model's records from the engine.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return void
+     */
+    public function flush($model)
+    {
+        //
+    }
 }
