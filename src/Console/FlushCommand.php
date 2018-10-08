@@ -3,7 +3,6 @@
 namespace Laravel\Scout\Console;
 
 use Illuminate\Console\Command;
-use Laravel\Scout\Events\ModelsFlushed;
 use Illuminate\Contracts\Events\Dispatcher;
 
 class FlushCommand extends Command
