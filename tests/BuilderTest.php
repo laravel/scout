@@ -48,4 +48,19 @@ class BuilderTest extends AbstractTestCase
 
         $this->assertEquals(0, $builder->wheres['__soft_deleted']);
     }
+
+    public function test_count()
+    {
+        $builder = new Builder($model = Mockery::mock(), 'zonda');
+        $model->shouldReceive('searchableUsing')->andReturn($engine = Mockery::mock());
+
+        $nbHits = 5;
+        $rawResults = ['nbHits' => $nbHits];
+        $engine->shouldReceive('search')->andReturn($rawResults);
+        $engine->shouldReceive('getTotalCount')
+            ->with($rawResults)
+            ->andReturn($nbHits);
+
+        $this->assertEquals($builder->count(), $nbHits);
+    }
 }
