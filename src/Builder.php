@@ -252,6 +252,18 @@ class Builder
     }
 
     /**
+     * Count the number of matching results.
+     *
+     * @return int
+     */
+    public function count()
+    {
+        return (int) $this->engine()->getTotalCount(
+            $this->raw()
+        );
+    }
+
+    /**
      * Paginate the given query into a simple paginator.
      *
      * @param  int  $perPage
