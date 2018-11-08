@@ -140,7 +140,7 @@ class AlgoliaEngine extends Engine
      */
     protected function filters(Builder $builder)
     {
-        return collect($builder->wheres)->map(function ($value, $key) {
+        return collect($builder->wheres)->filter()->map(function ($value, $key) {
             return $key.'='.$value;
         })->values()->all();
     }
