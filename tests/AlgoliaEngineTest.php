@@ -7,6 +7,7 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\AlgoliaEngine;
 use Tests\Fixtures\AlgoliaEngineTestCustomKeyModel;
 use Tests\Fixtures\AlgoliaEngineTestModel;
+use Tests\Fixtures\EmptyTestModel;
 use Illuminate\Database\Eloquent\Collection;
 
 class AlgoliaEngineTest extends AbstractTestCase
@@ -98,5 +99,15 @@ class AlgoliaEngineTest extends AbstractTestCase
 
         $engine = new AlgoliaEngine($client);
         $engine->flush(new AlgoliaEngineTestCustomKeyModel());
+    }
+
+    public function test_update_empty_searchable_array_does_not_add_objects_to_index()
+    {
+        $client = Mockery::mock('AlgoliaSearch\Client');
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = Mockery::mock('StdClass'));
+        $index->shouldNotReceive('addObjects');
+
+        $engine = new AlgoliaEngine($client);
+        $engine->update(Collection::make([new EmptyTestModel()]));
     }
 }
