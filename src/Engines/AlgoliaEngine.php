@@ -58,7 +58,7 @@ class AlgoliaEngine extends Engine
             return array_merge(['objectID' => $model->getScoutKey()], $array);
         })->filter()->values()->all();
 
-        if (!empty($objects)) {
+        if (! empty($objects)) {
             $index->addObjects($objects);
         }
     }
