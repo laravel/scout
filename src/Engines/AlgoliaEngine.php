@@ -46,7 +46,7 @@ class AlgoliaEngine extends Engine
             $models->each->pushSoftDeleteMetadata();
         }
 
-        $index->addObjects($models->map(function ($model) {
+        $objects = $models->map(function ($model) {
             $array = array_merge(
                 $model->toSearchableArray(), $model->scoutMetadata()
             );
@@ -56,7 +56,11 @@ class AlgoliaEngine extends Engine
             }
 
             return array_merge(['objectID' => $model->getScoutKey()], $array);
-        })->filter()->values()->all());
+        })->filter()->values()->all();
+
+        if (! empty($objects)) {
+            $index->addObjects($objects);
+        }
     }
 
     /**
