@@ -6,7 +6,9 @@ use Mockery;
 use StdClass;
 use Laravel\Scout\Builder;
 use Illuminate\Pagination\Paginator;
+use Tests\Fixtures\SearchableTestModel;
 use Illuminate\Database\Eloquent\Collection;
+use Tests\Fixtures\SearchableSoftDeleteTestModel;
 
 class BuilderTest extends AbstractTestCase
 {
@@ -42,9 +44,16 @@ class BuilderTest extends AbstractTestCase
         );
     }
 
+    public function test_hard_delete_doesnt_set_wheres()
+    {
+        $builder = new Builder(new SearchableTestModel, 'zonda', null, true);
+
+        $this->assertArrayNotHasKey('__soft_deleted', $builder->wheres);
+    }
+
     public function test_soft_delete_sets_wheres()
     {
-        $builder = new Builder($model = Mockery::mock(), 'zonda', null, true);
+        $builder = new Builder(new SearchableSoftDeleteTestModel, 'zonda', null, true);
 
         $this->assertEquals(0, $builder->wheres['__soft_deleted']);
     }
