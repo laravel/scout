@@ -6,9 +6,7 @@ use Mockery;
 use StdClass;
 use Laravel\Scout\Builder;
 use Illuminate\Pagination\Paginator;
-use Tests\Fixtures\SearchableTestModel;
 use Illuminate\Database\Eloquent\Collection;
-use Tests\Fixtures\SearchableSoftDeleteTestModel;
 
 class BuilderTest extends AbstractTestCase
 {
