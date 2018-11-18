@@ -5,7 +5,6 @@ namespace Laravel\Scout;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class Builder
@@ -83,7 +82,7 @@ class Builder
         $this->query = $query;
         $this->callback = $callback;
 
-        if ($softDelete && $this->usesSoftDelete($model)) {
+        if ($softDelete) {
             $this->wheres['__soft_deleted'] = 0;
         }
     }
@@ -314,16 +313,5 @@ class Builder
     protected function engine()
     {
         return $this->model->searchableUsing();
-    }
-
-    /**
-     * Determine if the given model uses soft deletes.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @return bool
-     */
-    protected function usesSoftDelete($model)
-    {
-        return in_array(SoftDeletes::class, class_uses_recursive($model));
     }
 }

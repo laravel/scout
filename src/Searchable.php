@@ -104,7 +104,7 @@ trait Searchable
     public static function search($query = '', $callback = null)
     {
         return new Builder(
-            new static, $query, $callback, config('scout.soft_delete', false)
+            new static, $query, $callback, static::usesSoftDelete() && config('scout.soft_delete', false)
         );
     }
 
@@ -117,11 +117,10 @@ trait Searchable
     {
         $self = new static();
 
-        $softDeletes = in_array(SoftDeletes::class, class_uses_recursive(get_called_class())) &&
-                       config('scout.soft_delete', false);
+        $softDelete = static::usesSoftDelete() && config('scout.soft_delete', false);
 
         $self->newQuery()
-            ->when($softDeletes, function ($query) {
+            ->when($softDelete, function ($query) {
                 $query->withTrashed();
             })
             ->orderBy($self->getKeyName())
@@ -169,8 +168,8 @@ trait Searchable
      */
     public function getScoutModelsByIds(Builder $builder, array $ids)
     {
-        $query = in_array(SoftDeletes::class, class_uses_recursive($this))
-                        ? $this->withTrashed() : $this->newQuery();
+        $query = static::usesSoftDelete()
+            ? $this->withTrashed() : $this->newQuery();
 
         if ($builder->queryCallback) {
             call_user_func($builder->queryCallback, $query);
@@ -320,5 +319,15 @@ trait Searchable
     public function getScoutKeyName()
     {
         return $this->getQualifiedKeyName();
+    }
+
+    /**
+     * Determine if the current class should use soft deletes with searching.
+     *
+     * @return bool
+     */
+    protected static function usesSoftDelete()
+    {
+        return in_array(SoftDeletes::class, class_uses_recursive(get_called_class()));
     }
 }

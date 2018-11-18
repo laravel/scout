@@ -46,14 +46,14 @@ class BuilderTest extends AbstractTestCase
 
     public function test_hard_delete_doesnt_set_wheres()
     {
-        $builder = new Builder(new SearchableTestModel, 'zonda', null, true);
+        $builder = new Builder($model = Mockery::mock(), 'zonda', null, false);
 
         $this->assertArrayNotHasKey('__soft_deleted', $builder->wheres);
     }
 
     public function test_soft_delete_sets_wheres()
     {
-        $builder = new Builder(new SearchableSoftDeleteTestModel, 'zonda', null, true);
+        $builder = new Builder($model = Mockery::mock(), 'zonda', null, true);
 
         $this->assertEquals(0, $builder->wheres['__soft_deleted']);
     }
