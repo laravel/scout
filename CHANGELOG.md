@@ -1,5 +1,9 @@
 # Release Notes
 
+## [v6.2.0 (unreleased)](https://github.com/laravel/scout/compare/v6.1.0...v6.2.0)
+### Added
+- Builder implementation can be changed using the container ([#322](https://github.com/laravel/scout/pull/322))
+
 ## [v6.1.0](https://github.com/laravel/scout/compare/v6.0.0...v6.1.0)
 
 ### Fixed
