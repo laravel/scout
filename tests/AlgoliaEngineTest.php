@@ -4,11 +4,11 @@ namespace Tests;
 
 use Mockery;
 use Laravel\Scout\Builder;
-use Laravel\Scout\Engines\AlgoliaEngine;
-use Tests\Fixtures\AlgoliaEngineTestCustomKeyModel;
-use Tests\Fixtures\AlgoliaEngineTestModel;
 use Tests\Fixtures\EmptyTestModel;
+use Laravel\Scout\Engines\AlgoliaEngine;
+use Tests\Fixtures\AlgoliaEngineTestModel;
 use Illuminate\Database\Eloquent\Collection;
+use Tests\Fixtures\AlgoliaEngineTestCustomKeyModel;
 
 class AlgoliaEngineTest extends AbstractTestCase
 {
