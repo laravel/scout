@@ -118,7 +118,7 @@ trait Searchable
      */
     public static function makeAllSearchable()
     {
-        $self = new static();
+        $self = new static;
 
         $softDelete = static::usesSoftDelete() && config('scout.soft_delete', false);
 
@@ -147,7 +147,7 @@ trait Searchable
      */
     public static function removeAllFromSearch()
     {
-        $self = new static();
+        $self = new static;
 
         $self->searchableUsing()->flush($self);
     }
