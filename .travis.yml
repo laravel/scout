@@ -11,6 +11,9 @@ sudo: false
 services:
     - elasticsearch
 
+before_install:
+  - phpenv config-rm xdebug.ini || true
+
 install: travis_retry composer install --no-interaction --prefer-dist
 
 before_script:
