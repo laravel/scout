@@ -14,7 +14,7 @@ class SearchableTest extends AbstractTestCase
         $collection->shouldReceive('isEmpty')->andReturn(false);
         $collection->shouldReceive('first->searchableUsing->update')->with($collection);
 
-        $model = new SearchableTestModel();
+        $model = new SearchableTestModel;
         $model->queueMakeSearchable($collection);
     }
 
@@ -24,7 +24,7 @@ class SearchableTest extends AbstractTestCase
         $collection->shouldReceive('isEmpty')->andReturn(true);
         $collection->shouldNotReceive('first->searchableUsing->update');
 
-        $model = new SearchableTestModel();
+        $model = new SearchableTestModel;
         $model->queueMakeSearchable($collection);
     }
 
@@ -34,7 +34,7 @@ class SearchableTest extends AbstractTestCase
         $collection->shouldReceive('isEmpty')->andReturn(false);
         $collection->shouldReceive('first->searchableUsing->delete')->with($collection);
 
-        $model = new SearchableTestModel();
+        $model = new SearchableTestModel;
         $model->queueRemoveFromSearch($collection);
     }
 
@@ -44,7 +44,7 @@ class SearchableTest extends AbstractTestCase
         $collection->shouldReceive('isEmpty')->andReturn(true);
         $collection->shouldNotReceive('first->searchableUsing->delete');
 
-        $model = new SearchableTestModel();
+        $model = new SearchableTestModel;
         $model->queueRemoveFromSearch($collection);
     }
 

@@ -78,7 +78,7 @@ class AlgoliaEngineTest extends AbstractTestCase
         ]]);
 
         $engine = new AlgoliaEngine($client);
-        $engine->update(Collection::make([new AlgoliaEngineTestCustomKeyModel()]));
+        $engine->update(Collection::make([new AlgoliaEngineTestCustomKeyModel]));
     }
 
     public function test_a_model_is_removed_with_a_custom_algolia_key()
@@ -88,7 +88,7 @@ class AlgoliaEngineTest extends AbstractTestCase
         $index->shouldReceive('deleteObjects')->with(['my-algolia-key.1']);
 
         $engine = new AlgoliaEngine($client);
-        $engine->delete(Collection::make([new AlgoliaEngineTestCustomKeyModel()]));
+        $engine->delete(Collection::make([new AlgoliaEngineTestCustomKeyModel]));
     }
 
     public function test_flush_a_model()
@@ -98,7 +98,7 @@ class AlgoliaEngineTest extends AbstractTestCase
         $index->shouldReceive('clearIndex');
 
         $engine = new AlgoliaEngine($client);
-        $engine->flush(new AlgoliaEngineTestCustomKeyModel());
+        $engine->flush(new AlgoliaEngineTestCustomKeyModel);
     }
 
     public function test_update_empty_searchable_array_does_not_add_objects_to_index()
@@ -108,6 +108,6 @@ class AlgoliaEngineTest extends AbstractTestCase
         $index->shouldNotReceive('addObjects');
 
         $engine = new AlgoliaEngine($client);
-        $engine->update(Collection::make([new EmptyTestModel()]));
+        $engine->update(Collection::make([new EmptyTestModel]));
     }
 }
