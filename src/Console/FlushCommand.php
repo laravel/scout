@@ -3,7 +3,6 @@
 namespace Laravel\Scout\Console;
 
 use Illuminate\Console\Command;
-use Illuminate\Contracts\Events\Dispatcher;
 
 class FlushCommand extends Command
 {
@@ -24,17 +23,16 @@ class FlushCommand extends Command
     /**
      * Execute the console command.
      *
-     * @param  \Illuminate\Contracts\Events\Dispatcher  $events
      * @return void
      */
-    public function handle(Dispatcher $events)
+    public function handle()
     {
         $class = $this->argument('model');
 
         $model = new $class;
 
         $model::removeAllFromSearch();
-        
+
         $this->info('All ['.$class.'] records have been flushed.');
     }
 }
