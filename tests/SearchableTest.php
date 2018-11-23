@@ -2,7 +2,6 @@
 
 namespace Tests;
 
-use Laravel\Scout\Stub;
 use Mockery;
 use Tests\Fixtures\SearchableTestModel;
 
@@ -87,8 +86,6 @@ class ModelStubForRemoveAllFromSearch extends SearchableTestModel
 }
 
 namespace Laravel\Scout;
-
-use Tests\Fixtures\SearchableTestModel;
 
 function config($arg)
 {
