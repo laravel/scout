@@ -8,9 +8,6 @@ php:
 
 sudo: false
 
-services:
-    - elasticsearch
-
 before_install:
   - phpenv config-rm xdebug.ini || true
 
