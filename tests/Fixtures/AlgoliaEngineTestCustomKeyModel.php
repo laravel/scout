@@ -1,10 +1,11 @@
 <?php
 
-namespace Tests\Fixtures;
+namespace Laravel\Scout\Tests\Fixtures;
 
 class AlgoliaEngineTestCustomKeyModel extends TestModel
 {
-    public function getScoutKey() {
+    public function getScoutKey()
+    {
         return 'my-algolia-key.'.$this->getKey();
     }
 }

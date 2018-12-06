@@ -1,15 +1,21 @@
 <?php
 
-namespace Tests;
+namespace Laravel\Scout\Tests;
 
-use Mockery;
-use StdClass;
+use stdClass;
+use Mockery as m;
 use Laravel\Scout\Builder;
+use PHPUnit\Framework\TestCase;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Collection;
 
-class BuilderTest extends AbstractTestCase
+class BuilderTest extends TestCase
 {
+    public function tearDown()
+    {
+        m::close();
+    }
+
     public function test_pagination_correctly_handles_paginated_results()
     {
         Paginator::currentPageResolver(function () {
@@ -19,12 +25,12 @@ class BuilderTest extends AbstractTestCase
             return 'http://localhost/foo';
         });
 
-        $builder = new Builder($model = Mockery::mock(), 'zonda');
+        $builder = new Builder($model = m::mock(), 'zonda');
         $model->shouldReceive('getPerPage')->andReturn(15);
-        $model->shouldReceive('searchableUsing')->andReturn($engine = Mockery::mock());
+        $model->shouldReceive('searchableUsing')->andReturn($engine = m::mock());
 
         $engine->shouldReceive('paginate');
-        $engine->shouldReceive('map')->andReturn(Collection::make([new StdClass]));
+        $engine->shouldReceive('map')->andReturn(Collection::make([new stdClass]));
         $engine->shouldReceive('getTotalCount');
 
         $builder->paginate();
@@ -36,7 +42,7 @@ class BuilderTest extends AbstractTestCase
             return 'bar';
         });
 
-        $builder = new Builder($model = Mockery::mock(), 'zonda');
+        $builder = new Builder($model = m::mock(), 'zonda');
         $this->assertEquals(
             'bar', $builder->foo()
         );
@@ -44,14 +50,14 @@ class BuilderTest extends AbstractTestCase
 
     public function test_hard_delete_doesnt_set_wheres()
     {
-        $builder = new Builder($model = Mockery::mock(), 'zonda', null, false);
+        $builder = new Builder($model = m::mock(), 'zonda', null, false);
 
         $this->assertArrayNotHasKey('__soft_deleted', $builder->wheres);
     }
 
     public function test_soft_delete_sets_wheres()
     {
-        $builder = new Builder($model = Mockery::mock(), 'zonda', null, true);
+        $builder = new Builder($model = m::mock(), 'zonda', null, true);
 
         $this->assertEquals(0, $builder->wheres['__soft_deleted']);
     }

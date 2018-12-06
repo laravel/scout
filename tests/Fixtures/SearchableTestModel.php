@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Fixtures;
+namespace Laravel\Scout\Tests\Fixtures;
 
 use Laravel\Scout\Searchable;
 

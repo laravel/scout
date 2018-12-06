@@ -1,15 +1,21 @@
 <?php
 
-namespace Tests;
+namespace Laravel\Scout\Tests;
 
-use Mockery;
-use Tests\Fixtures\SearchableTestModel;
+use Mockery as m;
+use PHPUnit\Framework\TestCase;
+use Laravel\Scout\Tests\Fixtures\SearchableTestModel;
 
-class SearchableTest extends AbstractTestCase
+class SearchableTest extends TestCase
 {
+    public function tearDown()
+    {
+        m::close();
+    }
+
     public function test_searchable_using_update_is_called_on_collection()
     {
-        $collection = Mockery::mock();
+        $collection = m::mock();
         $collection->shouldReceive('isEmpty')->andReturn(false);
         $collection->shouldReceive('first->searchableUsing->update')->with($collection);
 
@@ -19,7 +25,7 @@ class SearchableTest extends AbstractTestCase
 
     public function test_searchable_using_update_is_not_called_on_empty_collection()
     {
-        $collection = Mockery::mock();
+        $collection = m::mock();
         $collection->shouldReceive('isEmpty')->andReturn(true);
         $collection->shouldNotReceive('first->searchableUsing->update');
 
@@ -29,7 +35,7 @@ class SearchableTest extends AbstractTestCase
 
     public function test_searchable_using_delete_is_called_on_collection()
     {
-        $collection = Mockery::mock();
+        $collection = m::mock();
         $collection->shouldReceive('isEmpty')->andReturn(false);
         $collection->shouldReceive('first->searchableUsing->delete')->with($collection);
 
@@ -39,7 +45,7 @@ class SearchableTest extends AbstractTestCase
 
     public function test_searchable_using_delete_is_not_called_on_empty_collection()
     {
-        $collection = Mockery::mock();
+        $collection = m::mock();
         $collection->shouldReceive('isEmpty')->andReturn(true);
         $collection->shouldNotReceive('first->searchableUsing->delete');
 
