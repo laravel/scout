@@ -1,16 +1,22 @@
 <?php
 
-namespace Tests;
+namespace Laravel\Scout\Tests;
 
-use Mockery;
+use Mockery as m;
+use PHPUnit\Framework\TestCase;
 use Laravel\Scout\ModelObserver;
 
-class ModelObserverTest extends AbstractTestCase
+class ModelObserverTest extends TestCase
 {
+    public function tearDown()
+    {
+        m::close();
+    }
+
     public function test_saved_handler_makes_model_searchable()
     {
         $observer = new ModelObserver;
-        $model = Mockery::mock();
+        $model = m::mock();
         $model->shouldReceive('shouldBeSearchable')->andReturn(true);
         $model->shouldReceive('searchable');
         $observer->saved($model);
@@ -19,7 +25,7 @@ class ModelObserverTest extends AbstractTestCase
     public function test_saved_handler_doesnt_make_model_searchable_when_disabled()
     {
         $observer = new ModelObserver;
-        $model = Mockery::mock();
+        $model = m::mock();
         $observer->disableSyncingFor(get_class($model));
         $model->shouldReceive('searchable')->never();
         $observer->saved($model);
@@ -28,7 +34,7 @@ class ModelObserverTest extends AbstractTestCase
     public function test_saved_handler_makes_model_unsearchable_when_disabled_per_model_rule()
     {
         $observer = new ModelObserver;
-        $model = Mockery::mock();
+        $model = m::mock();
         $model->shouldReceive('shouldBeSearchable')->andReturn(false);
         $model->shouldReceive('searchable')->never();
         $model->shouldReceive('unsearchable');
@@ -38,7 +44,7 @@ class ModelObserverTest extends AbstractTestCase
     public function test_deleted_handler_makes_model_unsearchable()
     {
         $observer = new ModelObserver;
-        $model = Mockery::mock();
+        $model = m::mock();
         $model->shouldReceive('unsearchable');
         $observer->deleted($model);
     }
@@ -46,7 +52,7 @@ class ModelObserverTest extends AbstractTestCase
     public function test_restored_handler_makes_model_searchable()
     {
         $observer = new ModelObserver;
-        $model = Mockery::mock();
+        $model = m::mock();
         $model->shouldReceive('shouldBeSearchable')->andReturn(true);
         $model->shouldReceive('searchable');
         $observer->restored($model);
