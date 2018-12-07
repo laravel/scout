@@ -3,7 +3,6 @@
 namespace Laravel\Scout;
 
 use Laravel\Scout\Jobs\MakeSearchable;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
 
@@ -137,7 +136,7 @@ trait Searchable
      */
     public function searchable()
     {
-        Collection::make([$this])->searchable();
+        $this->newCollection([$this])->searchable();
     }
 
     /**
@@ -159,7 +158,7 @@ trait Searchable
      */
     public function unsearchable()
     {
-        Collection::make([$this])->unsearchable();
+        $this->newCollection([$this])->unsearchable();
     }
 
     /**

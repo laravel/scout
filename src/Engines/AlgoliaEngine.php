@@ -4,7 +4,6 @@ namespace Laravel\Scout\Engines;
 
 use Laravel\Scout\Builder;
 use AlgoliaSearch\Client as Algolia;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AlgoliaEngine extends Engine
@@ -171,20 +170,16 @@ class AlgoliaEngine extends Engine
     public function map(Builder $builder, $results, $model)
     {
         if (count($results['hits']) === 0) {
-            return Collection::make();
+            return $model->newCollection();
         }
 
-        $models = $model->getScoutModelsByIds(
-            $builder, collect($results['hits'])->pluck('objectID')->values()->all()
-        )->keyBy(function ($model) {
-            return $model->getScoutKey();
-        });
+        $objectIds = collect($results['hits'])->pluck('objectID')->values()->all();
 
-        return Collection::make($results['hits'])->map(function ($hit) use ($models) {
-            if (isset($models[$hit['objectID']])) {
-                return $models[$hit['objectID']];
-            }
-        })->filter()->values();
+        return $model->getScoutModelsByIds(
+                $builder, $objectIds
+            )->filter(function ($model) use ($objectIds) {
+                return in_array($model->getScoutKey(), $objectIds);
+            });
     }
 
     /**
