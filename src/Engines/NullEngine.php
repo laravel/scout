@@ -4,6 +4,7 @@ namespace Laravel\Scout\Engines;
 
 use Laravel\Scout\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as BaseCollection;
 
 class NullEngine extends Engine
 {
@@ -61,7 +62,7 @@ class NullEngine extends Engine
      */
     public function mapIds($results)
     {
-        return Collection::make();
+        return BaseCollection::make();
     }
 
     /**

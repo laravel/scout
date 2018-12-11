@@ -63,7 +63,8 @@ class AlgoliaEngineTest extends TestCase
         $model = m::mock('StdClass');
         $model->shouldReceive('newQuery')->andReturn($model);
         $model->shouldReceive('getKeyName')->andReturn('id');
-        $model->shouldReceive('getScoutModelsByIds')->andReturn(Collection::make([new AlgoliaEngineTestModel]));
+        $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([new AlgoliaEngineTestModel]));
+        $model->shouldReceive('newCollection')->andReturn($models);
 
         $builder = m::mock(Builder::class);
 
