@@ -26,4 +26,5 @@
 ## [v6.0.0 (2018-10-08)](https://github.com/laravel/scout/compare/v5.0.3...v6.0.0)
 
 ### Changed
+- Adds default `$query` value on `Searchable::search` ([#309](https://github.com/laravel/scout/pull/309))
 - Flush records of a model using the engine. **This removes the emitting of the `ModelsFlushed` event.** ([#310](https://github.com/laravel/scout/pull/310))
