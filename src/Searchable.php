@@ -16,6 +16,13 @@ trait Searchable
     protected $scoutMetadata = [];
 
     /**
+     * The relations to eager load on batch indexing (scout:import).
+     *
+     * @var array
+     */
+    protected $searchableWith = [];
+
+    /**
      * Boot the trait.
      *
      * @return void
@@ -122,6 +129,7 @@ trait Searchable
         $softDelete = static::usesSoftDelete() && config('scout.soft_delete', false);
 
         $self->newQuery()
+            ->with($self->searchableWith)
             ->when($softDelete, function ($query) {
                 $query->withTrashed();
             })
