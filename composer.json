@@ -27,7 +27,7 @@
         "illuminate/support": "~5.4"
     },
     "require-dev": {
-        "algolia/algoliasearch-client-php": "^1.10",
+        "algolia/algoliasearch-client-php": "^2.2",
         "mockery/mockery": "~1.0",
         "phpunit/phpunit": "~6.0"
     },
@@ -52,7 +52,7 @@
         }
     },
     "suggest": {
-        "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^1.10)."
+        "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^2.2)."
     },
     "config": {
         "sort-packages": true
