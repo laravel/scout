@@ -3,7 +3,6 @@
 namespace Laravel\Scout\Engines;
 
 use Laravel\Scout\Builder;
-use Illuminate\Database\Eloquent\Collection;
 
 abstract class Engine
 {
@@ -94,8 +93,8 @@ abstract class Engine
      */
     public function get(Builder $builder)
     {
-        return Collection::make($this->map(
+        return $this->map(
             $builder, $this->search($builder), $builder->model
-        ));
+        );
     }
 }
