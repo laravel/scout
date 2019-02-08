@@ -53,7 +53,7 @@ class EngineManager extends Manager
             throw new Exception('Please upgrade your Algolia client to version: ^2.2.');
         }
 
-        throw new Exception('Please install the Agolia client: algolia/algoliasearch-client-php.');
+        throw new Exception('Please install the Algolia client: algolia/algoliasearch-client-php.');
     }
 
     /**
