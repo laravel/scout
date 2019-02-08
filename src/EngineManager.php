@@ -2,7 +2,7 @@
 
 namespace Laravel\Scout;
 
-use Error;
+use Exception;
 use Illuminate\Support\Manager;
 use Laravel\Scout\Engines\NullEngine;
 use Laravel\Scout\Engines\AlgoliaEngine;
@@ -29,21 +29,31 @@ class EngineManager extends Manager
      */
     public function createAlgoliaDriver()
     {
-        if (! class_exists(Algolia::class)) {
-            if (class_exists('AlgoliaSearch\Client')) {
-                throw new Error('Laravel Scout do not support Algolia API Client v1. Update your
-                    `algolia/algoliasearch-client-php` dependency to `^2.2` in your `composer.json` file.');
-            }
-
-            throw new Error('Algolia API Client not found. Add the
-                `"algolia/algoliasearch-client-php": "^2.2"` dependency to your `composer.json` file.');
-        }
+        $this->ensureAlgoliaClientIsInstalled();
 
         UserAgent::addCustomUserAgent('Laravel Scout', '7.0.0');
 
         return new AlgoliaEngine(Algolia::create(
             config('scout.algolia.id'), config('scout.algolia.secret')
         ));
+    }
+
+    /**
+     * Ensure the Algolia API client is installed.
+     *
+     * @return void
+     */
+    protected function ensureAlgoliaClientIsInstalled()
+    {
+        if (class_exists(Algolia::class)) {
+            return;
+        }
+
+        if (class_exists('AlgoliaSearch\Client')) {
+            throw new Exception('Please upgrade your Algolia client to version: ^2.2.');
+        }
+
+        throw new Exception('Please install the Agolia client: algolia/algoliasearch-client-php.');
     }
 
     /**

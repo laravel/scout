@@ -3,7 +3,7 @@
 ## [Unreleased (2019-xx-xx)](https://github.com/laravel/scout/compare/v6.1.3...master)
 
 ### Changed
-- Upgrade Algolia API client to v2 ([#349](https://github.com/laravel/scout/pull/349), [#353](https://github.com/laravel/scout/pull/353))
+- Upgraded Algolia API client to v2 ([#349](https://github.com/laravel/scout/pull/349), [#353](https://github.com/laravel/scout/pull/353))
 
 ## [v6.1.3 (2018-12-11)](https://github.com/laravel/scout/compare/v6.1.2...v6.1.3)
 
