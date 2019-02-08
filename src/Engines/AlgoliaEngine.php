@@ -39,7 +39,14 @@ class AlgoliaEngine extends Engine
             return;
         }
 
-        $index = $this->algolia->initIndex($models->first()->searchableAs());
+        $language = array_search($models->first()->languageAs(), $models->first()->getFillable());
+
+        if ($language !== false) {
+            $index = $this->algolia->initIndex($models->first()->searchableAs() . '_' . $models->first()->{$models->first()->languageAs()});
+        } else {
+            $index = $this->algolia->initIndex($models->first()->searchableAs());
+        }
+
 
         if ($this->usesSoftDelete($models->first()) && config('scout.soft_delete', false)) {
             $models->each->pushSoftDeleteMetadata();
@@ -57,10 +64,11 @@ class AlgoliaEngine extends Engine
             return array_merge(['objectID' => $model->getScoutKey()], $array);
         })->filter()->values()->all();
 
-        if (! empty($objects)) {
+        if (!empty($objects)) {
             $index->addObjects($objects);
         }
     }
+
 
     /**
      * Remove the given model from the index.
@@ -70,8 +78,14 @@ class AlgoliaEngine extends Engine
      */
     public function delete($models)
     {
-        $index = $this->algolia->initIndex($models->first()->searchableAs());
+        $language = array_search($models->first()->languageAs(), $models->first()->getFillable());
 
+        if ($language !== false) {
+            $index = $this->algolia->initIndex($models->first()->searchableAs() . '_' . $models->first()->{$models->first()->languageAs()});
+        } else {
+            $index = $this->algolia->initIndex($models->first()->searchableAs());
+        }
+        
         $index->deleteObjects(
             $models->map(function ($model) {
                 return $model->getScoutKey();
