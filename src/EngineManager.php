@@ -5,6 +5,7 @@ namespace Laravel\Scout;
 use Illuminate\Support\Manager;
 use Laravel\Scout\Engines\NullEngine;
 use Laravel\Scout\Engines\AlgoliaEngine;
+use Algolia\AlgoliaSearch\Support\UserAgent;
 use Algolia\AlgoliaSearch\SearchClient as Algolia;
 
 class EngineManager extends Manager
@@ -27,6 +28,8 @@ class EngineManager extends Manager
      */
     public function createAlgoliaDriver()
     {
+        UserAgent::addCustomUserAgent('Laravel Scout', '7.0.0');
+
         return new AlgoliaEngine(Algolia::create(
             config('scout.algolia.id'), config('scout.algolia.secret')
         ));
