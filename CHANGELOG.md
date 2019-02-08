@@ -1,6 +1,6 @@
 # Release Notes
 
-## [Unreleased (2019-xx-xx)](https://github.com/laravel/scout/compare/v6.1.3...master)
+## [v7.0.0 (2019-02-08)](https://github.com/laravel/scout/compare/v6.1.3...v7.0.0)
 
 ### Changed
 - Upgraded Algolia API client to v2 ([#349](https://github.com/laravel/scout/pull/349), [#353](https://github.com/laravel/scout/pull/353))
