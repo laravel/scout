@@ -76,21 +76,6 @@ class ModelStubForMakeAllSearchable extends SearchableTestModel
     }
 }
 
-class ModelStubForRemoveAllFromSearch extends SearchableTestModel
-{
-    public function newQuery()
-    {
-        $mock = \Mockery::mock('Illuminate\Database\Eloquent\Builder');
-
-        $mock->shouldReceive('orderBy')
-            ->with('id')
-            ->andReturnSelf()
-            ->shouldReceive('unsearchable');
-
-        return $mock;
-    }
-}
-
 namespace Laravel\Scout;
 
 function config($arg)
