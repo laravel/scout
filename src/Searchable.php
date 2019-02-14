@@ -122,6 +122,9 @@ trait Searchable
         $softDelete = static::usesSoftDelete() && config('scout.soft_delete', false);
 
         $self->newQuery()
+            ->when(method_exists($self, 'scopeOnlySearchable'), function ($query) {
+                $query->onlySearchable();
+            })
             ->when($softDelete, function ($query) {
                 $query->withTrashed();
             })
