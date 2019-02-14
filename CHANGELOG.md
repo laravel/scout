@@ -1,5 +1,10 @@
 # Release Notes
 
+## [v7.1.0 (2019-02-14)](https://github.com/laravel/scout/compare/v7.0.0...v7.1.0)
+
+### Added
+- Added support for Laravel 5.8 ([694d83b](https://github.com/laravel/scout/commit/694d83bfc735cc2147c5ad57b034ea89a7893e08))
+
 ## [v7.0.0 (2019-02-08)](https://github.com/laravel/scout/compare/v6.1.3...v7.0.0)
 
 ### Changed
