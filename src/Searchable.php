@@ -60,7 +60,7 @@ trait Searchable
         }
 
         if (! config('scout.queue')) {
-            return $models->first()->searchableUsing()->update($models);
+            dispatch_now(new MakeSearchable($models));
         }
 
         dispatch((new MakeSearchable($models))
