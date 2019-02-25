@@ -61,11 +61,11 @@ trait Searchable
 
         if (! config('scout.queue')) {
             dispatch_now(new MakeSearchable($models));
+        } else {
+            dispatch((new MakeSearchable($models))
+            ->onQueue($models->first()->syncWithSearchUsingQueue())
+            ->onConnection($models->first()->syncWithSearchUsing()));
         }
-
-        dispatch((new MakeSearchable($models))
-                ->onQueue($models->first()->syncWithSearchUsingQueue())
-                ->onConnection($models->first()->syncWithSearchUsing()));
     }
 
     /**
