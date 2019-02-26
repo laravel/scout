@@ -2,9 +2,12 @@
 
 namespace Laravel\Scout;
 
+use Illuminate\Contracts\Bus\Dispatcher;
+use Illuminate\Database\Eloquent\Collection;
 use Laravel\Scout\Jobs\MakeSearchable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
+use Laravel\Scout\Jobs\RemoveFromSearch;
 
 trait Searchable
 {
@@ -37,32 +40,30 @@ trait Searchable
     public function registerSearchableMacros()
     {
         $self = $this;
-
-        BaseCollection::macro('searchable', function () use ($self) {
-            $self->queueMakeSearchable($this);
+        BaseCollection::macro('searchable', function ($dispatcher) use ($self) {
+            $self->dispatchMakeSearchable(app(Dispatcher::class), $this, config('scout.queue'));
         });
 
         BaseCollection::macro('unsearchable', function () use ($self) {
-            $self->queueRemoveFromSearch($this);
+
+            $self->dispatchRemoveFromSearch(app(Dispatcher::class), $this, config('scout.queue'));
         });
     }
 
     /**
      * Dispatch the job to make the given models searchable.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $models
+     * @param \Illuminate\Contracts\Bus\Dispatcher $dispatcher
+     * @param  \Illuminate\Database\Eloquent\Collection $models
+     * @param $now
      * @return void
      */
-    public function queueMakeSearchable($models)
+    public function dispatchMakeSearchable(Dispatcher $dispatcher, Collection $models, $now)
     {
-        if ($models->isEmpty()) {
-            return;
-        }
-
-        if (! config('scout.queue')) {
-            dispatch_now(new MakeSearchable($models));
+        if ($now) {
+            $dispatcher->dispatchNow(new MakeSearchable($models));
         } else {
-            dispatch((new MakeSearchable($models))
+            $dispatcher->dispatch((new MakeSearchable($models))
             ->onQueue($models->first()->syncWithSearchUsingQueue())
             ->onConnection($models->first()->syncWithSearchUsing()));
         }
@@ -71,16 +72,20 @@ trait Searchable
     /**
      * Dispatch the job to make the given models unsearchable.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $models
+     * @param \Illuminate\Contracts\Bus\Dispatcher $dispatcher
+     * @param  \Illuminate\Database\Eloquent\Collection $models
+     * @param $now
      * @return void
      */
-    public function queueRemoveFromSearch($models)
+    public function dispatchRemoveFromSearch(Dispatcher $dispatcher, Collection $models, $now)
     {
-        if ($models->isEmpty()) {
-            return;
+        if ($now) {
+            $dispatcher->dispatchNow(new RemoveFromSearch($models));
+        } else {
+            $dispatcher->dispatch((new RemoveFromSearch($models))
+                ->onQueue($models->first()->syncWithSearchUsingQueue())
+                ->onConnection($models->first()->syncWithSearchUsing()));
         }
-
-        return $models->first()->searchableUsing()->delete($models);
     }
 
     /**
