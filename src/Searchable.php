@@ -41,12 +41,11 @@ trait Searchable
     {
         $self = $this;
         BaseCollection::macro('searchable', function ($dispatcher) use ($self) {
-            $self->dispatchMakeSearchable(app(Dispatcher::class), $this, config('scout.queue'));
+            $self->dispatchMakeSearchable(app(Dispatcher::class), $this, !config('scout.queue'));
         });
 
         BaseCollection::macro('unsearchable', function () use ($self) {
-
-            $self->dispatchRemoveFromSearch(app(Dispatcher::class), $this, config('scout.queue'));
+            $self->dispatchRemoveFromSearch(app(Dispatcher::class), $this, !config('scout.queue'));
         });
     }
 
