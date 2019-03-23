@@ -176,7 +176,7 @@ class AlgoliaEngine extends Engine
         $objectIds = collect($results['hits'])->pluck('objectID')->values()->all();
 
         return $model->getScoutModelsByIds(
-                $builder, $objectIds
+                $objectIds, $builder->queryCallback
             )->filter(function ($model) use ($objectIds) {
                 return in_array($model->getScoutKey(), $objectIds);
             });

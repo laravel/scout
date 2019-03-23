@@ -164,17 +164,17 @@ trait Searchable
     /**
      * Get the requested models from an array of object IDs;
      *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @param  array  $ids
+     * @param  array $ids
+     * @param callable $queryCallback
      * @return mixed
      */
-    public function getScoutModelsByIds(Builder $builder, array $ids)
+    public function getScoutModelsByIds(array $ids, callable $queryCallback = null)
     {
         $query = static::usesSoftDelete()
             ? $this->withTrashed() : $this->newQuery();
 
-        if ($builder->queryCallback) {
-            call_user_func($builder->queryCallback, $query);
+        if ($queryCallback) {
+            call_user_func($queryCallback, $query);
         }
 
         return $query->whereIn(
