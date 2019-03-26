@@ -1,6 +1,6 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v7.1.0...7.0)
+## [Unreleased](https://github.com/laravel/scout/compare/v7.1.0...master)
 
 
 ## [v7.1.0 (2019-02-14)](https://github.com/laravel/scout/compare/v7.0.0...v7.1.0)
