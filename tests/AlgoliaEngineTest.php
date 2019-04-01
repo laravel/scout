@@ -8,10 +8,8 @@ use Laravel\Scout\Builder;
 use PHPUnit\Framework\TestCase;
 use Algolia\AlgoliaSearch\SearchClient;
 use Laravel\Scout\Engines\AlgoliaEngine;
+use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Illuminate\Database\Eloquent\Collection;
-use Laravel\Scout\Tests\Fixtures\EmptyTestModel;
-use Laravel\Scout\Tests\Fixtures\AlgoliaEngineTestModel;
-use Laravel\Scout\Tests\Fixtures\AlgoliaEngineTestCustomKeyModel;
 
 class AlgoliaEngineTest extends TestCase
 {
@@ -30,7 +28,7 @@ class AlgoliaEngineTest extends TestCase
         ]]);
 
         $engine = new AlgoliaEngine($client);
-        $engine->update(Collection::make([new AlgoliaEngineTestModel]));
+        $engine->update(Collection::make([new SearchableModel]));
     }
 
     public function test_delete_removes_objects_to_index()
@@ -40,7 +38,7 @@ class AlgoliaEngineTest extends TestCase
         $index->shouldReceive('deleteObjects')->with([1]);
 
         $engine = new AlgoliaEngine($client);
-        $engine->delete(Collection::make([new AlgoliaEngineTestModel]));
+        $engine->delete(Collection::make([new SearchableModel(['id' => 1])]));
     }
 
     public function test_search_sends_correct_parameters_to_algolia()
@@ -52,7 +50,7 @@ class AlgoliaEngineTest extends TestCase
         ]);
 
         $engine = new AlgoliaEngine($client);
-        $builder = new Builder(new AlgoliaEngineTestModel, 'zonda');
+        $builder = new Builder(new SearchableModel, 'zonda');
         $builder->where('foo', 1);
         $engine->search($builder);
     }
@@ -63,10 +61,9 @@ class AlgoliaEngineTest extends TestCase
         $engine = new AlgoliaEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive('newQuery')->andReturn($model);
-        $model->shouldReceive('getKeyName')->andReturn('id');
-        $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([new AlgoliaEngineTestModel]));
-        $model->shouldReceive('newCollection')->andReturn($models);
+        $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([
+            new SearchableModel(['id' => 1]),
+        ]));
 
         $builder = m::mock(Builder::class);
 
@@ -87,7 +84,7 @@ class AlgoliaEngineTest extends TestCase
         ]]);
 
         $engine = new AlgoliaEngine($client);
-        $engine->update(Collection::make([new AlgoliaEngineTestCustomKeyModel]));
+        $engine->update(Collection::make([new CustomKeySearchableModel]));
     }
 
     public function test_a_model_is_removed_with_a_custom_algolia_key()
@@ -97,17 +94,17 @@ class AlgoliaEngineTest extends TestCase
         $index->shouldReceive('deleteObjects')->with(['my-algolia-key.1']);
 
         $engine = new AlgoliaEngine($client);
-        $engine->delete(Collection::make([new AlgoliaEngineTestCustomKeyModel]));
+        $engine->delete(Collection::make([new CustomKeySearchableModel(['id' => 1])]));
     }
 
-    public function test_flush_a_model()
+    public function test_flush_a_model_with_a_custom_algolia_key()
     {
         $client = m::mock(SearchClient::class);
         $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('clearObjects');
 
         $engine = new AlgoliaEngine($client);
-        $engine->flush(new AlgoliaEngineTestCustomKeyModel);
+        $engine->flush(new CustomKeySearchableModel);
     }
 
     public function test_update_empty_searchable_array_does_not_add_objects_to_index()
@@ -117,6 +114,22 @@ class AlgoliaEngineTest extends TestCase
         $index->shouldNotReceive('saveObjects');
 
         $engine = new AlgoliaEngine($client);
-        $engine->update(Collection::make([new EmptyTestModel]));
+        $engine->update(Collection::make([new EmptySearchableModel]));
+    }
+}
+
+class CustomKeySearchableModel extends SearchableModel
+{
+    public function getScoutKey()
+    {
+        return 'my-algolia-key.'.$this->getKey();
+    }
+}
+
+class EmptySearchableModel extends SearchableModel
+{
+    public function toSearchableArray()
+    {
+        return [];
     }
 }

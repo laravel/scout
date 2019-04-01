@@ -5,7 +5,7 @@ namespace Laravel\Scout\Tests;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 use Illuminate\Database\Eloquent\Builder;
-use Laravel\Scout\Tests\Fixtures\SearchableTestModel;
+use Laravel\Scout\Tests\Fixtures\SearchableModel;
 
 class SearchableTest extends TestCase
 {
@@ -20,7 +20,7 @@ class SearchableTest extends TestCase
         $collection->shouldReceive('isEmpty')->andReturn(false);
         $collection->shouldReceive('first->searchableUsing->update')->with($collection);
 
-        $model = new SearchableTestModel;
+        $model = new SearchableModel();
         $model->queueMakeSearchable($collection);
     }
 
@@ -30,7 +30,7 @@ class SearchableTest extends TestCase
         $collection->shouldReceive('isEmpty')->andReturn(true);
         $collection->shouldNotReceive('first->searchableUsing->update');
 
-        $model = new SearchableTestModel;
+        $model = new SearchableModel;
         $model->queueMakeSearchable($collection);
     }
 
@@ -40,7 +40,7 @@ class SearchableTest extends TestCase
         $collection->shouldReceive('isEmpty')->andReturn(false);
         $collection->shouldReceive('first->searchableUsing->delete')->with($collection);
 
-        $model = new SearchableTestModel;
+        $model = new SearchableModel;
         $model->queueRemoveFromSearch($collection);
     }
 
@@ -50,7 +50,7 @@ class SearchableTest extends TestCase
         $collection->shouldReceive('isEmpty')->andReturn(true);
         $collection->shouldNotReceive('first->searchableUsing->delete');
 
-        $model = new SearchableTestModel;
+        $model = new SearchableModel;
         $model->queueRemoveFromSearch($collection);
     }
 
@@ -60,7 +60,7 @@ class SearchableTest extends TestCase
     }
 }
 
-class ModelStubForMakeAllSearchable extends SearchableTestModel
+class ModelStubForMakeAllSearchable extends SearchableModel
 {
     public function newQuery()
     {
