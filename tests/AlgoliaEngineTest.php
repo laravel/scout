@@ -8,8 +8,8 @@ use Laravel\Scout\Builder;
 use PHPUnit\Framework\TestCase;
 use Algolia\AlgoliaSearch\SearchClient;
 use Laravel\Scout\Engines\AlgoliaEngine;
-use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Illuminate\Database\Eloquent\Collection;
+use Laravel\Scout\Tests\Fixtures\SearchableModel;
 
 class AlgoliaEngineTest extends TestCase
 {
@@ -170,7 +170,7 @@ class EmptySearchableModel extends SearchableModel
     }
 }
 
-class SoftDeletedEmptySearchableModel extends EmptyTestModel
+class SoftDeletedEmptySearchableModel extends SearchableModel
 {
     public function toSearchableArray()
     {
