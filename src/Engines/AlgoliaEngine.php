@@ -55,15 +55,15 @@ class AlgoliaEngine extends Engine
         }
 
         $objects = $models->map(function ($model) {
-            $array = array_merge(
-                $model->toSearchableArray(), $model->scoutMetadata()
-            );
-
-            if (empty($array)) {
+            if (empty($searchableData = $model->toSearchableArray())) {
                 return;
             }
 
-            return array_merge(['objectID' => $model->getScoutKey()], $array);
+            return array_merge(
+                ['objectID' => $model->getScoutKey()],
+                $searchableData,
+                $model->scoutMetadata()
+            );
         })->filter()->values()->all();
 
         if (! empty($objects)) {
