@@ -33,9 +33,10 @@ class EngineManager extends Manager
 
         UserAgent::addCustomUserAgent('Laravel Scout', '7.0.0');
 
-        return new AlgoliaEngine(Algolia::create(
-            config('scout.algolia.id'), config('scout.algolia.secret')
-        ));
+        return new AlgoliaEngine(
+            Algolia::create(config('scout.algolia.id'), config('scout.algolia.secret')),
+            config('scout.soft_delete')
+        );
     }
 
     /**

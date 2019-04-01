@@ -158,4 +158,32 @@ class EmptySearchableModel extends SearchableModel
     {
         return [];
     }
+
+    public function test_update_empty_searchable_array_from_soft_deleted_model_does_not_add_objects_to_index()
+    {
+        $client = m::mock('Algolia\AlgoliaSearch\SearchClient');
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock('StdClass'));
+        $index->shouldNotReceive('saveObjects');
+
+        $engine = new AlgoliaEngine($client, true);
+        $engine->update(Collection::make([new SoftDeletedEmptySearchableModel]));
+    }
+}
+
+class SoftDeletedEmptySearchableModel extends EmptyTestModel
+{
+    public function toSearchableArray()
+    {
+        return [];
+    }
+
+    public function pushSoftDeleteMetadata()
+    {
+        //
+    }
+
+    public function scoutMetadata()
+    {
+        return ['__soft_deleted' => 1];
+    }
 }
