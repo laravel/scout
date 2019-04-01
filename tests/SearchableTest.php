@@ -4,6 +4,7 @@ namespace Laravel\Scout\Tests;
 
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
+use Illuminate\Database\Eloquent\Builder;
 use Laravel\Scout\Tests\Fixtures\SearchableTestModel;
 
 class SearchableTest extends TestCase
@@ -63,7 +64,7 @@ class ModelStubForMakeAllSearchable extends SearchableTestModel
 {
     public function newQuery()
     {
-        $mock = \Mockery::mock('Illuminate\Database\Eloquent\Builder');
+        $mock = m::mock(Builder::class);
 
         $mock->shouldReceive('orderBy')
             ->with('id')
