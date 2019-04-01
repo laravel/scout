@@ -16,14 +16,23 @@ class AlgoliaEngine extends Engine
     protected $algolia;
 
     /**
+     * Determines if soft deletes for Scout are enabled or not.
+     *
+     * @var bool
+     */
+    protected $softDelete;
+
+    /**
      * Create a new engine instance.
      *
      * @param  \Algolia\AlgoliaSearch\SearchClient  $algolia
+     * @param  bool  $softDelete
      * @return void
      */
-    public function __construct(Algolia $algolia)
+    public function __construct(Algolia $algolia, $softDelete = false)
     {
         $this->algolia = $algolia;
+        $this->softDelete = $softDelete;
     }
 
     /**
@@ -41,7 +50,7 @@ class AlgoliaEngine extends Engine
 
         $index = $this->algolia->initIndex($models->first()->searchableAs());
 
-        if ($this->usesSoftDelete($models->first()) && config('scout.soft_delete', false)) {
+        if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
             $models->each->pushSoftDeleteMetadata();
         }
 
