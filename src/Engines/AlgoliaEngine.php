@@ -183,13 +183,14 @@ class AlgoliaEngine extends Engine
         }
 
         $objectIds = collect($results['hits'])->pluck('objectID')->values()->all();
+        $objectIdPositions = array_flip($objectIds);
 
         return $model->getScoutModelsByIds(
                 $builder, $objectIds
             )->filter(function ($model) use ($objectIds) {
                 return in_array($model->getScoutKey(), $objectIds);
-            })->sortBy(function($model) use ($objectIds) {
-                return array_search($model->getScoutKey(), $objectIds);
+            })->sortBy(function($model) use ($objectIdPositions) {
+                return $objectIdPositions[$model->getScoutKey()];
             });
     }
 
