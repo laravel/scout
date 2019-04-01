@@ -179,6 +179,8 @@ class AlgoliaEngine extends Engine
                 $builder, $objectIds
             )->filter(function ($model) use ($objectIds) {
                 return in_array($model->getScoutKey(), $objectIds);
+            })->sortBy(function($model) use ($objectIds) {
+                return array_search($model->getScoutKey(), $objectIds);
             });
     }
 
