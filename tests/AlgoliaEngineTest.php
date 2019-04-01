@@ -74,6 +74,32 @@ class AlgoliaEngineTest extends TestCase
         $this->assertEquals(1, count($results));
     }
 
+    public function test_map_method_respects_order()
+    {
+        $client = m::mock(SearchClient::class);
+        $engine = new AlgoliaEngine($client);
+
+        $model = m::mock(stdClass::class);
+        $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([
+            new SearchableModel(['id' => 1]),
+            new SearchableModel(['id' => 2]),
+            new SearchableModel(['id' => 3]),
+            new SearchableModel(['id' => 4]),
+        ]));
+
+        $builder = m::mock(Builder::class);
+
+        $results = $engine->map($builder, ['nbHits' => 4, 'hits' => [
+            ['objectID' => 1, 'id' => 1],
+            ['objectID' => 2, 'id' => 2],
+            ['objectID' => 4, 'id' => 4],
+            ['objectID' => 3, 'id' => 3],
+        ]], $model);
+
+        $this->assertEquals(4, count($results));
+        $this->assertEquals([1, 2, 4, 3], $results->pluck('id')->all());
+    }
+
     public function test_a_model_is_indexed_with_a_custom_algolia_key()
     {
         $client = m::mock(SearchClient::class);
