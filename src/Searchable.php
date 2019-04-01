@@ -294,7 +294,7 @@ trait Searchable
      *
      * @param  string  $key
      * @param  mixed  $value
-     * @return void
+     * @return $this
      */
     public function withScoutMetadata($key, $value)
     {
