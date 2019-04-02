@@ -3,7 +3,7 @@
 ## [Unreleased](https://github.com/laravel/scout/compare/v7.1.1...master)
 
 
-## [v7.1.1](https://github.com/laravel/scout/compare/v7.1.0...v7.1.1)
+## [v7.1.1 (2019-04-02)](https://github.com/laravel/scout/compare/v7.1.0...v7.1.1)
 
 ### Changed
 - Remove support for PHP 7.0 ([217c2ee](https://github.com/laravel/scout/commit/217c2eebacb2fb242083102222428fa492b637bd))
