@@ -16,14 +16,23 @@ class AlgoliaEngine extends Engine
     protected $algolia;
 
     /**
+     * Determines if soft deletes for Scout are enabled or not.
+     *
+     * @var bool
+     */
+    protected $softDelete;
+
+    /**
      * Create a new engine instance.
      *
      * @param  \Algolia\AlgoliaSearch\SearchClient  $algolia
+     * @param  bool  $softDelete
      * @return void
      */
-    public function __construct(Algolia $algolia)
+    public function __construct(Algolia $algolia, $softDelete = false)
     {
         $this->algolia = $algolia;
+        $this->softDelete = $softDelete;
     }
 
     /**
@@ -41,20 +50,20 @@ class AlgoliaEngine extends Engine
 
         $index = $this->algolia->initIndex($models->first()->searchableAs());
 
-        if ($this->usesSoftDelete($models->first()) && config('scout.soft_delete', false)) {
+        if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
             $models->each->pushSoftDeleteMetadata();
         }
 
         $objects = $models->map(function ($model) {
-            $array = array_merge(
-                $model->toSearchableArray(), $model->scoutMetadata()
-            );
-
-            if (empty($array)) {
+            if (empty($searchableData = $model->toSearchableArray())) {
                 return;
             }
 
-            return array_merge(['objectID' => $model->getScoutKey()], $array);
+            return array_merge(
+                ['objectID' => $model->getScoutKey()],
+                $searchableData,
+                $model->scoutMetadata()
+            );
         })->filter()->values()->all();
 
         if (! empty($objects)) {
@@ -174,11 +183,14 @@ class AlgoliaEngine extends Engine
         }
 
         $objectIds = collect($results['hits'])->pluck('objectID')->values()->all();
+        $objectIdPositions = array_flip($objectIds);
 
         return $model->getScoutModelsByIds(
                 $builder, $objectIds
             )->filter(function ($model) use ($objectIds) {
                 return in_array($model->getScoutKey(), $objectIds);
+            })->sortBy(function($model) use ($objectIdPositions) {
+                return $objectIdPositions[$model->getScoutKey()];
             });
     }
 

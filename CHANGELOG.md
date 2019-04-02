@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v7.1.0...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v7.1.1...master)
+
+
+## [v7.1.1](https://github.com/laravel/scout/compare/v7.1.0...v7.1.1)
+
+### Changed
+- Remove support for PHP 7.0 ([217c2ee](https://github.com/laravel/scout/commit/217c2eebacb2fb242083102222428fa492b637bd))
+
+### Fixed
+- Fix engine results order ([#369](https://github.com/laravel/scout/pull/369), [bde4969](https://github.com/laravel/scout/commit/bde49694850e1c025bea7a77f3bd422862c7ab87))
+- Fix empty update with soft delete ([#370](https://github.com/laravel/scout/pull/370))
 
 
 ## [v7.1.0 (2019-02-14)](https://github.com/laravel/scout/compare/v7.0.0...v7.1.0)
