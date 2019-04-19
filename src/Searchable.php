@@ -106,7 +106,7 @@ trait Searchable
             'model' => new static,
             'query' => $query,
             'callback' => $callback,
-            'softDelete'=> static::usesSoftDelete() && config('scout.soft_delete', false)
+            'softDelete'=> static::usesSoftDelete() && config('scout.soft_delete', false),
         ]);
     }
 
@@ -162,7 +162,7 @@ trait Searchable
     }
 
     /**
-     * Get the requested models from an array of object IDs;
+     * Get the requested models from an array of object IDs.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  array  $ids
@@ -260,7 +260,7 @@ trait Searchable
     }
 
     /**
-     * Get the queue that should be used with syncing
+     * Get the queue that should be used with syncing.
      *
      * @return string
      */

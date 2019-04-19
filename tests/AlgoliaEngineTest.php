@@ -97,7 +97,15 @@ class AlgoliaEngineTest extends TestCase
         ]], $model);
 
         $this->assertEquals(4, count($results));
-        $this->assertEquals([1, 2, 4, 3], $results->pluck('id')->all());
+
+        // It's important we assert with array keys to ensure
+        // they have been reset after sorting.
+        $this->assertEquals([
+            0 => ['id' => 1],
+            1 => ['id' => 2],
+            2 => ['id' => 4],
+            3 => ['id' => 3],
+        ], $results->toArray());
     }
 
     public function test_a_model_is_indexed_with_a_custom_algolia_key()
