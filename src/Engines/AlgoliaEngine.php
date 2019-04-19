@@ -191,7 +191,7 @@ class AlgoliaEngine extends Engine
                 return in_array($model->getScoutKey(), $objectIds);
             })->sortBy(function($model) use ($objectIdPositions) {
                 return $objectIdPositions[$model->getScoutKey()];
-            });
+            })->values();
     }
 
     /**
