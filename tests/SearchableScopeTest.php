@@ -2,10 +2,10 @@
 
 namespace Laravel\Scout\Tests;
 
-use Illuminate\Database\Eloquent\Builder;
-use Laravel\Scout\SearchableScope;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
+use Laravel\Scout\SearchableScope;
+use Illuminate\Database\Eloquent\Builder;
 
 class SearchableScopeTest extends TestCase
 {
@@ -20,11 +20,13 @@ class SearchableScopeTest extends TestCase
         $builder->shouldReceive('macro')->with('searchable', m::on(function ($callback) use ($builder) {
             $builder->shouldReceive('chunkById')->with(500, m::type(\Closure::class));
             $callback($builder, 500);
+
             return true;
         }));
         $builder->shouldReceive('macro')->with('unsearchable', m::on(function ($callback) use ($builder) {
             $builder->shouldReceive('chunkById')->with(500, m::type(\Closure::class));
             $callback($builder, 500);
+
             return true;
         }));
 
