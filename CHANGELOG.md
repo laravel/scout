@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v7.1.1...7.0)
+## [Unreleased](https://github.com/laravel/scout/compare/v7.1.2...7.0)
+
+
+## [v7.1.2 (2019-04-30)](https://github.com/laravel/scout/compare/v7.1.1...v7.1.2)
+
+### Fixed
+- Calling `values()` on sorted collection to reset the array keys ([#372](https://github.com/laravel/scout/pull/372))
 
 
 ## [v7.1.1 (2019-04-02)](https://github.com/laravel/scout/compare/v7.1.0...v7.1.1)
