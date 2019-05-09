@@ -68,7 +68,7 @@ class EngineManager extends Manager
     }
 
     /**
-     * Get the default session driver name.
+     * Get the default Scout driver name.
      *
      * @return string
      */
