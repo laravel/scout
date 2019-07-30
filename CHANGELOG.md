@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v7.1.2...7.0)
+## [Unreleased](https://github.com/laravel/scout/compare/v7.1.3...7.0)
+
+
+## [v7.1.3 (2019-07-30)](https://github.com/laravel/scout/compare/v7.1.2...v7.1.3)
+
+### Changed
+- Updated version constraints for Laravel 6 ([b31e612](https://github.com/laravel/scout/commit/b31e6123776ae7f5006dd8e12701e3d661c3db0d))
 
 
 ## [v7.1.2 (2019-04-30)](https://github.com/laravel/scout/compare/v7.1.1...v7.1.2)
