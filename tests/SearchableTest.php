@@ -9,7 +9,7 @@ use Laravel\Scout\Tests\Fixtures\SearchableModel;
 
 class SearchableTest extends TestCase
 {
-    public function tearDown()
+    protected function tearDown(): void
     {
         m::close();
     }
