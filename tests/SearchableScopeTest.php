@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class SearchableScopeTest extends TestCase
 {
-    public function tearDown()
+    protected function tearDown(): void
     {
         m::close();
     }
