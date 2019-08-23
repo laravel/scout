@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 class BuilderTest extends TestCase
 {
-    public function tearDown()
+    protected function tearDown(): void
     {
         m::close();
     }

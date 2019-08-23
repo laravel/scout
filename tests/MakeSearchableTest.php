@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 class MakeSearchableTest extends TestCase
 {
-    public function tearDown()
+    protected function tearDown(): void
     {
         m::close();
     }
