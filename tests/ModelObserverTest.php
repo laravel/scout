@@ -8,7 +8,7 @@ use Laravel\Scout\ModelObserver;
 
 class ModelObserverTest extends TestCase
 {
-    public function tearDown()
+    protected function tearDown(): void
     {
         m::close();
     }
