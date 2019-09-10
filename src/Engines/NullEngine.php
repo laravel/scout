@@ -2,9 +2,9 @@
 
 namespace Laravel\Scout\Engines;
 
-use Laravel\Scout\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
+use Laravel\Scout\Builder;
 
 class NullEngine extends Engine
 {

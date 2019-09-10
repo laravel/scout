@@ -2,9 +2,9 @@
 
 namespace Laravel\Scout\Tests;
 
+use Laravel\Scout\ModelObserver;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
-use Laravel\Scout\ModelObserver;
 
 class ModelObserverTest extends TestCase
 {

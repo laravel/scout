@@ -2,12 +2,12 @@
 
 namespace Laravel\Scout\Tests;
 
-use stdClass;
-use Mockery as m;
-use Laravel\Scout\Builder;
-use PHPUnit\Framework\TestCase;
-use Illuminate\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\Paginator;
+use Laravel\Scout\Builder;
+use Mockery as m;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class BuilderTest extends TestCase
 {
