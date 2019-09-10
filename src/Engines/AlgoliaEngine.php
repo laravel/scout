@@ -228,7 +228,7 @@ class AlgoliaEngine extends Engine
     {
         return in_array(SoftDeletes::class, class_uses_recursive($model));
     }
-    
+
     /**
      * Dynamically call the Algolia client instance.
      *
