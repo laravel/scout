@@ -2,10 +2,10 @@
 
 namespace Laravel\Scout\Tests;
 
-use Mockery as m;
-use PHPUnit\Framework\TestCase;
 use Illuminate\Database\Eloquent\Builder;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use Mockery as m;
+use PHPUnit\Framework\TestCase;
 
 class SearchableTest extends TestCase
 {

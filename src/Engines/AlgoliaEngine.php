@@ -2,9 +2,9 @@
 
 namespace Laravel\Scout\Engines;
 
-use Laravel\Scout\Builder;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Algolia\AlgoliaSearch\SearchClient as Algolia;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Builder;
 
 class AlgoliaEngine extends Engine
 {

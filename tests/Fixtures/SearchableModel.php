@@ -2,8 +2,8 @@
 
 namespace Laravel\Scout\Tests\Fixtures;
 
-use Laravel\Scout\Searchable;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Scout\Searchable;
 
 class SearchableModel extends Model
 {

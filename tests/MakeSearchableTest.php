@@ -2,10 +2,10 @@
 
 namespace Laravel\Scout\Tests;
 
+use Illuminate\Database\Eloquent\Collection;
+use Laravel\Scout\Jobs\MakeSearchable;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
-use Laravel\Scout\Jobs\MakeSearchable;
-use Illuminate\Database\Eloquent\Collection;
 
 class MakeSearchableTest extends TestCase
 {

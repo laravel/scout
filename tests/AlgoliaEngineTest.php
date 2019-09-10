@@ -2,14 +2,14 @@
 
 namespace Laravel\Scout\Tests;
 
-use stdClass;
-use Mockery as m;
-use Laravel\Scout\Builder;
-use PHPUnit\Framework\TestCase;
 use Algolia\AlgoliaSearch\SearchClient;
-use Laravel\Scout\Engines\AlgoliaEngine;
 use Illuminate\Database\Eloquent\Collection;
+use Laravel\Scout\Builder;
+use Laravel\Scout\Engines\AlgoliaEngine;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use Mockery as m;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class AlgoliaEngineTest extends TestCase
 {

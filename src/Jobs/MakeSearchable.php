@@ -3,8 +3,8 @@
 namespace Laravel\Scout\Jobs;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\SerializesModels;
 
 class MakeSearchable implements ShouldQueue
 {
