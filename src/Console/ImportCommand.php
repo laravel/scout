@@ -3,8 +3,8 @@
 namespace Laravel\Scout\Console;
 
 use Illuminate\Console\Command;
-use Laravel\Scout\Events\ModelsImported;
 use Illuminate\Contracts\Events\Dispatcher;
+use Laravel\Scout\Events\ModelsImported;
 
 class ImportCommand extends Command
 {

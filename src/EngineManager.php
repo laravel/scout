@@ -2,12 +2,12 @@
 
 namespace Laravel\Scout;
 
+use Algolia\AlgoliaSearch\SearchClient as Algolia;
+use Algolia\AlgoliaSearch\Support\UserAgent;
 use Exception;
 use Illuminate\Support\Manager;
-use Laravel\Scout\Engines\NullEngine;
 use Laravel\Scout\Engines\AlgoliaEngine;
-use Algolia\AlgoliaSearch\Support\UserAgent;
-use Algolia\AlgoliaSearch\SearchClient as Algolia;
+use Laravel\Scout\Engines\NullEngine;
 
 class EngineManager extends Manager
 {

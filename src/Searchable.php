@@ -2,9 +2,9 @@
 
 namespace Laravel\Scout;
 
-use Laravel\Scout\Jobs\MakeSearchable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
+use Laravel\Scout\Jobs\MakeSearchable;
 
 trait Searchable
 {
