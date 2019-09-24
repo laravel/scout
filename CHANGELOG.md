@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v7.1.3...7.0)
+## [Unreleased](https://github.com/laravel/scout/compare/v7.2.0...7.0)
+
+
+## [v7.2.0 (2019-09-24)](https://github.com/laravel/scout/compare/v7.1.3...v7.2.0)
+
+### Added
+- Add `__call()` method to AlgoliaEngine ([#384](https://github.com/laravel/scout/pull/384))
 
 
 ## [v7.1.3 (2019-07-30)](https://github.com/laravel/scout/compare/v7.1.2...v7.1.3)
