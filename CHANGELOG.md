@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v7.2.0...7.0)
+## [Unreleased](https://github.com/laravel/scout/compare/v7.2.1...7.0)
+
+
+## [v7.2.1 (2019-09-24)](https://github.com/laravel/scout/compare/v7.2.0...v7.2.1)
+
+### Fixed
+- Proper version ([44c8924](https://github.com/laravel/scout/commit/44c8924815aab8dbbb1388bbd468e67f398ff3ef))
 
 
 ## [v7.2.0 (2019-09-24)](https://github.com/laravel/scout/compare/v7.1.3...v7.2.0)
