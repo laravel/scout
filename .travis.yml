@@ -1,10 +1,10 @@
+dist: bionic
 language: php
-
-sudo: false
 
 php:
   - 7.2
   - 7.3
+  - 7.4
 
 env:
   matrix:
@@ -25,4 +25,5 @@ install:
 before_script:
   - sleep 10
 
-script: vendor/bin/phpunit --verbose
+script:
+  - vendor/bin/phpunit --verbose

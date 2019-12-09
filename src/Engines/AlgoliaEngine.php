@@ -39,8 +39,9 @@ class AlgoliaEngine extends Engine
      * Update the given model in the index.
      *
      * @param  \Illuminate\Database\Eloquent\Collection  $models
-     * @throws \Algolia\AlgoliaSearch\Exceptions\AlgoliaException
      * @return void
+     *
+     * @throws \Algolia\AlgoliaSearch\Exceptions\AlgoliaException
      */
     public function update($models)
     {
@@ -233,7 +234,7 @@ class AlgoliaEngine extends Engine
      * Dynamically call the Algolia client instance.
      *
      * @param  string  $method
-     * @param  array   $parameters
+     * @param  array  $parameters
      * @return mixed
      */
     public function __call($method, $parameters)
