@@ -43,6 +43,8 @@ class EngineManager extends Manager
      * Ensure the Algolia API client is installed.
      *
      * @return void
+     *
+     * @throws \Exception
      */
     protected function ensureAlgoliaClientIsInstalled()
     {
