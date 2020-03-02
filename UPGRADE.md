@@ -1,6 +1,16 @@
 # Upgrade Guide
 
-## Upgrading To 7.0 From 6.0
+## Upgrading To 8.0 From 7.x
+
+### Minimum Laravel version
+
+Laravel 6.0 is now the minimum supported version of the framework and you should upgrade to continue using Browser Kit Testing.
+
+### Minimum PHP version
+
+PHP 7.2 is now the minimum supported version of the language and you should upgrade to continue using Browser Kit Testing.
+
+## Upgrading To 7.0 From 6.x
 
 ### Updating Dependencies
 
