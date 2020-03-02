@@ -2,6 +2,11 @@
 
 ## [Unreleased](https://github.com/laravel/scout/compare/v7.2.1...master)
 
+### Changed
+- Use chunkById instead of chunk ([#360](https://github.com/laravel/scout/pull/360))
+- Drop support for Laravel 5.x
+- Drop support for PHP 7.1
+
 
 ## [v7.2.1 (2019-09-24)](https://github.com/laravel/scout/compare/v7.2.0...v7.2.1)
 
