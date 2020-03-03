@@ -1,6 +1,6 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v7.2.1...8.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v7.2.1...master)
 
 ### Changed
 - Use chunkById instead of chunk ([#360](https://github.com/laravel/scout/pull/360))
