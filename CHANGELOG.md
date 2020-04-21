@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.0.0...8.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v8.0.1...8.x)
+
+
+## [v8.0.1 (2020-04-21)](https://github.com/laravel/scout/compare/v8.0.0...v8.0.1)
+
+### Fixed
+- Merge default scout configs ([#402](https://github.com/laravel/scout/pull/402))
 
 
 ## [v8.0.0 (2020-03-03)](https://github.com/laravel/scout/compare/v7.2.1...v8.0.0)
