@@ -113,9 +113,10 @@ trait Searchable
     /**
      * Make all instances of the model searchable.
      *
+     * @param int $chunkSize
      * @return void
      */
-    public static function makeAllSearchable()
+    public static function makeAllSearchable($chunkSize = null)
     {
         $self = new static;
 
@@ -126,7 +127,7 @@ trait Searchable
                 $query->withTrashed();
             })
             ->orderBy($self->getKeyName())
-            ->searchable();
+            ->searchable($chunkSize);
     }
 
     /**

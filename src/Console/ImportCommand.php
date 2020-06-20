@@ -13,7 +13,9 @@ class ImportCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'scout:import {model}';
+    protected $signature = 'scout:import
+            {model : Class name of model to bulk import}
+            {--c|chunk-size= : Number of items to bulk process at a time (Defaults to config value: `scout.chunk.searchable`)}';
 
     /**
      * The console command description.
@@ -31,6 +33,7 @@ class ImportCommand extends Command
     public function handle(Dispatcher $events)
     {
         $class = $this->argument('model');
+        $chunkSize = $this->option('chunk-size');
 
         $model = new $class;
 
@@ -40,7 +43,7 @@ class ImportCommand extends Command
             $this->line('<comment>Imported ['.$class.'] models up to ID:</comment> '.$key);
         });
 
-        $model::makeAllSearchable();
+        $model::makeAllSearchable($chunkSize);
 
         $events->forget(ModelsImported::class);
 
