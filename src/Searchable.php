@@ -16,6 +16,15 @@ trait Searchable
     protected $scoutMetadata = [];
 
     /**
+     * The relations to eager load loading models via Scout
+     * Uses model's default $with value when set to `null`.
+     * @see \Illuminate\Database\Eloquent\Model::$with
+     *
+     * @var array | null
+     */
+    protected $searchableWith = null;
+
+    /**
      * Boot the trait.
      *
      * @return void
@@ -121,7 +130,7 @@ trait Searchable
 
         $softDelete = static::usesSoftDelete() && config('scout.soft_delete', false);
 
-        $self->newQuery()
+        $self->applySearchableWith($self->newQuery())
             ->when($softDelete, function ($query) {
                 $query->withTrashed();
             })
@@ -172,6 +181,8 @@ trait Searchable
     {
         $query = static::usesSoftDelete()
             ? $this->withTrashed() : $this->newQuery();
+
+        $this->applySearchableWith($query);
 
         if ($builder->queryCallback) {
             call_user_func($builder->queryCallback, $query);
@@ -331,5 +342,21 @@ trait Searchable
     protected static function usesSoftDelete()
     {
         return in_array(SoftDeletes::class, class_uses_recursive(get_called_class()));
+    }
+
+    /**
+     * Apply $searchableWith overrides to query.
+     *
+     * @param $query \Illuminate\Database\Eloquent\Builder
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function applySearchableWith($query)
+    {
+        if ($this->searchableWith !== null) {
+            // Replace existing eagerLoads with those defined by searchableWith
+            $query->without($this->with)->with($this->searchableWith);
+        }
+
+        return $query;
     }
 }
