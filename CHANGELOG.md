@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.0.1...8.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v8.1.0...8.x)
+
+
+## [v8.1.0 (2020-07-14)](https://github.com/laravel/scout/compare/v8.0.1...v8.1.0)
+
+### Added
+- Optional param for chunk size on `scout:import` ([#407](https://github.com/laravel/scout/pull/407))
 
 
 ## [v8.0.1 (2020-04-21)](https://github.com/laravel/scout/compare/v8.0.0...v8.0.1)
