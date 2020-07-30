@@ -74,6 +74,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Auto Identify User
+    |--------------------------------------------------------------------------
+    |
+    | This option allows to control whether to automatically
+    | identify the currently authenticated user with your
+    | search engine of choice. Disabled by default.
+    |
+    | Support engines: "algolia"
+    |
+    */
+
+    'user' => env('SCOUT_USER', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Algolia Configuration
     |--------------------------------------------------------------------------
     |

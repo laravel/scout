@@ -2,9 +2,11 @@
 
 namespace Laravel\Scout;
 
+use Algolia\AlgoliaSearch\Config\SearchConfig;
 use Algolia\AlgoliaSearch\SearchClient as Algolia;
 use Algolia\AlgoliaSearch\Support\UserAgent;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Manager;
 use Laravel\Scout\Engines\AlgoliaEngine;
 use Laravel\Scout\Engines\NullEngine;
@@ -33,10 +35,14 @@ class EngineManager extends Manager
 
         UserAgent::addCustomUserAgent('Laravel Scout', '8.1.0');
 
-        return new AlgoliaEngine(
-            Algolia::create(config('scout.algolia.id'), config('scout.algolia.secret')),
-            config('scout.soft_delete')
+        $config = SearchConfig::create(
+            config('scout.algolia.id'),
+            config('scout.algolia.secret')
+        )->setDefaultHeaders(
+            $this->defaultAlgoliaHeaders()
         );
+
+        return new AlgoliaEngine(Algolia::createWithConfig($config), config('scout.soft_delete'));
     }
 
     /**
@@ -60,6 +66,31 @@ class EngineManager extends Manager
     }
 
     /**
+     * Set the default an Algolia config headers.
+     *
+     * @return array
+     */
+    protected function defaultAlgoliaHeaders()
+    {
+        if (! config('scout.user')) {
+            return [];
+        }
+
+        $headers = [];
+        $request = $this->container->make(Request::class);
+
+        if (filter_var($ip = $request->ip(), FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            $headers['X-Forwarded-For'] = $ip;
+        }
+
+        if ($user = $request->user()) {
+            $headers['X-Algolia-UserToken'] = $user->getKey();
+        }
+
+        return $headers;
+    }
+
+    /**
      * Create a Null engine instance.
      *
      * @return \Laravel\Scout\Engines\NullEngine
@@ -76,10 +107,10 @@ class EngineManager extends Manager
      */
     public function getDefaultDriver()
     {
-        if (is_null($this->app['config']['scout.driver'])) {
+        if (is_null($this->container['config']['scout.driver'])) {
             return 'null';
         }
 
-        return $this->app['config']['scout.driver'];
+        return $this->container['config']['scout.driver'];
     }
 }
