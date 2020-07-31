@@ -66,7 +66,7 @@ class EngineManager extends Manager
     }
 
     /**
-     * Set the default an Algolia config headers.
+     * Set the default Algolia config headers.
      *
      * @return array
      */
