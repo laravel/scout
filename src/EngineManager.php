@@ -6,7 +6,6 @@ use Algolia\AlgoliaSearch\Config\SearchConfig;
 use Algolia\AlgoliaSearch\SearchClient as Algolia;
 use Algolia\AlgoliaSearch\Support\UserAgent;
 use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Support\Manager;
 use Laravel\Scout\Engines\AlgoliaEngine;
 use Laravel\Scout\Engines\NullEngine;
@@ -72,18 +71,20 @@ class EngineManager extends Manager
      */
     protected function defaultAlgoliaHeaders()
     {
-        if (! config('scout.user')) {
+        if (! config('scout.identify_user')) {
             return [];
         }
 
         $headers = [];
-        $request = $this->container->make(Request::class);
 
-        if (filter_var($ip = $request->ip(), FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+        if (
+            ! config('app.debug') &&
+            filter_var($ip = request()->ip(), FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
+        ) {
             $headers['X-Forwarded-For'] = $ip;
         }
 
-        if ($user = $request->user()) {
+        if ($user = request()->user()) {
             $headers['X-Algolia-UserToken'] = $user->getKey();
         }
 
@@ -107,10 +108,10 @@ class EngineManager extends Manager
      */
     public function getDefaultDriver()
     {
-        if (is_null($this->container['config']['scout.driver'])) {
+        if (is_null($driver = config('scout.driver'))) {
             return 'null';
         }
 
-        return $this->container['config']['scout.driver'];
+        return $driver;
     }
 }

@@ -79,13 +79,13 @@ return [
     |
     | This option allows you to control whether to automatically
     | identify the currently authenticated user with a search
-    | search engine of choice. It is turned off by default.
+    | engine that is supported. By default it's turned off.
     |
     | Supported engines: "algolia"
     |
     */
 
-    'user' => env('SCOUT_USER', false),
+    'identify_user' => env('SCOUT_IDENTIFY_USER', false),
 
     /*
     |--------------------------------------------------------------------------
