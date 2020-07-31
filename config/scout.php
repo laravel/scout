@@ -74,18 +74,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Auto Identify User
+    | Identify User
     |--------------------------------------------------------------------------
     |
-    | This option allows you to control whether to automatically
-    | identify the currently authenticated user with a search
-    | engine that is supported. By default it's turned off.
+    | This option allows you to control whether to notify the search engine
+    | of the user performing the search. This is sometimes useful if the
+    | engine supports any analytics based on this application's users.
     |
     | Supported engines: "algolia"
     |
     */
 
-    'identify_user' => env('SCOUT_IDENTIFY_USER', false),
+    'identify' => env('SCOUT_IDENTIFY', false),
 
     /*
     |--------------------------------------------------------------------------

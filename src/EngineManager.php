@@ -65,26 +65,25 @@ class EngineManager extends Manager
     }
 
     /**
-     * Set the default Algolia config headers.
+     * Set the default Algolia configuration headers.
      *
      * @return array
      */
     protected function defaultAlgoliaHeaders()
     {
-        if (! config('scout.identify_user')) {
+        if (! config('scout.identify')) {
             return [];
         }
 
         $headers = [];
 
-        if (
-            ! config('app.debug') &&
+        if (! config('app.debug') &&
             filter_var($ip = request()->ip(), FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
         ) {
             $headers['X-Forwarded-For'] = $ip;
         }
 
-        if ($user = request()->user()) {
+        if ($user = request()->user() && method_exists($user, 'getKey')) {
             $headers['X-Algolia-UserToken'] = $user->getKey();
         }
 
