@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout;
 
+use Algolia\AlgoliaSearch\Config\SearchConfig;
 use Algolia\AlgoliaSearch\SearchClient as Algolia;
 use Algolia\AlgoliaSearch\Support\UserAgent;
 use Exception;
@@ -33,10 +34,14 @@ class EngineManager extends Manager
 
         UserAgent::addCustomUserAgent('Laravel Scout', '9.0.0-dev');
 
-        return new AlgoliaEngine(
-            Algolia::create(config('scout.algolia.id'), config('scout.algolia.secret')),
-            config('scout.soft_delete')
+        $config = SearchConfig::create(
+            config('scout.algolia.id'),
+            config('scout.algolia.secret')
+        )->setDefaultHeaders(
+            $this->defaultAlgoliaHeaders()
         );
+
+        return new AlgoliaEngine(Algolia::createWithConfig($config), config('scout.soft_delete'));
     }
 
     /**
@@ -60,6 +65,32 @@ class EngineManager extends Manager
     }
 
     /**
+     * Set the default Algolia configuration headers.
+     *
+     * @return array
+     */
+    protected function defaultAlgoliaHeaders()
+    {
+        if (! config('scout.identify')) {
+            return [];
+        }
+
+        $headers = [];
+
+        if (! config('app.debug') &&
+            filter_var($ip = request()->ip(), FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
+        ) {
+            $headers['X-Forwarded-For'] = $ip;
+        }
+
+        if ($user = request()->user() && method_exists($user, 'getKey')) {
+            $headers['X-Algolia-UserToken'] = $user->getKey();
+        }
+
+        return $headers;
+    }
+
+    /**
      * Create a Null engine instance.
      *
      * @return \Laravel\Scout\Engines\NullEngine
@@ -76,10 +107,10 @@ class EngineManager extends Manager
      */
     public function getDefaultDriver()
     {
-        if (is_null($this->app['config']['scout.driver'])) {
+        if (is_null($driver = config('scout.driver'))) {
             return 'null';
         }
 
-        return $this->app['config']['scout.driver'];
+        return $driver;
     }
 }

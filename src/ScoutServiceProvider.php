@@ -15,6 +15,8 @@ class ScoutServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $this->mergeConfigFrom(__DIR__.'/../config/scout.php', 'scout');
+
         $this->app->singleton(EngineManager::class, function ($app) {
             return new EngineManager($app);
         });
