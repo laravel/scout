@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.1.0...8.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v8.2.0...8.x)
+
+
+## [v8.2.0 (2020-08-04)](https://github.com/laravel/scout/compare/v8.0.1...v8.2.0)
+
+### Added
+- Identifying users ([#411](https://github.com/laravel/scout/pull/411))
 
 
 ## [v8.1.0 (2020-07-14)](https://github.com/laravel/scout/compare/v8.0.1...v8.1.0)
