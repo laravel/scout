@@ -32,7 +32,7 @@ class EngineManager extends Manager
     {
         $this->ensureAlgoliaClientIsInstalled();
 
-        UserAgent::addCustomUserAgent('Laravel Scout', '8.2.0');
+        UserAgent::addCustomUserAgent('Laravel Scout', '8.2.1');
 
         $config = SearchConfig::create(
             config('scout.algolia.id'),
