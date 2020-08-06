@@ -3,7 +3,13 @@
 ## [Unreleased](https://github.com/laravel/scout/compare/v8.2.0...8.x)
 
 
-## [v8.2.0 (2020-08-04)](https://github.com/laravel/scout/compare/v8.0.1...v8.2.0)
+## [v8.2.1 (2020-08-06)](https://github.com/laravel/scout/compare/v8.2.0...v8.0.1)
+
+# Fixed
+- Fix undefined `$user` variable bug ([e751cf4](https://github.com/laravel/scout/commit/e751cf4669ecab2fce887265280d1dfd29075aef))
+
+
+## [v8.2.0 (2020-08-04)](https://github.com/laravel/scout/compare/v8.1.0...v8.2.0)
 
 ### Added
 - Identifying users ([#411](https://github.com/laravel/scout/pull/411), [fe28ab2](https://github.com/laravel/scout/commit/fe28ab26bf1e5c9c3b46f2535bea746b69fa6fb1))
