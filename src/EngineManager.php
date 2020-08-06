@@ -83,7 +83,7 @@ class EngineManager extends Manager
             $headers['X-Forwarded-For'] = $ip;
         }
 
-        if ($user = request()->user() && method_exists($user, 'getKey')) {
+        if (($user = request()->user()) && method_exists($user, 'getKey')) {
             $headers['X-Algolia-UserToken'] = $user->getKey();
         }
 
