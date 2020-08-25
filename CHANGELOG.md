@@ -1,11 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.2.0...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v8.2.1...master)
 
 
 ## [v8.2.1 (2020-08-06)](https://github.com/laravel/scout/compare/v8.2.0...v8.0.1)
 
-# Fixed
+### Fixed
 - Fix undefined `$user` variable bug ([e751cf4](https://github.com/laravel/scout/commit/e751cf4669ecab2fce887265280d1dfd29075aef))
 
 
