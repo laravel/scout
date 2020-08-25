@@ -3,7 +3,16 @@
 ## [Unreleased](https://github.com/laravel/scout/compare/v8.2.1...master)
 
 
-## [v8.2.1 (2020-08-06)](https://github.com/laravel/scout/compare/v8.2.0...v8.0.1)
+## [v8.3.0 (2020-08-25)](https://github.com/laravel/scout/compare/v8.2.1...v8.3.0)
+
+### Added
+- Laravel 8 support ([#415](https://github.com/laravel/scout/pull/415))
+
+### Changed
+- Update builder class pagination methods to resolve LengthAwarePaginator using container ([#413](https://github.com/laravel/scout/pull/413))
+
+
+## [v8.2.1 (2020-08-06)](https://github.com/laravel/scout/compare/v8.2.0...v8.2.1)
 
 ### Fixed
 - Fix undefined `$user` variable bug ([e751cf4](https://github.com/laravel/scout/commit/e751cf4669ecab2fce887265280d1dfd29075aef))
