@@ -4,6 +4,7 @@ namespace Laravel\Scout;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Scope;
 use Laravel\Scout\Events\ModelsFlushed;
 use Laravel\Scout\Events\ModelsImported;
@@ -43,6 +44,22 @@ class SearchableScope implements Scope
                 $models->unsearchable();
 
                 event(new ModelsFlushed($models));
+            });
+        });
+
+        HasManyThrough::macro('searchable', function ($chunk = null) {
+            $this->chunkById($chunk ?: config('scout.chunk.searchable', 500), function ($models) {
+                $models->filter->shouldBeSearchable()->searchable();
+
+                event(new ModelsImported($models));
+            });
+        });
+
+        HasManyThrough::macro('unsearchable', function ($chunk = null) {
+            $this->chunkById($chunk ?: config('scout.chunk.searchable', 500), function ($models) {
+                $models->filter->shouldBeSearchable()->searchable();
+
+                event(new ModelsImported($models));
             });
         });
     }
