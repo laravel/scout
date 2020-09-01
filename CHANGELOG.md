@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.2.1...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v8.3.1...master)
+
+
+## [v8.3.1 (2020-09-01)](https://github.com/laravel/scout/compare/v8.3.0...v8.3.1)
+
+### Fixed
+- Fix HasManyThrough relationships ([#416](https://github.com/laravel/scout/pull/416))
 
 
 ## [v8.3.0 (2020-08-25)](https://github.com/laravel/scout/compare/v8.2.1...v8.3.0)
