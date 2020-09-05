@@ -45,7 +45,7 @@ class BuilderTest extends TestCase
         });
 
         $builder = new Builder($model = m::mock(), 'zonda');
-        $this->assertEquals(
+        $this->assertSame(
             'bar', $builder->foo()
         );
     }
@@ -61,6 +61,6 @@ class BuilderTest extends TestCase
     {
         $builder = new Builder($model = m::mock(), 'zonda', null, true);
 
-        $this->assertEquals(0, $builder->wheres['__soft_deleted']);
+        $this->assertSame(0, $builder->wheres['__soft_deleted']);
     }
 }
