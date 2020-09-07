@@ -71,7 +71,7 @@ class AlgoliaEngineTest extends TestCase
             ['objectID' => 1, 'id' => 1],
         ]], $model);
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
     }
 
     public function test_map_method_respects_order()
@@ -96,7 +96,7 @@ class AlgoliaEngineTest extends TestCase
             ['objectID' => 3, 'id' => 3],
         ]], $model);
 
-        $this->assertEquals(4, count($results));
+        $this->assertCount(4, $results);
 
         // It's important we assert with array keys to ensure
         // they have been reset after sorting.
