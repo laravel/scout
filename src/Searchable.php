@@ -106,7 +106,7 @@ trait Searchable
             'model' => new static,
             'query' => $query,
             'callback' => $callback,
-            'softDelete'=> static::usesSoftDelete() && config('scout.soft_delete', false),
+            'softDelete' => static::usesSoftDelete() && config('scout.soft_delete', false),
         ]);
     }
 
@@ -123,6 +123,7 @@ trait Searchable
         $softDelete = static::usesSoftDelete() && config('scout.soft_delete', false);
 
         $self->newQuery()
+            ->with($self->searchableEagerLoads())
             ->when($softDelete, function ($query) {
                 $query->withTrashed();
             })
@@ -238,6 +239,16 @@ trait Searchable
     public function toSearchableArray()
     {
         return $this->toArray();
+    }
+
+    /**
+     * Get the relations that should be eager loaded when adding to the search index.
+     *
+     * @return array
+     */
+    public function searchableEagerLoads()
+    {
+        return [];
     }
 
     /**
