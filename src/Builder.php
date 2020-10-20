@@ -28,7 +28,7 @@ class Builder
     /**
      * Optional callback before search execution.
      *
-     * @var string
+     * @var \Closure|null
      */
     public $callback;
 
@@ -72,7 +72,7 @@ class Builder
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @param  string  $query
-     * @param  \Closure  $callback
+     * @param  \Closure|null  $callback
      * @param  bool  $softDelete
      * @return void
      */
