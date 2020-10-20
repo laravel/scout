@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.3.1...8.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v8.4.0...8.x)
+
+
+## [v8.4.0 (2020-10-20)](https://github.com/laravel/scout/compare/v8.3.1...v8.4.0)
+
+### Added
+- Add `makeAllSearchableUsing` ([bf8585e](https://github.com/laravel/scout/commit/bf8585eaff9204d23602f9c064b7e3cc074212e2))
 
 
 ## [v8.3.1 (2020-09-01)](https://github.com/laravel/scout/compare/v8.3.0...v8.3.1)
