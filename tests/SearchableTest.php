@@ -75,7 +75,7 @@ class ModelStubForMakeAllSearchable extends SearchableModel
                 });
 
         $mock->shouldReceive('orderBy')
-            ->with('id')
+            ->with('id', 'asc')
             ->andReturnSelf()
             ->shouldReceive('searchable');
 
