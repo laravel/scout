@@ -15,7 +15,8 @@ class ImportCommand extends Command
      */
     protected $signature = 'scout:import
             {model : Class name of model to bulk import}
-            {--c|chunk= : The number of records to import at a time (Defaults to configuration value: `scout.chunk.searchable`)}';
+            {--c|chunk= : The number of records to import at a time (Defaults to configuration value: `scout.chunk.searchable`)}
+            {--sort-by= : The order to sort the results by whilst importing, defaults to ascending}';
 
     /**
      * The console command description.
@@ -42,7 +43,7 @@ class ImportCommand extends Command
             $this->line('<comment>Imported ['.$class.'] models up to ID:</comment> '.$key);
         });
 
-        $model::makeAllSearchable($this->option('chunk'));
+        $model::makeAllSearchable($this->option('chunk'), $this->option('sort-by') ?: 'asc');
 
         $events->forget(ModelsImported::class);
 

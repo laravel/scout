@@ -114,9 +114,10 @@ trait Searchable
      * Make all instances of the model searchable.
      *
      * @param  int  $chunk
+     * @param  string $sortBy
      * @return void
      */
-    public static function makeAllSearchable($chunk = null)
+    public static function makeAllSearchable($chunk = null, $sortBy = 'asc')
     {
         $self = new static;
 
@@ -129,7 +130,7 @@ trait Searchable
             ->when($softDelete, function ($query) {
                 $query->withTrashed();
             })
-            ->orderBy($self->getKeyName())
+            ->orderBy($self->getKeyName(), $sortBy)
             ->searchable($chunk);
     }
 
