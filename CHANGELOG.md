@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.4.0...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v8.5.0...master)
+
+
+## [v8.5.0 (2020-12-10)](https://github.com/laravel/scout/compare/v8.4.0...v8.5.0)
+
+### Added
+- PHP 8 Support ([#425](https://github.com/laravel/scout/pull/425))
 
 
 ## [v8.4.0 (2020-10-20)](https://github.com/laravel/scout/compare/v8.3.1...v8.4.0)

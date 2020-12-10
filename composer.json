@@ -14,7 +14,7 @@
         }
     ],
     "require": {
-        "php": "^7.2",
+        "php": "^7.2|^8.0",
         "illuminate/bus": "^6.0|^7.0|^8.0",
         "illuminate/contracts": "^6.0|^7.0|^8.0",
         "illuminate/database": "^6.0|^7.0|^8.0",
@@ -24,7 +24,6 @@
         "illuminate/support": "^6.0|^7.0|^8.0"
     },
     "require-dev": {
-        "algolia/algoliasearch-client-php": "^2.2",
         "mockery/mockery": "^1.0",
         "phpunit/phpunit": "^8.0|^9.3"
     },
