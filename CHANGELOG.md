@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.5.0...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v8.5.1...master)
+
+
+## [v8.5.1 (2020-12-22)](https://github.com/laravel/scout/compare/v8.5.0...v8.5.1)
+
+### Changed
+- Run observer callbacks after database transactions have committed ([#436](https://github.com/laravel/scout/pull/436))
 
 
 ## [v8.5.0 (2020-12-10)](https://github.com/laravel/scout/compare/v8.4.0...v8.5.0)
