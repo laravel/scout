@@ -185,6 +185,18 @@ trait Searchable
      */
     public function getScoutModelsByIds(Builder $builder, array $ids)
     {
+        return $this->queryScoutModelsByIds($builder, $ids)->get();
+    }
+
+    /**
+     * Get the requested models from an array of object IDs.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  array  $ids
+     * @return mixed
+     */
+    public function queryScoutModelsByIds(Builder $builder, array $ids)
+    {
         $query = static::usesSoftDelete()
             ? $this->withTrashed() : $this->newQuery();
 
@@ -194,7 +206,7 @@ trait Searchable
 
         return $query->whereIn(
             $this->getScoutKeyName(), $ids
-        )->get();
+        );
     }
 
     /**

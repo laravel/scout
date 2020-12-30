@@ -179,6 +179,19 @@ class AlgoliaEngine extends Engine
      */
     public function map(Builder $builder, $results, $model)
     {
+        return $this->lazyMap($builder, $results, $model)->collect();
+    }
+
+    /**
+     * Lazy-Map the given results to instances of the given model.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  mixed  $results
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return \Illuminate\Support\LazyCollection
+     */
+    public function lazyMap(Builder $builder, $results, $model)
+    {
         if (count($results['hits']) === 0) {
             return $model->newCollection();
         }
@@ -186,9 +199,9 @@ class AlgoliaEngine extends Engine
         $objectIds = collect($results['hits'])->pluck('objectID')->values()->all();
         $objectIdPositions = array_flip($objectIds);
 
-        return $model->getScoutModelsByIds(
+        return $model->queryScoutModelsByIds(
                 $builder, $objectIds
-            )->filter(function ($model) use ($objectIds) {
+            )->cursor()->filter(function ($model) use ($objectIds) {
                 return in_array($model->getScoutKey(), $objectIds);
             })->sortBy(function ($model) use ($objectIdPositions) {
                 return $objectIdPositions[$model->getScoutKey()];

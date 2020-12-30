@@ -252,6 +252,16 @@ class Builder
     }
 
     /**
+     * Get a lazy collection of the search.
+     *
+     * @return \Illuminate\Support\LazyCollection
+     */
+    public function cursor()
+    {
+        return $this->engine()->cursor($this);
+    }
+
+    /**
      * Paginate the given query into a simple paginator.
      *
      * @param  int  $perPage

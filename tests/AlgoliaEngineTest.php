@@ -4,6 +4,7 @@ namespace Laravel\Scout\Tests;
 
 use Algolia\AlgoliaSearch\SearchClient;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\AlgoliaEngine;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
@@ -61,9 +62,9 @@ class AlgoliaEngineTest extends TestCase
         $engine = new AlgoliaEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([
+        $model->shouldReceive('queryScoutModelsByIds->cursor')->andReturn(new LazyCollection($models = Collection::make([
             new SearchableModel(['id' => 1]),
-        ]));
+        ])));
 
         $builder = m::mock(Builder::class);
 
@@ -80,12 +81,12 @@ class AlgoliaEngineTest extends TestCase
         $engine = new AlgoliaEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([
+        $model->shouldReceive('queryScoutModelsByIds->cursor')->andReturn(new LazyCollection($models = Collection::make([
             new SearchableModel(['id' => 1]),
             new SearchableModel(['id' => 2]),
             new SearchableModel(['id' => 3]),
             new SearchableModel(['id' => 4]),
-        ]));
+        ])));
 
         $builder = m::mock(Builder::class);
 

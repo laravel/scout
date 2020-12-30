@@ -4,6 +4,7 @@ namespace Laravel\Scout\Engines;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as BaseCollection;
+use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 
 class NullEngine extends Engine
@@ -76,6 +77,19 @@ class NullEngine extends Engine
     public function map(Builder $builder, $results, $model)
     {
         return Collection::make();
+    }
+
+    /**
+     * Map the given results to instances of the given model.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  mixed  $results
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function lazyMap(Builder $builder, $results, $model)
+    {
+        return LazyCollection::make();
     }
 
     /**

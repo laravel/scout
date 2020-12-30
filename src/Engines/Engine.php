@@ -59,6 +59,16 @@ abstract class Engine
     abstract public function map(Builder $builder, $results, $model);
 
     /**
+     * Lazy-Map the given results to instances of the given model.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  mixed  $results
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return \Illuminate\Support\LazyCollection
+     */
+    abstract public function lazyMap(Builder $builder, $results, $model);
+
+    /**
      * Get the total count from a raw result returned by the engine.
      *
      * @param  mixed  $results
@@ -92,6 +102,19 @@ abstract class Engine
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function get(Builder $builder)
+    {
+        return $this->map(
+            $builder, $this->search($builder), $builder->model
+        );
+    }
+
+    /**
+     * Get a lazy collection for the given query mapped onto models.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function cursor(Builder $builder)
     {
         return $this->map(
             $builder, $this->search($builder), $builder->model
