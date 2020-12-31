@@ -45,6 +45,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Database Transactions
+    |--------------------------------------------------------------------------
+    |
+    | This option allows you to control if the operations that sync your
+    | data with your search engines are only executed afterall open
+    | database transactions have committed.
+    |
+    */
+
+    'after_commit' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Chunk Sizes
     |--------------------------------------------------------------------------
     |
