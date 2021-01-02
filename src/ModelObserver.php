@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ModelObserver
 {
     /**
-     * Only dispatch the observer's events after all database transactions have committed.
+     * Indicates if Scout will dispatch the observer's events after all database transactions have committed.
      *
      * @var bool
      */

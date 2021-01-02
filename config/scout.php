@@ -48,9 +48,9 @@ return [
     | Database Transactions
     |--------------------------------------------------------------------------
     |
-    | This option allows you to control if the operations that sync your
-    | data with your search engines are only executed afterall open
-    | database transactions have committed.
+    | This configuration option determines if your data will only be synced
+    | with your search indexes after every open database transaction has
+    | been committed, thus preventing any discarded data from syncing.
     |
     */
 
