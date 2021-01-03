@@ -27,7 +27,7 @@ class ModelObserver
      */
     public function __construct()
     {
-        $this->afterCommit = config('scout.after_commit', false);
+        $this->afterCommit = config('scout.after_commit', true);
     }
 
     /**
