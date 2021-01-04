@@ -59,7 +59,7 @@ abstract class Engine
     abstract public function map(Builder $builder, $results, $model);
 
     /**
-     * Lazy-Map the given results to instances of the given model.
+     * Map the given results to instances of the given model via a lazy collection.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  mixed  $results

@@ -189,7 +189,7 @@ trait Searchable
     }
 
     /**
-     * Get the requested models from an array of object IDs.
+     * Get a query builder for retrieving the requested models from an array of object IDs.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  array  $ids

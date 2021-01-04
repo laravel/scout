@@ -80,12 +80,12 @@ class NullEngine extends Engine
     }
 
     /**
-     * Map the given results to instances of the given model.
+     * Map the given results to instances of the given model via a lazy collection.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return \Illuminate\Support\LazyCollection
      */
     public function lazyMap(Builder $builder, $results, $model)
     {

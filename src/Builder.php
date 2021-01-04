@@ -252,7 +252,7 @@ class Builder
     }
 
     /**
-     * Get a lazy collection of the search.
+     * Get the results of the search as a "lazy collection" instance.
      *
      * @return \Illuminate\Support\LazyCollection
      */
