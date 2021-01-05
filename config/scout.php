@@ -45,6 +45,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Database Transactions
+    |--------------------------------------------------------------------------
+    |
+    | This configuration option determines if your data will only be synced
+    | with your search indexes after every open database transaction has
+    | been committed, thus preventing any discarded data from syncing.
+    |
+    */
+
+    'after_commit' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Chunk Sizes
     |--------------------------------------------------------------------------
     |
