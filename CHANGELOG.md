@@ -1,15 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.5.2...8.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v8.5.3...8.x)
 
 
-## [v8.5.2 (2021-01-05)](https://github.com/laravel/scout/compare/v8.5.1...v8.5.2)
-
-### Changed
-- Revert `$afterCommit` property ([ece6758](https://github.com/laravel/scout/commit/ece6758b82c51ff7f5e011f243a7c6b33711a847))
+## [v8.5.2 (2021-01-05)](https://github.com/laravel/scout/compare/v8.5.2...v8.5.3)
 
 ### Fixed
 - Allow running observer callbacks after database transactions have committed ([#440](https://github.com/laravel/scout/pull/440), [56ea20d](https://github.com/laravel/scout/commit/56ea20d8e46cc9cd03d04cbdd071e4deb94e7f26))
+
+
+## [v8.5.2 (2020-12-30)](https://github.com/laravel/scout/compare/v8.5.1...v8.5.2)
+
+### Changed
+- Revert `$afterCommit` property ([ece6758](https://github.com/laravel/scout/commit/ece6758b82c51ff7f5e011f243a7c6b33711a847))
 
 
 ## [v8.5.1 (2020-12-22)](https://github.com/laravel/scout/compare/v8.5.0...v8.5.1)
