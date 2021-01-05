@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.5.1...8.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v8.5.2...8.x)
+
+
+## [v8.5.2 (2021-01-05)](https://github.com/laravel/scout/compare/v8.5.1...v8.5.2)
+
+### Changed
+- Revert `$afterCommit` property ([ece6758](https://github.com/laravel/scout/commit/ece6758b82c51ff7f5e011f243a7c6b33711a847))
 
 
 ## [v8.5.1 (2020-12-22)](https://github.com/laravel/scout/compare/v8.5.0...v8.5.1)
