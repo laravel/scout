@@ -2,12 +2,18 @@
 
 namespace Laravel\Scout\Tests;
 
+use Illuminate\Support\Facades\Config;
 use Laravel\Scout\ModelObserver;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 
 class ModelObserverTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Config::shouldReceive('get')->with('scout.after_commit', m::any())->andReturn(false);
+    }
+
     protected function tearDown(): void
     {
         m::close();

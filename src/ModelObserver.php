@@ -3,6 +3,7 @@
 namespace Laravel\Scout;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Config;
 
 class ModelObserver
 {
@@ -27,7 +28,7 @@ class ModelObserver
      */
     public function __construct()
     {
-        $this->afterCommit = config('scout.after_commit', false);
+        $this->afterCommit = Config::get('scout.after_commit', false);
     }
 
     /**
