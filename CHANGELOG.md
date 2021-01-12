@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.5.3...8.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v8.5.4...8.x)
+
+
+## [v8.5.4 (2021-01-12)](https://github.com/laravel/scout/compare/v8.5.3...v8.5.4)
+
+### Changed
+- Use the Config facade instead ([#442](https://github.com/laravel/scout/pull/442))
 
 
 ## [v8.5.3 (2021-01-05)](https://github.com/laravel/scout/compare/v8.5.2...v8.5.3)
