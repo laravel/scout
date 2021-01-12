@@ -4,6 +4,7 @@ namespace Laravel\Scout\Tests;
 
 use Algolia\AlgoliaSearch\SearchClient;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\AlgoliaEngine;
@@ -14,6 +15,11 @@ use stdClass;
 
 class AlgoliaEngineTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Config::shouldReceive('get')->with('scout.after_commit', m::any())->andReturn(false);
+    }
+
     protected function tearDown(): void
     {
         m::close();
