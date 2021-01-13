@@ -257,6 +257,43 @@ class Builder
      * @param  int  $perPage
      * @param  string  $pageName
      * @param  int|null  $page
+     * @return \Illuminate\Contracts\Pagination\Paginator
+     */
+    public function simplePaginate($perPage = null, $pageName = 'page', $page = null)
+    {
+        $engine = $this->engine();
+
+        $page = $page ?: Paginator::resolveCurrentPage($pageName);
+
+        $perPage = $perPage ?: $this->model->getPerPage();
+
+        $results = $this->model->newCollection($engine->map(
+            $this, $rawResults = $engine->paginate($this, $perPage, $page), $this->model
+        )->all());
+
+        $total = $engine->getTotalCount($rawResults);
+
+        $hasMorePages = ($perPage * $page) < $engine->getTotalCount($rawResults);
+
+        $paginator = Container::getInstance()->makeWith(Paginator::class, [
+            'items' => $results,
+            'perPage' => $perPage,
+            'currentPage' => $page,
+            'options' => [
+                'path' => Paginator::resolveCurrentPath(),
+                'pageName' => $pageName,
+            ],
+        ])->hasMorePagesWhen($hasMorePages);
+
+        return $paginator->appends('query', $this->query);
+    }
+
+    /**
+     * Paginate the given query into a paginator.
+     *
+     * @param  int  $perPage
+     * @param  string  $pageName
+     * @param  int|null  $page
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function paginate($perPage = null, $pageName = 'page', $page = null)
