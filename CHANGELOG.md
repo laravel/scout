@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.5.4...8.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v8.6.0...8.x)
+
+
+## [v8.6.0 (2021-01-19)](https://github.com/laravel/scout/compare/v8.5.4...v8.6.0)
+
+### Added
+- Add ability to use simplePaginate ([#443](https://github.com/laravel/scout/pull/443))
 
 
 ## [v8.5.4 (2021-01-12)](https://github.com/laravel/scout/compare/v8.5.3...v8.5.4)
