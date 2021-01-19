@@ -30,12 +30,89 @@ class BuilderTest extends TestCase
         $model->shouldReceive('searchableUsing')->andReturn($engine = m::mock());
 
         $engine->shouldReceive('paginate');
-        $engine->shouldReceive('map')->andReturn($results = Collection::make([new stdClass]));
-        $engine->shouldReceive('getTotalCount');
+        $engine->shouldReceive('map')->andReturn($results = Collection::times(15, function () {
+            return new stdClass;
+        }));
+        $engine->shouldReceive('getTotalCount')->andReturn(16);
 
         $model->shouldReceive('newCollection')->andReturn($results);
 
-        $builder->paginate();
+        $paginated = $builder->paginate();
+
+        $this->assertSame($results->all(), $paginated->items());
+        $this->assertSame(16, $paginated->total());
+        $this->assertSame(15, $paginated->perPage());
+        $this->assertSame(1, $paginated->currentPage());
+        $this->assertSame([
+            'path' => 'http://localhost/foo',
+            'pageName' => 'page',
+        ], $paginated->getOptions());
+    }
+
+    public function test_simple_pagination_correctly_handles_paginated_results()
+    {
+        Paginator::currentPageResolver(function () {
+            return 1;
+        });
+        Paginator::currentPathResolver(function () {
+            return 'http://localhost/foo';
+        });
+
+        $builder = new Builder($model = m::mock(), 'zonda');
+        $model->shouldReceive('getPerPage')->andReturn(15);
+        $model->shouldReceive('searchableUsing')->andReturn($engine = m::mock());
+
+        $engine->shouldReceive('paginate');
+        $engine->shouldReceive('map')->andReturn($results = Collection::times(15, function () {
+            return new stdClass;
+        }));
+        $engine->shouldReceive('getTotalCount')->andReturn(16);
+
+        $model->shouldReceive('newCollection')->andReturn($results);
+
+        $paginated = $builder->simplePaginate();
+
+        $this->assertSame($results->all(), $paginated->items());
+        $this->assertTrue($paginated->hasMorePages());
+        $this->assertSame(15, $paginated->perPage());
+        $this->assertSame(1, $paginated->currentPage());
+        $this->assertSame([
+            'path' => 'http://localhost/foo',
+            'pageName' => 'page',
+        ], $paginated->getOptions());
+    }
+
+    public function test_simple_pagination_correctly_handles_paginated_results_without_more_pages()
+    {
+        Paginator::currentPageResolver(function () {
+            return 1;
+        });
+        Paginator::currentPathResolver(function () {
+            return 'http://localhost/foo';
+        });
+
+        $builder = new Builder($model = m::mock(), 'zonda');
+        $model->shouldReceive('getPerPage')->andReturn(15);
+        $model->shouldReceive('searchableUsing')->andReturn($engine = m::mock());
+
+        $engine->shouldReceive('paginate');
+        $engine->shouldReceive('map')->andReturn($results = Collection::times(10, function () {
+            return new stdClass;
+        }));
+        $engine->shouldReceive('getTotalCount')->andReturn(10);
+
+        $model->shouldReceive('newCollection')->andReturn($results);
+
+        $paginated = $builder->simplePaginate();
+
+        $this->assertSame($results->all(), $paginated->items());
+        $this->assertFalse($paginated->hasMorePages());
+        $this->assertSame(15, $paginated->perPage());
+        $this->assertSame(1, $paginated->currentPage());
+        $this->assertSame([
+            'path' => 'http://localhost/foo',
+            'pageName' => 'page',
+        ], $paginated->getOptions());
     }
 
     public function test_macroable()
