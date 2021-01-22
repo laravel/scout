@@ -19,32 +19,59 @@ class ModelObserverTest extends TestCase
         m::close();
     }
 
-    public function test_saved_handler_makes_model_searchable()
+    public function test_updated_handler_makes_model_searchable()
     {
         $observer = new ModelObserver;
         $model = m::mock();
         $model->shouldReceive('shouldBeSearchable')->andReturn(true);
         $model->shouldReceive('searchable');
-        $observer->saved($model);
+        $observer->updated($model);
     }
 
-    public function test_saved_handler_doesnt_make_model_searchable_when_disabled()
+    public function test_updated_handler_doesnt_make_model_searchable_when_disabled()
     {
         $observer = new ModelObserver;
         $model = m::mock();
         $observer->disableSyncingFor(get_class($model));
         $model->shouldReceive('searchable')->never();
-        $observer->saved($model);
+        $observer->updated($model);
     }
 
-    public function test_saved_handler_makes_model_unsearchable_when_disabled_per_model_rule()
+    public function test_updated_handler_makes_model_unsearchable_when_disabled_per_model_rule()
     {
         $observer = new ModelObserver;
         $model = m::mock();
         $model->shouldReceive('shouldBeSearchable')->andReturn(false);
         $model->shouldReceive('searchable')->never();
         $model->shouldReceive('unsearchable');
-        $observer->saved($model);
+        $observer->updated($model);
+    }
+
+    public function test_created_handler_makes_model_searchable()
+    {
+        $observer = new ModelObserver;
+        $model = m::mock();
+        $model->shouldReceive('shouldBeSearchable')->andReturn(true);
+        $model->shouldReceive('searchable');
+        $observer->created($model);
+    }
+
+    public function test_created_handler_doesnt_make_model_searchable_when_disabled()
+    {
+        $observer = new ModelObserver;
+        $model = m::mock();
+        $observer->disableSyncingFor(get_class($model));
+        $model->shouldReceive('searchable')->never();
+        $observer->created($model);
+    }
+
+    public function test_created_handler_makes_model_unsearchable_when_disabled_per_model_rule()
+    {
+        $observer = new ModelObserver;
+        $model = m::mock();
+        $model->shouldReceive('shouldBeSearchable')->andReturn(false);
+        $model->shouldReceive('searchable')->never();
+        $observer->created($model);
     }
 
     public function test_deleted_handler_makes_model_unsearchable()
