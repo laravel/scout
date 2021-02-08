@@ -114,17 +114,20 @@ trait Searchable
      * Make all instances of the model searchable.
      *
      * @param  int  $chunk
+     * @param  bool $disableGlobalScopes
      * @return void
      */
-    public static function makeAllSearchable($chunk = null)
+    public static function makeAllSearchable($chunk = null, $disableGlobalScopes = null)
     {
         $self = new static;
 
         $softDelete = static::usesSoftDelete() && config('scout.soft_delete', false);
 
         $self->newQuery()
-            ->when(true, function ($query) use ($self) {
-                $self->makeAllSearchableUsing($query);
+            ->when(true, function ($query) use ($self, $disableGlobalScopes) {
+                $self->makeAllSearchableUsing(
+                    $disableGlobalScopes ? $query->withoutGlobalScopes() : $query
+                );
             })
             ->when($softDelete, function ($query) {
                 $query->withTrashed();
