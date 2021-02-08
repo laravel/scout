@@ -15,7 +15,8 @@ class ImportCommand extends Command
      */
     protected $signature = 'scout:import
             {model : Class name of model to bulk import}
-            {--c|chunk= : The number of records to import at a time (Defaults to configuration value: `scout.chunk.searchable`)}';
+            {--c|chunk= : The number of records to import at a time (Defaults to configuration value: `scout.chunk.searchable`)}
+            {--disable-scopes : Disables all global scopes for the model while fetching entities to index}';
 
     /**
      * The console command description.
@@ -42,7 +43,7 @@ class ImportCommand extends Command
             $this->line('<comment>Imported ['.$class.'] models up to ID:</comment> '.$key);
         });
 
-        $model::makeAllSearchable($this->option('chunk'));
+        $model::makeAllSearchable($this->option('chunk'), $this->option('disable-scopes'));
 
         $events->forget(ModelsImported::class);
 
