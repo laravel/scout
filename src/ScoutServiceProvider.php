@@ -20,7 +20,15 @@ class ScoutServiceProvider extends ServiceProvider
         $this->app->singleton(EngineManager::class, function ($app) {
             return new EngineManager($app);
         });
+    }
 
+    /**
+     * Bootstrap any application services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
         if ($this->app->runningInConsole()) {
             $this->commands([
                 ImportCommand::class,
