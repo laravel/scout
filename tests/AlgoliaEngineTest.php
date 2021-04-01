@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\AlgoliaEngine;
+use Laravel\Scout\Tests\Fixtures\EmptySearchableModel;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use Laravel\Scout\Tests\Fixtures\SoftDeletedEmptySearchableModel;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -125,7 +127,7 @@ class AlgoliaEngineTest extends TestCase
         ]]);
 
         $engine = new AlgoliaEngine($client);
-        $engine->update(Collection::make([new CustomKeySearchableModel]));
+        $engine->update(Collection::make([new AlogliaCustomKeySearchableModel]));
     }
 
     public function test_a_model_is_removed_with_a_custom_algolia_key()
@@ -135,7 +137,7 @@ class AlgoliaEngineTest extends TestCase
         $index->shouldReceive('deleteObjects')->with(['my-algolia-key.1']);
 
         $engine = new AlgoliaEngine($client);
-        $engine->delete(Collection::make([new CustomKeySearchableModel(['id' => 1])]));
+        $engine->delete(Collection::make([new AlogliaCustomKeySearchableModel(['id' => 1])]));
     }
 
     public function test_flush_a_model_with_a_custom_algolia_key()
@@ -145,7 +147,7 @@ class AlgoliaEngineTest extends TestCase
         $index->shouldReceive('clearObjects');
 
         $engine = new AlgoliaEngine($client);
-        $engine->flush(new CustomKeySearchableModel);
+        $engine->flush(new AlogliaCustomKeySearchableModel);
     }
 
     public function test_update_empty_searchable_array_does_not_add_objects_to_index()
@@ -156,22 +158,6 @@ class AlgoliaEngineTest extends TestCase
 
         $engine = new AlgoliaEngine($client);
         $engine->update(Collection::make([new EmptySearchableModel]));
-    }
-}
-
-class CustomKeySearchableModel extends SearchableModel
-{
-    public function getScoutKey()
-    {
-        return 'my-algolia-key.'.$this->getKey();
-    }
-}
-
-class EmptySearchableModel extends SearchableModel
-{
-    public function toSearchableArray()
-    {
-        return [];
     }
 
     public function test_update_empty_searchable_array_from_soft_deleted_model_does_not_add_objects_to_index()
@@ -185,20 +171,10 @@ class EmptySearchableModel extends SearchableModel
     }
 }
 
-class SoftDeletedEmptySearchableModel extends SearchableModel
+class AlogliaCustomKeySearchableModel extends SearchableModel
 {
-    public function toSearchableArray()
+    public function getScoutKey()
     {
-        return [];
-    }
-
-    public function pushSoftDeleteMetadata()
-    {
-        //
-    }
-
-    public function scoutMetadata()
-    {
-        return ['__soft_deleted' => 1];
+        return 'my-algolia-key.'.$this->getKey();
     }
 }
