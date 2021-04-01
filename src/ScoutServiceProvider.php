@@ -18,6 +18,12 @@ class ScoutServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/scout.php', 'scout');
 
+        if (class_exists(MeiliSearch::class)) {
+            $this->app->singleton(MeiliSearch::class, function () {
+                return new MeiliSearch(config('meilisearch.host'), config('meilisearch.key'));
+            });
+        }
+
         $this->app->singleton(EngineManager::class, function ($app) {
             return new EngineManager($app);
         });
@@ -31,12 +37,6 @@ class ScoutServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../config/scout.php' => $this->app['path.config'].DIRECTORY_SEPARATOR.'scout.php',
             ]);
-        }
-
-        if (class_exists(MeiliSearch::class)) {
-            $this->app->singleton(MeiliSearch::class, function () {
-                return new MeiliSearch(config('meilisearch.host'), config('meilisearch.key'));
-            });
         }
     }
 }
