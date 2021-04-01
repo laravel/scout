@@ -8,7 +8,9 @@ use Algolia\AlgoliaSearch\Support\UserAgent;
 use Exception;
 use Illuminate\Support\Manager;
 use Laravel\Scout\Engines\AlgoliaEngine;
+use Laravel\Scout\Engines\MeiliSearchEngine;
 use Laravel\Scout\Engines\NullEngine;
+use MeiliSearch\Client as MeiliSearch;
 
 class EngineManager extends Manager
 {
@@ -88,6 +90,37 @@ class EngineManager extends Manager
         }
 
         return $headers;
+    }
+
+    /**
+     * Create an MeiliSearch engine instance.
+     *
+     * @return \Laravel\Scout\Engines\MeiliSearchEngine
+     */
+    public function createMeilisearchDriver()
+    {
+        $this->ensureMeiliSearchClientIsInstalled();
+
+        return new MeiliSearchEngine(
+            resolve(MeiliSearch::class),
+            config('scout.soft_delete', false)
+        );
+    }
+
+    /**
+     * Ensure the MeiliSearch client is installed.
+     *
+     * @return void
+     *
+     * @throws \Exception
+     */
+    protected function ensureMeiliSearchClientIsInstalled()
+    {
+        if (class_exists(MeiliSearch::class)) {
+            return;
+        }
+
+        throw new Exception('Please install the MeiliSearch client: meilisearch/meilisearch-php.');
     }
 
     /**

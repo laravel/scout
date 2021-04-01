@@ -3,15 +3,15 @@
 namespace Laravel\Scout\Engines;
 
 use Laravel\Scout\Builder;
-use MeiliSearch\Client as Meilisearch;
+use MeiliSearch\Client as MeiliSearch;
 use MeiliSearch\Search\SearchResult;
 
 class MeiliSearchEngine extends Engine
 {
     /**
-     * The Meilisearch client.
+     * The MeiliSearch client.
      *
-     * @var Meilisearch
+     * @var MeiliSearch
      */
     protected $meilisearch;
 
@@ -22,7 +22,7 @@ class MeiliSearchEngine extends Engine
      */
     protected $softDelete;
 
-    public function __construct(Meilisearch $meilisearch, bool $softDelete = false)
+    public function __construct(MeiliSearch $meilisearch, bool $softDelete = false)
     {
         $this->meilisearch = $meilisearch;
         $this->softDelete = $softDelete;
