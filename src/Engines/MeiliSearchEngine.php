@@ -11,7 +11,7 @@ class MeiliSearchEngine extends Engine
     /**
      * The MeiliSearch client.
      *
-     * @var MeiliSearch
+     * @var \MeiliSearch\Client
      */
     protected $meilisearch;
 
@@ -22,7 +22,14 @@ class MeiliSearchEngine extends Engine
      */
     protected $softDelete;
 
-    public function __construct(MeiliSearch $meilisearch, bool $softDelete = false)
+    /**
+     * Create a new MeiliSearchEngine instance.
+     *
+     * @param  \MeiliSearch\Client  $meilisearch
+     * @param  bool  $softDelete
+     * @return void
+     */
+    public function __construct(MeiliSearch $meilisearch, $softDelete = false)
     {
         $this->meilisearch = $meilisearch;
         $this->softDelete = $softDelete;
@@ -31,8 +38,7 @@ class MeiliSearchEngine extends Engine
     /**
      * Update the given model in the index.
      *
-     * @param \Illuminate\Database\Eloquent\Collection $models
-     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      *
      * @throws \MeiliSearch\Exceptions\ApiException
@@ -65,8 +71,7 @@ class MeiliSearchEngine extends Engine
     /**
      * Remove the given model from the index.
      *
-     * @param \Illuminate\Database\Eloquent\Collection $models
-     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
     public function delete($models)
@@ -96,9 +101,8 @@ class MeiliSearchEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param int $perPage
-     * @param int $page
-     *
+     * @param  int  $perPage
+     * @param  int  $page
      * @return mixed
      */
     public function paginate(Builder $builder, $perPage, $page)
@@ -113,6 +117,8 @@ class MeiliSearchEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  array  $searchParams
      * @return mixed
      */
     protected function performSearch(Builder $builder, array $searchParams = [])
@@ -136,6 +142,7 @@ class MeiliSearchEngine extends Engine
     /**
      * Get the filter array for the query.
      *
+     * @param  \Laravel\Scout\Builder  $builder
      * @return string
      */
     protected function filters(Builder $builder)
@@ -148,8 +155,7 @@ class MeiliSearchEngine extends Engine
     /**
      * Pluck and return the primary keys of the given results.
      *
-     * @param mixed $results
-     *
+     * @param  mixed  $results
      * @return \Illuminate\Support\Collection
      */
     public function mapIds($results)
@@ -167,9 +173,9 @@ class MeiliSearchEngine extends Engine
     /**
      * Map the given results to instances of the given model.
      *
-     * @param \Laravel\Scout\Builder $builder
-     * @param mixed $results
-     * @param \Illuminate\Database\Eloquent\Model $model
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  mixed  $results
+     * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function map(Builder $builder, $results, $model)
@@ -180,9 +186,9 @@ class MeiliSearchEngine extends Engine
     /**
      * Map the given results to instances of the given modell via a lazy collection.
      *
-     * @param \Laravel\Scout\Builder $builder
-     * @param mixed $results
-     * @param \Illuminate\Database\Eloquent\Model $model
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  mixed  $results
+     * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return \Illuminate\Support\LazyCollection
      */
     public function lazyMap(Builder $builder, $results, $model)
@@ -206,8 +212,7 @@ class MeiliSearchEngine extends Engine
     /**
      * Get the total count from a raw result returned by the engine.
      *
-     * @param mixed $results
-     *
+     * @param  mixed  $results
      * @return int
      */
     public function getTotalCount($results)
@@ -218,8 +223,7 @@ class MeiliSearchEngine extends Engine
     /**
      * Flush all of the model's records from the engine.
      *
-     * @param \Illuminate\Database\Eloquent\Model $model
-     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return void
      */
     public function flush($model)
@@ -232,8 +236,7 @@ class MeiliSearchEngine extends Engine
     /**
      * Determine if the given model uses soft deletes.
      *
-     * @param \Illuminate\Database\Eloquent\Model $model
-     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return bool
      */
     protected function usesSoftDelete($model)
@@ -244,9 +247,8 @@ class MeiliSearchEngine extends Engine
     /**
      * Dynamically call the MeiliSearch client instance.
      *
-     * @param string $method
-     * @param array  $parameters
-     *
+     * @param  string  $method
+     * @param  array  $parameters
      * @return mixed
      */
     public function __call($method, $parameters)
