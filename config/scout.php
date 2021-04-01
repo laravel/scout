@@ -117,6 +117,7 @@ return [
     ],
 
     'meilisearch' => [
+
         /*
         |--------------------------------------------------------------------------
         | MeiliSearch Host Address
@@ -130,6 +131,7 @@ return [
         | https://docs.meilisearch.com/guides/advanced_guides/configuration.html
         |
         */
+
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
 
         /*
@@ -146,7 +148,9 @@ return [
         | https://docs.meilisearch.com/guides/advanced_guides/configuration.html
         |
         */
+
         'key' => env('MEILISEARCH_KEY', null),
+
     ],
 
 ];
