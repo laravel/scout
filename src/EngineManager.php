@@ -102,7 +102,7 @@ class EngineManager extends Manager
         $this->ensureMeiliSearchClientIsInstalled();
 
         return new MeiliSearchEngine(
-            resolve(MeiliSearch::class),
+            $this->container->make(MeiliSearch::class),
             config('scout.soft_delete', false)
         );
     }
