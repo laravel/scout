@@ -101,6 +101,18 @@ class EngineManager extends Manager
     }
 
     /**
+     * Forget all of the resolved engine instances.
+     *
+     * @return $this
+     */
+    public function forgetEngines()
+    {
+        $this->drivers = [];
+
+        return $this;
+    }
+
+    /**
      * Get the default Scout driver name.
      *
      * @return string
