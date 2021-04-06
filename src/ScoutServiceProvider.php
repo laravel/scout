@@ -20,7 +20,7 @@ class ScoutServiceProvider extends ServiceProvider
 
         if (class_exists(MeiliSearch::class)) {
             $this->app->singleton(MeiliSearch::class, function ($app) {
-                $config = $app['config']['meilisearch'];
+                $config = $app['config']->get('scout.meilisearch');
 
                 return new MeiliSearch($config['host'], $config['key']);
             });
