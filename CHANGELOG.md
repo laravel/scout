@@ -1,6 +1,13 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.6.0...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v8.6.1...master)
+
+
+## [v8.6.1 (2021-04-06)](https://github.com/laravel/scout/compare/v8.6.0...v8.6.1)
+
+### Changed
+- Move booting of services ([#453](https://github.com/laravel/scout/pull/453))
+- Add reset method ([fb8ce0c](https://github.com/laravel/scout/commit/fb8ce0c3a0ea33fc67be9a0916bf049a7e86bd54))
 
 
 ## [v8.6.0 (2021-01-19)](https://github.com/laravel/scout/compare/v8.5.4...v8.6.0)
