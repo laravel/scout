@@ -234,6 +234,33 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
+     * Create a search index.
+     *
+     * @param  string  $name
+     * @param  array  $options
+     * @return mixed
+     *
+     * @throws \MeiliSearch\Exceptions\ApiException
+     */
+    public function createIndex($name, array $options = [])
+    {
+        return $this->meilisearch->createIndex($name, $options);
+    }
+
+    /**
+     * Delete a search index.
+     *
+     * @param  string  $name
+     * @return mixed
+     *
+     * @throws \MeiliSearch\Exceptions\ApiException
+     */
+    public function deleteIndex($name)
+    {
+        return $this->meilisearch->deleteIndex($name);
+    }
+
+    /**
      * Determine if the given model uses soft deletes.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model

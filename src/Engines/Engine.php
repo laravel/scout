@@ -85,6 +85,23 @@ abstract class Engine
     abstract public function flush($model);
 
     /**
+     * Create a search index.
+     *
+     * @param  string  $name
+     * @param  array  $options
+     * @return mixed
+     */
+    abstract public function createIndex($name, array $options = []);
+
+    /**
+     * Delete a search index.
+     *
+     * @param  string  $name
+     * @return mixed
+     */
+    abstract public function deleteIndex($name);
+
+    /**
      * Get the results of the query as a Collection of primary keys.
      *
      * @param  \Laravel\Scout\Builder  $builder

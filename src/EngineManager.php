@@ -18,7 +18,7 @@ class EngineManager extends Manager
      * Get a driver instance.
      *
      * @param  string|null  $name
-     * @return mixed
+     * @return \Laravel\Scout\Engines\Engine
      */
     public function engine($name = null)
     {

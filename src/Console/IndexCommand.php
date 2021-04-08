@@ -2,9 +2,9 @@
 
 namespace Laravel\Scout\Console;
 
+use Exception;
 use Illuminate\Console\Command;
-use MeiliSearch\Client;
-use MeiliSearch\Exceptions\ApiException;
+use Laravel\Scout\EngineManager;
 
 class IndexCommand extends Command
 {
@@ -14,9 +14,9 @@ class IndexCommand extends Command
      * @var string
      */
     protected $signature = 'scout:index
+            {name : The name of the index}
             {--d|delete : Delete an existing index}
-            {--k|key= : The name of primary key}
-            {name : The name of the index}';
+            {--k|key= : The name of primary key}';
 
     /**
      * The console command description.
@@ -28,16 +28,18 @@ class IndexCommand extends Command
     /**
      * Execute the console command.
      *
-     * @param  \MeiliSearch\Client  $client
+     * @param  \Laravel\Scout\EngineManager  $manager
      * @return void
      */
-    public function handle(Client $client)
+    public function handle(EngineManager $manager)
     {
+        $engine = $manager->engine();
+
         try {
             if ($this->option('delete')) {
-                $client->deleteIndex($this->argument('name'));
+                $engine->deleteIndex($this->argument('name'));
 
-                $this->info('Index "'.$this->argument('name').'" deleted.');
+                $this->info('Index "' . $this->argument('name') . '" deleted.');
 
                 return;
             }
@@ -48,10 +50,10 @@ class IndexCommand extends Command
                 $options = ['primaryKey' => $this->option('key')];
             }
 
-            $client->createIndex($this->argument('name'), $options);
+            $engine->createIndex($this->argument('name'), $options);
 
-            $this->info('Index "'.$this->argument('name').'" created.');
-        } catch (ApiException $exception) {
+            $this->info('Index "' . $this->argument('name') . '" created.');
+        } catch (Exception $exception) {
             $this->error($exception->getMessage());
         }
     }

@@ -3,6 +3,7 @@
 namespace Laravel\Scout\Engines;
 
 use Algolia\AlgoliaSearch\SearchClient as Algolia;
+use Exception;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Builder;
 
@@ -230,6 +231,31 @@ class AlgoliaEngine extends Engine
         $index = $this->algolia->initIndex($model->searchableAs());
 
         $index->clearObjects();
+    }
+
+    /**
+     * Create a search index.
+     *
+     * @param  string  $name
+     * @param  array  $options
+     * @return mixed
+     *
+     * @throws \Exception
+     */
+    public function createIndex($name, array $options = [])
+    {
+        throw new Exception('Algolia indexes are created automatically upon adding objects.');
+    }
+
+    /**
+     * Delete a search index.
+     *
+     * @param  string  $name
+     * @return mixed
+     */
+    public function deleteIndex($name)
+    {
+        return $this->algolia->initIndex($name)->delete();
     }
 
     /**
