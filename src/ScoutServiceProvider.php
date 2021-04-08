@@ -5,6 +5,7 @@ namespace Laravel\Scout;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Scout\Console\FlushCommand;
 use Laravel\Scout\Console\ImportCommand;
+use Laravel\Scout\Console\IndexCommand;
 use MeiliSearch\Client as MeiliSearch;
 
 class ScoutServiceProvider extends ServiceProvider
@@ -40,8 +41,9 @@ class ScoutServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                ImportCommand::class,
                 FlushCommand::class,
+                ImportCommand::class,
+                IndexCommand::class,
             ]);
 
             $this->publishes([
