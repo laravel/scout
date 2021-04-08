@@ -6,7 +6,7 @@ use Exception;
 use Illuminate\Console\Command;
 use Laravel\Scout\EngineManager;
 
-class IndexCommand extends Command
+class CreateIndexCommand extends Command
 {
     /**
      * The name and signature of the console command.
