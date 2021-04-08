@@ -6,7 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Scout\Console\DeleteIndexCommand;
 use Laravel\Scout\Console\FlushCommand;
 use Laravel\Scout\Console\ImportCommand;
-use Laravel\Scout\Console\IndexCommand;
+use Laravel\Scout\Console\CreateIndexCommand;
 use MeiliSearch\Client as MeiliSearch;
 
 class ScoutServiceProvider extends ServiceProvider
@@ -44,7 +44,7 @@ class ScoutServiceProvider extends ServiceProvider
             $this->commands([
                 FlushCommand::class,
                 ImportCommand::class,
-                IndexCommand::class,
+                CreateIndexCommand::class,
                 DeleteIndexCommand::class,
             ]);
 
