@@ -14,19 +14,19 @@
         }
     ],
     "require": {
-        "php": "^7.2|^8.0",
-        "illuminate/bus": "^6.0|^7.0|^8.0",
-        "illuminate/contracts": "^6.0|^7.0|^8.0",
-        "illuminate/database": "^6.0|^7.0|^8.0",
-        "illuminate/http": "^6.0|^7.0|^8.0",
-        "illuminate/pagination": "^6.0|^7.0|^8.0",
-        "illuminate/queue": "^6.0|^7.0|^8.0",
-        "illuminate/support": "^6.0|^7.0|^8.0"
+        "php": "^7.3|^8.0",
+        "illuminate/bus": "^8.0",
+        "illuminate/contracts": "^8.0",
+        "illuminate/database": "^8.0",
+        "illuminate/http": "^8.0",
+        "illuminate/pagination": "^8.0",
+        "illuminate/queue": "^8.0",
+        "illuminate/support": "^8.0"
     },
     "require-dev": {
         "meilisearch/meilisearch-php": "^0.17",
         "mockery/mockery": "^1.0",
-        "phpunit/phpunit": "^8.0|^9.3"
+        "phpunit/phpunit": "^9.3"
     },
     "autoload": {
         "psr-4": {
