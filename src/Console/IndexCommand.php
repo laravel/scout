@@ -39,7 +39,7 @@ class IndexCommand extends Command
             if ($this->option('delete')) {
                 $engine->deleteIndex($this->argument('name'));
 
-                $this->info('Index "' . $this->argument('name') . '" deleted.');
+                $this->info('Index "'.$this->argument('name').'" deleted.');
 
                 return;
             }
@@ -52,7 +52,7 @@ class IndexCommand extends Command
 
             $engine->createIndex($this->argument('name'), $options);
 
-            $this->info('Index "' . $this->argument('name') . '" created.');
+            $this->info('Index "'.$this->argument('name').'" created.');
         } catch (Exception $exception) {
             $this->error($exception->getMessage());
         }
