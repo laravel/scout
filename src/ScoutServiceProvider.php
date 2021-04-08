@@ -3,10 +3,10 @@
 namespace Laravel\Scout;
 
 use Illuminate\Support\ServiceProvider;
+use Laravel\Scout\Console\CreateIndexCommand;
 use Laravel\Scout\Console\DeleteIndexCommand;
 use Laravel\Scout\Console\FlushCommand;
 use Laravel\Scout\Console\ImportCommand;
-use Laravel\Scout\Console\CreateIndexCommand;
 use MeiliSearch\Client as MeiliSearch;
 
 class ScoutServiceProvider extends ServiceProvider
