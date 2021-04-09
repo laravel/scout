@@ -3,7 +3,7 @@
 namespace Laravel\Scout;
 
 use Illuminate\Support\ServiceProvider;
-use Laravel\Scout\Console\CreateIndexCommand;
+use Laravel\Scout\Console\IndexCommand;
 use Laravel\Scout\Console\DeleteIndexCommand;
 use Laravel\Scout\Console\FlushCommand;
 use Laravel\Scout\Console\ImportCommand;
@@ -44,7 +44,7 @@ class ScoutServiceProvider extends ServiceProvider
             $this->commands([
                 FlushCommand::class,
                 ImportCommand::class,
-                CreateIndexCommand::class,
+                IndexCommand::class,
                 DeleteIndexCommand::class,
             ]);
 
