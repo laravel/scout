@@ -2,19 +2,18 @@
 
 namespace Laravel\Scout\Engines;
 
-use Algolia\AlgoliaSearch\SearchClient as Algolia;
-use Exception;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Builder;
+use MeiliSearch\Client as MeiliSearch;
+use MeiliSearch\Search\SearchResult;
 
-class AlgoliaEngine extends Engine
+class MeiliSearchEngine extends Engine
 {
     /**
-     * The Algolia client.
+     * The MeiliSearch client.
      *
-     * @var \Algolia\AlgoliaSearch\SearchClient
+     * @var \MeiliSearch\Client
      */
-    protected $algolia;
+    protected $meilisearch;
 
     /**
      * Determines if soft deletes for Scout are enabled or not.
@@ -24,15 +23,15 @@ class AlgoliaEngine extends Engine
     protected $softDelete;
 
     /**
-     * Create a new engine instance.
+     * Create a new MeiliSearchEngine instance.
      *
-     * @param  \Algolia\AlgoliaSearch\SearchClient  $algolia
+     * @param  \MeiliSearch\Client  $meilisearch
      * @param  bool  $softDelete
      * @return void
      */
-    public function __construct(Algolia $algolia, $softDelete = false)
+    public function __construct(MeiliSearch $meilisearch, $softDelete = false)
     {
-        $this->algolia = $algolia;
+        $this->meilisearch = $meilisearch;
         $this->softDelete = $softDelete;
     }
 
@@ -42,7 +41,7 @@ class AlgoliaEngine extends Engine
      * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      *
-     * @throws \Algolia\AlgoliaSearch\Exceptions\AlgoliaException
+     * @throws \MeiliSearch\Exceptions\ApiException
      */
     public function update($models)
     {
@@ -50,7 +49,7 @@ class AlgoliaEngine extends Engine
             return;
         }
 
-        $index = $this->algolia->initIndex($models->first()->searchableAs());
+        $index = $this->meilisearch->index($models->first()->searchableAs());
 
         if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
             $models->each->pushSoftDeleteMetadata();
@@ -61,15 +60,11 @@ class AlgoliaEngine extends Engine
                 return;
             }
 
-            return array_merge(
-                ['objectID' => $model->getScoutKey()],
-                $searchableData,
-                $model->scoutMetadata()
-            );
+            return array_merge($searchableData, $model->scoutMetadata());
         })->filter()->values()->all();
 
         if (! empty($objects)) {
-            $index->saveObjects($objects);
+            $index->addDocuments($objects, $models->first()->getKeyName());
         }
     }
 
@@ -81,26 +76,41 @@ class AlgoliaEngine extends Engine
      */
     public function delete($models)
     {
-        $index = $this->algolia->initIndex($models->first()->searchableAs());
+        $index = $this->meilisearch->index($models->first()->searchableAs());
 
-        $index->deleteObjects(
-            $models->map(function ($model) {
-                return $model->getScoutKey();
-            })->values()->all()
+        $index->deleteDocuments(
+            $models->map->getScoutKey()
+                ->values()
+                ->all()
         );
     }
 
     /**
      * Perform the given search on the engine.
      *
-     * @param  \Laravel\Scout\Builder  $builder
      * @return mixed
      */
     public function search(Builder $builder)
     {
         return $this->performSearch($builder, array_filter([
-            'numericFilters' => $this->filters($builder),
-            'hitsPerPage' => $builder->limit,
+            'filters' => $this->filters($builder),
+            'limit' => $builder->limit,
+        ]));
+    }
+
+    /**
+     * Perform the given search on the engine.
+     *
+     * @param  int  $perPage
+     * @param  int  $page
+     * @return mixed
+     */
+    public function paginate(Builder $builder, $perPage, $page)
+    {
+        return $this->performSearch($builder, array_filter([
+            'filters' => $this->filters($builder),
+            'limit' => (int) $perPage,
+            'offset' => ($page - 1) * $perPage,
         ]));
     }
 
@@ -108,55 +118,38 @@ class AlgoliaEngine extends Engine
      * Perform the given search on the engine.
      *
      * @param  \Laravel\Scout\Builder  $builder
-     * @param  int  $perPage
-     * @param  int  $page
+     * @param  array  $searchParams
      * @return mixed
      */
-    public function paginate(Builder $builder, $perPage, $page)
+    protected function performSearch(Builder $builder, array $searchParams = [])
     {
-        return $this->performSearch($builder, [
-            'numericFilters' => $this->filters($builder),
-            'hitsPerPage' => $perPage,
-            'page' => $page - 1,
-        ]);
-    }
-
-    /**
-     * Perform the given search on the engine.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @param  array  $options
-     * @return mixed
-     */
-    protected function performSearch(Builder $builder, array $options = [])
-    {
-        $algolia = $this->algolia->initIndex(
-            $builder->index ?: $builder->model->searchableAs()
-        );
+        $meilisearch = $this->meilisearch->index($builder->index ?: $builder->model->searchableAs());
 
         if ($builder->callback) {
-            return call_user_func(
+            $result = call_user_func(
                 $builder->callback,
-                $algolia,
+                $meilisearch,
                 $builder->query,
-                $options
+                $searchParams
             );
+
+            return $result instanceof SearchResult ? $result->getRaw() : $result;
         }
 
-        return $algolia->search($builder->query, $options);
+        return $meilisearch->rawSearch($builder->query, $searchParams);
     }
 
     /**
      * Get the filter array for the query.
      *
      * @param  \Laravel\Scout\Builder  $builder
-     * @return array
+     * @return string
      */
     protected function filters(Builder $builder)
     {
         return collect($builder->wheres)->map(function ($value, $key) {
-            return $key.'='.$value;
-        })->values()->all();
+            return sprintf('%s="%s"', $key, $value);
+        })->values()->implode(' AND ');
     }
 
     /**
@@ -167,7 +160,14 @@ class AlgoliaEngine extends Engine
      */
     public function mapIds($results)
     {
-        return collect($results['hits'])->pluck('objectID')->values();
+        if (0 === count($results['hits'])) {
+            return collect();
+        }
+
+        $hits = collect($results['hits']);
+        $key = key($hits->first());
+
+        return $hits->pluck($key)->values();
     }
 
     /**
@@ -180,11 +180,11 @@ class AlgoliaEngine extends Engine
      */
     public function map(Builder $builder, $results, $model)
     {
-        return $this->lazyMap($builder, $results, $model)->collect();
+        return $this->lazyMap($builder, $results, $model);
     }
 
     /**
-     * Map the given results to instances of the given model via a lazy collection.
+     * Map the given results to instances of the given modell via a lazy collection.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  mixed  $results
@@ -193,20 +193,20 @@ class AlgoliaEngine extends Engine
      */
     public function lazyMap(Builder $builder, $results, $model)
     {
-        if (count($results['hits']) === 0) {
+        if (is_null($results) || 0 === count($results['hits'])) {
             return $model->newCollection();
         }
 
-        $objectIds = collect($results['hits'])->pluck('objectID')->values()->all();
+        $objectIds = collect($results['hits'])->pluck($model->getKeyName())->values()->all();
         $objectIdPositions = array_flip($objectIds);
 
         return $model->queryScoutModelsByIds(
-                $builder, $objectIds
-            )->cursor()->filter(function ($model) use ($objectIds) {
-                return in_array($model->getScoutKey(), $objectIds);
-            })->sortBy(function ($model) use ($objectIdPositions) {
-                return $objectIdPositions[$model->getScoutKey()];
-            })->values();
+            $builder, $objectIds
+        )->cursor()->filter(function ($model) use ($objectIds) {
+            return in_array($model->getScoutKey(), $objectIds);
+        })->sortBy(function ($model) use ($objectIdPositions) {
+            return $objectIdPositions[$model->getScoutKey()];
+        })->values();
     }
 
     /**
@@ -228,9 +228,9 @@ class AlgoliaEngine extends Engine
      */
     public function flush($model)
     {
-        $index = $this->algolia->initIndex($model->searchableAs());
+        $index = $this->meilisearch->index($model->searchableAs());
 
-        $index->clearObjects();
+        $index->deleteAllDocuments();
     }
 
     /**
@@ -240,11 +240,11 @@ class AlgoliaEngine extends Engine
      * @param  array  $options
      * @return mixed
      *
-     * @throws \Exception
+     * @throws \MeiliSearch\Exceptions\ApiException
      */
     public function createIndex($name, array $options = [])
     {
-        throw new Exception('Algolia indexes are created automatically upon adding objects.');
+        return $this->meilisearch->createIndex($name, $options);
     }
 
     /**
@@ -252,10 +252,12 @@ class AlgoliaEngine extends Engine
      *
      * @param  string  $name
      * @return mixed
+     *
+     * @throws \MeiliSearch\Exceptions\ApiException
      */
     public function deleteIndex($name)
     {
-        return $this->algolia->initIndex($name)->delete();
+        return $this->meilisearch->deleteIndex($name);
     }
 
     /**
@@ -266,11 +268,11 @@ class AlgoliaEngine extends Engine
      */
     protected function usesSoftDelete($model)
     {
-        return in_array(SoftDeletes::class, class_uses_recursive($model));
+        return in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive($model));
     }
 
     /**
-     * Dynamically call the Algolia client instance.
+     * Dynamically call the MeiliSearch client instance.
      *
      * @param  string  $method
      * @param  array  $parameters
@@ -278,6 +280,6 @@ class AlgoliaEngine extends Engine
      */
     public function __call($method, $parameters)
     {
-        return $this->algolia->$method(...$parameters);
+        return $this->meilisearch->$method(...$parameters);
     }
 }
