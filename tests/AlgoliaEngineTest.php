@@ -127,7 +127,7 @@ class AlgoliaEngineTest extends TestCase
         ]]);
 
         $engine = new AlgoliaEngine($client);
-        $engine->update(Collection::make([new AlogliaCustomKeySearchableModel]));
+        $engine->update(Collection::make([new AlgoliaCustomKeySearchableModel]));
     }
 
     public function test_a_model_is_removed_with_a_custom_algolia_key()
@@ -137,7 +137,7 @@ class AlgoliaEngineTest extends TestCase
         $index->shouldReceive('deleteObjects')->with(['my-algolia-key.1']);
 
         $engine = new AlgoliaEngine($client);
-        $engine->delete(Collection::make([new AlogliaCustomKeySearchableModel(['id' => 1])]));
+        $engine->delete(Collection::make([new AlgoliaCustomKeySearchableModel(['id' => 1])]));
     }
 
     public function test_flush_a_model_with_a_custom_algolia_key()
@@ -147,7 +147,7 @@ class AlgoliaEngineTest extends TestCase
         $index->shouldReceive('clearObjects');
 
         $engine = new AlgoliaEngine($client);
-        $engine->flush(new AlogliaCustomKeySearchableModel);
+        $engine->flush(new AlgoliaCustomKeySearchableModel);
     }
 
     public function test_update_empty_searchable_array_does_not_add_objects_to_index()
@@ -171,7 +171,7 @@ class AlgoliaEngineTest extends TestCase
     }
 }
 
-class AlogliaCustomKeySearchableModel extends SearchableModel
+class AlgoliaCustomKeySearchableModel extends SearchableModel
 {
     public function getScoutKey()
     {
