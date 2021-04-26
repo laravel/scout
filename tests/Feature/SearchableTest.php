@@ -1,25 +1,15 @@
 <?php
 
-namespace Laravel\Scout\Tests\Unit;
+namespace Laravel\Scout\Tests\Feature;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Config;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Mockery as m;
-use PHPUnit\Framework\TestCase;
+use Orchestra\Testbench\TestCase;
 
 class SearchableTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        Config::shouldReceive('get')->with('scout.queue', null)->andReturn(false);
-    }
-
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function test_searchable_using_update_is_called_on_collection()
     {
         $collection = m::mock();
