@@ -3,7 +3,6 @@
 namespace Laravel\Scout\Tests\Feature;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Config;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Mockery as m;
 use Orchestra\Testbench\TestCase;
