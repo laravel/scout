@@ -365,7 +365,7 @@ class Builder
     }
 
     /**
-     * Get total count from Scout Engine or fallback to Query Builder.
+     * Get the total number of results from the Scout engine, or fallback to query builder.
      *
      * @param  mixed  $results
      * @return int
