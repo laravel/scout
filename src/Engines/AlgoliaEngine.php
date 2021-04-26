@@ -186,6 +186,7 @@ class AlgoliaEngine extends Engine
         }
 
         $objectIds = collect($results['hits'])->pluck('objectID')->values()->all();
+
         $objectIdPositions = array_flip($objectIds);
 
         return $model->getScoutModelsByIds(
