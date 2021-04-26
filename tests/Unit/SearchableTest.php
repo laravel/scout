@@ -1,14 +1,20 @@
 <?php
 
-namespace Laravel\Scout\Tests;
+namespace Laravel\Scout\Tests\Unit;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Config;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 
 class SearchableTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Config::shouldReceive('get')->with('scout.queue', null)->andReturn(false);
+    }
+
     protected function tearDown(): void
     {
         m::close();
@@ -83,11 +89,4 @@ class ModelStubForMakeAllSearchable extends SearchableModel
 
         return $mock;
     }
-}
-
-namespace Laravel\Scout;
-
-function config($arg)
-{
-    return false;
 }
