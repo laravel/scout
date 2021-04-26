@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Scout\Tests;
+namespace Laravel\Scout\Tests\Unit;
 
 use Illuminate\Support\Facades\Config;
 use Laravel\Scout\ModelObserver;

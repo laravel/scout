@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Scout\Tests;
+namespace Laravel\Scout\Tests\Unit;
 
 use Algolia\AlgoliaSearch\SearchClient;
 use Illuminate\Database\Eloquent\Collection;

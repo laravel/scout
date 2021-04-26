@@ -1,19 +1,14 @@
 <?php
 
-namespace Laravel\Scout\Tests;
+namespace Laravel\Scout\Tests\Feature;
 
 use Illuminate\Database\Eloquent\Builder;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Mockery as m;
-use PHPUnit\Framework\TestCase;
+use Orchestra\Testbench\TestCase;
 
 class SearchableTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function test_searchable_using_update_is_called_on_collection()
     {
         $collection = m::mock();
@@ -83,11 +78,4 @@ class ModelStubForMakeAllSearchable extends SearchableModel
 
         return $mock;
     }
-}
-
-namespace Laravel\Scout;
-
-function config($arg)
-{
-    return false;
 }

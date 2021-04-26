@@ -320,7 +320,7 @@ class Builder
 
         $paginator = Container::getInstance()->makeWith(LengthAwarePaginator::class, [
             'items' => $results,
-            'total' => $engine->getTotalCount($rawResults),
+            'total' => $this->getTotalCount($rawResults),
             'perPage' => $perPage,
             'currentPage' => $page,
             'options' => [
@@ -352,7 +352,7 @@ class Builder
 
         $paginator = Container::getInstance()->makeWith(LengthAwarePaginator::class, [
             'items' => $results,
-            'total' => $engine->getTotalCount($results),
+            'total' => $this->getTotalCount($results),
             'perPage' => $perPage,
             'currentPage' => $page,
             'options' => [
@@ -362,6 +362,25 @@ class Builder
         ]);
 
         return $paginator->appends('query', $this->query);
+    }
+
+    /**
+     * Get the total number of results from the Scout engine, or fallback to query builder.
+     *
+     * @param  mixed  $results
+     * @return int
+     */
+    protected function getTotalCount($results)
+    {
+        $engine = $this->engine();
+
+        if (is_null($this->queryCallback)) {
+            return $engine->getTotalCount($results);
+        }
+
+        return $this->model->queryScoutModelsByIds(
+            $this, $engine->mapIds($results)->all()
+        )->toBase()->getCountForPagination();
     }
 
     /**
