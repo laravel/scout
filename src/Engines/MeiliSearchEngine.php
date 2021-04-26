@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Engines;
 
+use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use MeiliSearch\Client as MeiliSearch;
 use MeiliSearch\Search\SearchResult;
@@ -180,7 +181,21 @@ class MeiliSearchEngine extends Engine
      */
     public function map(Builder $builder, $results, $model)
     {
-        return $this->lazyMap($builder, $results, $model);
+        if (is_null($results) || 0 === count($results['hits'])) {
+            return $model->newCollection();
+        }
+
+        $objectIds = collect($results['hits'])->pluck($model->getKeyName())->values()->all();
+
+        $objectIdPositions = array_flip($objectIds);
+
+        return $model->getScoutModelsByIds(
+            $builder, $objectIds
+        )->filter(function ($model) use ($objectIds) {
+            return in_array($model->getScoutKey(), $objectIds);
+        })->sortBy(function ($model) use ($objectIdPositions) {
+            return $objectIdPositions[$model->getScoutKey()];
+        })->values();
     }
 
     /**
@@ -193,8 +208,8 @@ class MeiliSearchEngine extends Engine
      */
     public function lazyMap(Builder $builder, $results, $model)
     {
-        if (is_null($results) || 0 === count($results['hits'])) {
-            return $model->newCollection();
+        if (count($results['hits']) === 0) {
+            return LazyCollection::make($model->newCollection());
         }
 
         $objectIds = collect($results['hits'])->pluck($model->getKeyName())->values()->all();

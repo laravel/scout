@@ -5,6 +5,7 @@ namespace Laravel\Scout\Engines;
 use Algolia\AlgoliaSearch\SearchClient as Algolia;
 use Exception;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 
 class AlgoliaEngine extends Engine
@@ -180,7 +181,21 @@ class AlgoliaEngine extends Engine
      */
     public function map(Builder $builder, $results, $model)
     {
-        return $this->lazyMap($builder, $results, $model)->collect();
+        if (count($results['hits']) === 0) {
+            return $model->newCollection();
+        }
+
+        $objectIds = collect($results['hits'])->pluck('objectID')->values()->all();
+
+        $objectIdPositions = array_flip($objectIds);
+
+        return $model->getScoutModelsByIds(
+            $builder, $objectIds
+        )->filter(function ($model) use ($objectIds) {
+            return in_array($model->getScoutKey(), $objectIds);
+        })->sortBy(function ($model) use ($objectIdPositions) {
+            return $objectIdPositions[$model->getScoutKey()];
+        })->values();
     }
 
     /**
@@ -194,7 +209,7 @@ class AlgoliaEngine extends Engine
     public function lazyMap(Builder $builder, $results, $model)
     {
         if (count($results['hits']) === 0) {
-            return $model->newCollection();
+            return LazyCollection::make($model->newCollection());
         }
 
         $objectIds = collect($results['hits'])->pluck('objectID')->values()->all();
