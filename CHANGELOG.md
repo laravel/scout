@@ -1,6 +1,19 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.6.1...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.0.0...9.x)
+
+
+## [v9.0.0 (2021-04-27)](https://github.com/laravel/scout/compare/v8.6.1...v9.0.0)
+
+### Added
+- Support MeiliSearch Engine ([#455](https://github.com/laravel/scout/pull/455), [#457](https://github.com/laravel/scout/pull/457))
+- Add support for cursor and LazyCollection on scout ([#439](https://github.com/laravel/scout/pull/439), [1ebcd0d](https://github.com/laravel/scout/commit/1ebcd0d11185d43cea18e9b774b2926314311e41), [#470](https://github.com/laravel/scout/pull/470))
+
+### Changed
+- Drop support for old Laravel versions and PHP 7.2 ([#459](https://github.com/laravel/scout/pull/459))
+
+### Fixed
+- Fixes pagination count when `Laravel\Scout\Builder` contains custom query callback ([#469](https://github.com/laravel/scout/pull/469))
 
 
 ## [v8.6.1 (2021-04-06)](https://github.com/laravel/scout/compare/v8.6.0...v8.6.1)
