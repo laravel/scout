@@ -36,11 +36,9 @@ class RemoveFromSearch implements ShouldQueue
      */
     public function handle()
     {
-        if (count($this->models) === 0) {
-            return;
+        if ($this->models->isNotEmpty()) {
+            $this->models->first()->searchableUsing()->delete($this->models);
         }
-
-        $this->models->first()->searchableUsing()->delete($this->models);
     }
 
     /**
