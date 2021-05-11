@@ -35,7 +35,7 @@ class RemoveFromSearchTest extends TestCase
     public function test_models_are_deserialized_without_the_database()
     {
         $job = new RemoveFromSearch($collection = Collection::make([
-            $model = new SearchableModel(['id' => 1234])
+            $model = new SearchableModel(['id' => 1234]),
         ]));
 
         $job = unserialize(serialize($job));
