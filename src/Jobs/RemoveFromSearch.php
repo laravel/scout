@@ -12,7 +12,7 @@ class RemoveFromSearch implements ShouldQueue
     use Queueable, SerializesModels;
 
     /**
-     * The models to be made searchable.
+     * The models to be removed from the search index.
      *
      * @var \Illuminate\Database\Eloquent\Collection
      */
