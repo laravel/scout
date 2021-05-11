@@ -47,7 +47,6 @@ class RemoveFromSearch implements ShouldQueue
      * Restore a queueable collection instance.
      *
      * @param  \Illuminate\Contracts\Database\ModelIdentifier  $value
-     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     protected function restoreCollection($value)
