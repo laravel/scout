@@ -212,8 +212,7 @@ trait Searchable
         }
 
         return $query->whereIn(
-            $this->getScoutKeyName(),
-            $ids
+            $this->getScoutKeyName(), $ids
         );
     }
 
