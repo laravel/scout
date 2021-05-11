@@ -281,8 +281,6 @@ class Builder
             $this, $rawResults = $engine->paginate($this, $perPage, $page), $this->model
         )->all());
 
-        $total = $engine->getTotalCount($rawResults);
-
         $hasMorePages = ($perPage * $page) < $engine->getTotalCount($rawResults);
 
         $paginator = Container::getInstance()->makeWith(Paginator::class, [
