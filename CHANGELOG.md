@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.0.0...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.1.0...9.x)
+
+
+## [v9.1.0 (2021-05-13)](https://github.com/laravel/scout/compare/v9.0.0...v9.1.0)
+
+### Added
+- Use queued job for "unsearching" when Scout queue is enabled ([#471](https://github.com/laravel/scout/pull/471))
+
+### Changed
+- Remove useless variable in `simplePaginate` ([#472](https://github.com/laravel/scout/pull/472))
 
 
 ## [v9.0.0 (2021-04-27)](https://github.com/laravel/scout/compare/v8.6.1...v9.0.0)
