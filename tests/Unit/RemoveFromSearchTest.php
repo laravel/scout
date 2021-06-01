@@ -33,17 +33,6 @@ class RemoveFromSearchTest extends TestCase
         $job->handle();
     }
 
-    public function test_overridden_remove_from_search_handle_passes_the_collection_to_engine()
-    {
-        $job = new OverriddenRemoveFromSearch($collection = Collection::make([
-            $model = m::mock(),
-        ]));
-
-        $model->shouldReceive('searchableUsing->delete')->with($collection);
-
-        $job->handle();
-    }
-
     public function test_models_are_deserialized_without_the_database()
     {
         $job = new RemoveFromSearch($collection = Collection::make([

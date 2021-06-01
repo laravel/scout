@@ -25,15 +25,4 @@ class MakeSearchableTest extends TestCase
 
         $job->handle();
     }
-
-    public function test_overridden_make_searchable_handle_passes_the_collection_to_engine()
-    {
-        $job = new OverriddenMakeSearchable($collection = Collection::make([
-            $model = m::mock(),
-        ]));
-
-        $model->shouldReceive('searchableUsing->update')->with($collection);
-
-        $job->handle();
-    }
 }
