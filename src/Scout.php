@@ -8,38 +8,38 @@ use Laravel\Scout\Jobs\RemoveFromSearch;
 class Scout
 {
     /**
-     * The make searchable job class name.
+     * The job class that should make models searchable.
      *
      * @var string
      */
     public static $makeSearchableJob = MakeSearchable::class;
 
     /**
-     * The remove from search job class name.
+     * The job that should remove models from the search index.
      *
      * @var string
      */
     public static $removeFromSearchJob = RemoveFromSearch::class;
 
     /**
-     * Set the make searchable job class name.
+     * Specify the job class that should make models searchable.
      *
-     * @param  string  $makeSearchableJob
+     * @param  string  $class
      * @return void
      */
-    public static function useMakeSearchableJob(string $makeSearchableJob): void
+    public static function makeSearchableUsing(string $class)
     {
-        static::$makeSearchableJob = $makeSearchableJob;
+        static::$makeSearchableJob = $class;
     }
 
     /**
-     * Set the remove from search job class name.
+     * Specify the job class that should remove models from the search index.
      *
-     * @param  string  $removeFromSearchJob
+     * @param  string  $class
      * @return void
      */
-    public static function useRemoveFromSearchJob(string $removeFromSearchJob): void
+    public static function removeFromSearchUsing(string $class)
     {
-        static::$removeFromSearchJob = $removeFromSearchJob;
+        static::$removeFromSearchJob = $class;
     }
 }
