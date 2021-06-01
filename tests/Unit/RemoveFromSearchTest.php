@@ -5,6 +5,7 @@ namespace Laravel\Scout\Tests\Unit;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Config;
 use Laravel\Scout\Jobs\RemoveFromSearch;
+use Laravel\Scout\Tests\Fixtures\OverriddenRemoveFromSearch;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
