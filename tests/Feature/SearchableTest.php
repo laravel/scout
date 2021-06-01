@@ -36,14 +36,14 @@ class SearchableTest extends TestCase
     {
         Queue::fake();
 
+        config()->set('scout.queue', true);
+        config()->set('scout.jobs.make_searchable', OverriddenMakeSearchable::class);
+
         $collection = m::mock();
         $collection->shouldReceive('isEmpty')->andReturn(false);
         $collection->shouldReceive('first->syncWithSearchUsingQueue');
         $collection->shouldReceive('first->syncWithSearchUsing');
         $collection->shouldReceive('first->searchableUsing->update')->with($collection);
-
-        config()->set('scout.queue', true);
-        config()->set('scout.jobs.make_searchable', OverriddenMakeSearchable::class);
 
         $model = new SearchableModel;
         $model->queueMakeSearchable($collection);
@@ -73,14 +73,14 @@ class SearchableTest extends TestCase
     {
         Queue::fake();
 
+        config()->set('scout.queue', true);
+        config()->set('scout.jobs.remove_from_search', OverriddenRemoveFromSearch::class);
+
         $collection = m::mock();
         $collection->shouldReceive('isEmpty')->andReturn(false);
         $collection->shouldReceive('first->syncWithSearchUsingQueue');
         $collection->shouldReceive('first->syncWithSearchUsing');
         $collection->shouldReceive('first->searchableUsing->update')->with($collection);
-
-        config()->set('scout.queue', true);
-        config()->set('scout.jobs.remove_from_search', OverriddenRemoveFromSearch::class);
 
         $model = new SearchableModel;
         $model->queueRemoveFromSearch($collection);
