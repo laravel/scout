@@ -4,7 +4,6 @@ namespace Laravel\Scout\Tests\Unit;
 
 use Illuminate\Database\Eloquent\Collection;
 use Laravel\Scout\Jobs\MakeSearchable;
-use Laravel\Scout\Tests\Fixtures\OverriddenMakeSearchable;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 
