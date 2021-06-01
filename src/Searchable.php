@@ -64,7 +64,9 @@ trait Searchable
             return $models->first()->searchableUsing()->update($models);
         }
 
-        dispatch((new MakeSearchable($models))
+        $makeSearchableJob = config('scout.jobs.make_searchable', MakeSearchable::class);
+
+        dispatch((new $makeSearchableJob($models))
                 ->onQueue($models->first()->syncWithSearchUsingQueue())
                 ->onConnection($models->first()->syncWithSearchUsing()));
     }
@@ -85,7 +87,9 @@ trait Searchable
             return $models->first()->searchableUsing()->delete($models);
         }
 
-        dispatch(new RemoveFromSearch($models))
+        $removeFromSearchJob = config('scout.jobs.remove_from_search', RemoveFromSearch::class);
+
+        dispatch(new $removeFromSearchJob($models))
             ->onQueue($models->first()->syncWithSearchUsingQueue())
             ->onConnection($models->first()->syncWithSearchUsing());
     }
