@@ -40,7 +40,7 @@ class SearchableTest extends TestCase
         Queue::fake();
 
         config()->set('scout.queue', true);
-        Scout::$makeSearchableJob = OverriddenMakeSearchable::class;
+        Scout::useMakeSearchableJob(OverriddenMakeSearchable::class);
 
         $collection = m::mock();
         $collection->shouldReceive('isEmpty')->andReturn(false);
@@ -50,7 +50,7 @@ class SearchableTest extends TestCase
         $model = new SearchableModel;
         $model->queueMakeSearchable($collection);
 
-        Scout::$makeSearchableJob = MakeSearchable::class;
+        Scout::useMakeSearchableJob(MakeSearchable::class);
     }
 
     public function test_searchable_using_delete_is_called_on_collection()
@@ -78,7 +78,7 @@ class SearchableTest extends TestCase
         Queue::fake();
 
         config()->set('scout.queue', true);
-        Scout::$makeSearchableJob = OverriddenRemoveFromSearch::class;
+        Scout::useRemoveFromSearchJob(OverriddenRemoveFromSearch::class);
 
         $collection = m::mock();
         $collection->shouldReceive('isEmpty')->andReturn(false);
@@ -88,7 +88,7 @@ class SearchableTest extends TestCase
         $model = new SearchableModel;
         $model->queueRemoveFromSearch($collection);
 
-        Scout::$makeSearchableJob = RemoveFromSearch::class;
+        Scout::useRemoveFromSearchJob(RemoveFromSearch::class);
     }
 
     public function test_make_all_searchable_uses_order_by()
