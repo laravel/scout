@@ -4,6 +4,9 @@ namespace Laravel\Scout\Tests\Feature;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Queue;
+use Laravel\Scout\Jobs\MakeSearchable;
+use Laravel\Scout\Jobs\RemoveFromSearch;
+use Laravel\Scout\Scout;
 use Laravel\Scout\Tests\Fixtures\OverriddenMakeSearchable;
 use Laravel\Scout\Tests\Fixtures\OverriddenRemoveFromSearch;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
@@ -37,16 +40,17 @@ class SearchableTest extends TestCase
         Queue::fake();
 
         config()->set('scout.queue', true);
-        config()->set('scout.jobs.make_searchable', OverriddenMakeSearchable::class);
+        Scout::$makeSearchableJob = OverriddenMakeSearchable::class;
 
         $collection = m::mock();
         $collection->shouldReceive('isEmpty')->andReturn(false);
         $collection->shouldReceive('first->syncWithSearchUsingQueue');
         $collection->shouldReceive('first->syncWithSearchUsing');
-        $collection->shouldReceive('first->searchableUsing->update')->with($collection);
 
         $model = new SearchableModel;
         $model->queueMakeSearchable($collection);
+
+        Scout::$makeSearchableJob = MakeSearchable::class;
     }
 
     public function test_searchable_using_delete_is_called_on_collection()
@@ -74,16 +78,17 @@ class SearchableTest extends TestCase
         Queue::fake();
 
         config()->set('scout.queue', true);
-        config()->set('scout.jobs.remove_from_search', OverriddenRemoveFromSearch::class);
+        Scout::$makeSearchableJob = OverriddenRemoveFromSearch::class;
 
         $collection = m::mock();
         $collection->shouldReceive('isEmpty')->andReturn(false);
         $collection->shouldReceive('first->syncWithSearchUsingQueue');
         $collection->shouldReceive('first->syncWithSearchUsing');
-        $collection->shouldReceive('first->searchableUsing->update')->with($collection);
 
         $model = new SearchableModel;
         $model->queueRemoveFromSearch($collection);
+
+        Scout::$makeSearchableJob = RemoveFromSearch::class;
     }
 
     public function test_make_all_searchable_uses_order_by()
