@@ -4,8 +4,6 @@ namespace Laravel\Scout;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
-use Laravel\Scout\Jobs\MakeSearchable;
-use Laravel\Scout\Jobs\RemoveFromSearch;
 
 trait Searchable
 {
@@ -64,7 +62,7 @@ trait Searchable
             return $models->first()->searchableUsing()->update($models);
         }
 
-        dispatch((new MakeSearchable($models))
+        dispatch((new Scout::$makeSearchableJob($models))
                 ->onQueue($models->first()->syncWithSearchUsingQueue())
                 ->onConnection($models->first()->syncWithSearchUsing()));
     }
@@ -85,7 +83,7 @@ trait Searchable
             return $models->first()->searchableUsing()->delete($models);
         }
 
-        dispatch(new RemoveFromSearch($models))
+        dispatch(new Scout::$removeFromSearchJob($models))
             ->onQueue($models->first()->syncWithSearchUsingQueue())
             ->onConnection($models->first()->syncWithSearchUsing());
     }
