@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.1.0...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.1.1...9.x)
+
+
+## [v9.1.1 (2021-06-08)](https://github.com/laravel/scout/compare/v9.1.0...v9.1.1)
+
+### Changed
+- Overridable jobs ([#476](https://github.com/laravel/scout/pull/476))
 
 
 ## [v9.1.0 (2021-05-13)](https://github.com/laravel/scout/compare/v9.0.0...v9.1.0)
