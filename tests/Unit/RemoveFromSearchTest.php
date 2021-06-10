@@ -25,11 +25,15 @@ class RemoveFromSearchTest extends TestCase
 
     public function test_handle_passes_the_collection_to_engine()
     {
-        $job = new RemoveFromSearch($collection = Collection::make([
+        $job = new RemoveFromSearch(Collection::make([
             $model = m::mock(),
         ]));
 
-        $model->shouldReceive('searchableUsing->delete')->with($collection);
+        $model->shouldReceive('searchableUsing->delete')->with(
+            m::on(function ($collection) use ($model) {
+                return $collection instanceof RemoveableScoutCollection && $collection->first() === $model;
+            })
+        );
 
         $job->handle();
     }
