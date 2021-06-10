@@ -2,11 +2,11 @@
 
 namespace Laravel\Scout\Jobs;
 
-use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Str;
 
 class RemoveFromSearch implements ShouldQueue
 {

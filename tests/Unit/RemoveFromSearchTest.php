@@ -60,7 +60,7 @@ class RemoveFromSearchTest extends TestCase
         ]));
 
         $job = unserialize(serialize($job));
-        
+
         $this->assertInstanceOf(Collection::class, $job->models);
         $this->assertCount(1, $job->models);
         $this->assertInstanceOf(SearchableModelWithCustomKey::class, $job->models->first());

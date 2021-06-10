@@ -2,8 +2,8 @@
 
 namespace Laravel\Scout\Jobs;
 
-use Laravel\Scout\Searchable;
 use Illuminate\Database\Eloquent\Collection;
+use Laravel\Scout\Searchable;
 
 class RemoveableScoutCollection extends Collection
 {
