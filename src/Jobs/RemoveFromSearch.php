@@ -15,7 +15,7 @@ class RemoveFromSearch implements ShouldQueue
     /**
      * The models to be removed from the search index.
      *
-     * @var RemoveableScoutCollection
+     * @var \Illuminate\Database\Eloquent\Collection
      */
     public $models;
 
