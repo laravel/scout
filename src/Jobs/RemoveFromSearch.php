@@ -4,7 +4,6 @@ namespace Laravel\Scout\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Queue\SerializesModels;
 
 class RemoveFromSearch implements ShouldQueue
@@ -39,26 +38,5 @@ class RemoveFromSearch implements ShouldQueue
         if ($this->models->isNotEmpty()) {
             $this->models->first()->searchableUsing()->delete($this->models);
         }
-    }
-
-    /**
-     * Restore a queueable collection instance.
-     *
-     * @param  \Illuminate\Contracts\Database\ModelIdentifier  $value
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    protected function restoreCollection($value)
-    {
-        if (! $value->class || count($value->id) === 0) {
-            return new EloquentCollection;
-        }
-
-        return new EloquentCollection(
-            collect($value->id)->map(function ($id) use ($value) {
-                return tap(new $value->class, function ($model) use ($id) {
-                    $model->forceFill([$model->getKeyName() => $id]);
-                });
-            })
-        );
     }
 }

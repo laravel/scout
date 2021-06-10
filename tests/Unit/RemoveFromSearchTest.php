@@ -5,7 +5,6 @@ namespace Laravel\Scout\Tests\Unit;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Config;
 use Laravel\Scout\Jobs\RemoveFromSearch;
-use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 
@@ -30,20 +29,5 @@ class RemoveFromSearchTest extends TestCase
         $model->shouldReceive('searchableUsing->delete')->with($collection);
 
         $job->handle();
-    }
-
-    public function test_models_are_deserialized_without_the_database()
-    {
-        $job = new RemoveFromSearch($collection = Collection::make([
-            $model = new SearchableModel(['id' => 1234]),
-        ]));
-
-        $job = unserialize(serialize($job));
-
-        $this->assertInstanceOf(Collection::class, $job->models);
-        $this->assertCount(1, $job->models);
-        $this->assertInstanceOf(SearchableModel::class, $job->models->first());
-        $this->assertTrue($model->is($job->models->first()));
-        $this->assertEquals(1234, $job->models->first()->getScoutKey());
     }
 }
