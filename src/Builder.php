@@ -372,12 +372,24 @@ class Builder
     {
         $engine = $this->engine();
 
+        $totalCount = $engine->getTotalCount($results);
+
         if (is_null($this->queryCallback)) {
-            return $engine->getTotalCount($results);
+            return $totalCount;
+        }
+
+        $ids = $engine->mapIds($results)->all();
+
+        if (count($ids) < $totalCount) {
+            $ids = $engine->keys(tap(clone $this, function ($builder) use ($totalCount) {
+                $builder->take(
+                    is_null($this->limit) ? $totalCount : min($this->limit, $totalCount)
+                );
+            }))->all();
         }
 
         return $this->model->queryScoutModelsByIds(
-            $this, $engine->mapIds($results)->all()
+            $this, $ids
         )->toBase()->getCountForPagination();
     }
 
