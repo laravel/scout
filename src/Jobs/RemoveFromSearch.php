@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Str;
 
 class RemoveFromSearch implements ShouldQueue
 {
@@ -26,7 +27,7 @@ class RemoveFromSearch implements ShouldQueue
      */
     public function __construct($models)
     {
-        $this->models = $models;
+        $this->models = RemoveableScoutCollection::make($models);
     }
 
     /**
@@ -56,9 +57,24 @@ class RemoveFromSearch implements ShouldQueue
         return new EloquentCollection(
             collect($value->id)->map(function ($id) use ($value) {
                 return tap(new $value->class, function ($model) use ($id) {
-                    $model->forceFill([$model->getKeyName() => $id]);
+                    $keyName = $this->getUnqualifiedScoutKeyName(
+                        $model->getScoutKeyName()
+                    );
+
+                    $model->forceFill([$keyName => $id]);
                 });
             })
         );
+    }
+
+    /**
+     * Get the unqualified Scout key name.
+     *
+     * @param string $keyName
+     * @return string
+     */
+    protected function getUnqualifiedScoutKeyName($keyName)
+    {
+        return Str::afterLast($keyName, '.');
     }
 }
