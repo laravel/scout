@@ -65,7 +65,7 @@ class MeiliSearchEngine extends Engine
         })->filter()->values()->all();
 
         if (! empty($objects)) {
-            $index->addDocuments($objects, $models->first()->getScoutKeyName());
+            $index->addDocuments($objects, $models->first()->getKeyName());
         }
     }
 
