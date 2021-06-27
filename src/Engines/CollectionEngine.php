@@ -83,12 +83,13 @@ class CollectionEngine extends Engine
     protected function searchModels(Builder $builder)
     {
         $models = $builder->model->query()
+                        ->when(count($builder->wheres) > 0, function ($query) use ($builder) {
+                            foreach ($builder->wheres as $key => $value) {
+                                $query->where($key, $value);
+                            }
+                        })
                         ->orderBy($builder->model->getKeyName(), 'desc')
                         ->cursor();
-
-        foreach ($builder->wheres as $key => $value) {
-            $models = $models->where($key, $value);
-        }
 
         $models = $models->values();
 
