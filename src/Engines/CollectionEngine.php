@@ -51,7 +51,7 @@ class CollectionEngine extends Engine
         $models = $this->searchModels($builder);
 
         return [
-            'results' => $models->take($builder->limit)->all(),
+            'results' => $models->all(),
             'total' => count($models),
         ];
     }
@@ -82,7 +82,9 @@ class CollectionEngine extends Engine
      */
     protected function searchModels(Builder $builder)
     {
-        $models = $builder->model->query()->get();
+        $models = $builder->model->query()
+                        ->orderBy($builder->model->getKeyName(), 'desc')
+                        ->cursor();
 
         foreach ($builder->wheres as $key => $value) {
             $models = $models->where($key, $value);
@@ -94,7 +96,7 @@ class CollectionEngine extends Engine
             return $models;
         }
 
-        $columns = array_keys($models[0]->toSearchableArray());
+        $columns = array_keys($models->first()->toSearchableArray());
 
         return $models->filter(function ($model) use ($builder, $columns) {
             foreach ($columns as $column) {
