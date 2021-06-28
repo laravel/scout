@@ -89,7 +89,7 @@ class CollectionEngine extends Engine
                             }
                         })
                         ->orderBy($builder->model->getKeyName(), 'desc')
-                        ->cursor();
+                        ->get();
 
         $models = $models->values();
 
