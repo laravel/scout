@@ -172,7 +172,7 @@ class CollectionEngine extends Engine
         $results = $results['results'];
 
         if (count($results) === 0) {
-            return LazyCollection::make($model->newCollection());
+            return LazyCollection::empty();
         }
 
         $objectIds = collect($results)
