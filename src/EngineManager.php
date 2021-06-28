@@ -125,7 +125,7 @@ class EngineManager extends Manager
     }
 
     /**
-     * Create a database engine instance.
+     * Create a collection engine instance.
      *
      * @return \Laravel\Scout\Engines\CollectionEngine
      */
