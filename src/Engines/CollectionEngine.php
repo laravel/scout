@@ -87,11 +87,9 @@ class CollectionEngine extends Engine
         $query = $builder->model->query()
                         ->when(count($builder->wheres) > 0, function ($query) use ($builder) {
                             foreach ($builder->wheres as $key => $value) {
-                                if ($key === '__soft_deleted') {
-                                    continue;
+                                if ($key !== '__soft_deleted') {
+                                    $query->where($key, $value);
                                 }
-
-                                $query->where($key, $value);
                             }
                         })
                         ->orderBy($builder->model->getKeyName(), 'desc');
