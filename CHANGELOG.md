@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.1.2...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.2.0...9.x)
+
+
+## [v9.2.0 (2021-06-29)](https://github.com/laravel/scout/compare/v9.1.2...v9.2.0)
+
+### Added
+- Collection Engine ([#488](https://github.com/laravel/scout/pull/488))
 
 
 ## [v9.1.2 (2021-06-15)](https://github.com/laravel/scout/compare/v9.1.1...v9.1.2)
