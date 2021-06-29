@@ -71,7 +71,7 @@ class CollectionEngine extends Engine
         $models = $this->searchModels($builder);
 
         return [
-            'results' => $models->forPage($page - 1, $perPage)->all(),
+            'results' => $models->forPage($page, $perPage)->all(),
             'total' => count($models),
         ];
     }
