@@ -2,6 +2,8 @@
 
 namespace Laravel\Scout\Engines;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Arr;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Support\Str;
 use Laravel\Scout\Builder;
@@ -82,16 +84,28 @@ class CollectionEngine extends Engine
      */
     protected function searchModels(Builder $builder)
     {
-        $models = $builder->model->query()
+        $query = $builder->model->query()
                         ->when(count($builder->wheres) > 0, function ($query) use ($builder) {
                             foreach ($builder->wheres as $key => $value) {
+                                if ($key === '__soft_deleted') {
+                                    continue;
+                                }
+
                                 $query->where($key, $value);
                             }
                         })
-                        ->orderBy($builder->model->getKeyName(), 'desc')
-                        ->get();
+                        ->orderBy($builder->model->getKeyName(), 'desc');
 
-        $models = $models->values();
+        if (Arr::get($builder->wheres, '__soft_deleted') === 0) {
+            $query = $query->withoutTrashed();
+        } elseif (Arr::get($builder->wheres, '__soft_deleted') === 1) {
+            $query = $query->onlyTrashed();
+        } elseif (in_array(SoftDeletes::class, class_uses_recursive(get_class($builder->model))) &&
+                  config('scout.soft_delete', false)) {
+            $query = $query->withTrashed();
+        }
+
+        $models = $query->get()->values();
 
         if (count($models) === 0) {
             return $models;
