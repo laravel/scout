@@ -96,16 +96,9 @@ class CollectionEngine extends Engine
                         })
                         ->orderBy($builder->model->getKeyName(), 'desc');
 
-        if (Arr::get($builder->wheres, '__soft_deleted') === 0) {
-            $query = $query->withoutTrashed();
-        } elseif (Arr::get($builder->wheres, '__soft_deleted') === 1) {
-            $query = $query->onlyTrashed();
-        } elseif (in_array(SoftDeletes::class, class_uses_recursive(get_class($builder->model))) &&
-                  config('scout.soft_delete', false)) {
-            $query = $query->withTrashed();
-        }
-
-        $models = $query->get()->values();
+        $models = $this->ensureSoftDeletesAreHandled($builder, $query)
+                        ->get()
+                        ->values();
 
         if (count($models) === 0) {
             return $models;
@@ -128,6 +121,27 @@ class CollectionEngine extends Engine
 
             return false;
         })->values();
+    }
+
+    /**
+     * Ensure that soft delete handling is properly applied to the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  \Illuminate\Database\Query\Builder  $query
+     * @return \Illuminate\Database\Query\Builder
+     */
+    protected function ensureSoftDeletesAreHandled($builder, $query)
+    {
+        if (Arr::get($builder->wheres, '__soft_deleted') === 0) {
+            return $query->withoutTrashed();
+        } elseif (Arr::get($builder->wheres, '__soft_deleted') === 1) {
+            return $query->onlyTrashed();
+        } elseif (in_array(SoftDeletes::class, class_uses_recursive(get_class($builder->model))) &&
+                  config('scout.soft_delete', false)) {
+            return $query->withTrashed();
+        }
+
+        return $query;
     }
 
     /**
