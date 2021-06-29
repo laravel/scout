@@ -155,9 +155,15 @@ class AlgoliaEngine extends Engine
      */
     protected function filters(Builder $builder)
     {
-        return collect($builder->wheres)->map(function ($value, $key) {
+        $wheres = collect($builder->wheres)->map(function ($value, $key) {
             return $key.'='.$value;
-        })->values()->all();
+        })->values();
+
+        return $wheres->merge(collect($builder->whereIns)->map(function ($values, $key) {
+            return collect($values)->map(function ($value) use ($key) {
+                return $key.'='.$value;
+            })->all();
+        })->values())->values()->all();
     }
 
     /**

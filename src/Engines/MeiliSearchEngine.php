@@ -148,9 +148,25 @@ class MeiliSearchEngine extends Engine
      */
     protected function filters(Builder $builder)
     {
-        return collect($builder->wheres)->map(function ($value, $key) {
-            return sprintf('%s="%s"', $key, $value);
+        $filters = collect($builder->wheres)->map(function ($value, $key) {
+            return filter_var($value, FILTER_VALIDATE_INT) !== false
+                            ? sprintf('%s=%s', $key, $value)
+                            : sprintf('%s="%s"', $key, $value);
         })->values()->implode(' AND ');
+
+        if (empty($builder->whereIns)) {
+            return $filters;
+        }
+
+        foreach ($builder->whereIns as $key => $values) {
+            $filters = $filters.' AND ('.collect($values)->map(function ($value) use ($key) {
+                return filter_var($value, FILTER_VALIDATE_INT) !== false
+                                ? sprintf('%s=%s', $key, $value)
+                                : sprintf('%s="%s"', $key, $value);
+            })->values()->implode(' OR ').')';
+        }
+
+        return $filters;
     }
 
     /**

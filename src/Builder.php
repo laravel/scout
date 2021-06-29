@@ -54,6 +54,13 @@ class Builder
     public $wheres = [];
 
     /**
+     * The "where in" constraints added to the query.
+     *
+     * @var array
+     */
+    public $whereIns = [];
+
+    /**
      * The "limit" that should be applied to the search.
      *
      * @var int
@@ -110,6 +117,20 @@ class Builder
     public function where($field, $value)
     {
         $this->wheres[$field] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Add a "where in" constraint to the search query.
+     *
+     * @param  string  $field
+     * @param  array  $values
+     * @return $this
+     */
+    public function whereIn($field, array $values)
+    {
+        $this->whereIns[$field] = $values;
 
         return $this;
     }

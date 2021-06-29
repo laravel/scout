@@ -92,6 +92,11 @@ class CollectionEngine extends Engine
                                 }
                             }
                         })
+                        ->when(count($builder->whereIns) > 0, function ($query) use ($builder) {
+                            foreach ($builder->whereIns as $key => $values) {
+                                $query->whereIn($key, $values);
+                            }
+                        })
                         ->orderBy($builder->model->getKeyName(), 'desc');
 
         $models = $this->ensureSoftDeletesAreHandled($builder, $query)
