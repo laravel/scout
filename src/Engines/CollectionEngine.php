@@ -100,6 +100,10 @@ class CollectionEngine extends Engine
         $columns = array_keys($models->first()->toSearchableArray());
 
         return $models->filter(function ($model) use ($builder, $columns) {
+            if (! $model->shouldBeSearchable()) {
+                return false;
+            }
+
             foreach ($columns as $column) {
                 $attribute = $model->{$column};
 
