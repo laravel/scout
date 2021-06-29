@@ -8,6 +8,7 @@ use Algolia\AlgoliaSearch\Support\UserAgent;
 use Exception;
 use Illuminate\Support\Manager;
 use Laravel\Scout\Engines\AlgoliaEngine;
+use Laravel\Scout\Engines\CollectionEngine;
 use Laravel\Scout\Engines\MeiliSearchEngine;
 use Laravel\Scout\Engines\NullEngine;
 use MeiliSearch\Client as MeiliSearch;
@@ -124,7 +125,17 @@ class EngineManager extends Manager
     }
 
     /**
-     * Create a Null engine instance.
+     * Create a collection engine instance.
+     *
+     * @return \Laravel\Scout\Engines\CollectionEngine
+     */
+    public function createCollectionDriver()
+    {
+        return new CollectionEngine;
+    }
+
+    /**
+     * Create a null engine instance.
      *
      * @return \Laravel\Scout\Engines\NullEngine
      */
