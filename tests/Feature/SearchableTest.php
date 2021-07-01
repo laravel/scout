@@ -101,13 +101,44 @@ class SearchableTest extends TestCase
         $this->assertTrue($model->wasSearchableBeforeDelete());
     }
 
-    public function test_was_searchable_on_model_with_soft_deletes()
+    public function test_was_searchable_before_update_works_from_false_to_true()
     {
-        $model = new SearchableModelWithSoftDeletes;
+        $model = new SearchableModelWithSoftDeletes([
+            'published_at' => null,
+        ]);
         $model->syncOriginal();
 
+        $model->published_at = now();
+
+        $this->assertFalse($model->wasSearchableBeforeUpdate());
+        $this->assertTrue($model->shouldBeSearchable());
+    }
+
+    public function test_was_searchable_before_update_works_from_true_to_false()
+    {
+        $model = new SearchableModelWithSoftDeletes([
+            'published_at' => now(),
+        ]);
+        $model->syncOriginal();
+
+        $model->published_at = null;
+
         $this->assertTrue($model->wasSearchableBeforeUpdate());
+        $this->assertFalse($model->shouldBeSearchable());
+    }
+
+    public function test_was_searchable_before_delete_works_when_deleting()
+    {
+        $model = new SearchableModelWithSoftDeletes([
+            'published_at' => now(),
+        ]);
+        $model->syncOriginal();
+
+        // Mark as deleted!
+        $model->setAttribute($model->getDeletedAtColumn(), now());
+
         $this->assertTrue($model->wasSearchableBeforeDelete());
+        $this->assertFalse($model->shouldBeSearchable());
     }
 
     public function test_make_all_searchable_uses_order_by()
