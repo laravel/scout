@@ -2,10 +2,16 @@
 
 ## [Unreleased](https://github.com/laravel/scout/compare/v9.2.1...9.x)
 
+
 ## [v9.2.1 (2021-06-29)](https://github.com/laravel/scout/compare/v9.2.0...v9.2.1)
 
+### Added
+- Add `whereIn` support ([2b1dd75](https://github.com/laravel/scout/commit/2b1dd75adb533d71d3430ea91cd061bfe2fa0f32))
+
 ### Fixed
-- Various collection engine bugs.
+- Filter on should be searchable ([ad60f5b](https://github.com/laravel/scout/commit/ad60f5bf38b735e8a4178039515f4e30f44126b6))
+- Handle soft deletes ([f04927d](https://github.com/laravel/scout/commit/f04927d21bf48b79040189b41464e33b6d26dd1d), [b95af2e](https://github.com/laravel/scout/commit/b95af2e7a231f4403c7add1a7eba96cac1b415fb), [31073e4](https://github.com/laravel/scout/commit/31073e4ad5c0977a9a088b8793bba0e2c3d29c5d))
+- Fix pagination ([733eda3](https://github.com/laravel/scout/commit/733eda3d44140f87e235805531cd4c8c9ac04b59))
 
 
 ## [v9.2.0 (2021-06-29)](https://github.com/laravel/scout/compare/v9.1.2...v9.2.0)
