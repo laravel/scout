@@ -3,7 +3,6 @@
 namespace Laravel\Scout\Tests\Feature;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Scout\Jobs\MakeSearchable;
 use Laravel\Scout\Jobs\RemoveFromSearch;
@@ -11,6 +10,7 @@ use Laravel\Scout\Scout;
 use Laravel\Scout\Tests\Fixtures\OverriddenMakeSearchable;
 use Laravel\Scout\Tests\Fixtures\OverriddenRemoveFromSearch;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use Laravel\Scout\Tests\Fixtures\SearchableModelWithSoftDeletes;
 use Mockery as m;
 use Orchestra\Testbench\TestCase;
 
@@ -103,7 +103,7 @@ class SearchableTest extends TestCase
 
     public function test_was_searchable_on_model_with_soft_deletes()
     {
-        $model = new SearchableSoftDeleteModel;
+        $model = new SearchableModelWithSoftDeletes;
         $model->syncOriginal();
 
         $this->assertTrue($model->wasSearchableBeforeUpdate());
@@ -139,9 +139,4 @@ class ModelStubForMakeAllSearchable extends SearchableModel
 
         return $mock;
     }
-}
-
-class SearchableSoftDeleteModel extends SearchableModel
-{
-    use SoftDeletes;
 }
