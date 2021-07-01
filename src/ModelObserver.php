@@ -15,6 +15,13 @@ class ModelObserver
     public $afterCommit;
 
     /**
+     * Indicates if Scout will keep soft deleted records in the search indexes.
+     *
+     * @var bool
+     */
+    protected $usingSoftDeletes;
+
+    /**
      * The class names that syncing is disabled for.
      *
      * @var array
@@ -37,6 +44,7 @@ class ModelObserver
     public function __construct()
     {
         $this->afterCommit = Config::get('scout.after_commit', false);
+        $this->usingSoftDeletes = Config::get('scout.soft_delete', false);
     }
 
     /**
@@ -125,7 +133,7 @@ class ModelObserver
             return;
         }
 
-        if ($this->usesSoftDelete($model) && config('scout.soft_delete', false)) {
+        if ($this->usingSoftDeletes && $this->usesSoftDelete($model)) {
             $this->forceSaved($model);
         } else {
             $model->unsearchable();
