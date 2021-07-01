@@ -4,6 +4,7 @@ namespace Laravel\Scout\Tests\Unit;
 
 use Illuminate\Support\Facades\Config;
 use Laravel\Scout\ModelObserver;
+use Laravel\Scout\Tests\Fixtures\SearchableModelWithSoftDeletes;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 
@@ -48,15 +49,17 @@ class ModelObserverTest extends TestCase
         $observer->disableSyncingFor(get_class($model));
         $model->shouldReceive('searchable')->never();
         $observer->saved($model);
+        $observer->enableSyncingFor(get_class($model));
     }
 
     public function test_saved_handler_makes_model_unsearchable_when_disabled_per_model_rule()
     {
         $observer = new ModelObserver;
         $model = m::mock();
+        $model->shouldReceive('searchShouldUpdate')->andReturn(true);
         $model->shouldReceive('shouldBeSearchable')->andReturn(false);
         $model->shouldReceive('searchable')->never();
-        $model->shouldReceive('unsearchable');
+        $model->shouldReceive('unsearchable')->once();
         $observer->saved($model);
     }
 
@@ -64,16 +67,16 @@ class ModelObserverTest extends TestCase
     {
         $observer = new ModelObserver;
         $model = m::mock();
-        $model->shouldReceive('unsearchable');
+        $model->shouldReceive('unsearchable')->once();
         $observer->deleted($model);
     }
 
-    public function test_restored_handler_makes_model_searchable()
+    public function test_deleted_handler_on_soft_delete_model_makes_model_unsearchable()
     {
         $observer = new ModelObserver;
-        $model = m::mock();
-        $model->shouldReceive('shouldBeSearchable')->andReturn(true);
-        $model->shouldReceive('searchable');
-        $observer->restored($model);
+        $model = m::mock(SearchableModelWithSoftDeletes::class);
+        $model->shouldReceive('searchable')->never();
+        $model->shouldReceive('unsearchable')->once();
+        $observer->deleted($model);
     }
 }
