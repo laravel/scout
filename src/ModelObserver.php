@@ -78,6 +78,10 @@ class ModelObserver
             return;
         }
 
+        if (! $model->searchShouldUpdate()) {
+            return;
+        }
+
         if (! $model->shouldBeSearchable()) {
             $model->unsearchable();
 

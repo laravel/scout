@@ -99,6 +99,36 @@ trait Searchable
     }
 
     /**
+     * Get the update-sensitive attributes that, when changed, trigger an engine update.
+     *
+     * @return string[]
+     */
+    public function scoutSensitiveAttributes()
+    {
+        return ['*'];
+    }
+
+    /**
+     * Returns true if at least one the searchSensitiveAttributes is being updated.
+     *
+     * @return bool
+     */
+    public function searchShouldUpdate(): bool
+    {
+        $sensitiveAttributes = $this->scoutSensitiveAttributes();
+
+        if ($sensitiveAttributes === ['*']) {
+            return true;
+        }
+
+        $updatedAttributes = array_keys($this->getDirty());
+
+        return collect($sensitiveAttributes)
+            ->intersect($updatedAttributes)
+            ->isNotEmpty();
+    }
+
+    /**
      * Perform a search against the model's indexed data.
      *
      * @param  string  $query
