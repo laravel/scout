@@ -20,6 +20,6 @@ class SearchableModelWithSoftDeletes extends Model
 
     public function shouldBeSearchable()
     {
-        return !$this->trashed() && ! is_null($this->published_at);
+        return ! $this->trashed() && ! is_null($this->published_at);
     }
 }
