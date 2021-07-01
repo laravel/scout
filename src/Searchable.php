@@ -364,4 +364,32 @@ trait Searchable
     {
         return in_array(SoftDeletes::class, class_uses_recursive(get_called_class()));
     }
+
+    /**
+     * Was the model searchable before the update happened?
+     *
+     * @return bool
+     */
+    public function wasSearchableBeforeUpdate(): bool
+    {
+        return (clone $this)->forceFill($this->getOriginal())->shouldBeSearchable();
+    }
+
+    /**
+     * Was the model searchable before the deletion happened?
+     *
+     * To be used only when the model gets deleted using `delete`.
+     *
+     * @return bool
+     */
+    public function wasSearchableBeforeDelete(): bool
+    {
+        if (! method_exists($this, 'getDeletedAtColumn')) {
+            return $this->shouldBeSearchable();
+        }
+
+        return (clone $this)->forceFill([
+            $this->getDeletedAtColumn() => null,
+        ])->shouldBeSearchable();
+    }
 }

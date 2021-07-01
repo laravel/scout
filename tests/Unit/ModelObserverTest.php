@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Tests\Unit;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
 use Laravel\Scout\ModelObserver;
 use Mockery as m;
@@ -24,7 +25,7 @@ class ModelObserverTest extends TestCase
         $observer = new ModelObserver;
         $model = m::mock();
         $model->shouldReceive('shouldBeSearchable')->andReturn(true);
-        $model->shouldReceive('searchable');
+        $model->shouldReceive('searchable')->once();
         $observer->saved($model);
     }
 
@@ -35,6 +36,7 @@ class ModelObserverTest extends TestCase
         $observer->disableSyncingFor(get_class($model));
         $model->shouldReceive('searchable')->never();
         $observer->saved($model);
+        $observer->enableSyncingFor(get_class($model));
     }
 
     public function test_saved_handler_makes_model_unsearchable_when_disabled_per_model_rule()
@@ -42,15 +44,37 @@ class ModelObserverTest extends TestCase
         $observer = new ModelObserver;
         $model = m::mock();
         $model->shouldReceive('shouldBeSearchable')->andReturn(false);
+        $model->shouldReceive('wasSearchableBeforeUpdate')->andReturn(true);
         $model->shouldReceive('searchable')->never();
-        $model->shouldReceive('unsearchable');
+        $model->shouldReceive('unsearchable')->once();
         $observer->saved($model);
+    }
+
+    public function test_saved_handler_doesnt_make_model_unsearchable_when_disabled_per_model_rule_and_already_unsearchable()
+    {
+        $observer = new ModelObserver;
+        $model = m::mock(Model::class)->makePartial();
+        $model->shouldReceive('shouldBeSearchable')->andReturn(false);
+        $model->shouldReceive('wasSearchableBeforeUpdate')->andReturn(false);
+        $model->shouldReceive('searchable')->never();
+        $model->shouldReceive('unsearchable')->never();
+        $observer->saved($model);
+    }
+
+    public function test_deleted_handler_doesnt_make_model_unsearchable_when_already_unsearchable()
+    {
+        $observer = new ModelObserver;
+        $model = m::mock();
+        $model->shouldReceive('wasSearchableBeforeDelete')->andReturn(false);
+        $model->shouldReceive('unsearchable')->never();
+        $observer->deleted($model);
     }
 
     public function test_deleted_handler_makes_model_unsearchable()
     {
         $observer = new ModelObserver;
         $model = m::mock();
+        $model->shouldReceive('wasSearchableBeforeDelete')->andReturn(true);
         $model->shouldReceive('unsearchable');
         $observer->deleted($model);
     }
