@@ -14,7 +14,7 @@ class Builder
     /**
      * The model instance.
      *
-     * @var \Illuminate\Database\Eloquent\Model
+     * @var \Illuminate\Database\Eloquent\Model|\Laravel\Scout\Contracts\Searchable
      */
     public $model;
 

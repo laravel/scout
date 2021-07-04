@@ -69,7 +69,7 @@ class ModelObserver
     /**
      * Handle the saved event for the model.
      *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  \Illuminate\Database\Eloquent\Model|\Laravel\Scout\Contracts\Searchable  $model
      * @return void
      */
     public function saved($model)
@@ -90,7 +90,7 @@ class ModelObserver
     /**
      * Handle the deleted event for the model.
      *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  \Illuminate\Database\Eloquent\Model|\Laravel\Scout\Contracts\Searchable  $model
      * @return void
      */
     public function deleted($model)
@@ -109,7 +109,7 @@ class ModelObserver
     /**
      * Handle the force deleted event for the model.
      *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  \Illuminate\Database\Eloquent\Model|\Laravel\Scout\Contracts\Searchable  $model
      * @return void
      */
     public function forceDeleted($model)
@@ -124,7 +124,7 @@ class ModelObserver
     /**
      * Handle the restored event for the model.
      *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  \Illuminate\Database\Eloquent\Model|\Laravel\Scout\Contracts\Searchable  $model
      * @return void
      */
     public function restored($model)

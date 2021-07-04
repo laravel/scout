@@ -182,7 +182,7 @@ class AlgoliaEngine extends Engine
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  mixed  $results
-     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  \Illuminate\Database\Eloquent\Model|\Laravel\Scout\Contracts\Searchable  $model
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function map(Builder $builder, $results, $model)
@@ -209,7 +209,7 @@ class AlgoliaEngine extends Engine
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  mixed  $results
-     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  \Illuminate\Database\Eloquent\Model|\Laravel\Scout\Contracts\Searchable  $model
      * @return \Illuminate\Support\LazyCollection
      */
     public function lazyMap(Builder $builder, $results, $model)
@@ -244,7 +244,7 @@ class AlgoliaEngine extends Engine
     /**
      * Flush all of the model's records from the engine.
      *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  \Illuminate\Database\Eloquent\Model|\Laravel\Scout\Contracts\Searchable  $model
      * @return void
      */
     public function flush($model)
