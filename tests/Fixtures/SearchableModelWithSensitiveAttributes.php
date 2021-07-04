@@ -17,12 +17,17 @@ class SearchableModelWithSensitiveAttributes extends Model
     protected $fillable = ['first_name', 'last_name', 'remember_token', 'password'];
 
     /**
-     * Get the update-sensitive attributes that, when changed, trigger an engine update.
+     * When updating a model, this method determines if we
+     * should perform a search engine update or not.
      *
-     * @return string[]
+     * @return bool
      */
-    public function scoutSensitiveAttributes()
+    public function searchShouldUpdate(): bool
     {
-        return ['first_name', 'last_name'];
+        $sensitiveAttributeKeys = ['first_name', 'last_name'];
+
+        return collect($this->getDirty())->keys()
+            ->intersect($sensitiveAttributeKeys)
+            ->isNotEmpty();
     }
 }
