@@ -29,6 +29,14 @@ class ModelObserver
     protected static $syncingDisabledFor = [];
 
     /**
+     * Indicates if the model is currently force saving.
+     * When force saving we dismiss the sensitive attributes check.
+     *
+     * @var bool
+     */
+    protected $forceSaving = false;
+
+    /**
      * Create a new observer instance.
      *
      * @return void
@@ -86,7 +94,7 @@ class ModelObserver
             return;
         }
 
-        if (! $model->searchShouldUpdate()) {
+        if (! $this->forceSaving && ! $model->searchShouldUpdate()) {
             return;
         }
 
@@ -99,6 +107,19 @@ class ModelObserver
         }
 
         $model->searchable();
+    }
+
+    /**
+     * Handle the saved event for the model without checking for sensitive attributes.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return void
+     */
+    protected function forceSaved($model)
+    {
+        $this->forceSaving = true;
+        $this->saved($model);
+        $this->forceSaving = false;
     }
 
     /**
@@ -118,7 +139,7 @@ class ModelObserver
         }
 
         if ($this->usingSoftDeletes && $this->usesSoftDelete($model)) {
-            $this->saved($model);
+            $this->forceSaved($model);
         } else {
             $model->unsearchable();
         }
@@ -147,7 +168,7 @@ class ModelObserver
      */
     public function restored($model)
     {
-        $this->saved($model);
+        $this->forceSaved($model);
     }
 
     /**

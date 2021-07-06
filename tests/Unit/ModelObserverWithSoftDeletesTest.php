@@ -27,7 +27,7 @@ class ModelObserverWithSoftDeletesTest extends TestCase
     {
         $observer = new ModelObserver;
         $model = m::mock(SearchableModelWithSoftDeletes::class);
-        $model->shouldReceive('searchShouldUpdate')->once()->andReturn(true);
+        $model->shouldReceive('searchShouldUpdate')->never(); // The saved event is forced
         $model->shouldReceive('shouldBeSearchable')->andReturn(false); // Should not be searchable
         $model->shouldReceive('wasSearchableBeforeDelete')->andReturn(true);
         $model->shouldReceive('wasSearchableBeforeUpdate')->andReturn(true);
@@ -40,7 +40,7 @@ class ModelObserverWithSoftDeletesTest extends TestCase
     {
         $observer = new ModelObserver;
         $model = m::mock(SearchableModelWithSoftDeletes::class);
-        $model->shouldReceive('searchShouldUpdate')->once()->andReturn(true);
+        $model->shouldReceive('searchShouldUpdate')->never(); // The saved event is forced
         $model->shouldReceive('shouldBeSearchable')->andReturn(true); // Should be searchable
         $model->shouldReceive('wasSearchableBeforeDelete')->andReturn(true);
         $model->shouldReceive('searchable')->once();
@@ -52,7 +52,7 @@ class ModelObserverWithSoftDeletesTest extends TestCase
     {
         $observer = new ModelObserver;
         $model = m::mock(SearchableModelWithSoftDeletes::class);
-        $model->shouldReceive('searchShouldUpdate')->once()->andReturn(true);
+        $model->shouldReceive('searchShouldUpdate')->never();
         $model->shouldReceive('shouldBeSearchable')->andReturn(true);
         $model->shouldReceive('searchable')->once();
         $model->shouldReceive('unsearchable')->never();
