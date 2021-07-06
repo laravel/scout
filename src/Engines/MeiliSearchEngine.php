@@ -241,7 +241,7 @@ class MeiliSearchEngine extends Engine
 
         $hits = collect($results['hits'])->keyBy($model->getKeyName());
 
-        $objectIds = collect($results['hits'])->pluck($model->getKeyName())->values()->all();
+        $objectIds = $hits->pluck($model->getKeyName())->values()->all();
         $objectIdPositions = array_flip($objectIds);
 
         return $model->queryScoutModelsByIds(
