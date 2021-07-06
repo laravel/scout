@@ -182,6 +182,26 @@ trait Searchable
     }
 
     /**
+     * Determine if the model existed in the search index prior to an update.
+     *
+     * @return bool
+     */
+    public function wasSearchableBeforeUpdate()
+    {
+        return true;
+    }
+
+    /**
+     * Determine if the model existed in the search index prior to deletion.
+     *
+     * @return bool
+     */
+    public function wasSearchableBeforeDelete()
+    {
+        return true;
+    }
+
+    /**
      * Get the requested models from an array of object IDs.
      *
      * @param  \Laravel\Scout\Builder  $builder

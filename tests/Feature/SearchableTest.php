@@ -10,6 +10,7 @@ use Laravel\Scout\Scout;
 use Laravel\Scout\Tests\Fixtures\OverriddenMakeSearchable;
 use Laravel\Scout\Tests\Fixtures\OverriddenRemoveFromSearch;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use Laravel\Scout\Tests\Fixtures\SearchableModelWithSoftDeletes;
 use Mockery as m;
 use Orchestra\Testbench\TestCase;
 
@@ -89,6 +90,42 @@ class SearchableTest extends TestCase
         $model->queueRemoveFromSearch($collection);
 
         Scout::removeFromSearchUsing(RemoveFromSearch::class);
+    }
+
+    public function test_was_searchable_on_model_without_soft_deletes()
+    {
+        $model = new SearchableModel;
+        $model->syncOriginal();
+
+        $this->assertTrue($model->wasSearchableBeforeUpdate());
+        $this->assertTrue($model->wasSearchableBeforeDelete());
+    }
+
+    public function test_was_searchable_before_update_works_from_true_to_false()
+    {
+        $model = new SearchableModelWithSoftDeletes([
+            'published_at' => now(),
+        ]);
+        $model->syncOriginal();
+
+        $model->published_at = null;
+
+        $this->assertTrue($model->wasSearchableBeforeUpdate());
+        $this->assertFalse($model->shouldBeSearchable());
+    }
+
+    public function test_was_searchable_before_delete_works_when_deleting()
+    {
+        $model = new SearchableModelWithSoftDeletes([
+            'published_at' => now(),
+        ]);
+        $model->syncOriginal();
+
+        // Mark as deleted!
+        $model->setAttribute($model->getDeletedAtColumn(), now());
+
+        $this->assertTrue($model->wasSearchableBeforeDelete());
+        $this->assertFalse($model->shouldBeSearchable());
     }
 
     public function test_make_all_searchable_uses_order_by()
