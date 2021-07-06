@@ -182,6 +182,26 @@ trait Searchable
     }
 
     /**
+     * Determine if the model existed in the search index prior to an update.
+     *
+     * @return bool
+     */
+    public function wasSearchableBeforeUpdate()
+    {
+        return true;
+    }
+
+    /**
+     * Determine if the model existed in the search index prior to deletion.
+     *
+     * @return bool
+     */
+    public function wasSearchableBeforeDelete()
+    {
+        return true;
+    }
+
+    /**
      * Get the requested models from an array of object IDs.
      *
      * @param  \Laravel\Scout\Builder  $builder
@@ -363,33 +383,5 @@ trait Searchable
     protected static function usesSoftDelete()
     {
         return in_array(SoftDeletes::class, class_uses_recursive(get_called_class()));
-    }
-
-    /**
-     * Was the model searchable before the update happened?
-     *
-     * @return bool
-     */
-    public function wasSearchableBeforeUpdate(): bool
-    {
-        return (clone $this)->forceFill($this->getOriginal())->shouldBeSearchable();
-    }
-
-    /**
-     * Was the model searchable before the deletion happened?
-     *
-     * To be used only when the model gets deleted using `delete`.
-     *
-     * @return bool
-     */
-    public function wasSearchableBeforeDelete(): bool
-    {
-        if (! method_exists($this, 'getDeletedAtColumn')) {
-            return $this->shouldBeSearchable();
-        }
-
-        return (clone $this)->forceFill([
-            $this->getDeletedAtColumn() => null,
-        ])->shouldBeSearchable();
     }
 }
