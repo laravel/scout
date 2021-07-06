@@ -214,17 +214,15 @@ class MeiliSearchEngine extends Engine
         $objectIds = $hits->pluck($model->getKeyName())->values()->all();
         $objectIdPositions = array_flip($objectIds);
 
-        return $model->getScoutModelsByIds($builder, $objectIds)
-            ->filter(function ($model) use ($objectIds) {
-                return in_array($model->getScoutKey(), $objectIds);
-            })
-            ->each(function ($model) use ($hits) {
-                $this->setHitMetadata($model, $hits);
-            })
-            ->sortBy(function ($model) use ($objectIdPositions) {
-                return $objectIdPositions[$model->getScoutKey()];
-            })
-            ->values();
+        return $model->getScoutModelsByIds(
+            $builder, $objectIds
+        )->filter(function ($model) use ($objectIds) {
+            return in_array($model->getScoutKey(), $objectIds);
+        })->each(function ($model) use ($hits) {
+            $this->setHitMetadata($model, $hits);
+        })->sortBy(function ($model) use ($objectIdPositions) {
+            return $objectIdPositions[$model->getScoutKey()];
+        })->values();
     }
 
     /**
@@ -246,18 +244,15 @@ class MeiliSearchEngine extends Engine
         $objectIds = collect($results['hits'])->pluck($model->getKeyName())->values()->all();
         $objectIdPositions = array_flip($objectIds);
 
-        return $model->queryScoutModelsByIds($builder, $objectIds)
-            ->cursor()
-            ->filter(function ($model) use ($objectIds) {
-                return in_array($model->getScoutKey(), $objectIds);
-            })
-            ->each(function ($model) use ($hits) {
-                $this->setHitMetadata($model, $hits);
-            })
-            ->sortBy(function ($model) use ($objectIdPositions) {
-                return $objectIdPositions[$model->getScoutKey()];
-            })
-            ->values();
+        return $model->queryScoutModelsByIds(
+            $builder, $objectIds
+        )->cursor()->filter(function ($model) use ($objectIds) {
+            return in_array($model->getScoutKey(), $objectIds);
+        })->each(function ($model) use ($hits) {
+            $this->setHitMetadata($model, $hits);
+        })->sortBy(function ($model) use ($objectIdPositions) {
+            return $objectIdPositions[$model->getScoutKey()];
+        })->values();
     }
 
     /**
