@@ -149,6 +149,28 @@ class MeiliSearchEngineTest extends TestCase
         $this->assertEquals(1, count($results));
     }
 
+    public function test_map_correctly_maps_results_to_models_with_metadata()
+    {
+        $client = m::mock(Client::class);
+        $engine = new MeiliSearchEngine($client);
+
+        $model = m::mock(stdClass::class);
+        $model->shouldReceive(['getKeyName' => 'id']);
+        $model->shouldReceive('getScoutModelsByIds')->andReturn(Collection::make([new SearchableModel(['id' => 1])]));
+        $builder = m::mock(Builder::class);
+
+        $results = $engine->map($builder, [
+            'nbHits' => 1,
+            'hits' => [
+                ['id' => 1, '_formatted' => ['id' => 1]],
+            ],
+        ], $model);
+
+        $this->assertEquals(1, count($results));
+
+        $this->assertSame(['_formatted' => ['id' => 1]], $results->first()->scoutMetadata());
+    }
+
     public function test_map_method_respects_order()
     {
         $client = m::mock(Client::class);

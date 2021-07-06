@@ -20,9 +20,4 @@ class SearchableModel extends Model
     {
         return 'table';
     }
-
-    public function scoutMetadata()
-    {
-        return [];
-    }
 }

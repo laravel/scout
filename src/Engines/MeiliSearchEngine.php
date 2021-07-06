@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Engines;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use MeiliSearch\Client as MeiliSearch;
@@ -22,6 +23,13 @@ class MeiliSearchEngine extends Engine
      * @var bool
      */
     protected $softDelete;
+
+    /**
+     * @var string[]
+     */
+    protected $metadata = [
+        '_formatted',
+    ];
 
     /**
      * Create a new MeiliSearchEngine instance.
@@ -201,17 +209,22 @@ class MeiliSearchEngine extends Engine
             return $model->newCollection();
         }
 
-        $objectIds = collect($results['hits'])->pluck($model->getKeyName())->values()->all();
+        $hits = collect($results['hits'])->keyBy($model->getKeyName());
 
+        $objectIds = $hits->pluck($model->getKeyName())->values()->all();
         $objectIdPositions = array_flip($objectIds);
 
-        return $model->getScoutModelsByIds(
-            $builder, $objectIds
-        )->filter(function ($model) use ($objectIds) {
-            return in_array($model->getScoutKey(), $objectIds);
-        })->sortBy(function ($model) use ($objectIdPositions) {
-            return $objectIdPositions[$model->getScoutKey()];
-        })->values();
+        return $model->getScoutModelsByIds($builder, $objectIds)
+            ->filter(function ($model) use ($objectIds) {
+                return in_array($model->getScoutKey(), $objectIds);
+            })
+            ->each(function ($model) use ($hits) {
+                $this->setHitMetadata($model, $hits);
+            })
+            ->sortBy(function ($model) use ($objectIdPositions) {
+                return $objectIdPositions[$model->getScoutKey()];
+            })
+            ->values();
     }
 
     /**
@@ -228,16 +241,23 @@ class MeiliSearchEngine extends Engine
             return LazyCollection::make($model->newCollection());
         }
 
+        $hits = collect($results['hits'])->keyBy($model->getKeyName());
+
         $objectIds = collect($results['hits'])->pluck($model->getKeyName())->values()->all();
         $objectIdPositions = array_flip($objectIds);
 
-        return $model->queryScoutModelsByIds(
-            $builder, $objectIds
-        )->cursor()->filter(function ($model) use ($objectIds) {
-            return in_array($model->getScoutKey(), $objectIds);
-        })->sortBy(function ($model) use ($objectIdPositions) {
-            return $objectIdPositions[$model->getScoutKey()];
-        })->values();
+        return $model->queryScoutModelsByIds($builder, $objectIds)
+            ->cursor()
+            ->filter(function ($model) use ($objectIds) {
+                return in_array($model->getScoutKey(), $objectIds);
+            })
+            ->each(function ($model) use ($hits) {
+                $this->setHitMetadata($model, $hits);
+            })
+            ->sortBy(function ($model) use ($objectIdPositions) {
+                return $objectIdPositions[$model->getScoutKey()];
+            })
+            ->values();
     }
 
     /**
@@ -300,6 +320,24 @@ class MeiliSearchEngine extends Engine
     protected function usesSoftDelete($model)
     {
         return in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive($model));
+    }
+
+    /**
+     * Set hit metadata for the given model.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model$model
+     * @param  \Illuminate\Support\Collection $hits
+     * @return void
+     */
+    protected function setHitMetadata($model, $hits)
+    {
+        $hit = $hits->get($model->getScoutKey());
+
+        if ($hit && method_exists($model, 'withScoutMetadata')) {
+            foreach (Arr::only($hit, $this->metadata) as $metadataKey => $metadataValue) {
+                $model->withScoutMetadata($metadataKey, $metadataValue);
+            }
+        }
     }
 
     /**
