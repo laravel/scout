@@ -2,6 +2,8 @@
 
 namespace Laravel\Scout\Engines;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Arr;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Support\Str;
 use Laravel\Scout\Builder;
@@ -69,7 +71,7 @@ class CollectionEngine extends Engine
         $models = $this->searchModels($builder);
 
         return [
-            'results' => $models->forPage($page - 1, $perPage)->all(),
+            'results' => $models->forPage($page, $perPage)->all(),
             'total' => count($models),
         ];
     }
@@ -82,16 +84,27 @@ class CollectionEngine extends Engine
      */
     protected function searchModels(Builder $builder)
     {
-        $models = $builder->model->query()
-                        ->when(count($builder->wheres) > 0, function ($query) use ($builder) {
+        $query = $builder->model->query()
+                        ->when(! is_null($builder->callback), function ($query) {
+                            call_user_func($builder->callback, $query, $builder, $builder->query);
+                        })
+                        ->when(! $builder->callback && count($builder->wheres) > 0, function ($query) use ($builder) {
                             foreach ($builder->wheres as $key => $value) {
-                                $query->where($key, $value);
+                                if ($key !== '__soft_deleted') {
+                                    $query->where($key, $value);
+                                }
                             }
                         })
-                        ->orderBy($builder->model->getKeyName(), 'desc')
-                        ->get();
+                        ->when(! $builder->callback && count($builder->whereIns) > 0, function ($query) use ($builder) {
+                            foreach ($builder->whereIns as $key => $values) {
+                                $query->whereIn($key, $values);
+                            }
+                        })
+                        ->orderBy($builder->model->getKeyName(), 'desc');
 
-        $models = $models->values();
+        $models = $this->ensureSoftDeletesAreHandled($builder, $query)
+                        ->get()
+                        ->values();
 
         if (count($models) === 0) {
             return $models;
@@ -100,16 +113,41 @@ class CollectionEngine extends Engine
         $columns = array_keys($models->first()->toSearchableArray());
 
         return $models->filter(function ($model) use ($builder, $columns) {
+            if (! $model->shouldBeSearchable()) {
+                return false;
+            }
+
             foreach ($columns as $column) {
                 $attribute = $model->{$column};
 
-                if (Str::contains($attribute, $builder->query)) {
+                if (Str::contains(Str::lower($attribute), Str::lower($builder->query))) {
                     return true;
                 }
             }
 
             return false;
         })->values();
+    }
+
+    /**
+     * Ensure that soft delete handling is properly applied to the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  \Illuminate\Database\Query\Builder  $query
+     * @return \Illuminate\Database\Query\Builder
+     */
+    protected function ensureSoftDeletesAreHandled($builder, $query)
+    {
+        if (Arr::get($builder->wheres, '__soft_deleted') === 0) {
+            return $query->withoutTrashed();
+        } elseif (Arr::get($builder->wheres, '__soft_deleted') === 1) {
+            return $query->onlyTrashed();
+        } elseif (in_array(SoftDeletes::class, class_uses_recursive(get_class($builder->model))) &&
+                  config('scout.soft_delete', false)) {
+            return $query->withTrashed();
+        }
+
+        return $query;
     }
 
     /**

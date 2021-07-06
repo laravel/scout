@@ -79,7 +79,9 @@ class ModelObserver
         }
 
         if (! $model->shouldBeSearchable()) {
-            $model->unsearchable();
+            if ($model->wasSearchableBeforeUpdate()) {
+                $model->unsearchable();
+            }
 
             return;
         }
@@ -96,6 +98,10 @@ class ModelObserver
     public function deleted($model)
     {
         if (static::syncingDisabledFor($model)) {
+            return;
+        }
+
+        if (! $model->wasSearchableBeforeDelete()) {
             return;
         }
 

@@ -48,12 +48,12 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('search')->with('mustang', [
-            'filters' => 'foo=1',
+            'filters' => 'foo=1 AND bar=2',
         ]);
 
         $engine = new MeiliSearchEngine($client);
         $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
-            $options['filters'] = 'foo=1';
+            $options['filters'] = 'foo=1 AND bar=2';
 
             return $meilisearch->search($query, $options);
         });
@@ -336,6 +336,24 @@ class MeiliSearchEngineTest extends TestCase
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
             'filters' => 'foo="bar" AND key="value"',
+            'limit' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeiliSearchEngine($client);
+        $engine->search($builder);
+    }
+
+    public function test_where_in_conditions_are_applied()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+        $builder->where('foo', 'bar');
+        $builder->where('bar', 'baz');
+        $builder->whereIn('qux', [1, 2]);
+        $builder->whereIn('quux', [1, 2]);
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filters' => 'foo="bar" AND bar="baz" AND (qux=1 OR qux=2) AND (quux=1 OR quux=2)',
             'limit' => $builder->limit,
         ]))->andReturn([]);
 
