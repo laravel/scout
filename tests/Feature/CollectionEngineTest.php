@@ -44,6 +44,13 @@ class CollectionEngineTest extends TestCase
         $this->assertCount(1, $models);
         $this->assertEquals(1, $models[0]->id);
 
+        $models = SearchableUserModel::search('Taylor')->query(function ($query) {
+            $query->where('email', 'like', 'taylor@laravel.com');
+        })->get();
+
+        $this->assertCount(1, $models);
+        $this->assertEquals(1, $models[0]->id);
+
         $models = SearchableUserModel::search('Abigail')->where('email', 'abigail@laravel.com')->get();
         $this->assertCount(1, $models);
         $this->assertEquals(2, $models[0]->id);
