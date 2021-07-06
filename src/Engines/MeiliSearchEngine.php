@@ -149,7 +149,7 @@ class MeiliSearchEngine extends Engine
     protected function filters(Builder $builder)
     {
         $filters = collect($builder->wheres)->map(function ($value, $key) {
-            return filter_var($value, FILTER_VALIDATE_INT) !== false
+            return is_numeric($value)
                             ? sprintf('%s=%s', $key, $value)
                             : sprintf('%s="%s"', $key, $value);
         })->values()->implode(' AND ');

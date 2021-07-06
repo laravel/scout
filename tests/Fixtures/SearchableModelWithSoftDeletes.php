@@ -8,23 +8,18 @@ use Laravel\Scout\Searchable;
 
 class SearchableModelWithSoftDeletes extends Model
 {
-    use Searchable;
     use SoftDeletes;
+    use Searchable;
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['id'];
+    protected $fillable = ['published_at'];
 
-    public function searchableAs()
+    public function shouldBeSearchable()
     {
-        return 'table';
-    }
-
-    public function scoutMetadata()
-    {
-        return [];
+        return ! $this->trashed() && ! is_null($this->published_at);
     }
 }

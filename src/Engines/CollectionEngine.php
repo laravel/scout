@@ -117,7 +117,7 @@ class CollectionEngine extends Engine
             foreach ($columns as $column) {
                 $attribute = $model->{$column};
 
-                if (Str::contains($attribute, $builder->query)) {
+                if (Str::contains(Str::lower($attribute), Str::lower($builder->query))) {
                     return true;
                 }
             }
