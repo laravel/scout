@@ -28,13 +28,6 @@ class SearchableModelWithSensitiveAttributes extends Model
     {
         $sensitiveAttributeKeys = ['first_name', 'last_name'];
 
-        $dirtyKeys = collect($this->getDirty())->keys();
-
-        if ($dirtyKeys->isEmpty()) {
-            // Empty dirty attributes means delete/restore.
-            return true;
-        }
-
         return collect($this->getDirty())->keys()
             ->intersect($sensitiveAttributeKeys)
             ->isNotEmpty();
