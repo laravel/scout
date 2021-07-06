@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.2.1...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.2.2...9.x)
+
+
+## [v9.2.2 (2021-07-06)](https://github.com/laravel/scout/compare/v9.2.1...v9.2.2)
+
+### Changed
+- Improve observer strategy ([#490](https://github.com/laravel/scout/pull/490), [19cff04](https://github.com/laravel/scout/commit/19cff04e97f3fbaf67bf2bbe68a5d4daba6ba8b1))
+- Downcase attribute and query for case-insensitive search ([#493](https://github.com/laravel/scout/pull/493))
+- Use numeric check ([996256a](https://github.com/laravel/scout/commit/996256abf3b59db3e8dd3b428e027c0c1b2c37d3))
+- Custom callback support on collection engine ([7da9dd6](https://github.com/laravel/scout/commit/7da9dd69df7e63d48c53f5e92fa777b2b67d352e))
 
 
 ## [v9.2.1 (2021-06-29)](https://github.com/laravel/scout/compare/v9.2.0...v9.2.1)
