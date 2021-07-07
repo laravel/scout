@@ -94,7 +94,7 @@ class ModelObserver
             return;
         }
 
-        if (! $this->forceSaving && ! $model->searchShouldUpdate()) {
+        if (! $this->forceSaving && ! $model->searchIndexShouldBeUpdated()) {
             return;
         }
 
