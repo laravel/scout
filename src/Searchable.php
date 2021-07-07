@@ -99,6 +99,16 @@ trait Searchable
     }
 
     /**
+     * When updating a model, this method determines if we should update the search index.
+     *
+     * @return bool
+     */
+    public function searchIndexShouldBeUpdated()
+    {
+        return true;
+    }
+
+    /**
      * Perform a search against the model's indexed data.
      *
      * @param  string  $query

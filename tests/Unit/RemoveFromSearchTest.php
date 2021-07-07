@@ -16,6 +16,7 @@ class RemoveFromSearchTest extends TestCase
     protected function setUp(): void
     {
         Config::shouldReceive('get')->with('scout.after_commit', m::any())->andReturn(false);
+        Config::shouldReceive('get')->with('scout.soft_delete', m::any())->andReturn(false);
     }
 
     protected function tearDown(): void
