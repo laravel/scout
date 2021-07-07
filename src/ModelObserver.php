@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout;
 
+use Closure;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Config;
 
@@ -22,19 +23,18 @@ class ModelObserver
     protected $usingSoftDeletes;
 
     /**
+     * Indicates if the model is currently force saving.
+     *
+     * @var bool
+     */
+    protected $forceSaving = false;
+
+    /**
      * The class names that syncing is disabled for.
      *
      * @var array
      */
     protected static $syncingDisabledFor = [];
-
-    /**
-     * Indicates if the model is currently force saving.
-     * When force saving we dismiss the sensitive attributes check.
-     *
-     * @var bool
-     */
-    protected $forceSaving = false;
 
     /**
      * Create a new observer instance.
@@ -110,19 +110,6 @@ class ModelObserver
     }
 
     /**
-     * Handle the saved event for the model without checking for sensitive attributes.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @return void
-     */
-    protected function forceSaved($model)
-    {
-        $this->forceSaving = true;
-        $this->saved($model);
-        $this->forceSaving = false;
-    }
-
-    /**
      * Handle the deleted event for the model.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -139,7 +126,9 @@ class ModelObserver
         }
 
         if ($this->usingSoftDeletes && $this->usesSoftDelete($model)) {
-            $this->forceSaved($model);
+            $this->whileForcingUpdate(function () use ($model) {
+                $this->saved($model);
+            });
         } else {
             $model->unsearchable();
         }
@@ -168,7 +157,26 @@ class ModelObserver
      */
     public function restored($model)
     {
-        $this->forceSaved($model);
+        $this->whileForcingUpdate(function () use ($model) {
+            $this->saved($model);
+        });
+    }
+
+    /**
+     * Execute the given callback while forcing updates.
+     *
+     * @param  \Closure  $callback
+     * @return mixed
+     */
+    protected function whileForcingUpdate(Closure $callback)
+    {
+        $this->forceSaving = true;
+
+        $result = $callback();
+
+        $this->forceSaving = false;
+
+        return $result;
     }
 
     /**

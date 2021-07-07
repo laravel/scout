@@ -99,12 +99,11 @@ trait Searchable
     }
 
     /**
-     * When updating a model, this method determines if we
-     * should perform a search engine update or not.
+     * When updating a model, this method determines if we should update the search index.
      *
      * @return bool
      */
-    public function searchShouldUpdate(): bool
+    public function searchIndexShouldBeUpdated()
     {
         return true;
     }
