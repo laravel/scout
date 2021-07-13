@@ -24,7 +24,7 @@ class SearchableModelWithSensitiveAttributes extends Model
      *
      * @return bool
      */
-    public function searchShouldUpdate(): bool
+    public function searchIndexShouldBeUpdated(): bool
     {
         $sensitiveAttributeKeys = ['first_name', 'last_name'];
 
