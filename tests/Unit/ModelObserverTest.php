@@ -28,7 +28,7 @@ class ModelObserverTest extends TestCase
     {
         $observer = new ModelObserver;
         $model = m::mock();
-        $model->shouldReceive('searchShouldUpdate')->andReturn(true);
+        $model->shouldReceive('searchIndexShouldBeUpdated')->andReturn(true);
         $model->shouldReceive('shouldBeSearchable')->andReturn(true);
         $model->shouldReceive('searchable')->once();
         $observer->saved($model);
@@ -38,7 +38,7 @@ class ModelObserverTest extends TestCase
     {
         $observer = new ModelObserver;
         $model = m::mock();
-        $model->shouldReceive('searchShouldUpdate')->andReturn(false);
+        $model->shouldReceive('searchIndexShouldBeUpdated')->andReturn(false);
         $model->shouldReceive('shouldBeSearchable')->andReturn(true);
         $model->shouldReceive('searchable')->never();
         $observer->saved($model);
@@ -58,7 +58,7 @@ class ModelObserverTest extends TestCase
     {
         $observer = new ModelObserver;
         $model = m::mock();
-        $model->shouldReceive('searchShouldUpdate')->andReturn(true);
+        $model->shouldReceive('searchIndexShouldBeUpdated')->andReturn(true);
         $model->shouldReceive('shouldBeSearchable')->andReturn(false);
         $model->shouldReceive('wasSearchableBeforeUpdate')->andReturn(true);
         $model->shouldReceive('searchable')->never();
@@ -70,7 +70,7 @@ class ModelObserverTest extends TestCase
     {
         $observer = new ModelObserver;
         $model = m::mock(Model::class);
-        $model->shouldReceive('searchShouldUpdate')->andReturn(true);
+        $model->shouldReceive('searchIndexShouldBeUpdated')->andReturn(true);
         $model->shouldReceive('shouldBeSearchable')->andReturn(false);
         $model->shouldReceive('wasSearchableBeforeUpdate')->andReturn(false);
         $model->shouldReceive('searchable')->never();
