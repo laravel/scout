@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.2.2...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.2.3...9.x)
+
+
+## [v9.2.3 (2021-07-13)](https://github.com/laravel/scout/compare/v9.2.2...v9.2.3)
+
+### Changed
+- Filter on sensitive attributes ([#491](https://github.com/laravel/scout/pull/491), [1dfde65](https://github.com/laravel/scout/commit/1dfde65d4d9fa78512c68020f6fa05ee0f19eae8))
 
 
 ## [v9.2.2 (2021-07-06)](https://github.com/laravel/scout/compare/v9.2.1...v9.2.2)
