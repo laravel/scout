@@ -85,7 +85,7 @@ class CollectionEngine extends Engine
     protected function searchModels(Builder $builder)
     {
         $query = $builder->model->query()
-                        ->when(! is_null($builder->callback), function ($query) {
+                        ->when(! is_null($builder->callback), function ($query) use ($builder) {
                             call_user_func($builder->callback, $query, $builder, $builder->query);
                         })
                         ->when(! $builder->callback && count($builder->wheres) > 0, function ($query) use ($builder) {
