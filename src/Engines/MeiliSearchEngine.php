@@ -155,7 +155,7 @@ class MeiliSearchEngine extends Engine
         });
 
         foreach ($builder->whereIns as $key => $values) {
-            $filters->push(sprintf("(%s)", collect($values)->map(function ($value) use ($key) {
+            $filters->push(sprintf('(%s)', collect($values)->map(function ($value) use ($key) {
                 return filter_var($value, FILTER_VALIDATE_INT) !== false
                                 ? sprintf('%s=%s', $key, $value)
                                 : sprintf('%s="%s"', $key, $value);
