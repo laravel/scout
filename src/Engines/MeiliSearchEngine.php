@@ -152,21 +152,17 @@ class MeiliSearchEngine extends Engine
             return is_numeric($value)
                             ? sprintf('%s=%s', $key, $value)
                             : sprintf('%s="%s"', $key, $value);
-        })->values()->implode(' AND ');
-
-        if (empty($builder->whereIns)) {
-            return $filters;
-        }
+        });
 
         foreach ($builder->whereIns as $key => $values) {
-            $filters = $filters.' AND ('.collect($values)->map(function ($value) use ($key) {
+            $filters->push(sprintf('(%s)', collect($values)->map(function ($value) use ($key) {
                 return filter_var($value, FILTER_VALIDATE_INT) !== false
                                 ? sprintf('%s=%s', $key, $value)
                                 : sprintf('%s="%s"', $key, $value);
-            })->values()->implode(' OR ').')';
+            })->values()->implode(' OR ')));
         }
 
-        return $filters;
+        return $filters->values()->implode(' AND ');
     }
 
     /**
