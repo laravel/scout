@@ -361,6 +361,22 @@ class MeiliSearchEngineTest extends TestCase
         $engine->search($builder);
     }
 
+    public function test_where_in_conditions_are_applied_without_other_conditions()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+        $builder->whereIn('qux', [1, 2]);
+        $builder->whereIn('quux', [1, 2]);
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filters' => '(qux=1 OR qux=2) AND (quux=1 OR quux=2)',
+            'limit' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeiliSearchEngine($client);
+        $engine->search($builder);
+    }
+
     public function test_engine_returns_hits_entry_from_search_response()
     {
         $this->assertTrue(3 === (new MeiliSearchEngine(m::mock(Client::class)))->getTotalCount([
