@@ -109,11 +109,17 @@ return [
     | search engine which works great with Scout out of the box. Just plug
     | in your application ID and admin API key to get started searching.
     |
+    | See for timeouts configurations: https://www.algolia.com/doc/api-reference/api-methods/configuring-timeouts/
+    |
     */
 
     'algolia' => [
         'id' => env('ALGOLIA_APP_ID', ''),
         'secret' => env('ALGOLIA_SECRET', ''),
+
+        'connect_timeout' => env('ALGOLIA_CONNECT_TIMEOUT', null),
+        'read_timeout' => env('ALGOLIA_READ_TIMEOUT', null),
+        'write_timeout' => env('ALGOLIA_WRITE_TIMEOUT', null),
     ],
 
     /*
