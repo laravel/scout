@@ -47,9 +47,11 @@ class EngineManager extends Manager
         if (is_int($connectTimeout = config('scout.algolia.connect_timeout'))) {
             $config->setConnectTimeout($connectTimeout);
         }
+
         if (is_int($readTimeout = config('scout.algolia.read_timeout'))) {
             $config->setReadTimeout($readTimeout);
         }
+
         if (is_int($writeTimeout = config('scout.algolia.write_timeout'))) {
             $config->setWriteTimeout($writeTimeout);
         }
