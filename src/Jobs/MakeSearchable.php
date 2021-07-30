@@ -4,6 +4,7 @@ namespace Laravel\Scout\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 
@@ -36,7 +37,11 @@ class MakeSearchable implements ShouldQueue, ShouldBeUnique
      */
     public function uniqueId()
     {
-        $ids = $this->models->map(function($model){
+        $models = ($this->models instanceof Collection)
+            ? $this->models
+            : collect([$this->models]);
+
+        $ids = $models->map(function($model){
             return $model->getScoutKey();
         });
 
