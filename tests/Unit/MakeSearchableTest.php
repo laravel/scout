@@ -14,6 +14,25 @@ class MakeSearchableTest extends TestCase
         m::close();
     }
 
+    public function test_unique_id_returns_unique_string()
+    {
+        $model = m::mock();
+
+        $key = random_int(1, 1000);
+
+        $model->shouldReceive('getScoutKey')
+              ->andReturn($key);
+
+        $job = new MakeSearchable($collection = Collection::make([$model]));
+
+        $model->shouldReceive('searchableUsing->update')->with($collection);
+
+        $this->assertEquals(
+            $key,
+            $job->uniqueId()
+        );
+    }
+
     public function test_handle_passes_the_collection_to_engine()
     {
         $job = new MakeSearchable($collection = Collection::make([
