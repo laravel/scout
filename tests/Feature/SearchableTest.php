@@ -45,6 +45,7 @@ class SearchableTest extends TestCase
 
         $collection = m::mock();
         $collection->shouldReceive('isEmpty')->andReturn(false);
+        $collection->shouldReceive('getScoutKey')->andReturn(random_int(1,1000));
         $collection->shouldReceive('first->syncWithSearchUsingQueue');
         $collection->shouldReceive('first->syncWithSearchUsing');
 
