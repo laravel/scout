@@ -20,15 +20,18 @@ class MakeSearchableTest extends TestCase
 
         $key = random_int(1, 1000);
 
-        $model->shouldReceive('getScoutKey')
-              ->andReturn($key);
+        $model
+            ->shouldReceive('getScoutKeyName')
+            ->andReturn("model.id")
+            ->shouldReceive('getScoutKey')
+            ->andReturn($key);
 
         $job = new MakeSearchable($collection = Collection::make([$model]));
 
         $model->shouldReceive('searchableUsing->update')->with($collection);
 
         $this->assertEquals(
-            $key,
+            "model.id.$key",
             $job->uniqueId()
         );
     }

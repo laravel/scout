@@ -42,7 +42,7 @@ class MakeSearchable implements ShouldQueue, ShouldBeUnique
             : collect([$this->models]);
 
         $ids = $models->map(function ($model) {
-            return $model->getScoutKey();
+            return $model->getScoutKeyName().".".$model->getScoutKey();
         });
 
         return $ids->sort()->implode('-');
