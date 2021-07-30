@@ -36,12 +36,13 @@ class MakeSearchable implements ShouldQueue, ShouldBeUnique
      */
     public function uniqueId()
     {
-        $ids = $models->map(fn($model)=> $model->getScoutKey())->sort();
-        
-       
-        return $ids->implode('-');
+        $ids = $this->models->map(function($model){
+            return $model->getScoutKey();
+        });
+
+        return $ids->sort()->implode('-');
     }
-    
+
     /**
      * Handle the job.
      *
