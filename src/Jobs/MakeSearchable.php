@@ -5,8 +5,9 @@ namespace Laravel\Scout\Jobs;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 
-class MakeSearchable implements ShouldQueue
+class MakeSearchable implements ShouldQueue, ShouldBeUnique
 {
     use Queueable, SerializesModels;
 
@@ -28,6 +29,19 @@ class MakeSearchable implements ShouldQueue
         $this->models = $models;
     }
 
+    /**
+     * The unique ID of the job.
+     *
+     * @return string
+     */
+    public function uniqueId()
+    {
+        $ids = $models->map(fn($model)=> $model->getScoutKey())->sort();
+        
+       
+        return $ids->implode('-');
+    }
+    
     /**
      * Handle the job.
      *
