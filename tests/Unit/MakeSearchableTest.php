@@ -22,7 +22,7 @@ class MakeSearchableTest extends TestCase
 
         $model
             ->shouldReceive('getScoutKeyName')
-            ->andReturn("model.id")
+            ->andReturn('model.id')
             ->shouldReceive('getScoutKey')
             ->andReturn($key);
 
