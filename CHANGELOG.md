@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.2.3...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.2.4...9.x)
+
+
+## [v9.2.4 (2021-08-03)](https://github.com/laravel/scout/compare/v9.2.3...v9.2.4)
+
+### Changed
+- Timeout options for algolia client ([#501](https://github.com/laravel/scout/pull/501))
+
+### Fixed
+- Fix meilisearch where in ([#498](https://github.com/laravel/scout/pull/498))
 
 
 ## [v9.2.3 (2021-07-13)](https://github.com/laravel/scout/compare/v9.2.2...v9.2.3)
