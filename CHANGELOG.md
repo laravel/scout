@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.2.4...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.2.5...master)
+
+
+## [v9.2.5 (2021-08-10)](https://github.com/laravel/scout/compare/v9.2.4...v9.2.5)
+
+### Fixed
+- `HasManyThrough::macro('unsearchable')` fix ([#505](https://github.com/laravel/scout/pull/505))
 
 
 ## [v9.2.4 (2021-08-03)](https://github.com/laravel/scout/compare/v9.2.3...v9.2.4)
