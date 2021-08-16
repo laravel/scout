@@ -120,7 +120,7 @@ class CollectionEngine extends Engine
             foreach ($columns as $column) {
                 $attribute = $model->{$column};
 
-                if (!is_string($attribute)) {
+                if (! is_string($attribute)) {
                     continue;
                 }
 
