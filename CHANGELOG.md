@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.2.5...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.2.6...master)
+
+
+## [v9.2.6 (2021-08-17)](https://github.com/laravel/scout/compare/v9.2.5...v9.2.6)
+
+### Fixed
+- Fixed non string columns breaking model filter with collection driver ([#507](https://github.com/laravel/scout/pull/507))
 
 
 ## [v9.2.5 (2021-08-10)](https://github.com/laravel/scout/compare/v9.2.4...v9.2.5)
