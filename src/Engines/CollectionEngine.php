@@ -100,7 +100,9 @@ class CollectionEngine extends Engine
                                 $query->whereIn($key, $values);
                             }
                         })
-                        ->orderBy($builder->model->getScoutKeyName(), 'desc');
+                        ->orderBy(
+                            $builder->model->qualifyColumn($builder->model->getScoutKeyName()), 'desc'
+                        );
 
         $models = $this->ensureSoftDeletesAreHandled($builder, $query)
                         ->get()
