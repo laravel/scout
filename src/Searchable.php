@@ -144,7 +144,7 @@ trait Searchable
             ->when($softDelete, function ($query) {
                 $query->withTrashed();
             })
-            ->orderBy($self->getKeyName())
+            ->orderBy($self->getScoutKeyName())
             ->searchable($chunk);
     }
 
@@ -382,7 +382,7 @@ trait Searchable
      */
     public function getScoutKeyName()
     {
-        return $this->getQualifiedKeyName();
+        return $this->getKeyName();
     }
 
     /**
