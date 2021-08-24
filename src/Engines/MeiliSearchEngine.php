@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Engines;
 
+use Composer\InstalledVersions;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use MeiliSearch\Client as MeiliSearch;
@@ -125,6 +126,12 @@ class MeiliSearchEngine extends Engine
     protected function performSearch(Builder $builder, array $searchParams = [])
     {
         $meilisearch = $this->meilisearch->index($builder->index ?: $builder->model->searchableAs());
+
+        // from 0.21.0 onwards, `filters` is renamed to `filter`
+        if (version_compare($this->getInstalledMeilisearchVersion(), '0.21.0') >= 0) {
+            $searchParams['filter'] = $searchParams['filters'];
+            unset($searchParams['filters']);
+        }
 
         if ($builder->callback) {
             $result = call_user_func(
@@ -308,5 +315,19 @@ class MeiliSearchEngine extends Engine
     public function __call($method, $parameters)
     {
         return $this->meilisearch->$method(...$parameters);
+    }
+
+    /**
+     * Get the version of the meilisearch/meilisearch-php package intalled by Composer.
+     *
+     * @return string|null
+     */
+    protected function getInstalledMeilisearchVersion()
+    {
+        try {
+            return InstalledVersions::getVersion('meilisearch/meilisearch-php');
+        } catch (\OutOfBoundsException $e) {
+            return null;
+        }
     }
 }
