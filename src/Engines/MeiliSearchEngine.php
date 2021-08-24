@@ -4,7 +4,8 @@ namespace Laravel\Scout\Engines;
 
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
-use MeiliSearch\Client as MeiliSearch;
+use MeiliSearch\Client as MeiliSearchClient;
+use MeiliSearch\MeiliSearch;
 use MeiliSearch\Search\SearchResult;
 
 class MeiliSearchEngine extends Engine
@@ -30,7 +31,7 @@ class MeiliSearchEngine extends Engine
      * @param  bool  $softDelete
      * @return void
      */
-    public function __construct(MeiliSearch $meilisearch, $softDelete = false)
+    public function __construct(MeiliSearchClient $meilisearch, $softDelete = false)
     {
         $this->meilisearch = $meilisearch;
         $this->softDelete = $softDelete;
@@ -127,7 +128,7 @@ class MeiliSearchEngine extends Engine
         $meilisearch = $this->meilisearch->index($builder->index ?: $builder->model->searchableAs());
 
         // from 0.21.0 onwards, `filters` is renamed to `filter`
-        if (version_compare($this->getInstalledMeilisearchVersion(), '0.21.0') >= 0) {
+        if (version_compare(MeiliSearch::VERSION, '0.21.0') >= 0) {
             $searchParams['filter'] = $searchParams['filters'];
             unset($searchParams['filters']);
         }
@@ -314,15 +315,5 @@ class MeiliSearchEngine extends Engine
     public function __call($method, $parameters)
     {
         return $this->meilisearch->$method(...$parameters);
-    }
-
-    /**
-     * Get the version of the meilisearch/meilisearch-php package intalled by Composer.
-     *
-     * @return string
-     */
-    protected function getInstalledMeilisearchVersion()
-    {
-        return \MeiliSearch\MeiliSearch::VERSION;
     }
 }
