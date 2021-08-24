@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.2.6...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.2.7...9.x)
+
+
+## [v9.2.7 (2021-08-24)](https://github.com/laravel/scout/compare/v9.2.6...v9.2.7)
+
+### Changed
+- Support rename of filters to filter in meilisearch 0.21.x ([#510](https://github.com/laravel/scout/pull/510))
 
 
 ## [v9.2.6 (2021-08-17)](https://github.com/laravel/scout/compare/v9.2.5...v9.2.6)
