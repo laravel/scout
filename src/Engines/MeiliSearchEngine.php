@@ -2,7 +2,6 @@
 
 namespace Laravel\Scout\Engines;
 
-use Composer\InstalledVersions;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use MeiliSearch\Client as MeiliSearch;
@@ -320,14 +319,10 @@ class MeiliSearchEngine extends Engine
     /**
      * Get the version of the meilisearch/meilisearch-php package intalled by Composer.
      *
-     * @return string|null
+     * @return string
      */
     protected function getInstalledMeilisearchVersion()
     {
-        try {
-            return InstalledVersions::getVersion('meilisearch/meilisearch-php');
-        } catch (\OutOfBoundsException $e) {
-            return null;
-        }
+        return \MeiliSearch\MeiliSearch::VERSION;
     }
 }
