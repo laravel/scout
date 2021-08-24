@@ -136,7 +136,7 @@ class MeiliSearchEngineTest extends TestCase
         $engine = new MeiliSearchEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getKeyName' => 'id']);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
         $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([new SearchableModel(['id' => 1])]));
         $builder = m::mock(Builder::class);
 
@@ -155,7 +155,7 @@ class MeiliSearchEngineTest extends TestCase
         $engine = new MeiliSearchEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getKeyName' => 'id']);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
         $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([
             new SearchableModel(['id' => 1]),
             new SearchableModel(['id' => 2]),
@@ -189,7 +189,7 @@ class MeiliSearchEngineTest extends TestCase
         $engine = new MeiliSearchEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getKeyName' => 'id']);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
         $model->shouldReceive('queryScoutModelsByIds->cursor')->andReturn($models = LazyCollection::make([new SearchableModel(['id' => 1])]));
         $builder = m::mock(Builder::class);
 
@@ -208,7 +208,7 @@ class MeiliSearchEngineTest extends TestCase
         $engine = new MeiliSearchEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getKeyName' => 'id']);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
         $model->shouldReceive('queryScoutModelsByIds->cursor')->andReturn($models = LazyCollection::make([
             new SearchableModel(['id' => 1]),
             new SearchableModel(['id' => 2]),
