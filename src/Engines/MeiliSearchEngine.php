@@ -127,9 +127,9 @@ class MeiliSearchEngine extends Engine
     {
         $meilisearch = $this->meilisearch->index($builder->index ?: $builder->model->searchableAs());
 
-        // from 0.21.0 onwards, `filters` is renamed to `filter`
         if (version_compare(MeiliSearch::VERSION, '0.21.0') >= 0) {
             $searchParams['filter'] = $searchParams['filters'];
+
             unset($searchParams['filters']);
         }
 
