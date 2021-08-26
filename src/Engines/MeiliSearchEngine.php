@@ -127,7 +127,8 @@ class MeiliSearchEngine extends Engine
     {
         $meilisearch = $this->meilisearch->index($builder->index ?: $builder->model->searchableAs());
 
-        if (version_compare(MeiliSearch::VERSION, '0.21.0') >= 0) {
+        // meilisearch-php 0.19.0 is compatible with meilisearch server 0.21.0...
+        if (version_compare(MeiliSearch::VERSION, '0.19.0') >= 0 && isset($searchParams['filters'])) {
             $searchParams['filter'] = $searchParams['filters'];
 
             unset($searchParams['filters']);
