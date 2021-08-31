@@ -117,6 +117,10 @@ class CollectionEngine extends Engine
                 return false;
             }
 
+            if (! $builder->query) {
+                return true;
+            }
+
             foreach ($columns as $column) {
                 $attribute = $model->{$column};
 
