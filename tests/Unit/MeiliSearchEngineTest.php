@@ -48,12 +48,12 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('search')->with('mustang', [
-            'filters' => 'foo=1 AND bar=2',
+            'filter' => 'foo=1 AND bar=2',
         ]);
 
         $engine = new MeiliSearchEngine($client);
         $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
-            $options['filters'] = 'foo=1 AND bar=2';
+            $options['filter'] = 'foo=1 AND bar=2';
 
             return $meilisearch->search($query, $options);
         });
@@ -66,14 +66,14 @@ class MeiliSearchEngineTest extends TestCase
             new SearchableModel(),
             $query = 'mustang',
             $callable = function ($meilisearch, $query, $options) {
-                $options['filters'] = 'foo=1';
+                $options['filter'] = 'foo=1';
 
                 return $meilisearch->search($query, $options);
             }
         );
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('search')->with($query, ['filters' => 'foo=1'])->andReturn(new SearchResult($expectedResult = [
+        $index->shouldReceive('search')->with($query, ['filter' => 'foo=1'])->andReturn(new SearchResult($expectedResult = [
             'hits' => [],
             'offset' => 0,
             'limit' => 20,
@@ -95,14 +95,14 @@ class MeiliSearchEngineTest extends TestCase
             new SearchableModel(),
             $query = 'mustang',
             $callable = function ($meilisearch, $query, $options) {
-                $options['filters'] = 'foo=1';
+                $options['filter'] = 'foo=1';
 
                 return $meilisearch->rawSearch($query, $options);
             }
         );
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('rawSearch')->with($query, ['filters' => 'foo=1'])->andReturn($expectedResult = [
+        $index->shouldReceive('rawSearch')->with($query, ['filter' => 'foo=1'])->andReturn($expectedResult = [
             'hits' => [],
             'offset' => 0,
             'limit' => 20,
@@ -274,14 +274,14 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('search')->with('mustang', [
-            'filters' => 'foo=1',
+            'filter' => 'foo=1',
             'limit' => $perPage,
             'offset' => ($page - 1) * $perPage,
         ]);
 
         $engine = new MeiliSearchEngine($client);
         $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
-            $options['filters'] = 'foo=1';
+            $options['filter'] = 'foo=1';
 
             return $meilisearch->search($query, $options);
         });
@@ -335,7 +335,7 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filters' => 'foo="bar" AND key="value"',
+            'filter' => 'foo="bar" AND key="value"',
             'limit' => $builder->limit,
         ]))->andReturn([]);
 
@@ -353,7 +353,7 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filters' => 'foo="bar" AND bar="baz" AND (qux=1 OR qux=2) AND (quux=1 OR quux=2)',
+            'filter' => 'foo="bar" AND bar="baz" AND (qux=1 OR qux=2) AND (quux=1 OR quux=2)',
             'limit' => $builder->limit,
         ]))->andReturn([]);
 
@@ -369,7 +369,7 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filters' => '(qux=1 OR qux=2) AND (quux=1 OR quux=2)',
+            'filter' => '(qux=1 OR qux=2) AND (quux=1 OR quux=2)',
             'limit' => $builder->limit,
         ]))->andReturn([]);
 

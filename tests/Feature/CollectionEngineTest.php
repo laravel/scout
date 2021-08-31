@@ -38,6 +38,13 @@ class CollectionEngineTest extends TestCase
         ]);
     }
 
+    public function test_it_can_retrieve_results_with_empty_search()
+    {
+        $models = SearchableUserModel::search()->get();
+
+        $this->assertCount(2, $models);
+    }
+
     public function test_it_can_retrieve_results()
     {
         $models = SearchableUserModel::search('Taylor')->where('email', 'taylor@laravel.com')->get();
