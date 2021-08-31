@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.2.7...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.2.8...9.x)
+
+
+## [v9.2.8 (2021-08-31)](https://github.com/laravel/scout/compare/v9.2.7...v9.2.8)
+
+### Changed
+- Add the ability to omit the search argument in the `CollectionEngine` ([#515](https://github.com/laravel/scout/pull/515))
+
+### Fixed
+- Update meilisearch-sdk version to v0.19.0 ([#511](https://github.com/laravel/scout/pull/511))
+- Check for meilisearch-php 0.19.0 instead ([#513](https://github.com/laravel/scout/pull/513))
 
 
 ## [v9.2.7 (2021-08-24)](https://github.com/laravel/scout/compare/v9.2.6...v9.2.7)
