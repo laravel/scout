@@ -5,6 +5,7 @@ namespace Laravel\Scout\Tests\Feature;
 use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Scout\ScoutServiceProvider;
 use Laravel\Scout\Tests\Fixtures\SearchableUserModel;
+use Laravel\Scout\Tests\Fixtures\SearchableUserModelWithCustomSearchableData;
 use Orchestra\Testbench\Factories\UserFactory;
 use Orchestra\Testbench\TestCase;
 
@@ -79,6 +80,12 @@ class CollectionEngineTest extends TestCase
 
         $models = SearchableUserModel::search('Abigail')->where('email', 'taylor@laravel.com')->get();
         $this->assertCount(0, $models);
+    }
+
+    public function test_it_can_retrieve_results_matching_to_custom_searchable_data()
+    {
+        $models = SearchableUserModelWithCustomSearchableData::search('rolyaT')->get();
+        $this->assertCount(1, $models);
     }
 
     public function test_it_can_paginate_results()

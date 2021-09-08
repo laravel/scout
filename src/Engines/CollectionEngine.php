@@ -110,9 +110,7 @@ class CollectionEngine extends Engine
             return $models;
         }
 
-        $columns = array_keys($models->first()->toSearchableArray());
-
-        return $models->filter(function ($model) use ($builder, $columns) {
+        return $models->filter(function ($model) use ($builder) {
             if (! $model->shouldBeSearchable()) {
                 return false;
             }
@@ -121,14 +119,10 @@ class CollectionEngine extends Engine
                 return true;
             }
 
-            foreach ($columns as $column) {
-                $attribute = $model->{$column};
+            $searchables = $model->toSearchableArray();
 
-                if (! is_string($attribute)) {
-                    continue;
-                }
-
-                if (Str::contains(Str::lower($attribute), Str::lower($builder->query))) {
+            foreach ($searchables as $value) {
+                if (Str::contains(Str::lower($value), Str::lower($builder->query))) {
                     return true;
                 }
             }
