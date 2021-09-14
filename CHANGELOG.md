@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.2.8...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.2.9...9.x)
+
+
+## [v9.2.9 (2021-09-14)](https://github.com/laravel/scout/compare/v9.2.8...v9.2.9)
+
+### Fixed
+- Searching on custom searchable data when using collection driver ([#521](https://github.com/laravel/scout/pull/521))
 
 
 ## [v9.2.8 (2021-08-31)](https://github.com/laravel/scout/compare/v9.2.7...v9.2.8)
