@@ -70,7 +70,7 @@ class RemoveFromSearch implements ShouldQueue
     /**
      * Get the unqualified Scout key name.
      *
-     * @param string $keyName
+     * @param  string  $keyName
      * @return string
      */
     protected function getUnqualifiedScoutKeyName($keyName)
