@@ -149,6 +149,20 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
+     * Convert attribute name and value to a string representation of condition.
+     *
+     * @param string $key
+     * @param mixed  $value
+     * @return string
+     */
+    private function filterExpression(string $key, $value): string
+    {
+        return filter_var($value, FILTER_VALIDATE_INT) !== false
+            ? sprintf('%s=%s', $key, $value)
+            : sprintf('%s="%s"', $key, $value);
+    }
+
+    /**
      * Get the filter array for the query.
      *
      * @param  \Laravel\Scout\Builder  $builder
@@ -157,16 +171,18 @@ class MeiliSearchEngine extends Engine
     protected function filters(Builder $builder)
     {
         $filters = collect($builder->wheres)->map(function ($value, $key) {
-            return is_numeric($value)
-                            ? sprintf('%s=%s', $key, $value)
-                            : sprintf('%s="%s"', $key, $value);
+            if (is_array($value)) {
+                return collect($value)->map(function ($value) use ($key) {
+                    return $this->filterExpression($key, $value);
+                })->values()->implode(' AND ');
+            }
+
+            return $this->filterExpression($key, $value);
         });
 
         foreach ($builder->whereIns as $key => $values) {
             $filters->push(sprintf('(%s)', collect($values)->map(function ($value) use ($key) {
-                return filter_var($value, FILTER_VALIDATE_INT) !== false
-                                ? sprintf('%s=%s', $key, $value)
-                                : sprintf('%s="%s"', $key, $value);
+                return $this->filterExpression($key, $value);
             })->values()->implode(' OR ')));
         }
 
