@@ -151,8 +151,8 @@ class MeiliSearchEngine extends Engine
     /**
      * Convert attribute name and value to a string representation of condition.
      *
-     * @param string $key
-     * @param mixed  $value
+     * @param  string  $key
+     * @param  mixed  $value
      * @return string
      */
     private function filterExpression(string $key, $value): string
