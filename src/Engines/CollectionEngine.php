@@ -125,6 +125,7 @@ class CollectionEngine extends Engine
                 if (! is_scalar($value)) {
                     $value = json_encode($value);
                 }
+
                 if (Str::contains(Str::lower($value), Str::lower($builder->query))) {
                     return true;
                 }
