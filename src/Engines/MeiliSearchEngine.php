@@ -158,13 +158,14 @@ class MeiliSearchEngine extends Engine
     {
         $filters = collect($builder->wheres)->map(function ($operation, $key) {
             [$operator,  $value] = $operation;
+
             if (is_bool($value)) {
                 return sprintf('%s%s%s', $key, $operator, $value ? 'true' : 'false');
+            } else if (is_numeric($value)) {
+                return sprintf('%s%s%s', $key, $operator, $value);
             }
 
-            return is_numeric($value)
-                            ? sprintf('%s%s%s', $key, $operator, $value)
-                            : sprintf('%s%s"%s"', $key, $operator, $value);
+            return sprintf('%s%s"%s"', $key, $operator, $value);
         });
 
         foreach ($builder->whereIns as $key => $values) {
