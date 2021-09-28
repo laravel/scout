@@ -89,9 +89,10 @@ class CollectionEngine extends Engine
                             call_user_func($builder->callback, $query, $builder, $builder->query);
                         })
                         ->when(! $builder->callback && count($builder->wheres) > 0, function ($query) use ($builder) {
-                            foreach ($builder->wheres as $key => $value) {
+                            foreach ($builder->wheres as $key => $operation) {
+                                [$operator, $value] = $operation;
                                 if ($key !== '__soft_deleted') {
-                                    $query->where($key, $value);
+                                    $query->where($key, $operator, $value);
                                 }
                             }
                         })

@@ -237,6 +237,20 @@ class AlgoliaEngineTest extends TestCase
         $engine = new AlgoliaEngine($client, true);
         $engine->update(Collection::make([new SoftDeletedEmptySearchableModel]));
     }
+
+    public function test_search_supports_operators_in_where_clause()
+    {
+        $client = m::mock(SearchClient::class);
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
+        $index->shouldReceive('search')->with('zonda', [
+            'numericFilters' => ['foo=1', 'bar<>1'],
+        ]);
+
+        $engine = new AlgoliaEngine($client);
+        $builder = new Builder(new SearchableModel, 'zonda');
+        $builder->where('foo', 1)->where('bar', '<>', 1);
+        $engine->search($builder);
+    }
 }
 
 class AlgoliaCustomKeySearchableModel extends SearchableModel
