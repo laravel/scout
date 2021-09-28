@@ -383,6 +383,23 @@ class MeiliSearchEngineTest extends TestCase
             'nbHits' => 3,
         ]));
     }
+
+    public function test_where_conditions_can_have_an_operator()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+        $builder->where('foo', '=', 'bar');
+        $builder->where('bar', '<>', 'baz');
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter' => 'foo="bar" AND bar<>"baz"',
+            'limit' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeiliSearchEngine($client);
+        $engine->search($builder);
+    }
 }
 
 class MeiliSearchCustomKeySearchableModel extends SearchableModel
