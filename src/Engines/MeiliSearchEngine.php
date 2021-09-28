@@ -157,6 +157,10 @@ class MeiliSearchEngine extends Engine
     protected function filters(Builder $builder)
     {
         $filters = collect($builder->wheres)->map(function ($value, $key) {
+            if (is_bool($value)) {
+                return sprintf('%s=%s', $key, $value ? 'true' : 'false');
+            }
+
             return is_numeric($value)
                             ? sprintf('%s=%s', $key, $value)
                             : sprintf('%s="%s"', $key, $value);
@@ -164,6 +168,10 @@ class MeiliSearchEngine extends Engine
 
         foreach ($builder->whereIns as $key => $values) {
             $filters->push(sprintf('(%s)', collect($values)->map(function ($value) use ($key) {
+                if (is_bool($value)) {
+                    return sprintf('%s=%s', $key, $value ? 'true' : 'false');
+                }
+
                 return filter_var($value, FILTER_VALIDATE_INT) !== false
                                 ? sprintf('%s=%s', $key, $value)
                                 : sprintf('%s="%s"', $key, $value);
