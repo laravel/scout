@@ -161,7 +161,7 @@ class MeiliSearchEngine extends Engine
 
             if (is_bool($value)) {
                 return sprintf('%s%s%s', $key, $operator, $value ? 'true' : 'false');
-            } else if (is_numeric($value)) {
+            } elseif (is_numeric($value)) {
                 return sprintf('%s%s%s', $key, $operator, $value);
             }
 

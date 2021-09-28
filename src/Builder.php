@@ -117,7 +117,7 @@ class Builder
      */
     public function where($field, $operator, $value = null)
     {
-        if(func_num_args() == 2){
+        if (func_num_args() == 2) {
             $value = $operator;
             $operator = '=';
         }

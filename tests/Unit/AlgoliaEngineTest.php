@@ -248,7 +248,7 @@ class AlgoliaEngineTest extends TestCase
 
         $engine = new AlgoliaEngine($client);
         $builder = new Builder(new SearchableModel, 'zonda');
-        $builder->where('foo', 1)->where('bar','<>',1);
+        $builder->where('foo', 1)->where('bar', '<>', 1);
         $engine->search($builder);
     }
 }
