@@ -1,5 +1,15 @@
 # Upgrade Guide
 
+## Upgrading To 9.0 From 8.x
+
+### Minimum Laravel Version
+
+Laravel 8.0 is now the minimum supported version of the framework.
+
+### Minimum PHP Version
+
+PHP 7.3 is now the minimum supported version of the language.
+
 ## Upgrading To 8.0 From 7.x
 
 ### Minimum Laravel Version

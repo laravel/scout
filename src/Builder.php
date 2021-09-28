@@ -54,6 +54,13 @@ class Builder
     public $wheres = [];
 
     /**
+     * The "where in" constraints added to the query.
+     *
+     * @var array
+     */
+    public $whereIns = [];
+
+    /**
      * The "limit" that should be applied to the search.
      *
      * @var int
@@ -110,6 +117,20 @@ class Builder
     public function where($field, $value)
     {
         $this->wheres[$field] = $value;
+
+        return $this;
+    }
+
+    /**
+     * Add a "where in" constraint to the search query.
+     *
+     * @param  string  $field
+     * @param  array  $values
+     * @return $this
+     */
+    public function whereIn($field, array $values)
+    {
+        $this->whereIns[$field] = $values;
 
         return $this;
     }
@@ -281,8 +302,6 @@ class Builder
             $this, $rawResults = $engine->paginate($this, $perPage, $page), $this->model
         )->all());
 
-        $total = $engine->getTotalCount($rawResults);
-
         $hasMorePages = ($perPage * $page) < $engine->getTotalCount($rawResults);
 
         $paginator = Container::getInstance()->makeWith(Paginator::class, [
@@ -320,7 +339,7 @@ class Builder
 
         $paginator = Container::getInstance()->makeWith(LengthAwarePaginator::class, [
             'items' => $results,
-            'total' => $engine->getTotalCount($rawResults),
+            'total' => $this->getTotalCount($rawResults),
             'perPage' => $perPage,
             'currentPage' => $page,
             'options' => [
@@ -352,7 +371,7 @@ class Builder
 
         $paginator = Container::getInstance()->makeWith(LengthAwarePaginator::class, [
             'items' => $results,
-            'total' => $engine->getTotalCount($results),
+            'total' => $this->getTotalCount($results),
             'perPage' => $perPage,
             'currentPage' => $page,
             'options' => [
@@ -362,6 +381,37 @@ class Builder
         ]);
 
         return $paginator->appends('query', $this->query);
+    }
+
+    /**
+     * Get the total number of results from the Scout engine, or fallback to query builder.
+     *
+     * @param  mixed  $results
+     * @return int
+     */
+    protected function getTotalCount($results)
+    {
+        $engine = $this->engine();
+
+        $totalCount = $engine->getTotalCount($results);
+
+        if (is_null($this->queryCallback)) {
+            return $totalCount;
+        }
+
+        $ids = $engine->mapIds($results)->all();
+
+        if (count($ids) < $totalCount) {
+            $ids = $engine->keys(tap(clone $this, function ($builder) use ($totalCount) {
+                $builder->take(
+                    is_null($this->limit) ? $totalCount : min($this->limit, $totalCount)
+                );
+            }))->all();
+        }
+
+        return $this->model->queryScoutModelsByIds(
+            $this, $ids
+        )->toBase()->getCountForPagination();
     }
 
     /**

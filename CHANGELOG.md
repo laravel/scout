@@ -1,6 +1,125 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v8.6.1...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.2.10...master)
+
+
+## [v9.2.10 (2021-09-28)](https://github.com/laravel/scout/compare/v9.2.9...v9.2.10)
+
+### Changed
+- Collection Engine: add support for non-scalar values ([#528](https://github.com/laravel/scout/pull/528))
+
+### Fixed
+- Support boolean filters ([#524](https://github.com/laravel/scout/pull/524))
+
+
+## [v9.2.9 (2021-09-14)](https://github.com/laravel/scout/compare/v9.2.8...v9.2.9)
+
+### Fixed
+- Searching on custom searchable data when using collection driver ([#521](https://github.com/laravel/scout/pull/521))
+
+
+## [v9.2.8 (2021-08-31)](https://github.com/laravel/scout/compare/v9.2.7...v9.2.8)
+
+### Changed
+- Add the ability to omit the search argument in the `CollectionEngine` ([#515](https://github.com/laravel/scout/pull/515))
+
+### Fixed
+- Update meilisearch-sdk version to v0.19.0 ([#511](https://github.com/laravel/scout/pull/511))
+- Check for meilisearch-php 0.19.0 instead ([#513](https://github.com/laravel/scout/pull/513))
+
+
+## [v9.2.7 (2021-08-24)](https://github.com/laravel/scout/compare/v9.2.6...v9.2.7)
+
+### Changed
+- Support rename of filters to filter in meilisearch 0.21.x ([#510](https://github.com/laravel/scout/pull/510))
+
+
+## [v9.2.6 (2021-08-17)](https://github.com/laravel/scout/compare/v9.2.5...v9.2.6)
+
+### Fixed
+- Fixed non string columns breaking model filter with collection driver ([#507](https://github.com/laravel/scout/pull/507))
+
+
+## [v9.2.5 (2021-08-10)](https://github.com/laravel/scout/compare/v9.2.4...v9.2.5)
+
+### Fixed
+- `HasManyThrough::macro('unsearchable')` fix ([#505](https://github.com/laravel/scout/pull/505))
+
+
+## [v9.2.4 (2021-08-03)](https://github.com/laravel/scout/compare/v9.2.3...v9.2.4)
+
+### Changed
+- Timeout options for algolia client ([#501](https://github.com/laravel/scout/pull/501))
+
+### Fixed
+- Fix meilisearch where in ([#498](https://github.com/laravel/scout/pull/498))
+
+
+## [v9.2.3 (2021-07-13)](https://github.com/laravel/scout/compare/v9.2.2...v9.2.3)
+
+### Changed
+- Filter on sensitive attributes ([#491](https://github.com/laravel/scout/pull/491), [1dfde65](https://github.com/laravel/scout/commit/1dfde65d4d9fa78512c68020f6fa05ee0f19eae8))
+
+
+## [v9.2.2 (2021-07-06)](https://github.com/laravel/scout/compare/v9.2.1...v9.2.2)
+
+### Changed
+- Improve observer strategy ([#490](https://github.com/laravel/scout/pull/490), [19cff04](https://github.com/laravel/scout/commit/19cff04e97f3fbaf67bf2bbe68a5d4daba6ba8b1))
+- Downcase attribute and query for case-insensitive search ([#493](https://github.com/laravel/scout/pull/493))
+- Use numeric check ([996256a](https://github.com/laravel/scout/commit/996256abf3b59db3e8dd3b428e027c0c1b2c37d3))
+- Custom callback support on collection engine ([7da9dd6](https://github.com/laravel/scout/commit/7da9dd69df7e63d48c53f5e92fa777b2b67d352e))
+
+
+## [v9.2.1 (2021-06-29)](https://github.com/laravel/scout/compare/v9.2.0...v9.2.1)
+
+### Added
+- Add `whereIn` support ([2b1dd75](https://github.com/laravel/scout/commit/2b1dd75adb533d71d3430ea91cd061bfe2fa0f32))
+
+### Fixed
+- Filter on should be searchable ([ad60f5b](https://github.com/laravel/scout/commit/ad60f5bf38b735e8a4178039515f4e30f44126b6))
+- Handle soft deletes ([f04927d](https://github.com/laravel/scout/commit/f04927d21bf48b79040189b41464e33b6d26dd1d), [b95af2e](https://github.com/laravel/scout/commit/b95af2e7a231f4403c7add1a7eba96cac1b415fb), [31073e4](https://github.com/laravel/scout/commit/31073e4ad5c0977a9a088b8793bba0e2c3d29c5d))
+- Fix pagination ([733eda3](https://github.com/laravel/scout/commit/733eda3d44140f87e235805531cd4c8c9ac04b59))
+
+
+## [v9.2.0 (2021-06-29)](https://github.com/laravel/scout/compare/v9.1.2...v9.2.0)
+
+### Added
+- Collection Engine ([#488](https://github.com/laravel/scout/pull/488))
+
+
+## [v9.1.2 (2021-06-15)](https://github.com/laravel/scout/compare/v9.1.1...v9.1.2)
+
+### Fixed
+- Fix removing queued models with custom Scout keys ([#480](https://github.com/laravel/scout/pull/480))
+- Re-query scout engine when paginate results contains insufficient keys to generate proper pagination count query ([#483](https://github.com/laravel/scout/pull/483))
+
+
+## [v9.1.1 (2021-06-08)](https://github.com/laravel/scout/compare/v9.1.0...v9.1.1)
+
+### Changed
+- Overridable jobs ([#476](https://github.com/laravel/scout/pull/476))
+
+
+## [v9.1.0 (2021-05-13)](https://github.com/laravel/scout/compare/v9.0.0...v9.1.0)
+
+### Added
+- Use queued job for "unsearching" when Scout queue is enabled ([#471](https://github.com/laravel/scout/pull/471))
+
+### Changed
+- Remove useless variable in `simplePaginate` ([#472](https://github.com/laravel/scout/pull/472))
+
+
+## [v9.0.0 (2021-04-27)](https://github.com/laravel/scout/compare/v8.6.1...v9.0.0)
+
+### Added
+- Support MeiliSearch Engine ([#455](https://github.com/laravel/scout/pull/455), [#457](https://github.com/laravel/scout/pull/457))
+- Add support for cursor and LazyCollection on scout ([#439](https://github.com/laravel/scout/pull/439), [1ebcd0d](https://github.com/laravel/scout/commit/1ebcd0d11185d43cea18e9b774b2926314311e41), [#470](https://github.com/laravel/scout/pull/470))
+
+### Changed
+- Drop support for old Laravel versions and PHP 7.2 ([#459](https://github.com/laravel/scout/pull/459))
+
+### Fixed
+- Fixes pagination count when `Laravel\Scout\Builder` contains custom query callback ([#469](https://github.com/laravel/scout/pull/469))
 
 
 ## [v8.6.1 (2021-04-06)](https://github.com/laravel/scout/compare/v8.6.0...v8.6.1)

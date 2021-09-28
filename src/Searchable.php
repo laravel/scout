@@ -4,7 +4,6 @@ namespace Laravel\Scout;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
-use Laravel\Scout\Jobs\MakeSearchable;
 
 trait Searchable
 {
@@ -63,7 +62,7 @@ trait Searchable
             return $models->first()->searchableUsing()->update($models);
         }
 
-        dispatch((new MakeSearchable($models))
+        dispatch((new Scout::$makeSearchableJob($models))
                 ->onQueue($models->first()->syncWithSearchUsingQueue())
                 ->onConnection($models->first()->syncWithSearchUsing()));
     }
@@ -80,7 +79,13 @@ trait Searchable
             return;
         }
 
-        return $models->first()->searchableUsing()->delete($models);
+        if (! config('scout.queue')) {
+            return $models->first()->searchableUsing()->delete($models);
+        }
+
+        dispatch(new Scout::$removeFromSearchJob($models))
+            ->onQueue($models->first()->syncWithSearchUsingQueue())
+            ->onConnection($models->first()->syncWithSearchUsing());
     }
 
     /**
@@ -89,6 +94,16 @@ trait Searchable
      * @return bool
      */
     public function shouldBeSearchable()
+    {
+        return true;
+    }
+
+    /**
+     * When updating a model, this method determines if we should update the search index.
+     *
+     * @return bool
+     */
+    public function searchIndexShouldBeUpdated()
     {
         return true;
     }
@@ -129,7 +144,9 @@ trait Searchable
             ->when($softDelete, function ($query) {
                 $query->withTrashed();
             })
-            ->orderBy($self->getKeyName())
+            ->orderBy(
+                $self->qualifyColumn($self->getScoutKeyName())
+            )
             ->searchable($chunk);
     }
 
@@ -177,6 +194,26 @@ trait Searchable
     }
 
     /**
+     * Determine if the model existed in the search index prior to an update.
+     *
+     * @return bool
+     */
+    public function wasSearchableBeforeUpdate()
+    {
+        return true;
+    }
+
+    /**
+     * Determine if the model existed in the search index prior to deletion.
+     *
+     * @return bool
+     */
+    public function wasSearchableBeforeDelete()
+    {
+        return true;
+    }
+
+    /**
      * Get the requested models from an array of object IDs.
      *
      * @param  \Laravel\Scout\Builder  $builder
@@ -205,7 +242,7 @@ trait Searchable
         }
 
         return $query->whereIn(
-            $this->getScoutKeyName(), $ids
+            $this->qualifyColumn($this->getScoutKeyName()), $ids
         );
     }
 
@@ -347,7 +384,7 @@ trait Searchable
      */
     public function getScoutKeyName()
     {
-        return $this->getQualifiedKeyName();
+        return $this->getKeyName();
     }
 
     /**

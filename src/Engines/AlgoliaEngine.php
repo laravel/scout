@@ -5,6 +5,7 @@ namespace Laravel\Scout\Engines;
 use Algolia\AlgoliaSearch\SearchClient as Algolia;
 use Exception;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 
 class AlgoliaEngine extends Engine
@@ -154,9 +155,15 @@ class AlgoliaEngine extends Engine
      */
     protected function filters(Builder $builder)
     {
-        return collect($builder->wheres)->map(function ($value, $key) {
+        $wheres = collect($builder->wheres)->map(function ($value, $key) {
             return $key.'='.$value;
-        })->values()->all();
+        })->values();
+
+        return $wheres->merge(collect($builder->whereIns)->map(function ($values, $key) {
+            return collect($values)->map(function ($value) use ($key) {
+                return $key.'='.$value;
+            })->all();
+        })->values())->values()->all();
     }
 
     /**
@@ -180,7 +187,21 @@ class AlgoliaEngine extends Engine
      */
     public function map(Builder $builder, $results, $model)
     {
-        return $this->lazyMap($builder, $results, $model)->collect();
+        if (count($results['hits']) === 0) {
+            return $model->newCollection();
+        }
+
+        $objectIds = collect($results['hits'])->pluck('objectID')->values()->all();
+
+        $objectIdPositions = array_flip($objectIds);
+
+        return $model->getScoutModelsByIds(
+            $builder, $objectIds
+        )->filter(function ($model) use ($objectIds) {
+            return in_array($model->getScoutKey(), $objectIds);
+        })->sortBy(function ($model) use ($objectIdPositions) {
+            return $objectIdPositions[$model->getScoutKey()];
+        })->values();
     }
 
     /**
@@ -194,7 +215,7 @@ class AlgoliaEngine extends Engine
     public function lazyMap(Builder $builder, $results, $model)
     {
         if (count($results['hits']) === 0) {
-            return $model->newCollection();
+            return LazyCollection::make($model->newCollection());
         }
 
         $objectIds = collect($results['hits'])->pluck('objectID')->values()->all();

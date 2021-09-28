@@ -133,7 +133,7 @@ abstract class Engine
      */
     public function cursor(Builder $builder)
     {
-        return $this->map(
+        return $this->lazyMap(
             $builder, $this->search($builder), $builder->model
         );
     }

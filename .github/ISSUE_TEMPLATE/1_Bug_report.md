@@ -7,6 +7,7 @@ about: "Report something that's broken. Please ensure your Laravel version is st
 <!-- Fill out the FULL versions with patch versions -->
 
 - Scout Version: #.#.#
+- Scout Driver: Algolia / MeiliSearch
 - Laravel Version: #.#.#
 - PHP Version: #.#.#
 - Database Driver & Version:
@@ -15,3 +16,6 @@ about: "Report something that's broken. Please ensure your Laravel version is st
 
 
 ### Steps To Reproduce:
+
+<!-- If possible, please provide a GitHub repository to demonstrate your issue -->
+<!-- laravel new bug-report --github="--public" -->

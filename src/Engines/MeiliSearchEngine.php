@@ -2,8 +2,10 @@
 
 namespace Laravel\Scout\Engines;
 
+use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
-use MeiliSearch\Client as MeiliSearch;
+use MeiliSearch\Client as MeiliSearchClient;
+use MeiliSearch\MeiliSearch;
 use MeiliSearch\Search\SearchResult;
 
 class MeiliSearchEngine extends Engine
@@ -29,7 +31,7 @@ class MeiliSearchEngine extends Engine
      * @param  bool  $softDelete
      * @return void
      */
-    public function __construct(MeiliSearch $meilisearch, $softDelete = false)
+    public function __construct(MeiliSearchClient $meilisearch, $softDelete = false)
     {
         $this->meilisearch = $meilisearch;
         $this->softDelete = $softDelete;
@@ -64,7 +66,7 @@ class MeiliSearchEngine extends Engine
         })->filter()->values()->all();
 
         if (! empty($objects)) {
-            $index->addDocuments($objects, $models->first()->getKeyName());
+            $index->addDocuments($objects, $models->first()->getScoutKeyName());
         }
     }
 
@@ -125,6 +127,13 @@ class MeiliSearchEngine extends Engine
     {
         $meilisearch = $this->meilisearch->index($builder->index ?: $builder->model->searchableAs());
 
+        // meilisearch-php 0.19.0 is compatible with meilisearch server 0.21.0...
+        if (version_compare(MeiliSearch::VERSION, '0.19.0') >= 0 && isset($searchParams['filters'])) {
+            $searchParams['filter'] = $searchParams['filters'];
+
+            unset($searchParams['filters']);
+        }
+
         if ($builder->callback) {
             $result = call_user_func(
                 $builder->callback,
@@ -147,9 +156,29 @@ class MeiliSearchEngine extends Engine
      */
     protected function filters(Builder $builder)
     {
-        return collect($builder->wheres)->map(function ($value, $key) {
-            return sprintf('%s="%s"', $key, $value);
-        })->values()->implode(' AND ');
+        $filters = collect($builder->wheres)->map(function ($value, $key) {
+            if (is_bool($value)) {
+                return sprintf('%s=%s', $key, $value ? 'true' : 'false');
+            }
+
+            return is_numeric($value)
+                            ? sprintf('%s=%s', $key, $value)
+                            : sprintf('%s="%s"', $key, $value);
+        });
+
+        foreach ($builder->whereIns as $key => $values) {
+            $filters->push(sprintf('(%s)', collect($values)->map(function ($value) use ($key) {
+                if (is_bool($value)) {
+                    return sprintf('%s=%s', $key, $value ? 'true' : 'false');
+                }
+
+                return filter_var($value, FILTER_VALIDATE_INT) !== false
+                                ? sprintf('%s=%s', $key, $value)
+                                : sprintf('%s="%s"', $key, $value);
+            })->values()->implode(' OR ')));
+        }
+
+        return $filters->values()->implode(' AND ');
     }
 
     /**
@@ -180,7 +209,21 @@ class MeiliSearchEngine extends Engine
      */
     public function map(Builder $builder, $results, $model)
     {
-        return $this->lazyMap($builder, $results, $model);
+        if (is_null($results) || 0 === count($results['hits'])) {
+            return $model->newCollection();
+        }
+
+        $objectIds = collect($results['hits'])->pluck($model->getScoutKeyName())->values()->all();
+
+        $objectIdPositions = array_flip($objectIds);
+
+        return $model->getScoutModelsByIds(
+            $builder, $objectIds
+        )->filter(function ($model) use ($objectIds) {
+            return in_array($model->getScoutKey(), $objectIds);
+        })->sortBy(function ($model) use ($objectIdPositions) {
+            return $objectIdPositions[$model->getScoutKey()];
+        })->values();
     }
 
     /**
@@ -193,11 +236,11 @@ class MeiliSearchEngine extends Engine
      */
     public function lazyMap(Builder $builder, $results, $model)
     {
-        if (is_null($results) || 0 === count($results['hits'])) {
-            return $model->newCollection();
+        if (count($results['hits']) === 0) {
+            return LazyCollection::make($model->newCollection());
         }
 
-        $objectIds = collect($results['hits'])->pluck($model->getKeyName())->values()->all();
+        $objectIds = collect($results['hits'])->pluck($model->getScoutKeyName())->values()->all();
         $objectIdPositions = array_flip($objectIds);
 
         return $model->queryScoutModelsByIds(
