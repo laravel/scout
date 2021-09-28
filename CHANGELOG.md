@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.2.9...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.2.10...9.x)
+
+
+## [v9.2.10 (2021-09-28)](https://github.com/laravel/scout/compare/v9.2.9...v9.2.10)
+
+### Changed
+- Collection Engine: add support for non-scalar values ([#528](https://github.com/laravel/scout/pull/528))
+
+### Fixed
+- Support boolean filters ([#524](https://github.com/laravel/scout/pull/524))
 
 
 ## [v9.2.9 (2021-09-14)](https://github.com/laravel/scout/compare/v9.2.8...v9.2.9)
