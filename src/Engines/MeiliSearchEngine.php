@@ -157,7 +157,7 @@ class MeiliSearchEngine extends Engine
     protected function filters(Builder $builder)
     {
         $filters = collect($builder->wheres)->map(function ($operation, $key) {
-            [$operator,  $value] = $operation;
+            [$operator, $value] = $operation;
 
             if (is_bool($value)) {
                 return sprintf('%s%s%s', $key, $operator, $value ? 'true' : 'false');
