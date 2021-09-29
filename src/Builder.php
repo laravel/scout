@@ -121,6 +121,7 @@ class Builder
             $value = $operator;
             $operator = '=';
         }
+
         $this->wheres[$field] = [$operator, $value];
 
         return $this;
