@@ -156,7 +156,8 @@ class AlgoliaEngine extends Engine
     protected function filters(Builder $builder)
     {
         $wheres = collect($builder->wheres)->map(function ($operation, $key) {
-            [$operator,  $value] = $operation;
+            [$operator, $value] = $operation;
+
             return $key.$operator.$value;
         })->values();
 
