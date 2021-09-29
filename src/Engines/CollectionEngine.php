@@ -91,6 +91,7 @@ class CollectionEngine extends Engine
                         ->when(! $builder->callback && count($builder->wheres) > 0, function ($query) use ($builder) {
                             foreach ($builder->wheres as $key => $operation) {
                                 [$operator, $value] = $operation;
+
                                 if ($key !== '__soft_deleted') {
                                     $query->where($key, $operator, $value);
                                 }
