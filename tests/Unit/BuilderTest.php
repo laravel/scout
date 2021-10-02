@@ -131,13 +131,13 @@ class BuilderTest extends TestCase
     {
         $builder = new Builder($model = m::mock(), 'zonda', null, false);
 
-        $this->assertArrayNotHasKey('__soft_deleted', $builder->wheres);
+        $this->assertArrayNotHasKey('__soft_deleted', $builder->whereConditions);
     }
 
     public function test_soft_delete_sets_wheres()
     {
         $builder = new Builder($model = m::mock(), 'zonda', null, true);
 
-        $this->assertSame(0, $builder->wheres['__soft_deleted']);
+        $this->assertSame(['=', 0], $builder->whereConditions['__soft_deleted']);
     }
 }

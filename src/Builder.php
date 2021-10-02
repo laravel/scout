@@ -54,6 +54,13 @@ class Builder
     public $wheres = [];
 
     /**
+     * The "where" constraints added to the query.
+     *
+     * @var array
+     */
+    public $whereConditions = [];
+
+    /**
      * The "where in" constraints added to the query.
      *
      * @var array
@@ -90,7 +97,7 @@ class Builder
         $this->callback = $callback;
 
         if ($softDelete) {
-            $this->wheres['__soft_deleted'] = 0;
+            $this->where('__soft_deleted', 0);
         }
     }
 
@@ -121,7 +128,8 @@ class Builder
             $value = $operator;
             $operator = '=';
         }
-        $this->wheres[$field] = [$operator, $value];
+        $this->wheres[$field] = $value;
+        $this->whereConditions[$field] = [$operator, $value];
 
         return $this;
     }
@@ -148,6 +156,7 @@ class Builder
     public function withTrashed()
     {
         unset($this->wheres['__soft_deleted']);
+        unset($this->whereConditions['__soft_deleted']);
 
         return $this;
     }
@@ -160,7 +169,7 @@ class Builder
     public function onlyTrashed()
     {
         return tap($this->withTrashed(), function () {
-            $this->wheres['__soft_deleted'] = 1;
+            $this->where('__soft_deleted', 1);
         });
     }
 

@@ -88,8 +88,8 @@ class CollectionEngine extends Engine
                         ->when(! is_null($builder->callback), function ($query) use ($builder) {
                             call_user_func($builder->callback, $query, $builder, $builder->query);
                         })
-                        ->when(! $builder->callback && count($builder->wheres) > 0, function ($query) use ($builder) {
-                            foreach ($builder->wheres as $key => $operation) {
+                        ->when(! $builder->callback && count($builder->whereConditions) > 0, function ($query) use ($builder) {
+                            foreach ($builder->whereConditions as $key => $operation) {
                                 [$operator, $value] = $operation;
                                 if ($key !== '__soft_deleted') {
                                     $query->where($key, $operator, $value);
@@ -147,9 +147,9 @@ class CollectionEngine extends Engine
      */
     protected function ensureSoftDeletesAreHandled($builder, $query)
     {
-        if (Arr::get($builder->wheres, '__soft_deleted') === 0) {
+        if (Arr::get($builder->whereConditions, '__soft_deleted.1') === 0) {
             return $query->withoutTrashed();
-        } elseif (Arr::get($builder->wheres, '__soft_deleted') === 1) {
+        } elseif (Arr::get($builder->whereConditions, '__soft_deleted.1') === 1) {
             return $query->onlyTrashed();
         } elseif (in_array(SoftDeletes::class, class_uses_recursive(get_class($builder->model))) &&
                   config('scout.soft_delete', false)) {
