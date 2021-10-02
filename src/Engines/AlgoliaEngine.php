@@ -157,6 +157,7 @@ class AlgoliaEngine extends Engine
     {
         $wheres = collect($builder->whereConditions)->map(function ($operation, $key) {
             [$operator,  $value] = $operation;
+
             return $key.$operator.$value;
         })->values();
 
