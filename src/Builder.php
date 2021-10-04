@@ -49,6 +49,8 @@ class Builder
     /**
      * The "where" constraints added to the query.
      *
+     * @deprecated 10.0
+     *
      * @var array
      */
     public $wheres = [];
