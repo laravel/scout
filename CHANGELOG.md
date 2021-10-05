@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.2.10...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.3.0...9.x)
+
+
+## [v9.3.0 (2021-10-05)](https://github.com/laravel/scout/compare/v9.2.10...v9.3.0)
+
+### Added
+- Add simplePaginateRaw query ([#534](https://github.com/laravel/scout/pull/534))
 
 
 ## [v9.2.10 (2021-09-28)](https://github.com/laravel/scout/compare/v9.2.9...v9.2.10)
