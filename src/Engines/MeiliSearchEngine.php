@@ -158,7 +158,7 @@ class MeiliSearchEngine extends Engine
     {
 
         $filters = collect($builder->whereConditions)->map(function ($operations, $key) {
-            return collect($operations)->map(function($operation) use ($key) {
+            return collect($operations)->map(function ($operation) use ($key) {
 
                 [$operator,  $value] = $operation;
 
