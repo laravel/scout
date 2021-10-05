@@ -97,6 +97,7 @@ class MeiliSearchEngine extends Engine
         return $this->performSearch($builder, array_filter([
             'filters' => $this->filters($builder),
             'limit' => $builder->limit,
+            'sort' => $this->sorters($builder),
         ]));
     }
 
@@ -181,6 +182,19 @@ class MeiliSearchEngine extends Engine
         return $filters->values()->implode(' AND ');
     }
 
+    /**
+     * Get the sort array for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
+     */
+    protected function sorters(Builder $builder): array
+    {
+        return collect($builder->orders)->map(function(array $order) {
+            return $order['column'] .':'. $order['direction'];
+        })->toArray();
+    }
+    
     /**
      * Pluck and return the primary keys of the given results.
      *
