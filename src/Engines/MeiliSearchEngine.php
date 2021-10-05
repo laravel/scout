@@ -156,10 +156,8 @@ class MeiliSearchEngine extends Engine
      */
     protected function filters(Builder $builder)
     {
-
         $filters = collect($builder->whereConditions)->map(function ($operations, $key) {
             return collect($operations)->map(function ($operation) use ($key) {
-
                 [$operator,  $value] = $operation;
 
                 if (is_bool($value)) {
@@ -170,7 +168,6 @@ class MeiliSearchEngine extends Engine
 
                 return sprintf('%s%s"%s"', $key, $operator, $value);
             });
-
         })->flatten();
 
         foreach ($builder->whereIns as $key => $values) {
