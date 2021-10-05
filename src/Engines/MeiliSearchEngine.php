@@ -190,7 +190,7 @@ class MeiliSearchEngine extends Engine
      */
     protected function sorters(Builder $builder): array
     {
-        return collect($builder->orders)->map(function(array $order) {
+        return collect($builder->orders)->map(function (array $order) {
             return $order['column'].':'.$order['direction'];
         })->toArray();
     }
