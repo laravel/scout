@@ -156,17 +156,22 @@ class MeiliSearchEngine extends Engine
      */
     protected function filters(Builder $builder)
     {
-        $filters = collect($builder->whereConditions)->map(function ($operation, $key) {
-            [$operator,  $value] = $operation;
 
-            if (is_bool($value)) {
-                return sprintf('%s%s%s', $key, $operator, $value ? 'true' : 'false');
-            } elseif (is_numeric($value)) {
-                return sprintf('%s%s%s', $key, $operator, $value);
-            }
+        $filters = collect($builder->whereConditions)->map(function ($operations, $key) {
+            return collect($operations)->map(function($operation) use($key){
 
-            return sprintf('%s%s"%s"', $key, $operator, $value);
-        });
+                [$operator,  $value] = $operation;
+
+                if (is_bool($value)) {
+                    return sprintf('%s%s%s', $key, $operator, $value ? 'true' : 'false');
+                } elseif (is_numeric($value)) {
+                    return sprintf('%s%s%s', $key, $operator, $value);
+                }
+
+                return sprintf('%s%s"%s"', $key, $operator, $value);
+            });
+
+        })->flatten();
 
         foreach ($builder->whereIns as $key => $values) {
             $filters->push(sprintf('(%s)', collect($values)->map(function ($value) use ($key) {

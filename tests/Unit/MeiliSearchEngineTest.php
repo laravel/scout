@@ -401,6 +401,23 @@ class MeiliSearchEngineTest extends TestCase
         $engine->search($builder);
     }
 
+    public function test_where_conditions_can_operate_on_the_same_field()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+        $builder->where('foo', '>', 1);
+        $builder->where('foo', '<', 10);
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter' => 'foo>1 AND foo<10',
+            'limit' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeiliSearchEngine($client);
+        $engine->search($builder);
+    }
+
     public function test_where_conditions_can_be_numeric_or_boolean()
     {
         $builder = new Builder(new SearchableModel(), '');

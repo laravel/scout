@@ -131,7 +131,7 @@ class Builder
             $operator = '=';
         }
         $this->wheres[$field] = $value;
-        $this->whereConditions[$field] = [$operator, $value];
+        $this->whereConditions[$field] = \array_merge($this->whereConditions[$field] ?? [], [[$operator, $value]]);
 
         return $this;
     }

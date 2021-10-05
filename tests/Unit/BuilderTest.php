@@ -138,6 +138,6 @@ class BuilderTest extends TestCase
     {
         $builder = new Builder($model = m::mock(), 'zonda', null, true);
 
-        $this->assertSame(['=', 0], $builder->whereConditions['__soft_deleted']);
+        $this->assertSame([['=', 0]], $builder->whereConditions['__soft_deleted']);
     }
 }
