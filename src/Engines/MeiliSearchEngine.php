@@ -182,7 +182,25 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
+     * Pluck and the given results with the given primary key name.
+     *
+     * @param  mixed  $results
+     * @param  string  $primaryKey
+     * @return \Illuminate\Support\Collection
+     */
+    public function mapIdsFrom($results, $primaryKey)
+    {
+        if (0 === count($results['hits'])) {
+            return collect();
+        }
+
+        return collect($results['hits'])->pluck($primaryKey)->values();
+    }
+
+    /**
      * Pluck and return the primary keys of the given results.
+     * This expects the first item of each search item array to be the primary key.
+     * Use mapIdsFrom() instead to get the correct results based on a given primary key.
      *
      * @param  mixed  $results
      * @return \Illuminate\Support\Collection

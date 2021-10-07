@@ -41,6 +41,18 @@ abstract class Engine
     abstract public function paginate(Builder $builder, $perPage, $page);
 
     /**
+     * Pluck and return the primary keys of the given results with the primary key name.
+     *
+     * @param  mixed  $results
+     * @param  string  $primaryKey
+     * @return \Illuminate\Support\Collection
+     */
+    public function mapIdsFrom($results, $primaryKey)
+    {
+        return $this->mapIds($results);
+    }
+
+    /**
      * Pluck and return the primary keys of the given results.
      *
      * @param  mixed  $results
