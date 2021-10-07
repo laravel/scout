@@ -102,6 +102,18 @@ abstract class Engine
     abstract public function deleteIndex($name);
 
     /**
+     * Pluck and return the primary keys of the given results using the given key name.
+     *
+     * @param  mixed  $results
+     * @param  string  $key
+     * @return \Illuminate\Support\Collection
+     */
+    public function mapIdsFrom($results, $key)
+    {
+        return $this->mapIds($results);
+    }
+
+    /**
      * Get the results of the query as a Collection of primary keys.
      *
      * @param  \Laravel\Scout\Builder  $builder
