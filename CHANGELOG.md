@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.3.0...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.3.1...master)
+
+
+## [v9.3.1 (2021-10-12)](https://github.com/laravel/scout/compare/v9.3.0...v9.3.1)
+
+### Fixed
+- Return correct output of mapIds method for MeiliSearch ([#538](https://github.com/laravel/scout/pull/538))
 
 
 ## [v9.3.0 (2021-10-05)](https://github.com/laravel/scout/compare/v9.2.10...v9.3.0)

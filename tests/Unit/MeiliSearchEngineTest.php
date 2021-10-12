@@ -123,11 +123,46 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $engine = new MeiliSearchEngine($client);
 
-        $results = $engine->mapIds([
+        $results = $engine->mapIdsFrom([
             'nbHits' => 0, 'hits' => [],
-        ]);
+        ], 'id');
 
         $this->assertEquals(0, count($results));
+    }
+
+    public function test_map_ids_returns_correct_values_of_primary_key()
+    {
+        $client = m::mock(Client::class);
+        $engine = new MeiliSearchEngine($client);
+
+        $results = $engine->mapIdsFrom([
+            'nbHits' => 5,
+            'hits' => [
+                [
+                    'some_field' => 'something',
+                    'id' => 1,
+                ],
+                [
+                    'some_field' => 'foo',
+                    'id' => 2,
+                ],
+                [
+                    'some_field' => 'bar',
+                    'id' => 3,
+                ],
+                [
+                    'some_field' => 'baz',
+                    'id' => 4,
+                ],
+            ],
+        ], 'id');
+
+        $this->assertEquals($results->all(), [
+            1,
+            2,
+            3,
+            4,
+        ]);
     }
 
     public function test_map_correctly_maps_results_to_models()
