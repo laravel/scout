@@ -53,6 +53,8 @@ class MeiliSearchEngine extends Engine
 
         $index = $this->meilisearch->index($models->first()->searchableAs());
 
+        $models->first()->loadSearchableRelations($models);
+
         if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
             $models->each->pushSoftDeleteMetadata();
         }

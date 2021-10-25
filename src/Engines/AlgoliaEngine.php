@@ -53,6 +53,8 @@ class AlgoliaEngine extends Engine
 
         $index = $this->algolia->initIndex($models->first()->searchableAs());
 
+        $models->first()->loadSearchableRelations($models);
+
         if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
             $models->each->pushSoftDeleteMetadata();
         }

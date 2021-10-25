@@ -160,6 +160,20 @@ trait Searchable
     }
 
     /**
+     * Loads all searchable relations for all models using eager loading
+     */
+    public function loadSearchableRelations($models)
+    {
+        $relationshipsQuery = $models
+            ->first()
+            ->newQueryWithoutRelationships()
+            ->tap(function($query) use ($models) {
+                $models->first()->makeAllSearchableUsing($query);
+            });
+        $relationshipsQuery->eagerLoadRelations($models->all());
+    }
+
+    /**
      * Make the given model instance searchable.
      *
      * @return void
