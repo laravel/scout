@@ -160,7 +160,7 @@ trait Searchable
     }
 
     /**
-     * Loads all searchable relations for all models using eager loading
+     * Loads all searchable relations for all models using eager loading.
      */
     public function loadSearchableRelations($models)
     {
