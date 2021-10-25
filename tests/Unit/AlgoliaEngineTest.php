@@ -245,12 +245,4 @@ class AlgoliaCustomKeySearchableModel extends SearchableModel
     {
         return 'my-algolia-key.'.$this->getKey();
     }
-
-    public function newQueryWithoutRelationships()
-    {
-        $mock = m::mock(Builder::class);
-        $mock->shouldReceive('tap')->andReturnSelf();
-
-        return $mock;
-    }
 }
