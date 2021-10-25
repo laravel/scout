@@ -167,7 +167,7 @@ trait Searchable
         $relationshipsQuery = $models
             ->first()
             ->newQueryWithoutRelationships()
-            ->tap(function($query) use ($models) {
+            ->tap(function ($query) use ($models) {
                 $models->first()->makeAllSearchableUsing($query);
             });
         $relationshipsQuery->eagerLoadRelations($models->all());
