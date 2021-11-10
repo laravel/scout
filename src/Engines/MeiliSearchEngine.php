@@ -62,7 +62,11 @@ class MeiliSearchEngine extends Engine
                 return;
             }
 
-            return array_merge($searchableData, $model->scoutMetadata());
+            return array_merge(
+                [$model->getScoutKeyName() => $model->getScoutKey()],
+                $searchableData,
+                $model->scoutMetadata()
+            );
         })->filter()->values()->all();
 
         if (! empty($objects)) {
@@ -203,7 +207,7 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
-     * Pluck and the given results with the given primary key name.
+     * Pluck the given results with the given primary key name.
      *
      * @param  mixed  $results
      * @param  string  $key

@@ -275,10 +275,13 @@ class MeiliSearchEngineTest extends TestCase
     {
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('addDocuments')->with([['id' => 'my-meilisearch-key.1']], 'id');
+        $index->shouldReceive('addDocuments')->once()->with([[
+            'meilisearch-key' => 'my-meilisearch-key.5',
+            'id' => 5,
+        ]], 'meilisearch-key');
 
         $engine = new MeiliSearchEngine($client);
-        $engine->update(Collection::make([new MeiliSearchCustomKeySearchableModel()]));
+        $engine->update(Collection::make([new MeiliSearchCustomKeySearchableModel(['id' => 5])]));
     }
 
     public function test_flush_a_model_with_a_custom_meilisearch_key()
@@ -425,5 +428,10 @@ class MeiliSearchCustomKeySearchableModel extends SearchableModel
     public function getScoutKey()
     {
         return 'my-meilisearch-key.'.$this->getKey();
+    }
+
+    public function getScoutKeyName()
+    {
+        return 'meilisearch-key';
     }
 }
