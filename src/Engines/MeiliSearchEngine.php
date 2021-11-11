@@ -62,7 +62,11 @@ class MeiliSearchEngine extends Engine
                 return;
             }
 
-            return array_merge($searchableData, $model->scoutMetadata());
+            return array_merge(
+                [$model->getKeyName() => $model->getScoutKey()],
+                $searchableData,
+                $model->scoutMetadata()
+            );
         })->filter()->values()->all();
 
         if (! empty($objects)) {
