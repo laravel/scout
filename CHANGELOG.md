@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.3.1...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.3.2...9.x)
+
+
+## [v9.3.2 (2021-11-16)](https://github.com/laravel/scout/compare/v9.3.1...v9.3.2)
+
+### Fixed
+- Fix issues for users providing searchable array without primary key ([#547](https://github.com/laravel/scout/pull/547))
 
 
 ## [v9.3.1 (2021-10-12)](https://github.com/laravel/scout/compare/v9.3.0...v9.3.1)
