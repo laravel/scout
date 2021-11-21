@@ -37,6 +37,13 @@ class ModelObserver
     protected static $syncingDisabledFor = [];
 
     /**
+     * The class names that syncing with queue is disabled for.
+     *
+     * @var array
+     */
+    protected static $queueDisabledFor = [];
+
+    /**
      * Create a new observer instance.
      *
      * @return void
@@ -80,6 +87,41 @@ class ModelObserver
         $class = is_object($class) ? get_class($class) : $class;
 
         return isset(static::$syncingDisabledFor[$class]);
+    }
+
+    /**
+     * Enable syncing with queue for the given class.
+     *
+     * @param  string  $class
+     * @return void
+     */
+    public static function enableQueueFor($class)
+    {
+        unset(static::$queueDisabledFor[$class]);
+    }
+
+    /**
+     * Disable syncing with queue for the given class.
+     *
+     * @param  string  $class
+     * @return void
+     */
+    public static function disableQueueFor($class)
+    {
+        static::$queueDisabledFor[$class] = true;
+    }
+
+    /**
+     * Determine if syncing with queue is disabled for the given class or model.
+     *
+     * @param  object|string  $class
+     * @return bool
+     */
+    public static function queueDisabledFor($class)
+    {
+        $class = is_object($class) ? get_class($class) : $class;
+
+        return isset(static::$queueDisabledFor[$class]);
     }
 
     /**

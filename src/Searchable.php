@@ -58,7 +58,7 @@ trait Searchable
             return;
         }
 
-        if (! config('scout.queue')) {
+        if (! config('scout.queue') || ModelObserver::queueDisabledFor($models->first())) {
             return $models->first()->searchableUsing()->update($models);
         }
 
@@ -79,7 +79,7 @@ trait Searchable
             return;
         }
 
-        if (! config('scout.queue')) {
+        if (! config('scout.queue') || ModelObserver::queueDisabledFor($models->first())) {
             return $models->first()->searchableUsing()->delete($models);
         }
 
@@ -278,6 +278,43 @@ trait Searchable
             return $callback();
         } finally {
             static::enableSearchSyncing();
+        }
+    }
+
+    /**
+     * Enable search syncing using queue for this model.
+     *
+     * @return void
+     */
+    public static function enableSearchQueue()
+    {
+        ModelObserver::enableQueueFor(get_called_class());
+    }
+
+    /**
+     * Disable search syncing using queue for this model.
+     *
+     * @return void
+     */
+    public static function disableSearchQueue()
+    {
+        ModelObserver::disableQueueFor(get_called_class());
+    }
+
+    /**
+     * Temporarily disable search syncing using queue for the given callback.
+     *
+     * @param  callable  $callback
+     * @return mixed
+     */
+    public static function syncToSearchWithoutQueue($callback)
+    {
+        static::disableSearchQueue();
+
+        try {
+            return $callback();
+        } finally {
+            static::enableSearchQueue();
         }
     }
 
