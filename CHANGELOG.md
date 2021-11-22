@@ -1,6 +1,24 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.2.10...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.3.2...master)
+
+
+## [v9.3.2 (2021-11-16)](https://github.com/laravel/scout/compare/v9.3.1...v9.3.2)
+
+### Fixed
+- Fix issues for users providing searchable array without primary key ([#547](https://github.com/laravel/scout/pull/547))
+
+
+## [v9.3.1 (2021-10-12)](https://github.com/laravel/scout/compare/v9.3.0...v9.3.1)
+
+### Fixed
+- Return correct output of mapIds method for MeiliSearch ([#538](https://github.com/laravel/scout/pull/538))
+
+
+## [v9.3.0 (2021-10-05)](https://github.com/laravel/scout/compare/v9.2.10...v9.3.0)
+
+### Added
+- Add simplePaginateRaw query ([#534](https://github.com/laravel/scout/pull/534))
 
 
 ## [v9.2.10 (2021-09-28)](https://github.com/laravel/scout/compare/v9.2.9...v9.2.10)
