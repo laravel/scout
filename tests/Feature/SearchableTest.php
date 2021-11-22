@@ -100,7 +100,7 @@ class SearchableTest extends TestCase
 
         $model = new SearchableModel;
 
-        $model->syncToSearchWithoutQueue(function() use ($model) {
+        $model->syncToSearchWithoutQueue(function () use ($model) {
             $model->searchable();
 
             Queue::assertNotPushed(MakeSearchable::class);
