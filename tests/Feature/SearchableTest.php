@@ -92,6 +92,21 @@ class SearchableTest extends TestCase
         Scout::removeFromSearchUsing(RemoveFromSearch::class);
     }
 
+    public function test_job_not_pushed_to_queue_when_using_sync_to_search_without_queue()
+    {
+        Queue::fake();
+
+        config()->set('scout.queue', true);
+
+        $model = new SearchableModel;
+
+        $model->syncToSearchWithoutQueue(function() use ($model) {
+            $model->searchable();
+
+            Queue::assertNotPushed(MakeSearchable::class);
+        });
+    }
+
     public function test_was_searchable_on_model_without_soft_deletes()
     {
         $model = new SearchableModel;
