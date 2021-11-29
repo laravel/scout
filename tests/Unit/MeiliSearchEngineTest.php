@@ -364,6 +364,34 @@ class MeiliSearchEngineTest extends TestCase
         $engine->search($builder);
     }
 
+    public function test_custom_search_receives_builder_instance()
+    {
+        $builder = new Builder(
+            new SearchableModel(),
+            '',
+            function ($meilisearchIndex, $query, $options, $builder) {
+                $options['sort'] = collect($builder->orders)->map(function ($order) {
+                    return $order['column'].':'.$order['direction'];
+                })->toArray();
+
+                return $meilisearchIndex->rawSearch($query, $options);
+            });
+        $builder->orderBy('foo');
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->with($builder->query, array_filter([
+            'filters' => '',
+            'limit' => $builder->limit,
+            'sort' => [
+                'foo:asc',
+            ],
+        ]))->andReturn([]);
+
+        $engine = new MeiliSearchEngine($client);
+        $engine->search($builder);
+    }
+
     public function test_where_conditions_are_applied()
     {
         $builder = new Builder(new SearchableModel(), '');

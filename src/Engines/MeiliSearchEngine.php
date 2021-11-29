@@ -143,7 +143,8 @@ class MeiliSearchEngine extends Engine
                 $builder->callback,
                 $meilisearch,
                 $builder->query,
-                $searchParams
+                $searchParams,
+                $builder,
             );
 
             return $result instanceof SearchResult ? $result->getRaw() : $result;

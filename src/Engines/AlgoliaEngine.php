@@ -140,7 +140,8 @@ class AlgoliaEngine extends Engine
                 $builder->callback,
                 $algolia,
                 $builder->query,
-                $options
+                $options,
+                $builder,
             );
         }
 
