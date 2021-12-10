@@ -167,7 +167,7 @@ class CollectionEngine extends Engine
         $results = $results['results'];
 
         return count($results) > 0
-                    ? collect($results)->pluck($results[0]->getKeyName())->values()
+                    ? collect($results)->pluck(array_pop($results)->getKeyName())->values()
                     : collect();
     }
 
