@@ -7,6 +7,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Traits\Macroable;
 
+/**
+ * @template TModel of \Illuminate\Database\Eloquent\Model
+ */
 class Builder
 {
     use Macroable;
@@ -14,7 +17,7 @@ class Builder
     /**
      * The model instance.
      *
-     * @var \Illuminate\Database\Eloquent\Model
+     * @var \Illuminate\Database\Eloquent\Model|TModel
      */
     public $model;
 
@@ -77,7 +80,7 @@ class Builder
     /**
      * Create a new search builder instance.
      *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  \Illuminate\Database\Eloquent\Model|TModel  $model
      * @param  string  $query
      * @param  \Closure|null  $callback
      * @param  bool  $softDelete
@@ -255,7 +258,7 @@ class Builder
     /**
      * Get the first result from the search.
      *
-     * @return \Illuminate\Database\Eloquent\Model
+     * @return \Illuminate\Database\Eloquent\Model|TModel
      */
     public function first()
     {
@@ -265,7 +268,7 @@ class Builder
     /**
      * Get the results of the search.
      *
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return \Illuminate\Database\Eloquent\Collection<array-key, \Illuminate\Database\Eloquent\Model|TModel>
      */
     public function get()
     {
@@ -275,7 +278,7 @@ class Builder
     /**
      * Get the results of the search as a "lazy collection" instance.
      *
-     * @return \Illuminate\Support\LazyCollection
+     * @return \Illuminate\Support\LazyCollection<array-key, \Illuminate\Database\Eloquent\Model|TModel>
      */
     public function cursor()
     {
