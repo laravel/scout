@@ -3,11 +3,13 @@
 namespace Laravel\Scout\Tests\Unit;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\MeiliSearchEngine;
 use Laravel\Scout\Tests\Fixtures\EmptySearchableModel;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use Laravel\Scout\Tests\Fixtures\SearchableUserModel;
 use Laravel\Scout\Tests\Fixtures\SoftDeletedEmptySearchableModel;
 use MeiliSearch\Client;
 use MeiliSearch\Endpoints\Indexes;
@@ -33,6 +35,45 @@ class MeiliSearchEngineTest extends TestCase
         $engine->update(Collection::make([new SearchableModel()]));
     }
 
+    public function test_update_adds_objects_to_multiple_indexes()
+    {
+        $client = m::mock(Client::class);
+
+        $client->shouldReceive('index')
+            ->with('table')
+            ->andReturn($index = m::mock(Indexes::class));
+
+        $index->shouldReceive('addDocuments')
+            ->with([
+                [
+                    'id' => 1,
+                ],
+                'id',
+            ]);
+
+        $client->shouldReceive('index')
+            ->with('users')
+            ->andReturn($index = m::mock(Indexes::class));
+
+        $index->shouldReceive('addDocuments')
+            ->with([
+                [
+                    'id' => 1,
+                ],
+                'id',
+            ]);
+
+        $engine = new MeiliSearchEngine($client);
+        $engine->update(Collection::make([
+            new SearchableModel(),
+            m::mock(SearchableModel::class)
+                ->makePartial()
+                ->shouldReceive('searchableAs')
+                ->andReturn('users')
+                ->getMock()
+        ]));
+    }
+
     public function test_delete_removes_objects_to_index()
     {
         $client = m::mock(Client::class);
@@ -42,6 +83,34 @@ class MeiliSearchEngineTest extends TestCase
         $engine = new MeiliSearchEngine($client);
         $engine->delete(Collection::make([new SearchableModel(['id' => 1])]));
     }
+
+    public function test_delete_removes_objects_to_multiple_indexes()
+    {
+        $client = m::mock(Client::class);
+
+        $client->shouldReceive('index')
+            ->with('table')
+            ->andReturn($index = m::mock(Indexes::class));
+
+        $index->shouldReceive('deleteDocuments')->with([1]);
+
+        $client->shouldReceive('index')
+            ->with('users')
+            ->andReturn($index = m::mock(Indexes::class));
+
+        $index->shouldReceive('deleteDocuments')->with([0]);
+
+        $engine = new MeiliSearchEngine($client);
+        $engine->delete(Collection::make([
+            new SearchableModel(['id' => 1]),
+            m::mock(SearchableModel::class)
+                ->makePartial()
+                ->shouldReceive('searchableAs')
+                ->andReturn('users')
+                ->getMock()
+        ]));
+    }
+
 
     public function test_search_sends_correct_parameters_to_meilisearch()
     {
