@@ -40,55 +40,67 @@ class MeiliSearchEngine extends Engine
     /**
      * Update the given model in the index.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $collection
      * @return void
      *
      * @throws \MeiliSearch\Exceptions\ApiException
      */
-    public function update($models)
+    public function update($collection)
     {
-        if ($models->isEmpty()) {
+        if ($collection->isEmpty()) {
             return;
         }
 
-        $index = $this->meilisearch->index($models->first()->searchableAs());
+        $groupedByIndex = $collection->groupBy(function ($model) {
+            return $model->searchableAs();
+        });
 
-        if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
-            $models->each->pushSoftDeleteMetadata();
-        }
+        foreach ($groupedByIndex as $index => $models) {
+            $index = $this->meilisearch->index($index);
 
-        $objects = $models->map(function ($model) {
-            if (empty($searchableData = $model->toSearchableArray())) {
-                return;
+            if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
+                $models->each->pushSoftDeleteMetadata();
             }
 
-            return array_merge(
-                [$model->getKeyName() => $model->getScoutKey()],
-                $searchableData,
-                $model->scoutMetadata()
-            );
-        })->filter()->values()->all();
+            $objects = $models->map(function ($model) {
+                if (empty($searchableData = $model->toSearchableArray())) {
+                    return;
+                }
 
-        if (! empty($objects)) {
-            $index->addDocuments($objects, $models->first()->getKeyName());
+                return array_merge(
+                    [$model->getKeyName() => $model->getScoutKey()],
+                    $searchableData,
+                    $model->scoutMetadata()
+                );
+            })->filter()->values()->all();
+
+            if (!empty($objects)) {
+                $index->addDocuments($objects, $models->first()->getKeyName());
+            }
         }
     }
 
     /**
      * Remove the given model from the index.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $collection
      * @return void
      */
-    public function delete($models)
+    public function delete($collection)
     {
-        $index = $this->meilisearch->index($models->first()->searchableAs());
+        $groupedByIndex = $collection->groupBy(function ($model) {
+            return $model->searchableAs();
+        });
 
-        $index->deleteDocuments(
-            $models->map->getScoutKey()
-                ->values()
-                ->all()
-        );
+        foreach ($groupedByIndex as $index => $models) {
+            $index = $this->meilisearch->index($index);
+
+            $index->deleteDocuments(
+                $models->map->getScoutKey()
+                    ->values()
+                    ->all()
+            );
+        }
     }
 
     /**
