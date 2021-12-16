@@ -40,29 +40,29 @@ class MeiliSearchEngine extends Engine
     /**
      * Update the given model in the index.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $collection
+     * @param  \Illuminate\Database\Eloquent\Collection $models
      * @return void
      *
      * @throws \MeiliSearch\Exceptions\ApiException
      */
-    public function update($collection)
+    public function update($models)
     {
-        if ($collection->isEmpty()) {
+        if ($models->isEmpty()) {
             return;
         }
 
-        $groupedByIndex = $collection->groupBy(function ($model) {
+        $groupedByIndex = $models->groupBy(function ($model) {
             return $model->searchableAs();
         });
 
-        foreach ($groupedByIndex as $index => $models) {
+        foreach ($groupedByIndex as $index => $collection) {
             $index = $this->meilisearch->index($index);
 
-            if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
-                $models->each->pushSoftDeleteMetadata();
+            if ($this->usesSoftDelete($collection->first()) && $this->softDelete) {
+                $collection->each->pushSoftDeleteMetadata();
             }
 
-            $objects = $models->map(function ($model) {
+            $objects = $collection->map(function ($model) {
                 if (empty($searchableData = $model->toSearchableArray())) {
                     return;
                 }
@@ -75,7 +75,7 @@ class MeiliSearchEngine extends Engine
             })->filter()->values()->all();
 
             if (!empty($objects)) {
-                $index->addDocuments($objects, $models->first()->getKeyName());
+                $index->addDocuments($objects, $collection->first()->getKeyName());
             }
         }
     }
@@ -83,20 +83,20 @@ class MeiliSearchEngine extends Engine
     /**
      * Remove the given model from the index.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $collection
+     * @param  \Illuminate\Database\Eloquent\Collection $models
      * @return void
      */
-    public function delete($collection)
+    public function delete($models)
     {
-        $groupedByIndex = $collection->groupBy(function ($model) {
+        $groupedByIndex = $models->groupBy(function ($model) {
             return $model->searchableAs();
         });
 
-        foreach ($groupedByIndex as $index => $models) {
+        foreach ($groupedByIndex as $index => $collection) {
             $index = $this->meilisearch->index($index);
 
             $index->deleteDocuments(
-                $models->map->getScoutKey()
+                $collection->map->getScoutKey()
                     ->values()
                     ->all()
             );

@@ -40,29 +40,29 @@ class AlgoliaEngine extends Engine
     /**
      * Update the given model in the index.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $collection
+     * @param  \Illuminate\Database\Eloquent\Collection $models
      * @return void
      *
      * @throws \Algolia\AlgoliaSearch\Exceptions\AlgoliaException
      */
-    public function update($collection)
+    public function update($models)
     {
-        if ($collection->isEmpty()) {
+        if ($models->isEmpty()) {
             return;
         }
 
-        $groupedByIndex = $collection->groupBy(function ($model) {
+        $groupedByIndex = $models->groupBy(function ($model) {
             return $model->searchableAs();
         });
 
-        foreach ($groupedByIndex as $index => $models) {
+        foreach ($groupedByIndex as $index => $collection) {
             $index = $this->algolia->initIndex($index);
 
-            if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
-                $models->each->pushSoftDeleteMetadata();
+            if ($this->usesSoftDelete($collection->first()) && $this->softDelete) {
+                $collection->each->pushSoftDeleteMetadata();
             }
 
-            $objects = $models->map(function ($model) {
+            $objects = $collection->map(function ($model) {
                 if (empty($searchableData = $model->toSearchableArray())) {
                     return;
                 }
@@ -83,20 +83,20 @@ class AlgoliaEngine extends Engine
     /**
      * Remove the given model from the index.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $collection
+     * @param  \Illuminate\Database\Eloquent\Collection $models
      * @return void
      */
-    public function delete($collection)
+    public function delete($models)
     {
-        $groupedByIndex = $collection->groupBy(function ($model) {
+        $groupedByIndex = $models->groupBy(function ($model) {
             return $model->searchableAs();
         });
 
-        foreach ($groupedByIndex as $index => $models) {
+        foreach ($groupedByIndex as $index => $collection) {
             $index = $this->algolia->initIndex($index);
 
             $index->deleteObjects(
-                $models->map(function ($model) {
+                $collection->map(function ($model) {
                     return $model->getScoutKey();
                 })->values()->all()
             );
