@@ -40,55 +40,67 @@ class AlgoliaEngine extends Engine
     /**
      * Update the given model in the index.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $collection
      * @return void
      *
      * @throws \Algolia\AlgoliaSearch\Exceptions\AlgoliaException
      */
-    public function update($models)
+    public function update($collection)
     {
-        if ($models->isEmpty()) {
+        if ($collection->isEmpty()) {
             return;
         }
 
-        $index = $this->algolia->initIndex($models->first()->searchableAs());
+        $groupedByIndex = $collection->groupBy(function ($model) {
+            return $model->searchableAs();
+        });
 
-        if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
-            $models->each->pushSoftDeleteMetadata();
-        }
+        foreach ($groupedByIndex as $index => $models) {
+            $index = $this->algolia->initIndex($index);
 
-        $objects = $models->map(function ($model) {
-            if (empty($searchableData = $model->toSearchableArray())) {
-                return;
+            if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
+                $models->each->pushSoftDeleteMetadata();
             }
 
-            return array_merge(
-                ['objectID' => $model->getScoutKey()],
-                $searchableData,
-                $model->scoutMetadata()
-            );
-        })->filter()->values()->all();
+            $objects = $models->map(function ($model) {
+                if (empty($searchableData = $model->toSearchableArray())) {
+                    return;
+                }
 
-        if (! empty($objects)) {
-            $index->saveObjects($objects);
+                return array_merge(
+                    ['objectID' => $model->getScoutKey()],
+                    $searchableData,
+                    $model->scoutMetadata()
+                );
+            })->filter()->values()->all();
+
+            if (!empty($objects)) {
+                $index->saveObjects($objects);
+            }
         }
     }
 
     /**
      * Remove the given model from the index.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $models
+     * @param  \Illuminate\Database\Eloquent\Collection  $collection
      * @return void
      */
-    public function delete($models)
+    public function delete($collection)
     {
-        $index = $this->algolia->initIndex($models->first()->searchableAs());
+        $groupedByIndex = $collection->groupBy(function ($model) {
+            return $model->searchableAs();
+        });
 
-        $index->deleteObjects(
-            $models->map(function ($model) {
-                return $model->getScoutKey();
-            })->values()->all()
-        );
+        foreach ($groupedByIndex as $index => $models) {
+            $index = $this->algolia->initIndex($index);
+
+            $index->deleteObjects(
+                $models->map(function ($model) {
+                    return $model->getScoutKey();
+                })->values()->all()
+            );
+        }
     }
 
     /**
