@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.3.2...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.3.4...9.x)
+
+
+## [v9.3.4 (2021-12-23)](https://github.com/laravel/scout/compare/v9.3.2...v9.3.4)
+
+No significant changes.
 
 
 ## [v9.3.2 (2021-11-16)](https://github.com/laravel/scout/compare/v9.3.1...v9.3.2)
