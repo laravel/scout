@@ -112,17 +112,7 @@ class DatabaseEngine extends Engine
             return $models;
         }
 
-        return $models->filter(function ($model) use ($builder) {
-            if (! $model->shouldBeSearchable()) {
-                return false;
-            }
-
-            if (! $builder->query) {
-                return true;
-            }
-
-            return false;
-        })->values();
+        return $models->filter->shouldBeSearchable()->values();
     }
 
     /**
