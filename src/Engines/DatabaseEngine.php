@@ -85,24 +85,42 @@ class DatabaseEngine extends Engine
     {
         $columns = array_keys($builder->model->toSearchableArray());
 
-        $query = $builder->model->query()
-                        ->whereFulltext($columns, $builder->query)
-                        ->when(! is_null($builder->callback), function ($query) use ($builder) {
-                            call_user_func($builder->callback, $query, $builder, $builder->query);
-                        })
-                        ->when(! $builder->callback && count($builder->wheres) > 0, function ($query) use ($builder) {
-                            foreach ($builder->wheres as $key => $value) {
-                                if ($key !== '__soft_deleted') {
-                                    $query->where($key, $value);
-                                }
-                            }
-                        })
-                        ->when(! $builder->callback && count($builder->whereIns) > 0, function ($query) use ($builder) {
-                            foreach ($builder->whereIns as $key => $values) {
-                                $query->whereIn($key, $values);
-                            }
-                        })
-                        ->orderBy($builder->model->getKeyName(), 'desc');
+        $query = $builder->model->query()->where(function ($query) use ($builder, $columns) {
+            $connectionType = $builder->model->getConnection()->getDriverName();
+
+            $canSearchPrimaryKey = ctype_digit($builder->query) &&
+                                   in_array($builder->model->getKeyType(), ['int', 'integer']) &&
+                                   ($connectionType != 'pgsql' || $builder->query <= PHP_INT_MAX) &&
+                                   in_array($builder->model->getKeyName(), $columns);
+
+            if ($canSearchPrimaryKey) {
+                $query->orWhere($builder->model->getQualifiedKeyName(), $builder->query);
+            }
+
+            $likeOperator = $connectionType == 'pgsql' ? 'ilike' : 'like';
+
+            foreach ($columns as $column) {
+                $query->orWhere(
+                    $builder->model->qualifyColumn($column),
+                    $likeOperator,
+                    '%'.$builder->query.'%',
+                );
+            }
+        });
+
+        $query = $query->when(! is_null($builder->callback), function ($query) use ($builder) {
+            call_user_func($builder->callback, $query, $builder, $builder->query);
+        })->when(! $builder->callback && count($builder->wheres) > 0, function ($query) use ($builder) {
+            foreach ($builder->wheres as $key => $value) {
+                if ($key !== '__soft_deleted') {
+                    $query->where($key, '=', $value);
+                }
+            }
+        })->when(! $builder->callback && count($builder->whereIns) > 0, function ($query) use ($builder) {
+            foreach ($builder->whereIns as $key => $values) {
+                $query->whereIn($key, $values);
+            }
+        });
 
         $models = $this->ensureSoftDeletesAreHandled($builder, $query)
                         ->get()
