@@ -249,7 +249,7 @@ trait Searchable
     }
 
     /**
-     * Check if values in array are numeric
+     * Check if values in array are numeric.
      *
      * @param  array  $array
      * @return bool
