@@ -70,10 +70,8 @@ class DatabaseEngine extends Engine
      */
     public function paginate(Builder $builder, $perPage, $page)
     {
-        $models = $this->searchModels($builder, $page, $perPage);
-
         return [
-            'results' => $models,
+            'results' => $this->searchModels($builder, $page, $perPage),
             'total' => $this->buildSearchQuery($builder)->toBase()->getCountForPagination(),
         ];
     }
