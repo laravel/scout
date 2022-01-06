@@ -239,9 +239,30 @@ trait Searchable
             call_user_func($builder->queryCallback, $query);
         }
 
-        return $query->whereIn(
+        $whereIn = static::isNumericArray($ids) ?
+            'whereIntegerInRaw' :
+            'whereIn';
+
+        return $query->{$whereIn}(
             $this->getScoutKeyName(), $ids
         );
+    }
+
+    /**
+     * Check if values in array are numeric
+     *
+     * @param  array  $array
+     * @return bool
+     */
+    public static function isNumericArray($array)
+    {
+        foreach ($array as $a) {
+            if (! is_numeric($a)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
