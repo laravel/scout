@@ -88,9 +88,7 @@ class DatabaseEngine extends Engine
      */
     protected function searchModels(Builder $builder, $page = null, $perPage = null)
     {
-        $query = $this->buildSearchQuery($builder);
-
-        $models = $query->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
+        $models = $this->buildSearchQuery($builder)->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
             return $query->forPage($page, $perPage);
         })->get();
 
