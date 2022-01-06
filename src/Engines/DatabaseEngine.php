@@ -2,11 +2,11 @@
 
 namespace Laravel\Scout\Engines;
 
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
 use Illuminate\Support\LazyCollection;
-use Laravel\Scout\Attributes\FullText;
+use Laravel\Scout\Attributes\SearchUsingFullText;
+use Laravel\Scout\Attributes\SearchUsingPrefix;
 use Laravel\Scout\Builder;
 use ReflectionMethod;
 
@@ -91,6 +91,7 @@ class DatabaseEngine extends Engine
         $query = $this->initializeSearchQuery(
             $builder,
             $columns = array_keys($builder->model->toSearchableArray()),
+            $this->getPrefixColumns($builder),
             $this->getFullTextColumns($builder)
         );
 
@@ -107,37 +108,17 @@ class DatabaseEngine extends Engine
     }
 
     /**
-     * Get the full-text columns for the query.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @return array
-     */
-    protected function getFullTextColumns(Builder $builder)
-    {
-        $columns = [];
-
-        foreach ((new ReflectionMethod($builder->model, 'toSearchableArray'))->getAttributes() as $attribute) {
-            if ($attribute->getName() !== FullText::class) {
-                continue;
-            }
-
-            $columns = array_merge($columns, Arr::wrap($attribute->getArguments()[0]));
-        }
-
-        return $columns;
-    }
-
-    /**
      * Build the initial text search database query for all relevant columns.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  array  $columns
+     * @param  array  $prefixColumns
      * @param  array  $fullTextColumns
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function initializeSearchQuery(Builder $builder, array $columns, array $fullTextColumns = [])
+    protected function initializeSearchQuery(Builder $builder, array $columns, array $prefixColumns = [], array $fullTextColumns = [])
     {
-        return $builder->model->query()->where(function ($query) use ($builder, $columns, $fullTextColumns) {
+        return $builder->model->query()->where(function ($query) use ($builder, $columns, $prefixColumns, $fullTextColumns) {
             $connectionType = $builder->model->getConnection()->getDriverName();
 
             $canSearchPrimaryKey = ctype_digit($builder->query) &&
@@ -161,10 +142,9 @@ class DatabaseEngine extends Engine
                     $query->orWhere(
                         $builder->model->qualifyColumn($column),
                         $likeOperator,
-                        '%'.$builder->query.'%',
+                        in_array($column, $prefixColumns) ? $builder->query.'%' : '%'.$builder->query.'%',
                     );
                 }
-
             }
         });
     }
@@ -212,6 +192,50 @@ class DatabaseEngine extends Engine
         }
 
         return $query;
+    }
+
+    /**
+     * Get the full-text columns for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
+     */
+    protected function getFullTextColumns(Builder $builder)
+    {
+        return $this->getAttributeColumns($builder, SearchUsingFullText::class);
+    }
+
+    /**
+     * Get the full-text columns for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
+     */
+    protected function getPrefixColumns(Builder $builder)
+    {
+        return $this->getAttributeColumns($builder, SearchUsingPrefix::class);
+    }
+
+    /**
+     * Get the columns marked with a given attribute.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  string  $attributeClass
+     * @return array
+     */
+    protected function getAttributeColumns(Builder $builder, $attributeClass)
+    {
+        $columns = [];
+
+        foreach ((new ReflectionMethod($builder->model, 'toSearchableArray'))->getAttributes() as $attribute) {
+            if ($attribute->getName() !== $attributeClass) {
+                continue;
+            }
+
+            $columns = array_merge($columns, Arr::wrap($attribute->getArguments()[0]));
+        }
+
+        return $columns;
     }
 
     /**

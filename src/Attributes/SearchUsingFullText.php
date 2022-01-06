@@ -6,7 +6,7 @@ use Attribute;
 use Illuminate\Support\Arr;
 
 #[Attribute]
-class FullText
+class SearchUsingFullText
 {
     /**
      * The full-text columns.
