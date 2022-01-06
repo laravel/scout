@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Engines;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
 use Illuminate\Support\LazyCollection;
@@ -52,8 +53,8 @@ class DatabaseEngine extends Engine
         $models = $this->searchModels($builder);
 
         return [
-            'results' => $models->all(),
-            'total' => count($models),
+            'results' => $models,
+            'total' => $models->count(),
         ];
     }
 
@@ -67,11 +68,11 @@ class DatabaseEngine extends Engine
      */
     public function paginate(Builder $builder, $perPage, $page)
     {
-        $models = $this->searchModels($builder);
+        $models = $this->searchModels($builder, $page, $perPage);
 
         return [
-            'results' => $models->forPage($page, $perPage)->all(),
-            'total' => count($models),
+            'results' => $models,
+            'total' => $models->count(),
         ];
     }
 
@@ -79,13 +80,39 @@ class DatabaseEngine extends Engine
      * Get the Eloquent models for the given builder.
      *
      * @param  \Laravel\Scout\Builder  $builder
+     * @param  int|null  $page
+     * @param  int|null  $perPage
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    protected function searchModels(Builder $builder)
+    protected function searchModels(Builder $builder, $page = null, $perPage = null)
     {
-        $columns = array_keys($builder->model->toSearchableArray());
+        $query = $this->initializeSearchQuery(
+            $builder,
+            $columns = array_keys($builder->model->toSearchableArray())
+        );
 
-        $query = $builder->model->query()->where(function ($query) use ($builder, $columns) {
+        $query = $this->addAdditionalConstraints($builder, $query);
+
+        $models = $this->constrainForSoftDeletes($builder, $query)
+                        ->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
+                            return $query->forPage($page, $perPage);
+                        })->get();
+
+        return count($models) > 0
+                ? $models->filter->shouldBeSearchable()->values()
+                : $models;
+    }
+
+    /**
+     * Build the initial text search database query for all relevant columns.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  array  $columns
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function initializeSearchQuery(Builder $builder, array $columns)
+    {
+        return $builder->model->query()->where(function ($query) use ($builder, $columns) {
             $connectionType = $builder->model->getConnection()->getDriverName();
 
             $canSearchPrimaryKey = ctype_digit($builder->query) &&
@@ -107,8 +134,18 @@ class DatabaseEngine extends Engine
                 );
             }
         });
+    }
 
-        $query = $query->when(! is_null($builder->callback), function ($query) use ($builder) {
+    /**
+     * Add additional, developer defined constraints to the serach query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function addAdditionalConstraints(Builder $builder, $query)
+    {
+        return $query->when(! is_null($builder->callback), function ($query) use ($builder) {
             call_user_func($builder->callback, $query, $builder, $builder->query);
         })->when(! $builder->callback && count($builder->wheres) > 0, function ($query) use ($builder) {
             foreach ($builder->wheres as $key => $value) {
@@ -121,26 +158,16 @@ class DatabaseEngine extends Engine
                 $query->whereIn($key, $values);
             }
         });
-
-        $models = $this->ensureSoftDeletesAreHandled($builder, $query)
-                        ->get()
-                        ->values();
-
-        if (count($models) === 0) {
-            return $models;
-        }
-
-        return $models->filter->shouldBeSearchable()->values();
     }
 
     /**
-     * Ensure that soft delete handling is properly applied to the query.
+     * Ensure that soft delete constraints are properly applied to the query.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  \Illuminate\Database\Query\Builder  $query
      * @return \Illuminate\Database\Query\Builder
      */
-    protected function ensureSoftDeletesAreHandled($builder, $query)
+    protected function constrainForSoftDeletes($builder, $query)
     {
         if (Arr::get($builder->wheres, '__soft_deleted') === 0) {
             return $query->withoutTrashed();
@@ -165,7 +192,7 @@ class DatabaseEngine extends Engine
         $results = $results['results'];
 
         return count($results) > 0
-                    ? collect($results)->pluck($results[0]->getKeyName())->values()
+                    ? $results->modelKeys()
                     : collect();
     }
 
@@ -179,26 +206,7 @@ class DatabaseEngine extends Engine
      */
     public function map(Builder $builder, $results, $model)
     {
-        $results = $results['results'];
-
-        if (count($results) === 0) {
-            return $model->newCollection();
-        }
-
-        $objectIds = collect($results)
-                ->pluck($model->getKeyName())
-                ->values()
-                ->all();
-
-        $objectIdPositions = array_flip($objectIds);
-
-        return $model->getScoutModelsByIds(
-            $builder, $objectIds
-        )->filter(function ($model) use ($objectIds) {
-            return in_array($model->getScoutKey(), $objectIds);
-        })->sortBy(function ($model) use ($objectIdPositions) {
-            return $objectIdPositions[$model->getScoutKey()];
-        })->values();
+        return $results['results'];
     }
 
     /**
@@ -211,25 +219,7 @@ class DatabaseEngine extends Engine
      */
     public function lazyMap(Builder $builder, $results, $model)
     {
-        $results = $results['results'];
-
-        if (count($results) === 0) {
-            return LazyCollection::empty();
-        }
-
-        $objectIds = collect($results)
-                ->pluck($model->getKeyName())
-                ->values()->all();
-
-        $objectIdPositions = array_flip($objectIds);
-
-        return $model->queryScoutModelsByIds(
-            $builder, $objectIds
-        )->cursor()->filter(function ($model) use ($objectIds) {
-            return in_array($model->getScoutKey(), $objectIds);
-        })->sortBy(function ($model) use ($objectIdPositions) {
-            return $objectIdPositions[$model->getScoutKey()];
-        })->values();
+        return new LazyCollection($results['results']->all());
     }
 
     /**
