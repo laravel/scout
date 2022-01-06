@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
 use Illuminate\Support\LazyCollection;
+use Laravel\Scout\Attributes\FullText;
 use Laravel\Scout\Builder;
+use ReflectionMethod;
 
 class DatabaseEngine extends Engine
 {
@@ -88,7 +90,8 @@ class DatabaseEngine extends Engine
     {
         $query = $this->initializeSearchQuery(
             $builder,
-            $columns = array_keys($builder->model->toSearchableArray())
+            $columns = array_keys($builder->model->toSearchableArray()),
+            $this->getFullTextColumns($builder)
         );
 
         $query = $this->addAdditionalConstraints($builder, $query);
@@ -104,15 +107,37 @@ class DatabaseEngine extends Engine
     }
 
     /**
+     * Get the full-text columns for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
+     */
+    protected function getFullTextColumns(Builder $builder)
+    {
+        $columns = [];
+
+        foreach ((new ReflectionMethod($builder->model, 'toSearchableArray'))->getAttributes() as $attribute) {
+            if ($attribute->getName() !== FullText::class) {
+                continue;
+            }
+
+            $columns = array_merge($columns, Arr::wrap($attribute->getArguments()[0]));
+        }
+
+        return $columns;
+    }
+
+    /**
      * Build the initial text search database query for all relevant columns.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  array  $columns
+     * @param  array  $fullTextColumns
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function initializeSearchQuery(Builder $builder, array $columns)
+    protected function initializeSearchQuery(Builder $builder, array $columns, array $fullTextColumns = [])
     {
-        return $builder->model->query()->where(function ($query) use ($builder, $columns) {
+        return $builder->model->query()->where(function ($query) use ($builder, $columns, $fullTextColumns) {
             $connectionType = $builder->model->getConnection()->getDriverName();
 
             $canSearchPrimaryKey = ctype_digit($builder->query) &&
@@ -127,11 +152,19 @@ class DatabaseEngine extends Engine
             $likeOperator = $connectionType == 'pgsql' ? 'ilike' : 'like';
 
             foreach ($columns as $column) {
-                $query->orWhere(
-                    $builder->model->qualifyColumn($column),
-                    $likeOperator,
-                    '%'.$builder->query.'%',
-                );
+                if (in_array($column, $fullTextColumns)) {
+                    $query->orWhereFullText(
+                        $builder->model->qualifyColumn($column),
+                        $builder->query
+                    );
+                } else {
+                    $query->orWhere(
+                        $builder->model->qualifyColumn($column),
+                        $likeOperator,
+                        '%'.$builder->query.'%',
+                    );
+                }
+
             }
         });
     }
