@@ -239,7 +239,7 @@ trait Searchable
             call_user_func($builder->queryCallback, $query);
         }
 
-        return $query->whereIn(
+        return $query->whereIntegerInRaw(
             $this->getScoutKeyName(), $ids
         );
     }
