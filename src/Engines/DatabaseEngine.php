@@ -74,7 +74,7 @@ class DatabaseEngine extends Engine
 
         return [
             'results' => $models,
-            'total' => $models->count(),
+            'total' => $this->buildSearchQuery($builder)->toBase()->getCountForPagination(),
         ];
     }
 
@@ -88,6 +88,25 @@ class DatabaseEngine extends Engine
      */
     protected function searchModels(Builder $builder, $page = null, $perPage = null)
     {
+        $query = $this->buildSearchQuery($builder);
+
+        $models = $query->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
+            return $query->forPage($page, $perPage);
+        })->get();
+
+        return count($models) > 0
+                ? $models->filter->shouldBeSearchable()->values()
+                : $models;
+    }
+
+    /**
+     * Initialize / build the search query for the given Scout builder.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function buildSearchQuery(Builder $builder)
+    {
         $query = $this->initializeSearchQuery(
             $builder,
             $columns = array_keys($builder->model->toSearchableArray()),
@@ -95,16 +114,9 @@ class DatabaseEngine extends Engine
             $this->getFullTextColumns($builder)
         );
 
-        $query = $this->addAdditionalConstraints($builder, $query);
-
-        $models = $this->constrainForSoftDeletes($builder, $query)
-                        ->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
-                            return $query->forPage($page, $perPage);
-                        })->get();
-
-        return count($models) > 0
-                ? $models->filter->shouldBeSearchable()->values()
-                : $models;
+        return $this->constrainForSoftDeletes(
+            $builder, $this->addAdditionalConstraints($builder, $query)
+        );
     }
 
     /**
