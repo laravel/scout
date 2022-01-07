@@ -39,12 +39,20 @@ class MorphRelation extends Search
      */
     public function apply(Builder $query, $search, string $connectionType, string $prefix = '', string $suffix = '')
     {
-        $types = ! empty($this->types) ? $this->types : '*';
-
-        return $query->orWhereHasMorph($this->relation, $types, function ($query) use ($search, $connectionType, $prefix, $suffix) {
+        return $query->orWhereHasMorph($this->relation, $this->morphTypes(), function ($query) use ($search, $connectionType, $prefix, $suffix) {
             return (new Search($this->column))->apply(
                 $query, $search, $connectionType, $prefix, $suffix
             );
         });
+    }
+
+    /**
+     * Get available morph types.
+     *
+     * @return array|string
+     */
+    protected function morphTypes()
+    {
+        return ! empty($this->types) ? $this->types : '*';
     }
 }
