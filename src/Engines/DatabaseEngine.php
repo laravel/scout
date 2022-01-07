@@ -90,7 +90,7 @@ class DatabaseEngine extends Engine
             ! is_null($page) && ! is_null($perPage),
             function ($query) use ($page, $perPage) {
                 return $query->forPage($page, $perPage);
-            })->get();
+        })->orderBy($builder->model->getKeyName(), 'desc')->get();
 
         return count($models) > 0
                 ? $models->filter->shouldBeSearchable()->values()
