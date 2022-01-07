@@ -35,7 +35,7 @@ class Search
      * @param  string  $suffix
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function apply(Builder $query, string $search, string $connectionType, string $prefix = '', string $suffix = '')
+    public function apply(Builder $query, $search, string $connectionType, string $prefix = '', string $suffix = '')
     {
         return $query->orWhere(
             $this->columnName($query),
