@@ -2,6 +2,8 @@
 
 namespace Laravel\Scout\Engines\Database;
 
+use Illuminate\Database\Eloquent\Builder;
+
 class PrimaryKey extends Search
 {
     /**
