@@ -39,9 +39,9 @@ class MorphRelation extends Search
     {
         $types = ! empty($this->types) ? $this->types : '*';
 
-        return $query->orWhereHasMorph($this->relation, $types, function ($query) use ($search) {
-            return (new Search($this->column, $this->connectionType, $this->prefix, $this->suffix))->apply(
-                $query, $search
+        return $query->orWhereHasMorph($this->relation, $types, function ($query) use ($search, $connectionType, $prefix, $suffix) {
+            return (new Search($this->column))->apply(
+                $query, $search, $connectionType, $prefix, $suffix
             );
         });
     }
