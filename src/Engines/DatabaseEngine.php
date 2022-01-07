@@ -130,34 +130,19 @@ class DatabaseEngine extends Engine
     {
         return $builder->model->query()->where(function ($query) use ($builder, $columns, $prefixColumns, $fullTextColumns) {
             $connectionType = $builder->model->getConnection()->getDriverName();
-
-            $canSearchPrimaryKey = ctype_digit($builder->query) &&
-                                   in_array($builder->model->getKeyType(), ['int', 'integer']) &&
-                                   ($connectionType != 'pgsql' || $builder->query <= PHP_INT_MAX) &&
-                                   in_array($builder->model->getKeyName(), $columns);
-
-            if ($canSearchPrimaryKey) {
-                $query->orWhere($builder->model->getQualifiedKeyName(), $builder->query);
-            }
-
-            $likeOperator = $connectionType == 'pgsql' ? 'ilike' : 'like';
+            $modelKeyName = $builder->model->getKeyName();
 
             foreach ($columns as $column) {
-                if (in_array($column, $fullTextColumns)) {
-                    $query->orWhereFullText(
-                        $builder->model->qualifyColumn($column),
-                        $builder->query
-                    );
-                } else {
-                    if ($canSearchPrimaryKey && $column === $builder->model->getKeyName()) {
-                        continue;
-                    }
+                $prefix = ! in_array($column, $prefixColumns) ? '%' : '';
 
-                    $query->orWhere(
-                        $builder->model->qualifyColumn($column),
-                        $likeOperator,
-                        in_array($column, $prefixColumns) ? $builder->query.'%' : '%'.$builder->query.'%',
-                    );
+                if ($column instanceof Database\Search) {
+                    $column->apply($query, $builder->query, $connectionType, $prefix, '%');
+                } elseif (in_array($column, $fullTextColumns)) {
+                    (new Database\FullText($column))->apply($query, $builder->query, $connectionType);
+                } elseif ($column === $modelKeyName) {
+                    (new Database\PrimaryKey($column))->apply($query, $builder->query, $connectionType, $prefix, '%');
+                } else {
+                    (new Database\Search($column))->apply($query, $builder->query, $connectionType, $prefix, '%');
                 }
             }
         });
