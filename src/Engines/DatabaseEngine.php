@@ -141,6 +141,10 @@ class DatabaseEngine extends Engine
                     (new Database\FullText($column))->apply($query, $builder->query, $connectionType);
                 } elseif ($column === $modelKeyName) {
                     (new Database\PrimaryKey($column))->apply($query, $builder->query, $connectionType, $prefix, '%');
+                } elseif (strpos($column, '.') !== false) {
+                    [$relation, $columnName] = explode('.', $column, 2);
+
+                    new Database\Relation($relation, $columnName))->apply($query, $builder->query, $connectionType, $prefix, '%');
                 } else {
                     (new Database\Search($column))->apply($query, $builder->query, $connectionType, $prefix, '%');
                 }
