@@ -50,7 +50,7 @@ class CollectionEngine extends Engine
      */
     public function search(Builder $builder)
     {
-        $models = $this->searchModels($builder);
+        $models = $this->searchModels($builder)->take($builder->limit);
 
         return [
             'results' => $models->all(),

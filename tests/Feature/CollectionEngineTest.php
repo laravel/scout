@@ -102,4 +102,13 @@ class CollectionEngineTest extends TestCase
         $models = SearchableUserModel::search('laravel')->paginate();
         $this->assertCount(2, $models);
     }
+
+    public function test_limit_is_applied()
+    {
+        $models = SearchableUserModel::search('laravel')->get();
+        $this->assertCount(2, $models);
+
+        $models = SearchableUserModel::search('laravel')->take(1)->get();
+        $this->assertCount(1, $models);
+    }
 }
