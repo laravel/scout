@@ -86,9 +86,11 @@ class DatabaseEngine extends Engine
      */
     protected function searchModels(Builder $builder, $page = null, $perPage = null)
     {
-        $models = $this->buildSearchQuery($builder)->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
-            return $query->forPage($page, $perPage);
-        })->get();
+        $models = $this->buildSearchQuery($builder)->when(
+            ! is_null($page) && ! is_null($perPage),
+            function ($query) use ($page, $perPage) {
+                return $query->forPage($page, $perPage);
+            })->get();
 
         return count($models) > 0
                 ? $models->filter->shouldBeSearchable()->values()
@@ -147,6 +149,10 @@ class DatabaseEngine extends Engine
                         $builder->query
                     );
                 } else {
+                    if ($canSearchPrimaryKey && $column === $builder->model->getKeyName()) {
+                        continue;
+                    }
+
                     $query->orWhere(
                         $builder->model->qualifyColumn($column),
                         $likeOperator,
