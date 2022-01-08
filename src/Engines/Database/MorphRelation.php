@@ -4,7 +4,7 @@ namespace Laravel\Scout\Engines\Database;
 
 use Illuminate\Database\Eloquent\Builder;
 
-class MorphRelation extends Search
+class MorphRelation extends Relation
 {
     /**
      * The available morph types.
@@ -35,13 +35,14 @@ class MorphRelation extends Search
      * @param  string  $connectionType
      * @param  string  $prefix
      * @param  string  $suffix
+     * @param  string  $whereOperator
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function apply(Builder $query, $search, string $connectionType, string $prefix = '', string $suffix = '')
+    public function apply(Builder $query, $search, string $connectionType, string $prefix = '', string $suffix = '', string $whereOperator = 'orWhere')
     {
-        return $query->orWhereHasMorph($this->relation, $this->morphTypes(), function ($query) use ($search, $connectionType, $prefix, $suffix) {
+        return $query->{$whereOperator.'HasMorph'}($this->relation, $this->morphTypes(), function ($query) use ($search, $connectionType, $prefix, $suffix) {
             return (new Search($this->column))->apply(
-                $query, $search, $connectionType, $prefix, $suffix
+                $query, $search, $connectionType, 'where', $prefix, $suffix
             );
         });
     }

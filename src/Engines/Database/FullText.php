@@ -14,12 +14,13 @@ class PrimaryKey extends Search
      * @param  string  $connectionType
      * @param  string  $prefix
      * @param  string  $suffix
+     * @param  string  $whereOperator
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function apply(Builder $query, $search, string $connectionType, string $prefix = '', string $suffix = '')
+    public function apply(Builder $query, $search, string $connectionType, string $prefix = '', string $suffix = '', string $whereOperator = 'orWhere')
     {
         if (in_array($connectionType, ['mysql', 'pgsql'])) {
-            $query->orWhereFullText(
+            $query->{$whereOperator.'FullText'}(
                 $this->columnName($query), $search
             );
         }

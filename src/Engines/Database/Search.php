@@ -33,11 +33,12 @@ class Search
      * @param  string  $connectionType
      * @param  string  $prefix
      * @param  string  $suffix
+     * @param  string  $whereOperator
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function apply(Builder $query, $search, string $connectionType, string $prefix = '', string $suffix = '')
+    public function apply(Builder $query, $search, string $connectionType, string $prefix = '', string $suffix = '', string $whereOperator = 'orWhere')
     {
-        return $query->orWhere(
+        return $query->{$whereOperator}(
             $this->columnName($query),
             $connectionType == 'pgsql' ? 'ilike' : 'like',
             $prefix.$search.$suffix
