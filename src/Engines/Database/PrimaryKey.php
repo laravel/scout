@@ -23,7 +23,7 @@ class PrimaryKey extends Search
     public function __construct($column, $maxPrimaryKeySize = PHP_INT_MAX)
     {
         $this->column = $column;
-        $this->maxPrimaryKeySize = $maxPrimaryKeySize ?? $this->maxPrimaryKeySize;
+        $this->maxPrimaryKeySize = $maxPrimaryKeySize;
     }
 
     /**
