@@ -252,6 +252,10 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
     {
         $columns = [];
 
+        if (PHP_MAJOR_VERSION < 8) {
+            return [];
+        }
+
         foreach ((new ReflectionMethod($builder->model, 'toSearchableArray'))->getAttributes() as $attribute) {
             if ($attribute->getName() !== $attributeClass) {
                 continue;
