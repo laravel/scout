@@ -8,9 +8,10 @@ use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Attributes\SearchUsingFullText;
 use Laravel\Scout\Attributes\SearchUsingPrefix;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Contracts\PaginatesEloquentModels;
 use ReflectionMethod;
 
-class DatabaseEngine extends Engine
+class DatabaseEngine extends Engine implements PaginatesEloquentModels
 {
     /**
      * Create a new engine instance.
@@ -61,19 +62,33 @@ class DatabaseEngine extends Engine
     }
 
     /**
-     * Perform the given search on the engine.
+     * Paginate the given search on the engine.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $perPage
      * @param  int  $page
-     * @return mixed
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function paginate(Builder $builder, $perPage, $page)
     {
-        return [
-            'results' => $this->searchModels($builder, $page, $perPage),
-            'total' => $this->buildSearchQuery($builder)->toBase()->getCountForPagination(),
-        ];
+        return $this->buildSearchQuery($builder)
+                ->orderBy($builder->model->getKeyName(), 'desc')
+                ->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /**
+     * Paginate the given search on the engine using simple pagination.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  int  $perPage
+     * @param  int  $page
+     * @return \Illuminate\Contracts\Pagination\Paginator
+     */
+    public function simplePaginate(Builder $builder, $perPage, $page)
+    {
+        return $this->buildSearchQuery($builder)
+                ->orderBy($builder->model->getKeyName(), 'desc')
+                ->simplePaginate($perPage, ['*'], 'page', $page);
     }
 
     /**
@@ -86,15 +101,11 @@ class DatabaseEngine extends Engine
      */
     protected function searchModels(Builder $builder, $page = null, $perPage = null)
     {
-        $models = $this->buildSearchQuery($builder)->when(
+        return $this->buildSearchQuery($builder)->when(
             ! is_null($page) && ! is_null($perPage),
             function ($query) use ($page, $perPage) {
                 return $query->forPage($page, $perPage);
             })->orderBy($builder->model->getKeyName(), 'desc')->get();
-
-        return count($models) > 0
-                ? $models->filter->shouldBeSearchable()->values()
-                : $models;
     }
 
     /**
