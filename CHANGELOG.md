@@ -1,6 +1,17 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.3.4...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.4.0...9.x)
+
+
+## [v9.4.0 (2022-01-12)](https://github.com/laravel/scout/compare/v9.3.4...v9.4.0)
+
+### Added
+- Add a DatabaseEngine ([#564](https://github.com/laravel/scout/pull/564))
+
+### Changed
+- Optimize whereIn to use whereIntegerInRaw when primaryKey is integer ([#568](https://github.com/laravel/scout/pull/568))
+- Add limit to collection engine ([#569](https://github.com/laravel/scout/pull/569))
+- Laravel 9 support ([#571](https://github.com/laravel/scout/pull/571))
 
 
 ## [v9.3.4 (2021-12-23)](https://github.com/laravel/scout/compare/v9.3.2...v9.3.4)
