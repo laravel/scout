@@ -97,7 +97,7 @@ class MeiliSearchEngine extends Engine
         return $this->performSearch($builder, array_filter([
             'filters' => $this->filters($builder),
             'limit' => $builder->limit,
-            'sort' => $this->sorters($builder),
+            'sort' => $this->buildSortFromOrderByClauses($builder),
         ]));
     }
 
@@ -188,7 +188,7 @@ class MeiliSearchEngine extends Engine
      * @param  \Laravel\Scout\Builder  $builder
      * @return array
      */
-    protected function sorters(Builder $builder): array
+    protected function buildSortFromOrderByClauses(Builder $builder): array
     {
         return collect($builder->orders)->map(function (array $order) {
             return $order['column'].':'.$order['direction'];
