@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.4.0...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.4.1...9.x)
+
+
+## [v9.4.1 (2022-01-14)](https://github.com/laravel/scout/compare/v9.4.0...v9.4.1)
+
+### Fixed
+- Fix return for `paginateRaw` ([#574](https://github.com/laravel/scout/pull/574))
 
 
 ## [v9.4.0 (2022-01-12)](https://github.com/laravel/scout/compare/v9.3.4...v9.4.0)
