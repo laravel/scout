@@ -414,7 +414,7 @@ class Builder
 
         $results = $engine->paginate($this, $perPage, $page);
 
-        $paginator = Container::getInstance()->makeWith(LengthAwarePaginator::class, [
+        return Container::getInstance()->makeWith(LengthAwarePaginator::class, [
             'items' => $results,
             'total' => $this->getTotalCount($results),
             'perPage' => $perPage,
