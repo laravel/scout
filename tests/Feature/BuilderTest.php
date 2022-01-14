@@ -63,6 +63,30 @@ class BuilderTest extends TestCase
         $this->assertSame(15, $paginator->perPage());
     }
 
+    public function test_it_can_paginate_raw_without_custom_query_callback()
+    {
+        $this->prepareScoutSearchMockUsing('Laravel');
+
+        $paginator = SearchableUserModel::search('Laravel')->paginateRaw();
+
+        $this->assertSame(50, $paginator->total());
+        $this->assertSame(4, $paginator->lastPage());
+        $this->assertSame(15, $paginator->perPage());
+    }
+
+    public function test_it_can_paginate_raw_with_custom_query_callback()
+    {
+        $this->prepareScoutSearchMockUsing('Laravel');
+
+        $paginator = SearchableUserModel::search('Laravel')->query(function ($builder) {
+            return $builder->where('id', '<', 11);
+        })->paginateRaw();
+
+        $this->assertSame(10, $paginator->total());
+        $this->assertSame(1, $paginator->lastPage());
+        $this->assertSame(15, $paginator->perPage());
+    }
+
     protected function prepareScoutSearchMockUsing($searchQuery)
     {
         $engine = m::mock('MeiliSearch\Client');
