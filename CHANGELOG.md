@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.4.1...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.4.2...9.x)
+
+
+## [v9.4.2 (2022-01-18)](https://github.com/laravel/scout/compare/v9.4.1...v9.4.2)
+
+### Added
+- Add sorting for Meilisearch ([#537](https://github.com/laravel/scout/pull/537))
 
 
 ## [v9.4.1 (2022-01-14)](https://github.com/laravel/scout/compare/v9.4.0...v9.4.1)
