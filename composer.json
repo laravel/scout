@@ -20,7 +20,7 @@
         "illuminate/database": "^8.0|^9.0",
         "illuminate/http": "^8.0|^9.0",
         "illuminate/pagination": "^8.0|^9.0",
-        "illuminate/queue": "^8.|^9.0",
+        "illuminate/queue": "^8.0|^9.0",
         "illuminate/support": "^8.0|^9.0"
     },
     "require-dev": {
