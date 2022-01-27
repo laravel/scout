@@ -154,7 +154,7 @@ trait Searchable
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function makeAllSearchableUsing($query)
+    public function makeAllSearchableUsing($query)
     {
         return $query;
     }
