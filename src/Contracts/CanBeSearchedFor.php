@@ -7,15 +7,13 @@ use Laravel\Scout\Builder;
 interface CanBeSearchedFor
 {
     /**
-     * @param \Illuminate\Database\Eloquent\Collection $models
-     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
     public function queueMakeSearchable($models);
 
     /**
-     * @param \Illuminate\Database\Eloquent\Collection $models
-     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
     public function queueRemoveFromSearch($models);
@@ -31,23 +29,20 @@ interface CanBeSearchedFor
     public function searchIndexShouldBeUpdated();
 
     /**
-     * @param string $query
-     * @param \Closure $callback
-     *
+     * @param  string  $query
+     * @param  \Closure  $callback
      * @return \Laravel\Scout\Builder
      */
     public static function search($search = '', $callback = null);
 
     /**
-     * @param int $chunk
-     *
+     * @param  int  $chunk
      * @return void
      */
     public static function makeAllSearchable($chunk = null);
 
     /**
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function makeAllSearchableUsing($query);
@@ -98,8 +93,7 @@ interface CanBeSearchedFor
     public static function disableSearchSyncing();
 
     /**
-     * @param callable $callback
-     *
+     * @param  callable  $callback
      * @return mixed
      */
     public static function withoutSyncingToSearch($callback);
@@ -140,9 +134,8 @@ interface CanBeSearchedFor
     public function scoutMetadata();
 
     /**
-     * @param string $key
-     * @param mixed $value
-     *
+     * @param  string  $key
+     * @param  mixed  $value
      * @return $this
      */
     public function withScoutMetadata($key, $value);
