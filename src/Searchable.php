@@ -154,7 +154,7 @@ trait Searchable
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function makeAllSearchableUsing($query)
+    public function makeAllSearchableUsing($query)
     {
         return $query;
     }
@@ -394,7 +394,7 @@ trait Searchable
      *
      * @return bool
      */
-    protected static function usesSoftDelete()
+    public static function usesSoftDelete()
     {
         return in_array(SoftDeletes::class, class_uses_recursive(get_called_class()));
     }

@@ -3,9 +3,10 @@
 namespace Laravel\Scout\Tests\Fixtures;
 
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Scout\Contracts\CanBeSearchedFor;
 use Laravel\Scout\Searchable;
 
-class SearchableModel extends Model
+class SearchableModel extends Model implements CanBeSearchedFor
 {
     use Searchable;
 
