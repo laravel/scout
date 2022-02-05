@@ -230,7 +230,7 @@ class AlgoliaEngineTest extends TestCase
 
     public function test_update_empty_searchable_array_from_soft_deleted_model_does_not_add_objects_to_index()
     {
-        $client = m::mock('Algolia\AlgoliaSearch\SearchClient');
+        $client = m::mock(SearchClient::class);
         $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock('StdClass'));
         $index->shouldNotReceive('saveObjects');
 
