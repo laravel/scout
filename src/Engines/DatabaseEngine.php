@@ -175,7 +175,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
     }
 
     /**
-     * Add additional, developer defined constraints to the serach query.
+     * Add additional, developer defined constraints to the search query.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  \Illuminate\Database\Eloquent\Builder  $query
