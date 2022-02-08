@@ -45,6 +45,20 @@ class DatabaseEngineTest extends TestCase
         $this->assertCount(2, $models);
     }
 
+    public function test_it_does_not_add_search_where_clauses_with_empty_search()
+    {
+        SearchableUserDatabaseModel::search('')->query(function ($builder) {
+            $this->assertSame('select * from "users"', $builder->toSql());
+        })->get();
+    }
+
+    public function test_it_adds_search_where_clauses_with_non_empty_search()
+    {
+        SearchableUserDatabaseModel::search('Taylor')->query(function ($builder) {
+            $this->assertSame('select * from "users" where ("users"."id" like ? or "users"."name" like ? or "users"."email" like ?)', $builder->toSql());
+        })->get();
+    }
+
     public function test_it_can_retrieve_results()
     {
         $models = SearchableUserDatabaseModel::search('Taylor')->where('email', 'taylor@laravel.com')->get();
