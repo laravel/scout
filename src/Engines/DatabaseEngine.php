@@ -139,6 +139,10 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
      */
     protected function initializeSearchQuery(Builder $builder, array $columns, array $prefixColumns = [], array $fullTextColumns = [])
     {
+        if (blank($builder->query)) {
+            return $builder->model->query();
+        }
+
         return $builder->model->query()->where(function ($query) use ($builder, $columns, $prefixColumns, $fullTextColumns) {
             $connectionType = $builder->model->getConnection()->getDriverName();
 
