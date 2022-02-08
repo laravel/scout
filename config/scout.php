@@ -11,7 +11,7 @@ return [
     | using Laravel Scout. This connection is used when syncing all models
     | to the search service. You should adjust this based on your needs.
     |
-    | Supported: "algolia", "meilisearch", "collection", "null"
+    | Supported: "algolia", "meilisearch", "database", "collection", "null"
     |
     */
 
