@@ -231,7 +231,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
     }
 
     /**
-     * Get the full-text columns for the query.
+     * Get the prefix search columns for the query.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @return array
