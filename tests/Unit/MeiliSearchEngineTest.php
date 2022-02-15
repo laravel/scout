@@ -325,6 +325,30 @@ class MeiliSearchEngineTest extends TestCase
         $engine->paginate($builder, $perPage, $page);
     }
 
+    public function test_pagination_sorted_parameter()
+    {
+        $perPage = 5;
+        $page = 2;
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('search')->with('mustang', [
+            'filter' => 'foo=1',
+            'limit' => $perPage,
+            'offset' => ($page - 1) * $perPage,
+            'sort' => ['name:asc'],
+        ]);
+
+        $engine = new MeiliSearchEngine($client);
+        $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
+            $options['filter'] = 'foo=1';
+
+            return $meilisearch->search($query, $options);
+        });
+        $builder->orderBy('name', 'asc');
+        $engine->paginate($builder, $perPage, $page);
+    }
+
     public function test_update_empty_searchable_array_from_soft_deleted_model_does_not_add_documents_to_index()
     {
         $client = m::mock(Client::class);
