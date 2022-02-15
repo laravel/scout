@@ -342,6 +342,7 @@ class MeiliSearchEngineTest extends TestCase
         $engine = new MeiliSearchEngine($client);
         $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
             $options['filter'] = 'foo=1';
+            
             return $meilisearch->search($query, $options);
         });
         $builder->orderBy('name', 'asc');
