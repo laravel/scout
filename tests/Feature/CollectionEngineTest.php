@@ -101,6 +101,17 @@ class CollectionEngineTest extends TestCase
 
         $models = SearchableUserModel::search('laravel')->paginate();
         $this->assertCount(2, $models);
+
+        $dummyQuery = function ($query) {
+            $query->where('name', '!=', 'Dummy');
+        };
+        $models = SearchableUserModel::search('laravel')->query($dummyQuery)->orderBy('name')->paginate(1, 'page', 1);
+        $this->assertCount(1, $models);
+        $this->assertEquals('Abigail Otwell', $models[0]->name);
+
+        $models = SearchableUserModel::search('laravel')->query($dummyQuery)->orderBy('name')->paginate(1, 'page', 2);
+        $this->assertCount(1, $models);
+        $this->assertEquals('Taylor Otwell', $models[0]->name);
     }
 
     public function test_limit_is_applied()
