@@ -164,10 +164,10 @@ class CollectionEngine extends Engine
      */
     public function mapIds($results)
     {
-        $results = $results['results'];
+        $results = array_values($results['results']);
 
         return count($results) > 0
-                    ? collect($results)->pluck($results[0]->getKeyName())->values()
+                    ? collect($results)->pluck($results[0]->getKeyName())
                     : collect();
     }
 
