@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.4.3...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.4.4...9.x)
+
+## [v9.4.4](https://github.com/laravel/scout/compare/v9.4.3...v9.4.4) - 2022-02-15
+
+### Fixed
+
+- Fix collection engine `mapIds` bug by @amir9480 in https://github.com/laravel/scout/pull/585
 
 ## [v9.4.3](https://github.com/laravel/scout/compare/v9.4.2...v9.4.3) - 2022-02-08
 
