@@ -118,6 +118,7 @@ class MeiliSearchEngine extends Engine
             'filters' => $this->filters($builder),
             'limit' => (int) $perPage,
             'offset' => ($page - 1) * $perPage,
+            'sort' => $this->buildSortFromOrderByClauses($builder),
         ]));
     }
 
