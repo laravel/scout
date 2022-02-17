@@ -109,7 +109,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
             ->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
                 return $query->forPage($page, $perPage);
             })
-            ->when(!$this->getFullTextColumns($builder), function ($query) use ($builder) {
+            ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
                 $query->orderBy($builder->model->getKeyName(), 'desc');
             })
             ->get();
