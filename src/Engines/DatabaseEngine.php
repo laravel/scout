@@ -72,7 +72,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
     public function paginate(Builder $builder, $perPage, $page)
     {
         return $this->buildSearchQuery($builder)
-                ->when(!$this->getFullTextColumns($builder), function ($query) use ($builder) {
+                ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
                     $query->orderBy($builder->model->getKeyName(), 'desc');
                 })
                 ->paginate($perPage, ['*'], 'page', $page);
@@ -89,7 +89,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
     public function simplePaginate(Builder $builder, $perPage, $page)
     {
         return $this->buildSearchQuery($builder)
-                ->when(!$this->getFullTextColumns($builder), function ($query) use ($builder) {
+                ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
                     $query->orderBy($builder->model->getKeyName(), 'desc');
                 })
                 ->simplePaginate($perPage, ['*'], 'page', $page);
