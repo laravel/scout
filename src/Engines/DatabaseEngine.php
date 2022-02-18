@@ -206,6 +206,8 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
             foreach ($builder->whereIns as $key => $values) {
                 $query->whereIn($key, $values);
             }
+        })->when(! is_null($builder->queryCallback), function ($query) use ($builder) {
+            call_user_func($builder->queryCallback, $query);
         });
     }
 
