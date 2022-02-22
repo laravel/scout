@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.4.4...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.4.5...9.x)
+
+## [v9.4.5](https://github.com/laravel/scout/compare/v9.4.4...v9.4.5) - 2022-02-22
+
+### Changed
+
+- Remove redundant `return` key like for all `when` methods for databas… by @siarheipashkevich in https://github.com/laravel/scout/pull/592
+
+### Fixed
+
+- Implements Meilisearch sort on paginate by @mrABR in https://github.com/laravel/scout/pull/587
+- Remove default order by model key desc in database engine when full-text index is used by @smknstd in https://github.com/laravel/scout/pull/590
+- Call queryCallback in DatabaseEngine by @Alanaktion in https://github.com/laravel/scout/pull/591
 
 ## [v9.4.4](https://github.com/laravel/scout/compare/v9.4.3...v9.4.4) - 2022-02-15
 
