@@ -11,7 +11,7 @@ about: "Report something that's broken. Please ensure your Laravel version is st
 - Laravel Version: #.#.#
 - PHP Version: #.#.#
 - Database Driver & Version:
-- SDK Version (if using a thirdparty service): #.#.#
+- SDK Version (If using a third-party service): #.#.#
 
 ### Description:
 
