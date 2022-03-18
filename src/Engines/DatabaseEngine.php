@@ -168,7 +168,8 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
                 if (in_array($column, $fullTextColumns)) {
                     $query->orWhereFullText(
                         $builder->model->qualifyColumn($column),
-                        $builder->query
+                        $builder->query,
+                        $this->getFullTextOptions($builder)
                     );
                 } else {
                     if ($canSearchPrimaryKey && $column === $builder->model->getKeyName()) {
@@ -278,6 +279,18 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
         }
 
         return $columns;
+    }
+
+    /**
+     * Get the full-text search options for the query.
+     */
+    protected function getFullTextOptions(Builder $builder)
+    {
+        $reflection = new ReflectionMethod($builder->model, 'toSearchableArray');
+
+        if ($attribute = collect($reflection->getAttributes(SearchUsingOptions::class))->first()) {
+            return collect($attribute->getArguments())->first();
+        }
     }
 
     /**
