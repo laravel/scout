@@ -16,13 +16,19 @@ class SearchUsingFullText
     public $columns = [];
 
     /**
+     * The full-text options.
+     */
+    public $options = [];
+
+    /**
      * Create a new attribute instance.
      *
      * @param  array|string  $columns
      * @return void
      */
-    public function __construct($columns)
+    public function __construct($columns, $options = [])
     {
         $this->columns = Arr::wrap($columns);
+        $this->options = Arr::wrap($options);
     }
 }

@@ -283,14 +283,23 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
 
     /**
      * Get the full-text search options for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
      */
     protected function getFullTextOptions(Builder $builder)
     {
-        $reflection = new ReflectionMethod($builder->model, 'toSearchableArray');
+        $options = [];
 
-        if ($attribute = collect($reflection->getAttributes(SearchUsingOptions::class))->first()) {
-            return collect($attribute->getArguments())->first();
+        if (PHP_MAJOR_VERSION < 8) {
+            return [];
         }
+
+        foreach ((new ReflectionMethod($builder->model, 'toSearchableArray'))->getAttributes(SearchUsingFullText::class) as $attribute) {
+            $columns = array_merge($options, Arr::wrap($attribute->getArguments()[1]));
+        }
+
+        return $columns;
     }
 
     /**
