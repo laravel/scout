@@ -296,10 +296,10 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
         }
 
         foreach ((new ReflectionMethod($builder->model, 'toSearchableArray'))->getAttributes(SearchUsingFullText::class) as $attribute) {
-            $columns = array_merge($options, Arr::wrap($attribute->getArguments()[1]));
+            $options = array_merge($options, Arr::wrap($attribute->getArguments()[1]));
         }
 
-        return $columns;
+        return $options;
     }
 
     /**
