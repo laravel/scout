@@ -23,7 +23,8 @@ class SearchUsingFullText
     /**
      * Create a new attribute instance.
      *
-     * @param  array|string  $columns
+     * @param  array  $columns
+     * @param  array  $options
      * @return void
      */
     public function __construct($columns, $options = [])
