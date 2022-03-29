@@ -1,6 +1,13 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.4.5...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.4.6...9.x)
+
+## [v9.4.6](https://github.com/laravel/scout/compare/v9.4.5...v9.4.6) - 2022-03-29
+
+### Changed
+
+- Added the ability to pass an array of options to full-text search. by @den1n in https://github.com/laravel/scout/pull/606
+- Update suggested SDK versions of Algolia and Meilisearch by @mmachatschek in https://github.com/laravel/scout/pull/608
 
 ## [v9.4.5](https://github.com/laravel/scout/compare/v9.4.4...v9.4.5) - 2022-02-22
 
