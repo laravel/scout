@@ -102,6 +102,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Query Parameter Name
+    |--------------------------------------------------------------------------
+    |
+    | This option allows you to control what name string will be used to 
+    | append the url query string name i.e. ?query=search-term. Useful
+    | when using pagination links keeping it consistant with the app.
+    |
+    */
+
+    'parameter_name' => env('SCOUT_PARAMETER_NAME', 'query'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Algolia Configuration
     |--------------------------------------------------------------------------
     |
