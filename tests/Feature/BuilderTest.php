@@ -5,6 +5,7 @@ namespace Laravel\Scout\Tests\Feature;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Collection;
 use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\MeiliSearchEngine;
 use Laravel\Scout\ScoutServiceProvider;
@@ -85,6 +86,15 @@ class BuilderTest extends TestCase
         $this->assertSame(10, $paginator->total());
         $this->assertSame(1, $paginator->lastPage());
         $this->assertSame(15, $paginator->perPage());
+    }
+
+    public function test_it_can_get_keys_from_search_result()
+    {
+        $this->prepareScoutSearchMockUsing('Laravel');
+
+        $keys = SearchableUserModel::search('Laravel')->keys();
+
+        $this->assertInstanceOf(Collection::class, $keys);
     }
 
     protected function prepareScoutSearchMockUsing($searchQuery)
