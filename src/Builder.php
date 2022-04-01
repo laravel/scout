@@ -255,6 +255,21 @@ class Builder
     }
 
     /**
+     * Convert a search result into an Eloquent builder.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function toEloquent()
+    {
+        return $this->model
+            ->query()
+            ->whereIn(
+                $this->model->getQualifiedKeyName(),
+                $this->keys()
+            );
+    }
+
+    /**
      * Get the first result from the search.
      *
      * @return \Illuminate\Database\Eloquent\Model

@@ -97,6 +97,16 @@ class BuilderTest extends TestCase
         $this->assertInstanceOf(Collection::class, $keys);
     }
 
+    public function test_it_can_convert_search_result_to_eloquent()
+    {
+        $this->prepareScoutSearchMockUsing('Laravel');
+
+        $result = SearchableUserModel::search('Laravel')
+            ->toEloquent();
+
+        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Builder::class, $result);
+    }
+
     protected function prepareScoutSearchMockUsing($searchQuery)
     {
         $engine = m::mock('MeiliSearch\Client');
