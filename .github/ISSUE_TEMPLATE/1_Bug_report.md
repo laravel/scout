@@ -12,6 +12,7 @@ about: "Report something that's broken. Please ensure your Laravel version is st
 - PHP Version: #.#.#
 - Database Driver & Version:
 - SDK Version (If using a third-party service): #.#.#
+- Meilisearch CLI Version (If using Meilisearch): #.#.#
 
 ### Description:
 
