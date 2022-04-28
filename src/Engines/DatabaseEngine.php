@@ -112,6 +112,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
             ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
                 $query->orderBy($builder->model->getKeyName(), 'desc');
             })
+            ->take($builder->limit)
             ->get();
     }
 
