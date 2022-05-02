@@ -109,4 +109,13 @@ class DatabaseEngineTest extends TestCase
         $models = SearchableUserDatabaseModel::search('laravel')->paginate();
         $this->assertCount(2, $models);
     }
+
+    public function test_limit_is_applied()
+    {
+        $models = SearchableUserDatabaseModel::search('laravel')->get();
+        $this->assertCount(2, $models);
+
+        $models = SearchableUserDatabaseModel::search('laravel')->take(1)->get();
+        $this->assertCount(1, $models);
+    }
 }
