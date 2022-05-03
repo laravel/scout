@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.4.7...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.4.8...9.x)
+
+## [v9.4.8](https://github.com/laravel/scout/compare/v9.4.7...v9.4.8) - 2022-05-03
+
+### Changed
+
+- Add limit to database engine by @keithbrink in https://github.com/laravel/scout/pull/619
 
 ## [v9.4.7](https://github.com/laravel/scout/compare/v9.4.6...v9.4.7) - 2022-04-06
 
