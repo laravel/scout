@@ -112,7 +112,6 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
             ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
                 $query->orderBy($builder->model->getKeyName(), 'desc');
             })
-            ->take($builder->limit)
             ->get();
     }
 
@@ -132,7 +131,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
         );
 
         return $this->constrainForSoftDeletes(
-            $builder, $this->addAdditionalConstraints($builder, $query)
+            $builder, $this->addAdditionalConstraints($builder, $query->take($builder->limit))
         );
     }
 
