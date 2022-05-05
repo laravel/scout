@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.4.8...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.4.9...9.x)
+
+## [v9.4.9](https://github.com/laravel/scout/compare/v9.4.8...v9.4.9) - 2022-05-05
+
+### Fixed
+
+- Apply `limit` on `DatabaseEngine` before applying additional constraints by @crynobone in https://github.com/laravel/scout/pull/621
 
 ## [v9.4.8](https://github.com/laravel/scout/compare/v9.4.7...v9.4.8) - 2022-05-03
 
