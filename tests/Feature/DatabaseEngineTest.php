@@ -117,7 +117,7 @@ class DatabaseEngineTest extends TestCase
 
         $models = SearchableUserDatabaseModel::search('laravel')->take(1)->get();
         $this->assertCount(1, $models);
-    }    
+    }
     
     public function test_tap_is_applied()
     {
