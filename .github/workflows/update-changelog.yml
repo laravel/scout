@@ -4,6 +4,11 @@ on:
   release:
     types: [released]
 
+permissions:
+  contents: read
+
 jobs:
   update:
+    permissions:
+      contents: none
     uses: laravel/.github/.github/workflows/update-changelog.yml@main
