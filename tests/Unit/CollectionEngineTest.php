@@ -46,7 +46,6 @@ class CollectionEngineTest extends TestCase
 
     public function test_lazy_map_correctly_maps_results_to_models()
     {
-
         $engine = new CollectionEngine();
         $model = new SearchableModelWithCustomKeyForCollectionEngineTest([
             'id' => 1,
