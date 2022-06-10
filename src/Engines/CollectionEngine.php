@@ -188,7 +188,7 @@ class CollectionEngine extends Engine
         }
 
         $objectIds = collect($results)
-                ->pluck($model->getKeyName())
+                ->pluck($model->getScoutKeyName())
                 ->values()
                 ->all();
 
@@ -220,7 +220,7 @@ class CollectionEngine extends Engine
         }
 
         $objectIds = collect($results)
-                ->pluck($model->$this->getScoutKeyName())
+                ->pluck($model->getScoutKeyName())
                 ->values()->all();
 
         $objectIdPositions = array_flip($objectIds);

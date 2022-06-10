@@ -2,8 +2,11 @@
 
 namespace Laravel\Scout\Tests\Feature;
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Scout\ScoutServiceProvider;
+use Laravel\Scout\Tests\Fixtures\SearchableModelWithCustomKeyForCollectionEngineTest;
 use Laravel\Scout\Tests\Fixtures\SearchableUserModel;
 use Laravel\Scout\Tests\Fixtures\SearchableUserModelWithCustomSearchableData;
 use Orchestra\Testbench\Factories\UserFactory;
@@ -37,6 +40,11 @@ class CollectionEngineTest extends TestCase
             'name' => 'Abigail Otwell',
             'email' => 'abigail@laravel.com',
         ]);
+        Schema::create('searchable_model_with_custom_key_for_collection_engine_tests', function (Blueprint $table) {
+            $table->id();
+            $table->string('other_id');
+            $table->timestamps();
+        });
     }
 
     public function test_it_can_retrieve_results_with_empty_search()
@@ -121,5 +129,14 @@ class CollectionEngineTest extends TestCase
 
         $models = SearchableUserModel::search('laravel')->take(1)->get();
         $this->assertCount(1, $models);
+    }
+
+    public function test_with_custom_key()
+    {
+        $model = new SearchableModelWithCustomKeyForCollectionEngineTest(['other_id' => 1234]);
+        $model->save();
+
+        $result = SearchableModelWithCustomKeyForCollectionEngineTest::search('test')->get();
+        $this->assertCount(1, $result);
     }
 }
