@@ -261,7 +261,6 @@ class MeiliSearchEngine extends Engine
             return $objectIdPositions[$model->getScoutKey()];
         })->when(! empty($builder->withRaw), function ($collection) use ($builder, $objectIdPositions, $results) {
             return $collection->map(function ($model) use ($builder, $objectIdPositions, $results) {
-
                 $data = [];
                 $raw_result = $results['hits'][$objectIdPositions[$model->getScoutKey()]];
 
