@@ -263,7 +263,7 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
-     * Map the given results to instances of the given modell via a lazy collection.
+     * Map the given results to instances of the given model via a lazy collection.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  mixed  $results
