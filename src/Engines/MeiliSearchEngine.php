@@ -259,6 +259,21 @@ class MeiliSearchEngine extends Engine
             return in_array($model->getScoutKey(), $objectIds);
         })->sortBy(function ($model) use ($objectIdPositions) {
             return $objectIdPositions[$model->getScoutKey()];
+        })->when(!empty($builder->withRaw), function ($collection) use ($builder, $objectIdPositions, $results) {
+            return $collection->map(function ($model) use ($builder, $objectIdPositions, $results) {
+
+                $data = [];
+                $raw_result = $results['hits'][$objectIdPositions[$model->getScoutKey()]];
+
+                collect($builder->withRaw)
+                ->each(function($append) use (&$data, $raw_result) {
+                    data_set($data, $append, data_get($raw_result, $append));
+                });
+
+                $model->scout = $data;
+
+                return $model;
+            });
         })->values();
     }
 

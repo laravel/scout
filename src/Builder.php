@@ -77,6 +77,13 @@ class Builder
     public $orders = [];
 
     /**
+     * The attributes to include from the raw query
+     *
+     * @var array
+     */
+    public $withRaw = [];
+
+    /**
      * Create a new search builder instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -94,6 +101,19 @@ class Builder
         if ($softDelete) {
             $this->wheres['__soft_deleted'] = 0;
         }
+    }
+
+    /**
+     * Specify the fields from the raw query to include in the final result
+     *
+     * @param  array fields
+     * @return $this
+     */
+    public function withRaw($fields)
+    {
+        $this->withRaw = $fields;
+
+        return $this;
     }
 
     /**
