@@ -296,7 +296,7 @@ class MeiliSearchEngine extends Engine
      */
     public function getTotalCount($results)
     {
-        return $results['nbHits'];
+        return $results['estimatedTotalHits'];
     }
 
     /**
