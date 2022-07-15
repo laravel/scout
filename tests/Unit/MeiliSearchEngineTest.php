@@ -441,7 +441,7 @@ class MeiliSearchEngineTest extends TestCase
     public function test_engine_returns_hits_entry_from_search_response()
     {
         $this->assertTrue(3 === (new MeiliSearchEngine(m::mock(Client::class)))->getTotalCount([
-            'nbHits' => 3,
+            'estimatedTotalHits' => 3,
         ]));
     }
 }
