@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.4.9...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.4.10...9.x)
+
+## [v9.4.10](https://github.com/laravel/scout/compare/v9.4.9...v9.4.10) - 2022-07-19
+
+### Fixed
+
+- Return collection by @driesvints in https://github.com/laravel/scout/pull/635
 
 ## [v9.4.9](https://github.com/laravel/scout/compare/v9.4.8...v9.4.9) - 2022-05-05
 
