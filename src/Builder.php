@@ -448,7 +448,7 @@ class Builder
         )->all();
 
         if (count($ids) < $totalCount) {
-            $ids = $engine->keys(tap(clone $this, function ($builder) use ($totalCount) {
+            $ids = $engine->keys($this->model->getKeyName(), tap(clone $this, function ($builder) use ($totalCount) {
                 $builder->take(
                     is_null($this->limit) ? $totalCount : min($this->limit, $totalCount)
                 );

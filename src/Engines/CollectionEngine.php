@@ -162,7 +162,7 @@ class CollectionEngine extends Engine
      * @param  mixed  $results
      * @return \Illuminate\Support\Collection
      */
-    public function mapIds($results)
+    public function mapIds($key, $results)
     {
         $results = array_values($results['results']);
 

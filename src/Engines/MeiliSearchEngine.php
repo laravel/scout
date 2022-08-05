@@ -205,18 +205,17 @@ class MeiliSearchEngine extends Engine
      *
      * This expects the first item of each search item array to be the primary key.
      *
+     * @param  mixed  $key
      * @param  mixed  $results
      * @return \Illuminate\Support\Collection
      */
-    public function mapIds($results)
+    public function mapIds($key, $results)
     {
         if (0 === count($results['hits'])) {
             return collect();
         }
 
         $hits = collect($results['hits']);
-
-        $key = key($hits->first());
 
         return $hits->pluck($key)->values();
     }

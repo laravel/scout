@@ -43,10 +43,11 @@ abstract class Engine
     /**
      * Pluck and return the primary keys of the given results.
      *
+     * @param  mixed  $key
      * @param  mixed  $results
      * @return \Illuminate\Support\Collection
      */
-    abstract public function mapIds($results);
+    abstract public function mapIds($key, $results);
 
     /**
      * Map the given results to instances of the given model.
@@ -110,18 +111,19 @@ abstract class Engine
      */
     public function mapIdsFrom($results, $key)
     {
-        return $this->mapIds($results);
+        return $this->mapIds($key, $results);
     }
 
     /**
      * Get the results of the query as a Collection of primary keys.
      *
-     * @param  \Laravel\Scout\Builder  $builder
+     * @param mixed $key
+     * @param \Laravel\Scout\Builder $builder
      * @return \Illuminate\Support\Collection
      */
-    public function keys(Builder $builder)
+    public function keys($key, Builder $builder)
     {
-        return $this->mapIds($this->search($builder));
+        return $this->mapIds($key, $this->search($builder));
     }
 
     /**

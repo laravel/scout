@@ -307,10 +307,11 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
     /**
      * Pluck and return the primary keys of the given results.
      *
+     * @param  mixed  $key
      * @param  mixed  $results
      * @return \Illuminate\Support\Collection
      */
-    public function mapIds($results)
+    public function mapIds($key, $results)
     {
         $results = $results['results'];
 

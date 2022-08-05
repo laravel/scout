@@ -58,10 +58,11 @@ class NullEngine extends Engine
     /**
      * Pluck and return the primary keys of the given results.
      *
+     * @param  mixed  $key
      * @param  mixed  $results
      * @return \Illuminate\Support\Collection
      */
-    public function mapIds($results)
+    public function mapIds($key, $results)
     {
         return BaseCollection::make();
     }
