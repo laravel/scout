@@ -117,8 +117,8 @@ abstract class Engine
     /**
      * Get the results of the query as a Collection of primary keys.
      *
-     * @param mixed $key
-     * @param \Laravel\Scout\Builder $builder
+     * @param  mixed  $key
+     * @param  \Laravel\Scout\Builder  $builder
      * @return \Illuminate\Support\Collection
      */
     public function keys($key, Builder $builder)
