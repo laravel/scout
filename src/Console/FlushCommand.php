@@ -27,7 +27,12 @@ class FlushCommand extends Command
      */
     public function handle()
     {
-        $class = $this->argument('model');
+        $class = $this->lookupClass();
+
+        if(!$class) {
+            $this->error('Class ['.$this->argument('model').'] could not be found.');
+            return self::FAILURE;
+        }
 
         $model = new $class;
 
@@ -35,4 +40,23 @@ class FlushCommand extends Command
 
         $this->info('All ['.$class.'] records have been flushed.');
     }
+
+    protected function lookupClass()
+    {
+        $class = $this->argument('model');
+        if(!class_exists($class)) {
+            $rootNamespace = $this->laravel->getNamespace();
+            $class = is_dir(app_path('Models'))
+                ? $rootNamespace.'Models\\'.$class
+                : $rootNamespace.$class;
+        }
+
+        if(!class_exists($class)) {
+            return false;
+        }
+
+        return $class;
+    }
+
+
 }

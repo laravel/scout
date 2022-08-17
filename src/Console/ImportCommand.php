@@ -32,7 +32,12 @@ class ImportCommand extends Command
      */
     public function handle(Dispatcher $events)
     {
-        $class = $this->argument('model');
+        $class = $this->lookupClass();
+
+        if(!$class) {
+            $this->error('Class ['.$this->argument('model').'] could not be found.');
+            return self::FAILURE;
+        }
 
         $model = new $class;
 
@@ -47,5 +52,22 @@ class ImportCommand extends Command
         $events->forget(ModelsImported::class);
 
         $this->info('All ['.$class.'] records have been imported.');
+    }
+
+    protected function lookupClass()
+    {
+        $class = $this->argument('model');
+        if(!class_exists($class)) {
+            $rootNamespace = $this->laravel->getNamespace();
+            $class = is_dir(app_path('Models'))
+                ? $rootNamespace.'Models\\'.$class
+                : $rootNamespace.$class;
+        }
+
+        if(!class_exists($class)) {
+            return false;
+        }
+
+        return $class;
     }
 }
