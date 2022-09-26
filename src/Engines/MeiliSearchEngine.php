@@ -232,6 +232,8 @@ class MeiliSearchEngine extends Engine
     {
         return count($results['hits']) === 0
                 ? collect()
+                : collect($results['hits'])->pluck($key)->values();
+    }
 
     /**
      * Get the results of the query as a Collection of primary keys.
