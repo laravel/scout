@@ -156,6 +156,13 @@ class MeiliSearchEngineTest extends TestCase
                 ],
             ],
         ], 'id');
+        
+        $this->assertEquals($results->all(), [
+            1,
+            2,
+            3,
+            4,
+        ]);
 
     }
 
