@@ -232,7 +232,22 @@ class MeiliSearchEngine extends Engine
     {
         return count($results['hits']) === 0
                 ? collect()
-                : collect($results['hits'])->pluck($key)->values();
+
+    /**
+     * Get the results of the query as a Collection of primary keys.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return \Illuminate\Support\Collection
+     */
+    public function keys(Builder $builder)
+    {
+        $scoutKey = $builder->model->getScoutKeyName();
+
+        if (str_contains($scoutKey, '.')) {
+            $scoutKey = explode('.', $scoutKey)[1];
+        }
+
+        return $this->mapIdsFrom($this->search($builder), $scoutKey);
     }
 
     /**
