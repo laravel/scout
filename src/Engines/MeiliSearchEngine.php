@@ -3,6 +3,7 @@
 namespace Laravel\Scout\Engines;
 
 use Illuminate\Support\LazyCollection;
+use Illuminate\Support\Str;
 use Laravel\Scout\Builder;
 use MeiliSearch\Client as MeiliSearchClient;
 use MeiliSearch\MeiliSearch;
@@ -243,11 +244,7 @@ class MeiliSearchEngine extends Engine
      */
     public function keys(Builder $builder)
     {
-        $scoutKey = $builder->model->getScoutKeyName();
-
-        if (str_contains($scoutKey, '.')) {
-            $scoutKey = explode('.', $scoutKey)[1];
-        }
+        $scoutKey = Str::afterLast($this->model->getScoutKeyName(), '.');
 
         return $this->mapIdsFrom($this->search($builder), $scoutKey);
     }
