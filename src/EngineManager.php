@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Support\Manager;
 use Laravel\Scout\Engines\AlgoliaEngine;
 use Laravel\Scout\Engines\CollectionEngine;
+use Laravel\Scout\Engines\DatabaseEngine;
 use Laravel\Scout\Engines\MeiliSearchEngine;
 use Laravel\Scout\Engines\NullEngine;
 use MeiliSearch\Client as MeiliSearch;
@@ -134,6 +135,16 @@ class EngineManager extends Manager
         }
 
         throw new Exception('Please install the MeiliSearch client: meilisearch/meilisearch-php.');
+    }
+
+    /**
+     * Create a database engine instance.
+     *
+     * @return \Laravel\Scout\Engines\DatabaseEngine
+     */
+    public function createDatabaseDriver()
+    {
+        return new DatabaseEngine;
     }
 
     /**

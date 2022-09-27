@@ -241,7 +241,11 @@ trait Searchable
             call_user_func($builder->queryCallback, $query);
         }
 
-        return $query->whereIn(
+        $whereIn = in_array($this->getKeyType(), ['int', 'integer']) ?
+            'whereIntegerInRaw' :
+            'whereIn';
+
+        return $query->{$whereIn}(
             $this->qualifyColumn($this->getScoutKeyName()), $ids
         );
     }

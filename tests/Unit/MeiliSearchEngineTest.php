@@ -165,6 +165,30 @@ class MeiliSearchEngineTest extends TestCase
         ]);
     }
 
+    public function test_returns_primary_keys_when_custom_array_order_present()
+    {
+        $engine = m::mock(MeiliSearchEngine::class);
+        $builder = m::mock(Builder::class);
+
+        $model = m::mock(stdClass::class);
+        $model->shouldReceive(['getScoutKeyName' => 'table.custom_key']);
+        $builder->model = $model;
+
+        $engine->shouldReceive('keys')->passthru();
+
+        $engine
+            ->shouldReceive('search')
+            ->once()
+            ->andReturn([]);
+
+        $engine
+            ->shouldReceive('mapIdsFrom')
+            ->once()
+            ->with([], 'custom_key');
+
+        $engine->keys($builder);
+    }
+
     public function test_map_correctly_maps_results_to_models()
     {
         $client = m::mock(Client::class);
@@ -323,6 +347,30 @@ class MeiliSearchEngineTest extends TestCase
 
             return $meilisearch->search($query, $options);
         });
+        $engine->paginate($builder, $perPage, $page);
+    }
+
+    public function test_pagination_sorted_parameter()
+    {
+        $perPage = 5;
+        $page = 2;
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('search')->with('mustang', [
+            'filter' => 'foo=1',
+            'limit' => $perPage,
+            'offset' => ($page - 1) * $perPage,
+            'sort' => ['name:asc'],
+        ]);
+
+        $engine = new MeiliSearchEngine($client);
+        $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
+            $options['filter'] = 'foo=1';
+
+            return $meilisearch->search($query, $options);
+        });
+        $builder->orderBy('name', 'asc');
         $engine->paginate($builder, $perPage, $page);
     }
 

@@ -15,18 +15,18 @@
     ],
     "require": {
         "php": "^7.3|^8.0",
-        "illuminate/bus": "^8.0",
-        "illuminate/contracts": "^8.0",
-        "illuminate/database": "^8.0",
-        "illuminate/http": "^8.0",
-        "illuminate/pagination": "^8.0",
-        "illuminate/queue": "^8.0",
-        "illuminate/support": "^8.0"
+        "illuminate/bus": "^8.0|^9.0",
+        "illuminate/contracts": "^8.0|^9.0",
+        "illuminate/database": "^8.0|^9.0",
+        "illuminate/http": "^8.0|^9.0",
+        "illuminate/pagination": "^8.0|^9.0",
+        "illuminate/queue": "^8.0|^9.0",
+        "illuminate/support": "^8.0|^9.0"
     },
     "require-dev": {
         "meilisearch/meilisearch-php": "^0.19",
         "mockery/mockery": "^1.0",
-        "orchestra/testbench": "^6.17",
+        "orchestra/testbench": "^6.17|^7.0",
         "phpunit/phpunit": "^9.3"
     },
     "autoload": {
@@ -50,8 +50,8 @@
         }
     },
     "suggest": {
-        "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^2.2).",
-        "meilisearch/meilisearch-php": "Required to use the MeiliSearch engine (^0.17)."
+        "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^3.2).",
+        "meilisearch/meilisearch-php": "Required to use the MeiliSearch engine (^0.23)."
     },
     "config": {
         "sort-packages": true

@@ -3,6 +3,7 @@
 namespace Laravel\Scout\Engines;
 
 use Illuminate\Support\LazyCollection;
+use Illuminate\Support\Str;
 use Laravel\Scout\Builder;
 use MeiliSearch\Client as MeiliSearchClient;
 use MeiliSearch\MeiliSearch;
@@ -101,6 +102,7 @@ class MeiliSearchEngine extends Engine
         return $this->performSearch($builder, array_filter([
             'filters' => $this->filters($builder),
             'limit' => $builder->limit,
+            'sort' => $this->buildSortFromOrderByClauses($builder),
         ]));
     }
 
@@ -117,6 +119,7 @@ class MeiliSearchEngine extends Engine
             'filters' => $this->filters($builder),
             'limit' => (int) $perPage,
             'offset' => ($page - 1) * $perPage,
+            'sort' => $this->buildSortFromOrderByClauses($builder),
         ]));
     }
 
@@ -186,6 +189,19 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
+     * Get the sort array for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
+     */
+    protected function buildSortFromOrderByClauses(Builder $builder): array
+    {
+        return collect($builder->orders)->map(function (array $order) {
+            return $order['column'].':'.$order['direction'];
+        })->toArray();
+    }
+
+    /**
      * Pluck and return the primary keys of the given results.
      *
      * This expects the first item of each search item array to be the primary key.
@@ -221,6 +237,19 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
+     * Get the results of the query as a Collection of primary keys.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return \Illuminate\Support\Collection
+     */
+    public function keys(Builder $builder)
+    {
+        $scoutKey = Str::afterLast($builder->model->getScoutKeyName(), '.');
+
+        return $this->mapIdsFrom($this->search($builder), $scoutKey);
+    }
+
+    /**
      * Map the given results to instances of the given model.
      *
      * @param  \Laravel\Scout\Builder  $builder
@@ -248,7 +277,7 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
-     * Map the given results to instances of the given modell via a lazy collection.
+     * Map the given results to instances of the given model via a lazy collection.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  mixed  $results
