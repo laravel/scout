@@ -3,6 +3,7 @@
 namespace Laravel\Scout\Engines;
 
 use Illuminate\Support\LazyCollection;
+use Illuminate\Support\Str;
 use Laravel\Scout\Builder;
 use MeiliSearch\Client as MeiliSearchClient;
 use MeiliSearch\MeiliSearch;
@@ -233,6 +234,19 @@ class MeiliSearchEngine extends Engine
         return count($results['hits']) === 0
                 ? collect()
                 : collect($results['hits'])->pluck($key)->values();
+    }
+
+    /**
+     * Get the results of the query as a Collection of primary keys.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return \Illuminate\Support\Collection
+     */
+    public function keys(Builder $builder)
+    {
+        $scoutKey = Str::afterLast($builder->model->getScoutKeyName(), '.');
+
+        return $this->mapIdsFrom($this->search($builder), $scoutKey);
     }
 
     /**
