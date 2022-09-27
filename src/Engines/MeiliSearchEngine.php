@@ -220,6 +220,19 @@ class MeiliSearchEngine extends Engine
                 : collect($results['hits'])->pluck($key)->values();
     }
 
+     /**
+     * Get the results of the query as a Collection of primary keys.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return \Illuminate\Support\Collection
+     */
+    public function keys(Builder $builder)
+    {
+        $scoutKey = $builder->model->getScoutKeyName();
+
+        return $this->mapIdsFrom($this->search($builder), $scoutKey);
+    }
+
     /**
      * Map the given results to instances of the given model.
      *

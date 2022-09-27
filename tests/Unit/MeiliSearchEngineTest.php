@@ -165,6 +165,30 @@ class MeiliSearchEngineTest extends TestCase
         ]);
     }
 
+    public function test_returns_primary_keys_when_custom_array_order_present()
+    {
+        $engine = m::mock(MeiliSearchEngine::class);
+        $builder = m::mock(Builder::class);
+
+        $model = m::mock(stdClass::class);
+        $model->shouldReceive(['getScoutKeyName' => 'custom_key']);
+        $builder->model = $model;
+
+        $engine->shouldReceive('keys')->passthru();
+
+        $engine
+            ->shouldReceive('search')
+            ->once()
+            ->andReturn([]);
+
+        $engine
+            ->shouldReceive('mapIdsFrom')
+            ->once()
+            ->with([], 'custom_key');
+
+        $engine->keys($builder);
+    }
+
     public function test_map_correctly_maps_results_to_models()
     {
         $client = m::mock(Client::class);
