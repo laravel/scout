@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.4.10...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.4.11...9.x)
+
+## [v9.4.11](https://github.com/laravel/scout/compare/v9.4.10...v9.4.11) - 2022-09-27
+
+### Fixed
+
+- Use scout key when mapping keys from search results by @flexchar in https://github.com/laravel/scout/pull/652
 
 ## [v9.4.10](https://github.com/laravel/scout/compare/v9.4.9...v9.4.10) - 2022-07-19
 
