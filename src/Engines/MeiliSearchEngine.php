@@ -244,7 +244,7 @@ class MeiliSearchEngine extends Engine
      */
     public function keys(Builder $builder)
     {
-        $scoutKey = Str::afterLast($this->model->getScoutKeyName(), '.');
+        $scoutKey = Str::afterLast($builder->model->getScoutKeyName(), '.');
 
         return $this->mapIdsFrom($this->search($builder), $scoutKey);
     }
