@@ -27,7 +27,7 @@ class RemoveFromSearch implements ShouldQueue
      */
     public function __construct($models)
     {
-        $this->models = RemoveableScoutCollection::make($models);
+        $this->models = $models;
     }
 
     /**
@@ -38,7 +38,9 @@ class RemoveFromSearch implements ShouldQueue
     public function handle()
     {
         if ($this->models->isNotEmpty()) {
-            $this->models->first()->searchableUsing()->delete($this->models);
+            $this->models->first()->searchableUsing()->delete(
+                RemoveableScoutCollection::make($this->models)
+            );
         }
     }
 

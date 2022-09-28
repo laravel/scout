@@ -54,20 +54,20 @@ class RemoveFromSearchTest extends TestCase
         $this->assertEquals(1234, $job->models->first()->getScoutKey());
     }
 
-    public function test_models_are_deserialized_without_the_database_using_custom_scout_key()
+    public function test_models_are_deserialized_without_the_database_using_custom_scout_key_values()
     {
         $job = new RemoveFromSearch(Collection::make([
-            $model = new SearchableModelWithCustomKey(['other_id' => 1234]),
+            $model = new MeiliSearchCustomKeySearchableModel(['id' => 1234]),
         ]));
 
         $job = unserialize(serialize($job));
 
         $this->assertInstanceOf(Collection::class, $job->models);
         $this->assertCount(1, $job->models);
-        $this->assertInstanceOf(SearchableModelWithCustomKey::class, $job->models->first());
+        $this->assertInstanceOf(MeiliSearchCustomKeySearchableModel::class, $job->models->first());
         $this->assertTrue($model->is($job->models->first()));
-        $this->assertEquals(md5(1234), $job->models->first()->getScoutKey());
-        $this->assertEquals('searchable_model_with_custom_keys.other_id', $job->models->first()->getScoutKeyName());
+        $this->assertEquals('my-meilisearch-key.1234', $job->models->first()->getScoutKey());
+        $this->assertEquals('meili_search_custom_key_searchable_models.id', $job->models->first()->getScoutKeyName());
     }
 
     public function test_removeable_scout_collection_returns_scout_keys()
