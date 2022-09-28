@@ -18,7 +18,7 @@ class SearchableModelWithCustomKey extends Model
 
     public function getScoutKey()
     {
-        return md5($this->other_id);
+        return $this->other_id;
     }
 
     public function getScoutKeyName()

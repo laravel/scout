@@ -80,8 +80,8 @@ class RemoveFromSearchTest extends TestCase
         ]);
 
         $this->assertEquals([
-            md5(1234),
-            md5(2345),
+            1234,
+            2345,
             3456,
             7891,
         ], $collection->getQueueableIds());
