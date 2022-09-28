@@ -66,7 +66,7 @@ class RemoveFromSearchTest extends TestCase
         $this->assertCount(1, $job->models);
         $this->assertInstanceOf(SearchableModelWithCustomKey::class, $job->models->first());
         $this->assertTrue($model->is($job->models->first()));
-        $this->assertEquals(1234, $job->models->first()->getScoutKey());
+        $this->assertEquals(md5(1234), $job->models->first()->getScoutKey());
         $this->assertEquals('searchable_model_with_custom_keys.other_id', $job->models->first()->getScoutKeyName());
     }
 
@@ -80,8 +80,8 @@ class RemoveFromSearchTest extends TestCase
         ]);
 
         $this->assertEquals([
-            1234,
-            2345,
+            md5(1234),
+            md5(2345),
             3456,
             7891,
         ], $collection->getQueueableIds());
