@@ -15,7 +15,7 @@ class RemoveFromSearch implements ShouldQueue
     /**
      * The models to be removed from the search index.
      *
-     * @var \Illuminate\Database\Eloquent\Collection
+     * @var \Laravel\Scout\Jobs\RemoveableScoutCollection
      */
     public $models;
 
@@ -46,35 +46,27 @@ class RemoveFromSearch implements ShouldQueue
      * Restore a queueable collection instance.
      *
      * @param  \Illuminate\Contracts\Database\ModelIdentifier  $value
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return \Laravel\Scout\Jobs\RemoveableScoutCollection
      */
     protected function restoreCollection($value)
     {
         if (! $value->class || count($value->id) === 0) {
-            return new EloquentCollection;
+            return new RemoveableScoutCollection;
         }
 
-        return new EloquentCollection(
+        return new RemoveableScoutCollection(
             collect($value->id)->map(function ($id) use ($value) {
                 return tap(new $value->class, function ($model) use ($id) {
-                    $keyName = $this->getUnqualifiedScoutKeyName(
-                        $model->getScoutKeyName()
-                    );
-
-                    $model->forceFill([$keyName => $id]);
+                    // The scout key may not be an integer. In this case,
+                    // we will force a key type of string so it is not
+                    // cast when retrieving it from the model.
+                    $model->setKeyType(
+                        is_string($id) ? 'string' : 'int'
+                    )->forceFill([
+                        $model->getUnqualifiedScoutKeyName() => $id
+                    ]);
                 });
             })
         );
-    }
-
-    /**
-     * Get the unqualified Scout key name.
-     *
-     * @param  string  $keyName
-     * @return string
-     */
-    protected function getUnqualifiedScoutKeyName($keyName)
-    {
-        return Str::afterLast($keyName, '.');
     }
 }
