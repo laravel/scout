@@ -68,7 +68,7 @@ class AlgoliaEngineTest extends TestCase
     public function test_delete_with_removeable_scout_collection_using_custom_search_key()
     {
         $job = new RemoveFromSearch(Collection::make([
-            new AlgoliaCustomKeySearchableModel(['id' => 5])
+            new AlgoliaCustomKeySearchableModel(['id' => 5]),
         ]));
 
         $job = unserialize(serialize($job));
@@ -84,7 +84,7 @@ class AlgoliaEngineTest extends TestCase
     public function test_remove_from_search_job_uses_custom_search_key()
     {
         $job = new RemoveFromSearch(Collection::make([
-            new AlgoliaCustomKeySearchableModel(['id' => 5])
+            new AlgoliaCustomKeySearchableModel(['id' => 5]),
         ]));
 
         $job = unserialize(serialize($job));

@@ -72,7 +72,7 @@ class MeiliSearchEngineTest extends TestCase
     public function test_delete_with_removeable_scout_collection_using_custom_search_key()
     {
         $job = new RemoveFromSearch(Collection::make([
-            new MeiliSearchCustomKeySearchableModel(['id' => 5])
+            new MeiliSearchCustomKeySearchableModel(['id' => 5]),
         ]));
 
         $job = unserialize(serialize($job));
@@ -88,7 +88,7 @@ class MeiliSearchEngineTest extends TestCase
     public function test_remove_from_search_job_uses_custom_search_key()
     {
         $job = new RemoveFromSearch(Collection::make([
-            new MeiliSearchCustomKeySearchableModel(['id' => 5])
+            new MeiliSearchCustomKeySearchableModel(['id' => 5]),
         ]));
 
         $job = unserialize(serialize($job));
@@ -369,7 +369,7 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('addDocuments')->once()->with([[
-            'id' => 'my-meilisearch-key.5'
+            'id' => 'my-meilisearch-key.5',
         ]], 'id');
 
         $engine = new MeiliSearchEngine($client);

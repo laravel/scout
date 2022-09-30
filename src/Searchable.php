@@ -2,9 +2,9 @@
 
 namespace Laravel\Scout;
 
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
+use Illuminate\Support\Str;
 
 trait Searchable
 {

@@ -5,8 +5,8 @@ namespace Tests\Unit;
 use Illuminate\Support\Facades\Config;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
-use PHPUnit\Framework\TestCase;
 use Mockery as m;
+use PHPUnit\Framework\TestCase;
 
 class RemoveableScoutCollectionTest extends TestCase
 {
@@ -23,7 +23,7 @@ class RemoveableScoutCollectionTest extends TestCase
             new SearchableModel(['id' => 2]),
         ]);
 
-        $this->assertEquals([1,2], $collection->getQueueableIds());
+        $this->assertEquals([1, 2], $collection->getQueueableIds());
     }
 
     public function test_get_queuable_ids_resolves_custom_scout_keys()
