@@ -97,7 +97,7 @@ class MeiliSearchEngineTest extends TestCase
             $engine = m::mock(MeiliSearchEngine::class);
 
             $engine->shouldReceive('delete')->once()->with(m::on(function ($collection) {
-                $keyName = ($model = $collection->first())->getUnqualifiedScoutKeyName();
+                $keyName = ($model = $collection->first())->getScoutKeyName();
 
                 return $model->getAttributes()[$keyName] === 'my-meilisearch-key.5';
             }));
@@ -240,7 +240,7 @@ class MeiliSearchEngineTest extends TestCase
         $builder = m::mock(Builder::class);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getUnqualifiedScoutKeyName' => 'custom_key']);
+        $model->shouldReceive(['getScoutKeyName' => 'custom_key']);
         $builder->model = $model;
 
         $engine->shouldReceive('keys')->passthru();

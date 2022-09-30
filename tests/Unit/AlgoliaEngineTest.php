@@ -93,7 +93,7 @@ class AlgoliaEngineTest extends TestCase
             $engine = m::mock(AlgoliaEngine::class);
 
             $engine->shouldReceive('delete')->once()->with(m::on(function ($collection) {
-                $keyName = ($model = $collection->first())->getUnqualifiedScoutKeyName();
+                $keyName = ($model = $collection->first())->getScoutKeyName();
 
                 return $model->getAttributes()[$keyName] === 'my-algolia-key.5';
             }));

@@ -90,7 +90,7 @@ class MeiliSearchEngine extends Engine
         $index = $this->meilisearch->index($models->first()->searchableAs());
 
         $keys = $models instanceof RemoveableScoutCollection
-            ? $models->pluck($models->first()->getUnqualifiedScoutKeyName())
+            ? $models->pluck($models->first()->getScoutKeyName())
             : $models->map->getScoutKey();
 
         $index->deleteDocuments($keys->all());
@@ -248,7 +248,7 @@ class MeiliSearchEngine extends Engine
      */
     public function keys(Builder $builder)
     {
-        $scoutKey = $builder->model->getUnqualifiedScoutKeyName();
+        $scoutKey = $builder->model->getScoutKeyName();
 
         return $this->mapIdsFrom($this->search($builder), $scoutKey);
     }
