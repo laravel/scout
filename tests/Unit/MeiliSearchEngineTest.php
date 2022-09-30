@@ -2,10 +2,14 @@
 
 namespace Laravel\Scout\Tests\Unit;
 
+use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
+use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\MeiliSearchEngine;
+use Laravel\Scout\Jobs\RemoveFromSearch;
 use Laravel\Scout\Tests\Fixtures\EmptySearchableModel;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Laravel\Scout\Tests\Fixtures\SoftDeletedEmptySearchableModel;
@@ -18,6 +22,17 @@ use stdClass;
 
 class MeiliSearchEngineTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Config::shouldReceive('get')->with('scout.after_commit', m::any())->andReturn(false);
+        Config::shouldReceive('get')->with('scout.soft_delete', m::any())->andReturn(false);
+    }
+
+    protected function tearDown(): void
+    {
+        m::close();
+    }
+
     public function test_update_adds_objects_to_index()
     {
         $client = m::mock(Client::class);
@@ -41,6 +56,59 @@ class MeiliSearchEngineTest extends TestCase
 
         $engine = new MeiliSearchEngine($client);
         $engine->delete(Collection::make([new SearchableModel(['id' => 1])]));
+    }
+
+    public function test_delete_removes_objects_to_index_with_a_custom_search_key()
+    {
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('deleteDocuments')->once()->with(['my-meilisearch-key.5']);
+
+        $engine = new MeiliSearchEngine($client);
+        $engine->delete(Collection::make([new MeiliSearchCustomKeySearchableModel(['id' => 5])]));
+    }
+
+    public function test_delete_with_removeable_scout_collection_using_custom_search_key()
+    {
+        $job = new RemoveFromSearch(Collection::make([
+            new MeiliSearchCustomKeySearchableModel(['id' => 5])
+        ]));
+
+        $job = unserialize(serialize($job));
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('deleteDocuments')->once()->with(['my-meilisearch-key.5']);
+
+        $engine = new MeiliSearchEngine($client);
+        $engine->delete($job->models);
+    }
+
+    public function test_remove_from_search_job_uses_custom_search_key()
+    {
+        $job = new RemoveFromSearch(Collection::make([
+            new MeiliSearchCustomKeySearchableModel(['id' => 5])
+        ]));
+
+        $job = unserialize(serialize($job));
+
+        Container::getInstance()->bind(EngineManager::class, function () {
+            $engine = m::mock(MeiliSearchEngine::class);
+
+            $engine->shouldReceive('delete')->once()->with(m::on(function ($collection) {
+                $keyName = ($model = $collection->first())->getUnqualifiedScoutKeyName();
+
+                return $model->getAttributes()[$keyName] === 'my-meilisearch-key.5';
+            }));
+
+            $manager = m::mock(EngineManager::class);
+
+            $manager->shouldReceive('engine')->andReturn($engine);
+
+            return $manager;
+        });
+
+        $job->handle();
     }
 
     public function test_search_sends_correct_parameters_to_meilisearch()
@@ -171,7 +239,7 @@ class MeiliSearchEngineTest extends TestCase
         $builder = m::mock(Builder::class);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getScoutKeyName' => 'table.custom_key']);
+        $model->shouldReceive(['getUnqualifiedScoutKeyName' => 'custom_key']);
         $builder->model = $model;
 
         $engine->shouldReceive('keys')->passthru();
@@ -300,7 +368,7 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('addDocuments')->once()->with([[
-            'id' => 5,
+            'id' => 'my-meilisearch-key.5'
         ]], 'id');
 
         $engine = new MeiliSearchEngine($client);
