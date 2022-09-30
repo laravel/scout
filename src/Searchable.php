@@ -4,7 +4,6 @@ namespace Laravel\Scout;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
-use Illuminate\Support\Str;
 
 trait Searchable
 {
@@ -391,7 +390,7 @@ trait Searchable
     {
         return $this->getKeyName();
     }
-    
+
     /**
      * Determine if the current class should use soft deletes with searching.
      *
