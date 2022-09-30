@@ -30,6 +30,7 @@ class MeiliSearchEngineTest extends TestCase
 
     protected function tearDown(): void
     {
+        Container::getInstance()->flush();
         m::close();
     }
 
