@@ -90,11 +90,11 @@ class MeiliSearchEngine extends Engine
 
         $index = $this->meilisearch->index($models->first()->searchableAs());
 
-        $values = $models instanceof RemoveableScoutCollection
+        $keys = $models instanceof RemoveableScoutCollection
             ? $models->pluck($models->first()->getUnqualifiedScoutKeyName())
             : $models->map->getScoutKey();
 
-        $index->deleteDocuments($values->all());
+        $index->deleteDocuments($keys->all());
     }
 
     /**
