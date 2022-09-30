@@ -3,6 +3,7 @@
 namespace Laravel\Scout\Engines;
 
 use Illuminate\Support\LazyCollection;
+use Illuminate\Support\Str;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use MeiliSearch\Client as MeiliSearchClient;
@@ -248,7 +249,7 @@ class MeiliSearchEngine extends Engine
      */
     public function keys(Builder $builder)
     {
-        $scoutKey = $builder->model->getScoutKeyName();
+        $scoutKey = Str::afterLast($builder->model->getScoutKeyName(), '.');
 
         return $this->mapIdsFrom($this->search($builder), $scoutKey);
     }
