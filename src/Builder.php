@@ -444,7 +444,7 @@ class Builder
 
         $ids = $engine->mapIdsFrom(
             $results,
-            Str::afterLast($this->model->getScoutKeyName(), '.')
+            $this->model->getUnqualifiedScoutKeyName()
         )->all();
 
         if (count($ids) < $totalCount) {
