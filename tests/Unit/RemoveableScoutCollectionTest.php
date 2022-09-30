@@ -16,11 +16,6 @@ class RemoveableScoutCollectionTest extends TestCase
         Config::shouldReceive('get')->with('scout.soft_delete', m::any())->andReturn(false);
     }
 
-    protected function tearDown(): void
-    {
-        m::close();
-    }
-
     public function test_get_queuable_ids()
     {
         $collection = RemoveableScoutCollection::make([
