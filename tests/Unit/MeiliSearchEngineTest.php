@@ -264,7 +264,7 @@ class MeiliSearchEngineTest extends TestCase
         $engine = new MeiliSearchEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getKeyName' => 'id']);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
         $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([new SearchableModel(['id' => 1])]));
         $builder = m::mock(Builder::class);
 
@@ -283,7 +283,7 @@ class MeiliSearchEngineTest extends TestCase
         $engine = new MeiliSearchEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getKeyName' => 'id']);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
         $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([
             new SearchableModel(['id' => 1]),
             new SearchableModel(['id' => 2]),
@@ -317,7 +317,7 @@ class MeiliSearchEngineTest extends TestCase
         $engine = new MeiliSearchEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getKeyName' => 'id']);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
         $model->shouldReceive('queryScoutModelsByIds->cursor')->andReturn($models = LazyCollection::make([new SearchableModel(['id' => 1])]));
         $builder = m::mock(Builder::class);
 
@@ -336,7 +336,7 @@ class MeiliSearchEngineTest extends TestCase
         $engine = new MeiliSearchEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getKeyName' => 'id']);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
         $model->shouldReceive('queryScoutModelsByIds->cursor')->andReturn($models = LazyCollection::make([
             new SearchableModel(['id' => 1]),
             new SearchableModel(['id' => 2]),
@@ -369,8 +369,9 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('addDocuments')->once()->with([[
-            'id' => 'my-meilisearch-key.5',
-        ]], 'id');
+            'meilisearch-key' => 'my-meilisearch-key.5',
+            'id' => 5,
+        ]], 'meilisearch-key');
 
         $engine = new MeiliSearchEngine($client);
         $engine->update(Collection::make([new MeiliSearchCustomKeySearchableModel(['id' => 5])]));
@@ -544,5 +545,10 @@ class MeiliSearchCustomKeySearchableModel extends SearchableModel
     public function getScoutKey()
     {
         return 'my-meilisearch-key.'.$this->getKey();
+    }
+
+    public function getScoutKeyName()
+    {
+        return 'meilisearch-key';
     }
 }

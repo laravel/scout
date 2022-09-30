@@ -100,7 +100,9 @@ class CollectionEngine extends Engine
                                 $query->whereIn($key, $values);
                             }
                         })
-                        ->orderBy($builder->model->getKeyName(), 'desc');
+                        ->orderBy(
+                            $builder->model->qualifyColumn($builder->model->getScoutKeyName()), 'desc'
+                        );
 
         $models = $this->ensureSoftDeletesAreHandled($builder, $query)
                         ->get()
@@ -167,7 +169,7 @@ class CollectionEngine extends Engine
         $results = array_values($results['results']);
 
         return count($results) > 0
-                    ? collect($results)->pluck($results[0]->getKeyName())
+                    ? collect($results)->pluck($results[0]->getScoutKeyName())
                     : collect();
     }
 
@@ -188,7 +190,7 @@ class CollectionEngine extends Engine
         }
 
         $objectIds = collect($results)
-                ->pluck($model->getKeyName())
+                ->pluck($model->getScoutKeyName())
                 ->values()
                 ->all();
 
@@ -220,7 +222,7 @@ class CollectionEngine extends Engine
         }
 
         $objectIds = collect($results)
-                ->pluck($model->getKeyName())
+                ->pluck($model->getScoutKeyName())
                 ->values()->all();
 
         $objectIdPositions = array_flip($objectIds);

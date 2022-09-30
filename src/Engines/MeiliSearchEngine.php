@@ -66,12 +66,12 @@ class MeiliSearchEngine extends Engine
             return array_merge(
                 $searchableData,
                 $model->scoutMetadata(),
-                [$model->getKeyName() => $model->getScoutKey()],
+                [$model->getScoutKeyName() => $model->getScoutKey()],
             );
         })->filter()->values()->all();
 
         if (! empty($objects)) {
-            $index->addDocuments($objects, $models->first()->getKeyName());
+            $index->addDocuments($objects, $models->first()->getScoutKeyName());
         }
     }
 
@@ -227,7 +227,7 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
-     * Pluck and the given results with the given primary key name.
+     * Pluck the given results with the given primary key name.
      *
      * @param  mixed  $results
      * @param  string  $key
@@ -267,7 +267,7 @@ class MeiliSearchEngine extends Engine
             return $model->newCollection();
         }
 
-        $objectIds = collect($results['hits'])->pluck($model->getKeyName())->values()->all();
+        $objectIds = collect($results['hits'])->pluck($model->getScoutKeyName())->values()->all();
 
         $objectIdPositions = array_flip($objectIds);
 
@@ -294,7 +294,7 @@ class MeiliSearchEngine extends Engine
             return LazyCollection::make($model->newCollection());
         }
 
-        $objectIds = collect($results['hits'])->pluck($model->getKeyName())->values()->all();
+        $objectIds = collect($results['hits'])->pluck($model->getScoutKeyName())->values()->all();
         $objectIdPositions = array_flip($objectIds);
 
         return $model->queryScoutModelsByIds(
