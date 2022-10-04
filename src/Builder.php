@@ -5,7 +5,6 @@ namespace Laravel\Scout;
 use Illuminate\Container\Container;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Str;
 use Illuminate\Support\Traits\Macroable;
 use Laravel\Scout\Contracts\PaginatesEloquentModels;
 
@@ -444,7 +443,7 @@ class Builder
 
         $ids = $engine->mapIdsFrom(
             $results,
-            Str::afterLast($this->model->getScoutKeyName(), '.')
+            $this->model->getUnqualifiedScoutKeyName()
         )->all();
 
         if (count($ids) < $totalCount) {
