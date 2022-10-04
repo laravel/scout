@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.4.11...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.4.12...9.x)
+
+## [v9.4.12](https://github.com/laravel/scout/compare/v9.4.11...v9.4.12) - 2022-10-04
+
+### Fixed
+
+- Fix custom scout keys not being utilized when deleting from queue by @stevebauman in https://github.com/laravel/scout/pull/656
 
 ## [v9.4.11](https://github.com/laravel/scout/compare/v9.4.10...v9.4.11) - 2022-09-27
 
