@@ -64,9 +64,9 @@ class AlgoliaEngine extends Engine
             }
 
             return array_merge(
-                ['objectID' => $model->getScoutKey()],
                 $searchableData,
-                $model->scoutMetadata()
+                $model->scoutMetadata(),
+                ['objectID' => $model->getScoutKey()],
             );
         })->filter()->values()->all();
 
