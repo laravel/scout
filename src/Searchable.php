@@ -2,8 +2,8 @@
 
 namespace Laravel\Scout;
 
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Str;
 
