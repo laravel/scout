@@ -107,7 +107,7 @@ class BuilderTest extends TestCase
                     'name' => $result->name,
                 ];
             }),
-            'nbHits' => $query->count(),
+            'estimatedTotalHits' => $query->count(),
         ]);
     }
 }
