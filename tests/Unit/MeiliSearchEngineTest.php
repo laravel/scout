@@ -146,7 +146,7 @@ class MeiliSearchEngineTest extends TestCase
             'hits' => [],
             'offset' => 0,
             'limit' => 20,
-            'nbHits' => 0,
+            'estimatedTotalHits' => 0,
             'exhaustiveNbHits' => false,
             'processingTimeMs' => 1,
             'query' => 'mustang',
@@ -175,7 +175,7 @@ class MeiliSearchEngineTest extends TestCase
             'hits' => [],
             'offset' => 0,
             'limit' => 20,
-            'nbHits' => 0,
+            'estimatedTotalHits' => 0,
             'exhaustiveNbHits' => false,
             'processingTimeMs' => 1,
             'query' => 'mustang',
@@ -193,7 +193,7 @@ class MeiliSearchEngineTest extends TestCase
         $engine = new MeiliSearchEngine($client);
 
         $results = $engine->mapIdsFrom([
-            'nbHits' => 0, 'hits' => [],
+            'estimatedTotalHits' => 0, 'hits' => [],
         ], 'id');
 
         $this->assertEquals(0, count($results));
@@ -205,7 +205,7 @@ class MeiliSearchEngineTest extends TestCase
         $engine = new MeiliSearchEngine($client);
 
         $results = $engine->mapIdsFrom([
-            'nbHits' => 5,
+            'estimatedTotalHits' => 5,
             'hits' => [
                 [
                     'some_field' => 'something',
@@ -269,7 +269,7 @@ class MeiliSearchEngineTest extends TestCase
         $builder = m::mock(Builder::class);
 
         $results = $engine->map($builder, [
-            'nbHits' => 1, 'hits' => [
+            'estimatedTotalHits' => 1, 'hits' => [
                 ['id' => 1],
             ],
         ], $model);
@@ -294,7 +294,7 @@ class MeiliSearchEngineTest extends TestCase
         $builder = m::mock(Builder::class);
 
         $results = $engine->map($builder, [
-            'nbHits' => 4, 'hits' => [
+            'estimatedTotalHits' => 4, 'hits' => [
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 4],
@@ -322,7 +322,7 @@ class MeiliSearchEngineTest extends TestCase
         $builder = m::mock(Builder::class);
 
         $results = $engine->lazyMap($builder, [
-            'nbHits' => 1, 'hits' => [
+            'estimatedTotalHits' => 1, 'hits' => [
                 ['id' => 1],
             ],
         ], $model);
@@ -347,7 +347,7 @@ class MeiliSearchEngineTest extends TestCase
         $builder = m::mock(Builder::class);
 
         $results = $engine->lazyMap($builder, [
-            'nbHits' => 4, 'hits' => [
+            'estimatedTotalHits' => 4, 'hits' => [
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 4],
@@ -534,7 +534,7 @@ class MeiliSearchEngineTest extends TestCase
     public function test_engine_returns_hits_entry_from_search_response()
     {
         $this->assertTrue(3 === (new MeiliSearchEngine(m::mock(Client::class)))->getTotalCount([
-            'nbHits' => 3,
+            'estimatedTotalHits' => 3,
         ]));
     }
 }
