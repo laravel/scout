@@ -54,6 +54,10 @@ class MeiliSearchEngine extends Engine
 
         $index = $this->meilisearch->index($models->first()->searchableAs());
 
+        if ($settings = config('scout.meilisearch.settings.'.$models->first()->searchableAs(), [])) {
+            $index->updateSettings($settings);
+        }
+
         if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
             $models->each->pushSoftDeleteMetadata();
         }
@@ -355,6 +359,20 @@ class MeiliSearchEngine extends Engine
     public function deleteIndex($name)
     {
         return $this->meilisearch->deleteIndex($name);
+    }
+
+    /**
+     * Update an index's settings.
+     *
+     * @param  string  $name
+     * @param  array  $options
+     * @return mixed
+     *
+     * @throws \MeiliSearch\Exceptions\ApiException
+     */
+    public function updateIndexSettings($name, array $options = [])
+    {
+        return $this->meilisearch->index($name)->updateSettings($options);
     }
 
     /**
