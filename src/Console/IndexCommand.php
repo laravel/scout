@@ -46,7 +46,9 @@ class IndexCommand extends Command
             if (method_exists($engine, 'updateIndexSettings')) {
                 $driver = config('scout.driver');
 
-                $engine->updateIndexSettings($name, config('scout.'.$driver.'.settings.'.$name, []));
+                if ($settings = config('scout.'.$driver.'.settings.'.$name, [])) {
+                    $engine->updateIndexSettings($name, $settings);
+                }
             }
 
             $this->info('Index ["'.$this->argument('name').'"] created successfully.');
