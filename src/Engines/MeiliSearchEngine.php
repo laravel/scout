@@ -26,25 +26,16 @@ class MeiliSearchEngine extends Engine
     protected $softDelete;
 
     /**
-     * The index settings.
-     *
-     * @var array
-     */
-    protected $settings;
-
-    /**
      * Create a new MeiliSearchEngine instance.
      *
      * @param  \MeiliSearch\Client  $meilisearch
      * @param  bool  $softDelete
-     * @param  array  $settings
      * @return void
      */
-    public function __construct(MeiliSearchClient $meilisearch, $softDelete = false, array $settings = [])
+    public function __construct(MeiliSearchClient $meilisearch, $softDelete = false)
     {
         $this->meilisearch = $meilisearch;
         $this->softDelete = $softDelete;
-        $this->settings = $settings;
     }
 
     /**
