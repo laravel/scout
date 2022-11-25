@@ -63,10 +63,6 @@ class MeiliSearchEngine extends Engine
 
         $index = $this->meilisearch->index($models->first()->searchableAs());
 
-        if ($settings = $this->settings[$models->first()->searchableAs()] ?? []) {
-            $index->updateSettings($settings);
-        }
-
         if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
             $models->each->pushSoftDeleteMetadata();
         }
@@ -375,7 +371,7 @@ class MeiliSearchEngine extends Engine
      *
      * @param  string  $name
      * @param  array  $options
-     * @return mixed
+     * @return array
      *
      * @throws \MeiliSearch\Exceptions\ApiException
      */

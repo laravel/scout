@@ -7,6 +7,7 @@ use Laravel\Scout\Console\DeleteIndexCommand;
 use Laravel\Scout\Console\FlushCommand;
 use Laravel\Scout\Console\ImportCommand;
 use Laravel\Scout\Console\IndexCommand;
+use Laravel\Scout\Console\SyncSettingsCommand;
 use MeiliSearch\Client as MeiliSearch;
 
 class ScoutServiceProvider extends ServiceProvider
@@ -46,6 +47,7 @@ class ScoutServiceProvider extends ServiceProvider
                 ImportCommand::class,
                 IndexCommand::class,
                 DeleteIndexCommand::class,
+                SyncSettingsCommand::class,
             ]);
 
             $this->publishes([
