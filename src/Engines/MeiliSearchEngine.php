@@ -345,6 +345,20 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
+     * Update an index's settings.
+     *
+     * @param  string  $name
+     * @param  array  $options
+     * @return array
+     *
+     * @throws \MeiliSearch\Exceptions\ApiException
+     */
+    public function updateIndexSettings($name, array $options = [])
+    {
+        return $this->meilisearch->index($name)->updateSettings($options);
+    }
+
+    /**
      * Delete a search index.
      *
      * @param  string  $name
