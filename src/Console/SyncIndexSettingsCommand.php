@@ -6,21 +6,21 @@ use Exception;
 use Illuminate\Console\Command;
 use Laravel\Scout\EngineManager;
 
-class SyncSettingsCommand extends Command
+class SyncIndexSettingsCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'scout:sync-settings';
+    protected $signature = 'scout:sync-index-settings';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Sync the settings of an index';
+    protected $description = 'Sync your configured index settings with your search engine (MeiliSearch)';
 
     /**
      * Execute the console command.
@@ -31,6 +31,7 @@ class SyncSettingsCommand extends Command
     public function handle(EngineManager $manager)
     {
         $engine = $manager->engine();
+
         $driver = config('scout.driver');
 
         if (! method_exists($engine, 'updateIndexSettings')) {
@@ -38,13 +39,13 @@ class SyncSettingsCommand extends Command
         }
 
         try {
-            $indexes = (array) config('scout.'.$driver.'.settings', []);
+            $indexes = (array) config('scout.'.$driver.'.index-settings', []);
 
             if (count($indexes)) {
                 foreach ($indexes as $name => $settings) {
                     $engine->updateIndexSettings($name, $settings);
 
-                    $this->info('Index settings for the ["'.$name.'"] index synced successfully.');
+                    $this->info('Settings for the ["'.$name.'"] index synced successfully.');
                 }
             } else {
                 $this->info('No index settings found for the "'.$driver.'" engine.');

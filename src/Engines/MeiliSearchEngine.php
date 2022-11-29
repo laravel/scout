@@ -345,19 +345,6 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
-     * Delete a search index.
-     *
-     * @param  string  $name
-     * @return mixed
-     *
-     * @throws \MeiliSearch\Exceptions\ApiException
-     */
-    public function deleteIndex($name)
-    {
-        return $this->meilisearch->deleteIndex($name);
-    }
-
-    /**
      * Update an index's settings.
      *
      * @param  string  $name
@@ -369,6 +356,19 @@ class MeiliSearchEngine extends Engine
     public function updateIndexSettings($name, array $options = [])
     {
         return $this->meilisearch->index($name)->updateSettings($options);
+    }
+
+    /**
+     * Delete a search index.
+     *
+     * @param  string  $name
+     * @return mixed
+     *
+     * @throws \MeiliSearch\Exceptions\ApiException
+     */
+    public function deleteIndex($name)
+    {
+        return $this->meilisearch->deleteIndex($name);
     }
 
     /**
