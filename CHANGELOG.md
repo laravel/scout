@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.4.12...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.5.0...9.x)
+
+## [v9.5.0](https://github.com/laravel/scout/compare/v9.4.12...v9.5.0) - 2022-12-06
+
+### Added
+
+- Support Meilisearch index settings by @driesvints in https://github.com/laravel/scout/pull/669
 
 ## [v9.4.12](https://github.com/laravel/scout/compare/v9.4.11...v9.4.12) - 2022-10-04
 
