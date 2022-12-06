@@ -4,6 +4,7 @@ namespace Laravel\Scout\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Laravel\Scout\EngineManager;
 
 class SyncIndexSettingsCommand extends Command
@@ -63,6 +64,6 @@ class SyncIndexSettingsCommand extends Command
 
         $prefix = config('scout.prefix');
 
-        return ! str_starts_with($name, $prefix) ? $prefix . $name : $name;
+        return ! Str::startsWith($name, $prefix) ? $prefix . $name : $name;
     }
 }
