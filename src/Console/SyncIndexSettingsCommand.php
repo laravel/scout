@@ -64,6 +64,6 @@ class SyncIndexSettingsCommand extends Command
 
         $prefix = config('scout.prefix');
 
-        return ! Str::startsWith($name, $prefix) ? $prefix . $name : $name;
+        return ! Str::startsWith($name, $prefix) ? $prefix.$name : $name;
     }
 }
