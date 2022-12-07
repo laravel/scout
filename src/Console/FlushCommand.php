@@ -11,7 +11,7 @@ class FlushCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'scout:flush {model}';
+    protected $signature = 'scout:flush {model : Class name of the model to flush}';
 
     /**
      * The console command description.

@@ -55,9 +55,6 @@ class RemoveFromSearch implements ShouldQueue
         return new RemoveableScoutCollection(
             collect($value->id)->map(function ($id) use ($value) {
                 return tap(new $value->class, function ($model) use ($id) {
-                    // The scout key may not be an integer. In this case,
-                    // we will force a key type of string so it is not
-                    // cast when retrieving it from the faux model.
                     $model->setKeyType(
                         is_string($id) ? 'string' : 'int'
                     )->forceFill([

@@ -240,7 +240,7 @@ class MeiliSearchEngineTest extends TestCase
         $builder = m::mock(Builder::class);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getScoutKeyName' => 'table.custom_key']);
+        $model->shouldReceive(['getUnqualifiedScoutKeyName' => 'custom_key']);
         $builder->model = $model;
 
         $engine->shouldReceive('keys')->passthru();

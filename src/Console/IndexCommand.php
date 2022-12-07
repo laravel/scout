@@ -41,7 +41,15 @@ class IndexCommand extends Command
                 $options = ['primaryKey' => $this->option('key')];
             }
 
-            $engine->createIndex($this->argument('name'), $options);
+            $engine->createIndex($name = $this->argument('name'), $options);
+
+            if (method_exists($engine, 'updateIndexSettings')) {
+                $driver = config('scout.driver');
+
+                if ($settings = config('scout.'.$driver.'.index-settings.'.$name, [])) {
+                    $engine->updateIndexSettings($name, $settings);
+                }
+            }
 
             $this->info('Index ["'.$this->argument('name').'"] created successfully.');
         } catch (Exception $exception) {
