@@ -56,6 +56,12 @@ class SyncIndexSettingsCommand extends Command
         }
     }
 
+    /**
+     * Get the fully-qualified index name for the given index.
+     *
+     * @param  string  $name
+     * @return string
+     */
     protected function indexName($name)
     {
         if (class_exists($name)) {
