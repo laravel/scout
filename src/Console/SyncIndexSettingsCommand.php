@@ -4,6 +4,7 @@ namespace Laravel\Scout\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Laravel\Scout\EngineManager;
 
 class SyncIndexSettingsCommand extends Command
@@ -43,9 +44,9 @@ class SyncIndexSettingsCommand extends Command
 
             if (count($indexes)) {
                 foreach ($indexes as $name => $settings) {
-                    $engine->updateIndexSettings($name, $settings);
+                    $engine->updateIndexSettings($indexName = $this->indexName($name), $settings);
 
-                    $this->info('Settings for the ["'.$name.'"] index synced successfully.');
+                    $this->info('Settings for the ["'.$indexName.'"] index synced successfully.');
                 }
             } else {
                 $this->info('No index settings found for the "'.$driver.'" engine.');
@@ -53,5 +54,22 @@ class SyncIndexSettingsCommand extends Command
         } catch (Exception $exception) {
             $this->error($exception->getMessage());
         }
+    }
+
+    /**
+     * Get the fully-qualified index name for the given index.
+     *
+     * @param  string  $name
+     * @return string
+     */
+    protected function indexName($name)
+    {
+        if (class_exists($name)) {
+            return (new $name)->searchableAs();
+        }
+
+        $prefix = config('scout.prefix');
+
+        return ! Str::startsWith($name, $prefix) ? $prefix.$name : $name;
     }
 }
