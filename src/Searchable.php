@@ -4,7 +4,6 @@ namespace Laravel\Scout;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
-use Illuminate\Support\Str;
 
 trait Searchable
 {
