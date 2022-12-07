@@ -393,16 +393,6 @@ trait Searchable
     }
 
     /**
-     * Get the unqualified Scout key name.
-     *
-     * @return string
-     */
-    public function getUnqualifiedScoutKeyName()
-    {
-        return Str::afterLast($this->getScoutKeyName(), '.');
-    }
-
-    /**
      * Determine if the current class should use soft deletes with searching.
      *
      * @return bool
