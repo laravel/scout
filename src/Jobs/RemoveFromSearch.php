@@ -4,7 +4,6 @@ namespace Laravel\Scout\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Queue\SerializesModels;
 
 class RemoveFromSearch implements ShouldQueue
@@ -14,7 +13,7 @@ class RemoveFromSearch implements ShouldQueue
     /**
      * The models to be removed from the search index.
      *
-     * @var \Illuminate\Database\Eloquent\Collection
+     * @var \Laravel\Scout\Jobs\RemoveableScoutCollection
      */
     public $models;
 
@@ -45,18 +44,22 @@ class RemoveFromSearch implements ShouldQueue
      * Restore a queueable collection instance.
      *
      * @param  \Illuminate\Contracts\Database\ModelIdentifier  $value
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return \Laravel\Scout\Jobs\RemoveableScoutCollection
      */
     protected function restoreCollection($value)
     {
         if (! $value->class || count($value->id) === 0) {
-            return new EloquentCollection;
+            return new RemoveableScoutCollection;
         }
 
-        return new EloquentCollection(
+        return new RemoveableScoutCollection(
             collect($value->id)->map(function ($id) use ($value) {
                 return tap(new $value->class, function ($model) use ($id) {
-                    $model->forceFill([$model->getScoutKeyName() => $id]);
+                    $model->setKeyType(
+                        is_string($id) ? 'string' : 'int'
+                    )->forceFill([
+                        $model->getScoutKeyName() => $id,
+                    ]);
                 });
             })
         );

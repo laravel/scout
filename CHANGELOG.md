@@ -1,6 +1,24 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.4.10...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.5.0...master)
+
+## [v9.5.0](https://github.com/laravel/scout/compare/v9.4.12...v9.5.0) - 2022-12-06
+
+### Added
+
+- Support Meilisearch index settings by @driesvints in https://github.com/laravel/scout/pull/669
+
+## [v9.4.12](https://github.com/laravel/scout/compare/v9.4.11...v9.4.12) - 2022-10-04
+
+### Fixed
+
+- Fix custom scout keys not being utilized when deleting from queue by @stevebauman in https://github.com/laravel/scout/pull/656
+
+## [v9.4.11](https://github.com/laravel/scout/compare/v9.4.10...v9.4.11) - 2022-09-27
+
+### Fixed
+
+- Use scout key when mapping keys from search results by @flexchar in https://github.com/laravel/scout/pull/652
 
 ## [v9.4.10](https://github.com/laravel/scout/compare/v9.4.9...v9.4.10) - 2022-07-19
 

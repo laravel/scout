@@ -3,8 +3,8 @@
 namespace Laravel\Scout\Engines;
 
 use Illuminate\Support\LazyCollection;
-use Illuminate\Support\Str;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use MeiliSearch\Client as MeiliSearchClient;
 use MeiliSearch\MeiliSearch;
 use MeiliSearch\Search\SearchResult;
@@ -64,9 +64,9 @@ class MeiliSearchEngine extends Engine
             }
 
             return array_merge(
-                [$model->getScoutKeyName() => $model->getScoutKey()],
                 $searchableData,
-                $model->scoutMetadata()
+                $model->scoutMetadata(),
+                [$model->getScoutKeyName() => $model->getScoutKey()],
             );
         })->filter()->values()->all();
 
@@ -83,13 +83,17 @@ class MeiliSearchEngine extends Engine
      */
     public function delete($models)
     {
+        if ($models->isEmpty()) {
+            return;
+        }
+
         $index = $this->meilisearch->index($models->first()->searchableAs());
 
-        $index->deleteDocuments(
-            $models->map->getScoutKey()
-                ->values()
-                ->all()
-        );
+        $keys = $models instanceof RemoveableScoutCollection
+            ? $models->pluck($models->first()->getUnqualifiedScoutKeyName())
+            : $models->map->getScoutKey();
+
+        $index->deleteDocuments($keys->all());
     }
 
     /**
@@ -244,7 +248,7 @@ class MeiliSearchEngine extends Engine
      */
     public function keys(Builder $builder)
     {
-        $scoutKey = Str::afterLast($builder->model->getScoutKeyName(), '.');
+        $scoutKey = $builder->model->getUnqualifiedScoutKeyName();
 
         return $this->mapIdsFrom($this->search($builder), $scoutKey);
     }
@@ -338,6 +342,20 @@ class MeiliSearchEngine extends Engine
     public function createIndex($name, array $options = [])
     {
         return $this->meilisearch->createIndex($name, $options);
+    }
+
+    /**
+     * Update an index's settings.
+     *
+     * @param  string  $name
+     * @param  array  $options
+     * @return array
+     *
+     * @throws \MeiliSearch\Exceptions\ApiException
+     */
+    public function updateIndexSettings($name, array $options = [])
+    {
+        return $this->meilisearch->index($name)->updateSettings($options);
     }
 
     /**
