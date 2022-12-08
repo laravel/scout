@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.5.0...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.5.1...9.x)
+
+## [v9.5.1](https://github.com/laravel/scout/compare/v9.5.0...v9.5.1) - 2022-12-08
+
+### Fixed
+
+- Fix the sync index settings command not using the scout prefix by @tonysm in https://github.com/laravel/scout/pull/670
 
 ## [v9.5.0](https://github.com/laravel/scout/compare/v9.4.12...v9.5.0) - 2022-12-06
 
