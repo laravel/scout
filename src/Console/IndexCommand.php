@@ -51,7 +51,12 @@ class IndexCommand extends Command
             if (method_exists($engine, 'updateIndexSettings')) {
                 $driver = config('scout.driver');
 
-                if ($settings = config('scout.'.$driver.'.index-settings.'.$name, [])) {
+                $class = isset($model) ? get_class($model) : null;
+                $settings = config('scout.'.$driver.'.index-settings.'.$name)
+                    ?? config('scout.'.$driver.'.index-settings.'.$class)
+                    ?? [];
+
+                if ($settings) {
                     $engine->updateIndexSettings($name, $settings);
                 }
 
