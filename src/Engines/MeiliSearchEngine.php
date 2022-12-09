@@ -393,21 +393,6 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
-     * Update index filterable attribute to allow filter on soft deletes statement.
-     *
-     * @param $model
-     * @return array|void
-     */
-    public function applyFilterableSoftDeletedAttribute($model)
-    {
-        if (! $this->usesSoftDelete($model)) {
-            return;
-        }
-
-        return $this->updateIndexSettings($model->searchableAs(), ['filterableAttributes' => ['__soft_deleted']]);
-    }
-
-    /**
      * Dynamically call the MeiliSearch client instance.
      *
      * @param  string  $method

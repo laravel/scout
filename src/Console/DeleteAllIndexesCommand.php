@@ -35,13 +35,13 @@ class DeleteAllIndexesCommand extends Command
         $driver = config('scout.driver');
 
         if (! method_exists($engine, 'deleteAllIndexes')) {
-            return $this->error('The "'.$driver.'" engine does not support delete all indexes.');
+            return $this->error('The ['.$driver.'] engine does not support deleting all indexes.');
         }
 
         try {
             $manager->engine()->deleteAllIndexes();
 
-            $this->info('All indexes have been deleted.');
+            $this->info('All indexes deleted successfully.');
         } catch (Exception $exception) {
             $this->error($exception->getMessage());
         }
