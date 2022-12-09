@@ -46,7 +46,7 @@ class SyncIndexSettingsCommand extends Command
                 foreach ($indexes as $name => $settings) {
                     $engine->updateIndexSettings($indexName = $this->indexName($name), $settings);
 
-                    $this->info('Settings for the ["'.$indexName.'"] index synced successfully.');
+                    $this->info('Settings for the ['.$indexName.'] index synced successfully.');
                 }
             } else {
                 $this->info('No index settings found for the "'.$driver.'" engine.');

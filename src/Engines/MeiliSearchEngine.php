@@ -372,6 +372,16 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
+     * Delete all search indexes.
+     *
+     * @return mixed
+     */
+    public function deleteAllIndexes()
+    {
+        return $this->meilisearch->deleteAllIndexes();
+    }
+
+    /**
      * Determine if the given model uses soft deletes.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model

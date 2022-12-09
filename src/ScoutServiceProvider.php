@@ -3,6 +3,7 @@
 namespace Laravel\Scout;
 
 use Illuminate\Support\ServiceProvider;
+use Laravel\Scout\Console\DeleteAllIndexesCommand;
 use Laravel\Scout\Console\DeleteIndexCommand;
 use Laravel\Scout\Console\FlushCommand;
 use Laravel\Scout\Console\ImportCommand;
@@ -48,6 +49,7 @@ class ScoutServiceProvider extends ServiceProvider
                 IndexCommand::class,
                 SyncIndexSettingsCommand::class,
                 DeleteIndexCommand::class,
+                DeleteAllIndexesCommand::class,
             ]);
 
             $this->publishes([
