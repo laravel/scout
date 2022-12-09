@@ -41,7 +41,12 @@ class IndexCommand extends Command
                 $options = ['primaryKey' => $this->option('key')];
             }
 
-            $engine->createIndex($name = $this->argument('name'), $options);
+            if (class_exists($name = $this->argument('name'))) {
+                $model = new $name;
+                $name = $model->searchableAs();
+            }
+
+            $engine->createIndex($name, $options);
 
             if (method_exists($engine, 'updateIndexSettings')) {
                 $driver = config('scout.driver');
@@ -49,9 +54,13 @@ class IndexCommand extends Command
                 if ($settings = config('scout.'.$driver.'.index-settings.'.$name, [])) {
                     $engine->updateIndexSettings($name, $settings);
                 }
+
+                if (isset($model) && method_exists($engine, 'applyFilterableSoftDeletedAttribute')) {
+                    $engine->applyFilterableSoftDeletedAttribute($model);
+                }
             }
 
-            $this->info('Index ["'.$this->argument('name').'"] created successfully.');
+            $this->info('Index ["'.$name.'"] created successfully.');
         } catch (Exception $exception) {
             $this->error($exception->getMessage());
         }
