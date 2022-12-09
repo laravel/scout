@@ -372,7 +372,7 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
-     * Delete all search indexes
+     * Delete all search indexes.
      *
      * @return mixed
      */
