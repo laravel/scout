@@ -4,6 +4,7 @@ namespace Laravel\Scout\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Laravel\Scout\EngineManager;
 
@@ -44,6 +45,22 @@ class SyncIndexSettingsCommand extends Command
 
             if (count($indexes)) {
                 foreach ($indexes as $name => $settings) {
+                    if (! is_array($settings)) {
+                        $name = $settings;
+
+                        $settings = [];
+                    }
+
+                    if (class_exists($name)) {
+                        $model = new $name;
+                    }
+
+                    if (isset($model) &&
+                        config('scout.soft_delete', false) &&
+                        in_array(SoftDeletes::class, class_uses_recursive($model))) {
+                        $settings['filterableAttributes'][] = '__soft_deleted';
+                    }
+
                     $engine->updateIndexSettings($indexName = $this->indexName($name), $settings);
 
                     $this->info('Settings for the ['.$indexName.'] index synced successfully.');

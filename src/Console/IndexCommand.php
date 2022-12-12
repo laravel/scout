@@ -4,6 +4,7 @@ namespace Laravel\Scout\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Laravel\Scout\EngineManager;
 
@@ -58,6 +59,12 @@ class IndexCommand extends Command
                 $settings = config('scout.'.$driver.'.index-settings.'.$name)
                                 ?? config('scout.'.$driver.'.index-settings.'.$class)
                                 ?? [];
+
+                if (isset($model) &&
+                    config('scout.soft_delete', false) &&
+                    in_array(SoftDeletes::class, class_uses_recursive($model))) {
+                    $settings['filterableAttributes'][] = '__soft_deleted';
+                }
 
                 if ($settings) {
                     $engine->updateIndexSettings($name, $settings);
