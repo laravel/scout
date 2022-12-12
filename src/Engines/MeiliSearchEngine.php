@@ -393,6 +393,39 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
+     * Determine if the given model is soft deletable.
+     *
+     * @param  $name
+     * @return bool
+     */
+    protected function isSoftDeletable($name)
+    {
+        if (! class_exists($name)) {
+            return false;
+        }
+
+        return config('scout.soft_delete', false) && $this->usesSoftDelete(new $name);
+    }
+
+    /**
+     * Set soft deleted filterable attributes to scout index settings.
+     *
+     * @param  $name
+     * @param  $settings
+     * @return array
+     */
+    public function withSoftDeletedFilterable($name, $settings)
+    {
+        if (! $this->isSoftDeletable($name)) {
+            return $settings;
+        }
+
+        $settings['filterableAttributes'][] = '__soft_deleted';
+
+        return $settings;
+    }
+
+    /**
      * Dynamically call the MeiliSearch client instance.
      *
      * @param  string  $method

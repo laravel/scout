@@ -59,6 +59,10 @@ class IndexCommand extends Command
                                 ?? config('scout.'.$driver.'.index-settings.'.$class)
                                 ?? [];
 
+                if (method_exists($engine, 'withSoftDeletedFilterable')) {
+                    $settings = $engine->withSoftDeletedFilterable($class, $settings);
+                }
+
                 if ($settings) {
                     $engine->updateIndexSettings($name, $settings);
                 }

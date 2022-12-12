@@ -44,6 +44,15 @@ class SyncIndexSettingsCommand extends Command
 
             if (count($indexes)) {
                 foreach ($indexes as $name => $settings) {
+                    if (! is_array($settings)) {
+                        $name = $settings;
+                        $settings = [];
+                    }
+
+                    if (method_exists($engine, 'withSoftDeletedFilterable')) {
+                        $settings = $engine->withSoftDeletedFilterable($name, $settings);
+                    }
+
                     $engine->updateIndexSettings($indexName = $this->indexName($name), $settings);
 
                     $this->info('Settings for the ['.$indexName.'] index synced successfully.');
