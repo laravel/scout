@@ -90,7 +90,7 @@ class AlgoliaEngine extends Engine
         $index = $this->algolia->initIndex($models->first()->searchableAs());
 
         $keys = $models instanceof RemoveableScoutCollection
-            ? $models->pluck($models->first()->getUnqualifiedScoutKeyName())
+            ? $models->pluck($models->first()->getScoutKeyName())
             : $models->map->getScoutKey();
 
         $index->deleteObjects($keys->all());

@@ -4,7 +4,6 @@ namespace Laravel\Scout;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
-use Illuminate\Support\Str;
 
 trait Searchable
 {
@@ -390,16 +389,6 @@ trait Searchable
     public function getScoutKeyName()
     {
         return $this->getKeyName();
-    }
-
-    /**
-     * Get the unqualified Scout key name.
-     *
-     * @return string
-     */
-    public function getUnqualifiedScoutKeyName()
-    {
-        return Str::afterLast($this->getScoutKeyName(), '.');
     }
 
     /**
