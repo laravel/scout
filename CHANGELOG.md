@@ -1,6 +1,6 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.5.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.5.1...master)
 
 ## [v9.5.1](https://github.com/laravel/scout/compare/v9.5.0...v9.5.1) - 2022-12-08
 
