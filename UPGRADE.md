@@ -1,5 +1,36 @@
 # Upgrade Guide
 
+## Upgrading To 10.0 From 9.x
+
+This major version of Scout may require you to re-index your search records.
+
+### Minimum Versions
+
+The following required dependency versions have been updated:
+
+- The minimum PHP version is now v8.0
+- The minimum Laravel version is now v9.0
+
+### `getScoutKeyName` Changes
+
+PR: https://github.com/laravel/scout/pull/509
+
+Starting from v10, Scout's `getScoutKeyName` method will return just the unqualified key name and no longer prepends the table name. If you were overriding the `getScoutKeyName` you'll need to account for this change and make sure you return an unqualified key name.
+
+```diff
+public function getScoutKeyName()
+{
+-    return 'posts.id';
++    return 'id';
+}
+```
+
+### Removal of `getUnqualifiedScoutKeyName`
+
+PR: https://github.com/laravel/scout/pull/657
+
+Because of the above, `getUnqualifiedScoutKeyName` was also removed as it's not unnecessary. 
+
 ## Upgrading To 9.0 From 8.x
 
 ### Minimum Laravel Version
