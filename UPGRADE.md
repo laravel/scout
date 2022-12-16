@@ -2,8 +2,6 @@
 
 ## Upgrading To 10.0 From 9.x
 
-This major version of Scout may require you to re-index your search records.
-
 ### Minimum Versions
 
 The following required dependency versions have been updated:
