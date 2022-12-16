@@ -4,16 +4,16 @@
 
 ### Minimum Versions
 
-The following required dependency versions have been updated:
+The following dependency versions have been updated:
 
 - The minimum PHP version is now v8.0
 - The minimum Laravel version is now v9.0
 
-### `getScoutKeyName` Changes
+### The `getScoutKeyName` Method
 
 PR: https://github.com/laravel/scout/pull/509
 
-Starting from v10, Scout's `getScoutKeyName` method will return just the unqualified key name and no longer prepends the table name. If you were overriding the `getScoutKeyName` you'll need to account for this change and make sure you return an unqualified key name.
+In Scout 10.x, the `getScoutKeyName` method will return the unqualified key name and no longer qualifies the key name with the table name. If you are overriding the `getScoutKeyName` method you will need to account for this change and make sure you return an unqualified key name.
 
 ```diff
 public function getScoutKeyName()
@@ -23,11 +23,11 @@ public function getScoutKeyName()
 }
 ```
 
-### Removal of `getUnqualifiedScoutKeyName`
+### Removal Of `getUnqualifiedScoutKeyName`
 
 PR: https://github.com/laravel/scout/pull/657
 
-Because of the above, `getUnqualifiedScoutKeyName` was also removed as it's not unnecessary. 
+Due to the `getScoutKeyName` change discussed above, the `getUnqualifiedScoutKeyName` method was removed as it is no longer necessary.
 
 ## Upgrading To 9.0 From 8.x
 
