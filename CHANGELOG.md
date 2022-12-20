@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.6.0...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.6.1...9.x)
+
+## [v9.6.1](https://github.com/laravel/scout/compare/v9.6.0...v9.6.1) - 2022-12-20
+
+### Changed
+
+- Allow FQCN to delete-index command by @kichetof in https://github.com/laravel/scout/pull/677
 
 ## [v9.6.0](https://github.com/laravel/scout/compare/v9.5.1...v9.6.0) - 2022-12-15
 
