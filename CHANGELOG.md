@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.6.1...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.6.2...9.x)
+
+## [v9.6.2](https://github.com/laravel/scout/compare/v9.6.1...v9.6.2) - 2022-12-21
+
+### Fixed
+
+- Added a missing import by @driesvints in https://github.com/laravel/scout/commit/56adabcc1575a692824ffa8009719b20e7778f28
 
 ## [v9.6.1](https://github.com/laravel/scout/compare/v9.6.0...v9.6.1) - 2022-12-20
 
