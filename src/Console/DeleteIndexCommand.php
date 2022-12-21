@@ -4,6 +4,7 @@ namespace Laravel\Scout\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Laravel\Scout\EngineManager;
 
 class DeleteIndexCommand extends Command
