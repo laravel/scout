@@ -9,7 +9,8 @@ use Laravel\Scout\Console\FlushCommand;
 use Laravel\Scout\Console\ImportCommand;
 use Laravel\Scout\Console\IndexCommand;
 use Laravel\Scout\Console\SyncIndexSettingsCommand;
-use MeiliSearch\Client as MeiliSearch;
+use MeiliSearch\Client as MeiliSearchClient;
+use Meilisearch\Meilisearch;
 
 class ScoutServiceProvider extends ServiceProvider
 {
@@ -22,11 +23,21 @@ class ScoutServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/scout.php', 'scout');
 
-        if (class_exists(MeiliSearch::class)) {
-            $this->app->singleton(MeiliSearch::class, function ($app) {
+        if (class_exists(MeilisearchClient::class)) {
+            $this->app->singleton(MeilisearchClient::class, function ($app) {
                 $config = $app['config']->get('scout.meilisearch');
 
-                return new MeiliSearch($config['host'], $config['key']);
+                if (version_compare(Meilisearch::VERSION, '0.24.2') >= 0) {
+                    return new MeilisearchClient(
+                        $config['host'],
+                        $config['key'],
+                        null,
+                        null,
+                        [sprintf('Meilisearch Laravel Scout (v%s)', Scout::VERSION)],
+                    );
+                }
+
+                return new MeilisearchClient($config['host'], $config['key']);
             });
         }
 
