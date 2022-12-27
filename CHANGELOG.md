@@ -1,6 +1,25 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.5.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.6.2...10.x)
+
+## [v9.6.2](https://github.com/laravel/scout/compare/v9.6.1...v9.6.2) - 2022-12-21
+
+### Fixed
+
+- Added a missing import by @driesvints in https://github.com/laravel/scout/commit/56adabcc1575a692824ffa8009719b20e7778f28
+
+## [v9.6.1](https://github.com/laravel/scout/compare/v9.6.0...v9.6.1) - 2022-12-20
+
+### Changed
+
+- Allow FQCN to delete-index command by @kichetof in https://github.com/laravel/scout/pull/677
+
+## [v9.6.0](https://github.com/laravel/scout/compare/v9.5.1...v9.6.0) - 2022-12-15
+
+### Added
+
+- Add command delete-all-indexes, update scout:index to allow FQCN and apply filterable on SoftDeletes by @kichetof in https://github.com/laravel/scout/pull/671
+- Added soft deleted to Meilisearch by @kichetof in https://github.com/laravel/scout/pull/672
 
 ## [v9.5.1](https://github.com/laravel/scout/compare/v9.5.0...v9.5.1) - 2022-12-08
 
