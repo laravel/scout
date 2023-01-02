@@ -145,6 +145,8 @@ class MeiliSearchEngine extends Engine
             unset($searchParams['filters']);
         }
 
+        $searchParams = array_merge($builder->options, $searchParams);
+
         if ($builder->callback) {
             $result = call_user_func(
                 $builder->callback,

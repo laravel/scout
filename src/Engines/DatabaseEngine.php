@@ -125,7 +125,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
     {
         $query = $this->initializeSearchQuery(
             $builder,
-            $columns = array_keys($builder->model->toSearchableArray()),
+            array_keys($builder->model->toSearchableArray()),
             $this->getPrefixColumns($builder),
             $this->getFullTextColumns($builder)
         );
@@ -216,8 +216,8 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
      * Ensure that soft delete constraints are properly applied to the query.
      *
      * @param  \Laravel\Scout\Builder  $builder
-     * @param  \Illuminate\Database\Query\Builder  $query
-     * @return \Illuminate\Database\Query\Builder
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
      */
     protected function constrainForSoftDeletes($builder, $query)
     {
