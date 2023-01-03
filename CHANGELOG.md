@@ -1,6 +1,13 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.6.2...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.7.0...9.x)
+
+## [v9.7.0](https://github.com/laravel/scout/compare/v9.6.2...v9.7.0) - 2023-01-03
+
+### Changed
+
+- Add analytics for Meilisearch engine by @mmachatschek in https://github.com/laravel/scout/pull/681
+- Allow options for search requests by @driesvints in https://github.com/laravel/scout/pull/683
 
 ## [v9.6.2](https://github.com/laravel/scout/compare/v9.6.1...v9.6.2) - 2022-12-21
 
