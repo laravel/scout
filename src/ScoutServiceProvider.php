@@ -10,7 +10,7 @@ use Laravel\Scout\Console\ImportCommand;
 use Laravel\Scout\Console\IndexCommand;
 use Laravel\Scout\Console\SyncIndexSettingsCommand;
 use MeiliSearch\Client as MeiliSearchClient;
-use MeiliSearch\MeiliSearch;
+use MeiliSearch\Meilisearch;
 
 class ScoutServiceProvider extends ServiceProvider
 {
@@ -27,7 +27,7 @@ class ScoutServiceProvider extends ServiceProvider
             $this->app->singleton(MeiliSearchClient::class, function ($app) {
                 $config = $app['config']->get('scout.meilisearch');
 
-                if (version_compare(MeiliSearch::VERSION, '0.24.2') >= 0) {
+                if (version_compare(Meilisearch::VERSION, '0.24.2') >= 0) {
                     return new MeiliSearchClient(
                         $config['host'],
                         $config['key'],
