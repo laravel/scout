@@ -24,14 +24,14 @@ class ScoutServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/scout.php', 'scout');
 
         if (class_exists(MeiliSearchClient::class) || class_exists(\Meilisearch\Client::class)) {
-            $meilisearchClientClassName = class_exists(MeiliSearchClient::class) 
-                ? MeiliSearchClient::class 
+            $meilisearchClientClassName = class_exists(MeiliSearchClient::class)
+                ? MeiliSearchClient::class
                 : \Meilisearch\Client::class;
             $this->app->singleton($meilisearchClientClassName, function ($app) {
                 $config = $app['config']->get('scout.meilisearch');
 
-                $meilisearchVersionClassName = class_exists(MeiliSearch::class) 
-                    ? MeiliSearch::class 
+                $meilisearchVersionClassName = class_exists(MeiliSearch::class)
+                    ? MeiliSearch::class
                     : \Meilisearch\Meilisearch::class;
                 if (version_compare($meilisearchVersionClassName::VERSION, '0.24.2') >= 0) {
                     return new MeiliSearchClient(

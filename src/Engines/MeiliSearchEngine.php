@@ -5,7 +5,6 @@ namespace Laravel\Scout\Engines;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
-use MeiliSearch\Client as MeiliSearchClient;
 use MeiliSearch\MeiliSearch;
 use MeiliSearch\Search\SearchResult;
 
@@ -14,7 +13,7 @@ class MeiliSearchEngine extends Engine
     /**
      * The MeiliSearch client.
      *
-     * @var \MeiliSearch\Client|\Meilisearch\Client 
+     * @var \MeiliSearch\Client|\Meilisearch\Client
      */
     protected $meilisearch;
 
@@ -138,8 +137,8 @@ class MeiliSearchEngine extends Engine
     {
         $meilisearch = $this->meilisearch->index($builder->index ?: $builder->model->searchableAs());
 
-        $meilisearchVersionClassName = class_exists(MeiliSearch::class) 
-            ? MeiliSearch::class 
+        $meilisearchVersionClassName = class_exists(MeiliSearch::class)
+            ? MeiliSearch::class
             : \Meilisearch\Meilisearch::class;
 
         // meilisearch-php 0.19.0 is compatible with meilisearch server 0.21.0...
