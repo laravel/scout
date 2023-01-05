@@ -29,6 +29,9 @@
         "orchestra/testbench": "^6.17|^7.0",
         "phpunit/phpunit": "^9.3"
     },
+    "conflict":  {
+        "meilisearch/meilisearch-php": ">=0.26.1"
+    },
     "autoload": {
         "psr-4": {
             "Laravel\\Scout\\": "src/"
