@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.7.0...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.7.1...9.x)
+
+## [v9.7.1](https://github.com/laravel/scout/compare/v9.7.0...v9.7.1) - 2023-01-06
+
+### Fixed
+
+- Make scout compatible with new meilisearch casing by @mmachatschek in https://github.com/laravel/scout/pull/687
 
 ## [v9.7.0](https://github.com/laravel/scout/compare/v9.6.2...v9.7.0) - 2023-01-03
 
