@@ -92,7 +92,7 @@ class MeiliSearchEngine extends Engine
             ? $models->pluck($models->first()->getUnqualifiedScoutKeyName())
             : $models->map->getScoutKey();
 
-        $index->deleteDocuments($keys->all());
+        $index->deleteDocuments($keys->values()->all());
     }
 
     /**
