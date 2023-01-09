@@ -27,7 +27,7 @@ class ScoutServiceProvider extends ServiceProvider
             $meilisearchClientClassName = class_exists(MeiliSearchClient::class)
                 ? MeiliSearchClient::class
                 : \Meilisearch\Client::class;
-            $this->app->singleton($meilisearchClientClassName, function ($app) {
+            $this->app->singleton($meilisearchClientClassName, function ($app) use ($meilisearchClientClassName) {
                 $config = $app['config']->get('scout.meilisearch');
 
                 $meilisearchVersionClassName = class_exists(MeiliSearch::class)

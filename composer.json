@@ -26,6 +26,7 @@
     "require-dev": {
         "meilisearch/meilisearch-php": "^0.19",
         "mockery/mockery": "^1.0",
+        "php-http/guzzle7-adapter": "^1.0",
         "orchestra/testbench": "^6.17|^7.0",
         "phpunit/phpunit": "^9.3"
     },
