@@ -1,6 +1,13 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.7.1...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.7.2...9.x)
+
+## [v9.7.2](https://github.com/laravel/scout/compare/v9.7.1...v9.7.2) - 2023-01-09
+
+### Fixed
+
+- Handle non-consecutive key collection on MeiliSearch document deletion by @pyrou in https://github.com/laravel/scout/pull/688
+- Fix missing variable in closure by @driesvints in https://github.com/laravel/scout/pull/694
 
 ## [v9.7.1](https://github.com/laravel/scout/compare/v9.7.0...v9.7.1) - 2023-01-06
 
