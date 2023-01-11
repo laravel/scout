@@ -122,4 +122,15 @@ class CollectionEngineTest extends TestCase
         $models = SearchableUserModel::search('laravel')->take(1)->get();
         $this->assertCount(1, $models);
     }
+
+    public function test_it_can_order_results()
+    {
+        $models = SearchableUserModel::search('laravel')->orderBy('name', 'asc')->paginate(1, 'page', 1);
+        $this->assertCount(1, $models);
+        $this->assertEquals('Abigail Otwell', $models[0]->name);
+
+        $models = SearchableUserModel::search('laravel')->orderBy('name', 'desc')->paginate(1, 'page', 1);
+        $this->assertCount(1, $models);
+        $this->assertEquals('Taylor Otwell', $models[0]->name);
+    }
 }
