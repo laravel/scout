@@ -101,11 +101,11 @@ class CollectionEngine extends Engine
                             }
                         })
                         ->when($builder->orders, function ($query) use ($builder) {
-                            foreach ($builder->orders as $order){
+                            foreach ($builder->orders as $order) {
                                 $query->orderBy($order['column'], $order['direction']);
                             }
                         }, function ($query) use ($builder) {
-                                $query->orderBy($builder->model->getKeyName(), 'desc');
+                            $query->orderBy($builder->model->getKeyName(), 'desc');
                         });
 
         $models = $this->ensureSoftDeletesAreHandled($builder, $query)

@@ -73,7 +73,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
     {
         return $this->buildSearchQuery($builder)
                 ->when($builder->orders, function ($query) use ($builder) {
-                    foreach ($builder->orders as $order){
+                    foreach ($builder->orders as $order) {
                         $query->orderBy($order['column'], $order['direction']);
                     }
                 })
@@ -95,7 +95,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
     {
         return $this->buildSearchQuery($builder)
                 ->when($builder->orders, function ($query) use ($builder) {
-                    foreach ($builder->orders as $order){
+                    foreach ($builder->orders as $order) {
                         $query->orderBy($order['column'], $order['direction']);
                     }
                 })
@@ -120,7 +120,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
                 $query->forPage($page, $perPage);
             })
             ->when($builder->orders, function ($query) use ($builder) {
-                foreach ($builder->orders as $order){
+                foreach ($builder->orders as $order) {
                     $query->orderBy($order['column'], $order['direction']);
                 }
             })
