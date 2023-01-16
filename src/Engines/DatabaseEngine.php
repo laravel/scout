@@ -72,6 +72,11 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
     public function paginate(Builder $builder, $perPage, $page)
     {
         return $this->buildSearchQuery($builder)
+                ->when($builder->orders, function ($query) use ($builder) {
+                    foreach ($builder->orders as $order) {
+                        $query->orderBy($order['column'], $order['direction']);
+                    }
+                })
                 ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
                     $query->orderBy($builder->model->getKeyName(), 'desc');
                 })
@@ -89,6 +94,11 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
     public function simplePaginate(Builder $builder, $perPage, $page)
     {
         return $this->buildSearchQuery($builder)
+                ->when($builder->orders, function ($query) use ($builder) {
+                    foreach ($builder->orders as $order) {
+                        $query->orderBy($order['column'], $order['direction']);
+                    }
+                })
                 ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
                     $query->orderBy($builder->model->getKeyName(), 'desc');
                 })
@@ -108,6 +118,11 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
         return $this->buildSearchQuery($builder)
             ->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
                 $query->forPage($page, $perPage);
+            })
+            ->when($builder->orders, function ($query) use ($builder) {
+                foreach ($builder->orders as $order) {
+                    $query->orderBy($order['column'], $order['direction']);
+                }
             })
             ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
                 $query->orderBy($builder->model->getKeyName(), 'desc');

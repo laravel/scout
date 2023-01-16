@@ -100,7 +100,13 @@ class CollectionEngine extends Engine
                                 $query->whereIn($key, $values);
                             }
                         })
-                        ->orderBy($builder->model->getKeyName(), 'desc');
+                        ->when($builder->orders, function ($query) use ($builder) {
+                            foreach ($builder->orders as $order) {
+                                $query->orderBy($order['column'], $order['direction']);
+                            }
+                        }, function ($query) use ($builder) {
+                            $query->orderBy($builder->model->getKeyName(), 'desc');
+                        });
 
         $models = $this->ensureSoftDeletesAreHandled($builder, $query)
                         ->get()
