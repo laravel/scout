@@ -160,7 +160,6 @@ trait Searchable
         return $query;
     }
 
-
     /**
      * List of relations to eager load when making all models searchable.
      *
