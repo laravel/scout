@@ -39,6 +39,9 @@ class MakeSearchable implements ShouldQueue
             return;
         }
 
+        $relations = is_array($this->models->first()->searchableRelations()) ? $this->models->first()->searchableRelations() : [];
+        $this->models->loadMissing($relations);
+
         $this->models->first()->searchableUsing()->update($this->models);
     }
 }

@@ -157,7 +157,18 @@ trait Searchable
      */
     protected function makeAllSearchableUsing($query)
     {
-        return $query;
+        return $query->with($this->searchableRelations());
+    }
+
+
+    /**
+     * List of relations to eager load when making all models searchable.
+     *
+     * @return array
+     */
+    public function searchableRelations()
+    {
+        return [];
     }
 
     /**
