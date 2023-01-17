@@ -157,7 +157,7 @@ trait Searchable
      */
     protected function makeAllSearchableUsing($query)
     {
-        return $query->with();
+        return $query;
     }
 
 
