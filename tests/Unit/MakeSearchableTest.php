@@ -20,6 +20,7 @@ class MakeSearchableTest extends TestCase
             $model = m::mock(),
         ]));
 
+        $model->shouldReceive('searchableRelations');
         $model->shouldReceive('searchableUsing->update')->with($collection);
 
         $job->handle();
