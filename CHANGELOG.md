@@ -1,6 +1,13 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.7.2...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.8.0...9.x)
+
+## [v9.8.0](https://github.com/laravel/scout/compare/v9.7.2...v9.8.0) - 2023-01-17
+
+### Added
+
+- Laravel v10 Support by @driesvints in https://github.com/laravel/scout/pull/696
+- Enable order by for `collection` & `database` engines by @stein-j in https://github.com/laravel/scout/pull/695
 
 ## [v9.7.2](https://github.com/laravel/scout/compare/v9.7.1...v9.7.2) - 2023-01-09
 
