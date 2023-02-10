@@ -76,6 +76,13 @@ class Builder
     public $orders = [];
 
     /**
+     * Extra options that should be applied to the search.
+     *
+     * @var int
+     */
+    public $options = [];
+
+    /**
      * Create a new search builder instance.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -186,6 +193,19 @@ class Builder
             'column' => $column,
             'direction' => strtolower($direction) == 'asc' ? 'asc' : 'desc',
         ];
+
+        return $this;
+    }
+
+    /**
+     * Set extra options for the search query.
+     *
+     * @param  array  $options
+     * @return $this
+     */
+    public function options(array $options)
+    {
+        $this->options = $options;
 
         return $this;
     }
