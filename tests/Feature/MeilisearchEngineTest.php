@@ -3,7 +3,7 @@
 namespace Laravel\Scout\Tests\Feature;
 
 use Laravel\Scout\ScoutServiceProvider;
-use MeiliSearch\Client;
+use Meilisearch\Client;
 use Orchestra\Testbench\TestCase;
 
 class MeilisearchEngineTest extends TestCase

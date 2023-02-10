@@ -9,8 +9,7 @@ use Laravel\Scout\Console\FlushCommand;
 use Laravel\Scout\Console\ImportCommand;
 use Laravel\Scout\Console\IndexCommand;
 use Laravel\Scout\Console\SyncIndexSettingsCommand;
-use MeiliSearch\Client as MeiliSearchClient;
-use MeiliSearch\MeiliSearch;
+use Meilisearch\Client as Meilisearch;
 
 class ScoutServiceProvider extends ServiceProvider
 {
@@ -23,27 +22,15 @@ class ScoutServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/scout.php', 'scout');
 
-        if (class_exists(MeiliSearchClient::class) || class_exists(\Meilisearch\Client::class)) {
-            $meilisearchClientClassName = class_exists(MeiliSearchClient::class)
-                ? MeiliSearchClient::class
-                : \Meilisearch\Client::class;
-            $this->app->singleton($meilisearchClientClassName, function ($app) use ($meilisearchClientClassName) {
+        if (class_exists(Meilisearch::class)) {
+            $this->app->singleton(Meilisearch::class, function ($app) {
                 $config = $app['config']->get('scout.meilisearch');
 
-                $meilisearchVersionClassName = class_exists(MeiliSearch::class)
-                    ? MeiliSearch::class
-                    : \Meilisearch\Meilisearch::class;
-                if (version_compare($meilisearchVersionClassName::VERSION, '0.24.2') >= 0) {
-                    return new MeiliSearchClient(
-                        $config['host'],
-                        $config['key'],
-                        null,
-                        null,
-                        [sprintf('Meilisearch Laravel Scout (v%s)', Scout::VERSION)],
-                    );
-                }
-
-                return new $meilisearchClientClassName($config['host'], $config['key']);
+                return new Meilisearch(
+                    $config['host'],
+                    $config['key'],
+                    clientAgents: [sprintf('Meilisearch Laravel Scout (v%s)', Scout::VERSION)],
+                );
             });
         }
 
