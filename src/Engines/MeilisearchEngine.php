@@ -113,6 +113,7 @@ class MeilisearchEngine extends Engine
 
     /**
      * Perform the given search on the engine.
+     *
      * page/hitsPerPage ensures that the search is exhaustive.
      *
      * @param  int  $perPage
