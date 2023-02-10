@@ -36,7 +36,7 @@ class EngineManager extends Manager
     {
         $this->ensureAlgoliaClientIsInstalled();
 
-        UserAgent::addCustomUserAgent('Laravel Scout', '11.0.0-dev');
+        UserAgent::addCustomUserAgent('Laravel Scout', Scout::VERSION);
 
         $config = SearchConfig::create(
             config('scout.algolia.id'),
@@ -116,7 +116,11 @@ class EngineManager extends Manager
         $this->ensureMeiliSearchClientIsInstalled();
 
         return new MeiliSearchEngine(
-            $this->container->make(MeiliSearch::class),
+            $this->container->make(
+                class_exists(MeiliSearch::class)
+                    ? MeiliSearch::class
+                    : \Meilisearch\Client::class
+            ),
             config('scout.soft_delete', false)
         );
     }
@@ -130,7 +134,7 @@ class EngineManager extends Manager
      */
     protected function ensureMeiliSearchClientIsInstalled()
     {
-        if (class_exists(MeiliSearch::class)) {
+        if (class_exists(MeiliSearch::class) || class_exists(\Meilisearch\Client::class)) {
             return;
         }
 

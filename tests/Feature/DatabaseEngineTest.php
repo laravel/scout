@@ -129,4 +129,31 @@ class DatabaseEngineTest extends TestCase
         })->get();
         $this->assertCount(1, $models);
     }
+
+    public function test_it_can_order_results()
+    {
+        $models = SearchableUserDatabaseModel::search('laravel')->orderBy('name', 'asc')->take(1)->get();
+        $this->assertCount(1, $models);
+        $this->assertEquals('Abigail Otwell', $models[0]->name);
+
+        $modelsPaginate = SearchableUserDatabaseModel::search('laravel')->orderBy('name', 'asc')->paginate(1, 'page', 1);
+        $this->assertCount(1, $modelsPaginate);
+        $this->assertEquals('Abigail Otwell', $modelsPaginate[0]->name);
+
+        $modelsSimplePaginate = SearchableUserDatabaseModel::search('laravel')->orderBy('name', 'asc')->simplePaginate(1, 'page', 1);
+        $this->assertCount(1, $modelsPaginate);
+        $this->assertEquals('Abigail Otwell', $modelsSimplePaginate[0]->name);
+
+        $models = SearchableUserDatabaseModel::search('laravel')->orderBy('name', 'desc')->take(1)->get();
+        $this->assertCount(1, $models);
+        $this->assertEquals('Taylor Otwell', $models[0]->name);
+
+        $modelsPaginate = SearchableUserDatabaseModel::search('laravel')->orderBy('name', 'desc')->paginate(1, 'page', 1);
+        $this->assertCount(1, $modelsPaginate);
+        $this->assertEquals('Taylor Otwell', $modelsPaginate[0]->name);
+
+        $modelsSimplePaginate = SearchableUserDatabaseModel::search('laravel')->orderBy('name', 'desc')->simplePaginate(1, 'page', 1);
+        $this->assertCount(1, $modelsSimplePaginate);
+        $this->assertEquals('Taylor Otwell', $modelsSimplePaginate[0]->name);
+    }
 }

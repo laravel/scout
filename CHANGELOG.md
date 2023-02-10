@@ -1,6 +1,52 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.5.1...master)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.8.0...master)
+
+## [v9.8.0](https://github.com/laravel/scout/compare/v9.7.2...v9.8.0) - 2023-01-17
+
+### Added
+
+- Laravel v10 Support by @driesvints in https://github.com/laravel/scout/pull/696
+- Enable order by for `collection` & `database` engines by @stein-j in https://github.com/laravel/scout/pull/695
+
+## [v9.7.2](https://github.com/laravel/scout/compare/v9.7.1...v9.7.2) - 2023-01-09
+
+### Fixed
+
+- Handle non-consecutive key collection on MeiliSearch document deletion by @pyrou in https://github.com/laravel/scout/pull/688
+- Fix missing variable in closure by @driesvints in https://github.com/laravel/scout/pull/694
+
+## [v9.7.1](https://github.com/laravel/scout/compare/v9.7.0...v9.7.1) - 2023-01-06
+
+### Fixed
+
+- Make scout compatible with new meilisearch casing by @mmachatschek in https://github.com/laravel/scout/pull/687
+
+## [v9.7.0](https://github.com/laravel/scout/compare/v9.6.2...v9.7.0) - 2023-01-03
+
+### Changed
+
+- Add analytics for Meilisearch engine by @mmachatschek in https://github.com/laravel/scout/pull/681
+- Allow options for search requests by @driesvints in https://github.com/laravel/scout/pull/683
+
+## [v9.6.2](https://github.com/laravel/scout/compare/v9.6.1...v9.6.2) - 2022-12-21
+
+### Fixed
+
+- Added a missing import by @driesvints in https://github.com/laravel/scout/commit/56adabcc1575a692824ffa8009719b20e7778f28
+
+## [v9.6.1](https://github.com/laravel/scout/compare/v9.6.0...v9.6.1) - 2022-12-20
+
+### Changed
+
+- Allow FQCN to delete-index command by @kichetof in https://github.com/laravel/scout/pull/677
+
+## [v9.6.0](https://github.com/laravel/scout/compare/v9.5.1...v9.6.0) - 2022-12-15
+
+### Added
+
+- Add command delete-all-indexes, update scout:index to allow FQCN and apply filterable on SoftDeletes by @kichetof in https://github.com/laravel/scout/pull/671
+- Added soft deleted to Meilisearch by @kichetof in https://github.com/laravel/scout/pull/672
 
 ## [v9.5.1](https://github.com/laravel/scout/compare/v9.5.0...v9.5.1) - 2022-12-08
 

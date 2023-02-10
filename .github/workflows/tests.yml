@@ -11,26 +11,24 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: true
       matrix:
-        php: [7.3, 7.4, '8.0', 8.1, 8.2]
-        laravel: [8, 9]
+        php: ['8.0', 8.1, 8.2]
+        laravel: [9, 10]
         exclude:
-          - php: 7.3
+          - php: '8.0'
             laravel: 9
-          - php: 7.4
-            laravel: 9
-          - php: 8.2
-            laravel: 8
+          - php: '8.0'
+            laravel: 10
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2

@@ -140,6 +140,8 @@ class AlgoliaEngine extends Engine
             $builder->index ?: $builder->model->searchableAs()
         );
 
+        $options = array_merge($builder->options, $options);
+
         if ($builder->callback) {
             return call_user_func(
                 $builder->callback,
