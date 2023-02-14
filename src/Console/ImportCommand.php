@@ -25,6 +25,15 @@ class ImportCommand extends Command
     protected $description = 'Import the given model into the search index';
 
     /**
+     * Temporary method to identify memory ballooning issue.
+     */
+    private function convert(int $size): string
+    {
+        $unit = array('B', 'KB', 'MB', 'GB', 'TB', 'PB');
+        return @round($size/pow(1024,($i=floor(log($size,1024)))),2).' '.$unit[$i];
+    }
+
+    /**
      * Execute the console command.
      *
      * @param  \Illuminate\Contracts\Events\Dispatcher  $events
@@ -36,10 +45,15 @@ class ImportCommand extends Command
 
         $model = new $class;
 
-        $events->listen(ModelsImported::class, function ($event) use ($class) {
+        $events->listen(ModelsImported::class, function ($event) {
             $key = $event->models->last()->getScoutKey();
 
-            $this->line('<comment>Imported ['.$class.'] models up to ID:</comment> '.$key);
+            // Empty the models so that garbage collection kicks in on subsequent response to event broadcast
+            // This helps keep the memory usage low (without this, the memory usage keeps ballooning).
+            $event->models = collect();
+
+            $this->line('<comment>Imported ['.$this->argument('model').'] models up to ID:</comment> '.$key);
+            $this->line("<comment>(Current memory usage: " . $this->convert(memory_get_usage()) . ")</comment>");
         });
 
         $model::makeAllSearchable($this->option('chunk'));
