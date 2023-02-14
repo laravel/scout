@@ -38,6 +38,7 @@ class ImportCommand extends Command
 
         $events->listen(ModelsImported::class, function ($event) use ($class) {
             $key = $event->models->last()->getScoutKey();
+            $event->models = collect();
 
             $this->line('<comment>Imported ['.$class.'] models up to ID:</comment> '.$key);
         });
