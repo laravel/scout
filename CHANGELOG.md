@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.8.0...9.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v9.8.1...9.x)
+
+## [v9.8.1](https://github.com/laravel/scout/compare/v9.8.0...v9.8.1) - 2023-02-14
+
+### Changed
+
+- Adds types to `makeAllSearchableUsing` by @nunomaduro in https://github.com/laravel/scout/pull/660
 
 ## [v9.8.0](https://github.com/laravel/scout/compare/v9.7.2...v9.8.0) - 2023-01-17
 
