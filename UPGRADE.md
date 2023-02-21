@@ -29,6 +29,18 @@ PR: https://github.com/laravel/scout/pull/657
 
 Due to the `getScoutKeyName` change discussed above, the `getUnqualifiedScoutKeyName` method was removed as it is no longer necessary.
 
+### Meilisearch v1.0 Changes
+
+Scout v10 now supports Meilisearch PHP v1.0 as its new minimum version. You should upgrade your dependency:
+
+```json
+"meilisearch/meilisearch-php": "^1.0",
+```
+
+Further more, all casing has been changed from the old `MeiliSearch` to the new `Meilisearch`. This means that all references to Meilisearch code you have in your codebase should adopt this new casing.
+
+Please see [the full Meilisearch PHP v1.0 changelog](https://github.com/meilisearch/meilisearch/releases/tag/v1.0.0) for all changes.
+
 ## Upgrading To 9.0 From 8.x
 
 ### Minimum Laravel Version
