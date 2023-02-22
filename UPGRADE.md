@@ -29,7 +29,7 @@ PR: https://github.com/laravel/scout/pull/657
 
 Due to the `getScoutKeyName` change discussed above, the `getUnqualifiedScoutKeyName` method was removed as it is no longer necessary.
 
-### Meilisearch 1.0 Changes
+### Meilisearch 1.0
 
 Scout 10.x requires Meilisearch PHP 1.0 as its minimum supported SDK version; therefore, you should upgrade your dependency via your application's `composer.json` file:
 
