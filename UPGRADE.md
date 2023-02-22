@@ -39,7 +39,7 @@ Scout v10 now supports Meilisearch PHP v1.0 as its new minimum version. You shou
 
 Further more, all casing has been changed from the old `MeiliSearch` to the new `Meilisearch`. This means that all references to Meilisearch code you have in your codebase should adopt this new casing.
 
-Please see [the full Meilisearch PHP v1.0 changelog](https://github.com/meilisearch/meilisearch/releases/tag/v1.0.0) for all changes.
+Please see [the full Meilisearch PHP v1.0 changelog](https://github.com/meilisearch/meilisearch-php/releases/tag/v1.0.0) for all changes.
 
 ## Upgrading To 9.0 From 8.x
 
