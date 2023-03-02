@@ -7,5 +7,3 @@ parameters:
 
   ignoreErrors:
     - "#\\(void\\) is used.#"
-    - "#MeiliSearch\\\\Client referenced with incorrect case#"
-    - "#MeiliSearch\\\\MeiliSearch referenced with incorrect case#"
