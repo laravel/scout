@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v9.8.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.0.0...10.x)
+
+## [v10.0.0](https://github.com/laravel/scout/compare/v9.8.1...v10.0.0) - 2023-03-02
+
+- Refactor the use of getScoutKeyName by @driesvints in https://github.com/laravel/scout/pull/509
+- Remove obsolete code for scout key name by @mmachatschek in https://github.com/laravel/scout/pull/545
+- Provide searchable data array with primary key and value for MeiliSearch by @mmachatschek in https://github.com/laravel/scout/pull/546
+- Fix custom scout keys not being utilized when deleting from queue by @stevebauman in https://github.com/laravel/scout/pull/657
+- Drop old PHP and Laravel versions by @driesvints in https://github.com/laravel/scout/pull/675
+- Meilisearch v1 support by @mmachatschek in https://github.com/laravel/scout/pull/678
 
 ## [v9.8.1](https://github.com/laravel/scout/compare/v9.8.0...v9.8.1) - 2023-02-14
 
