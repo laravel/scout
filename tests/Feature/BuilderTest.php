@@ -52,7 +52,7 @@ class BuilderTest extends TestCase
 
     public function test_it_can_paginate_with_custom_query_callback()
     {
-        $this->prepareScoutSearchMockUsing('Laravel');
+        $this->prepareScoutSearchMockUsing('Laravel', 50);
 
         $paginator = SearchableUserModel::search('Laravel')->query(function ($builder) {
             return $builder->where('id', '<', 11);
@@ -60,6 +60,19 @@ class BuilderTest extends TestCase
 
         $this->assertSame(10, $paginator->total());
         $this->assertSame(1, $paginator->lastPage());
+        $this->assertSame(15, $paginator->perPage());
+    }
+
+    public function test_it_can_paginate_with_custom_query_callback_that_will_not_filter()
+    {
+        $this->prepareScoutSearchMockUsing('Laravel');
+
+        $paginator = SearchableUserModel::search('Laravel')->query(function ($builder) {
+            return $builder;
+        }, false)->paginate();
+
+        $this->assertSame(50, $paginator->total());
+        $this->assertSame(4, $paginator->lastPage());
         $this->assertSame(15, $paginator->perPage());
     }
 
@@ -76,7 +89,7 @@ class BuilderTest extends TestCase
 
     public function test_it_can_paginate_raw_with_custom_query_callback()
     {
-        $this->prepareScoutSearchMockUsing('Laravel');
+        $this->prepareScoutSearchMockUsing('Laravel', 50);
 
         $paginator = SearchableUserModel::search('Laravel')->query(function ($builder) {
             return $builder->where('id', '<', 11);
@@ -87,7 +100,7 @@ class BuilderTest extends TestCase
         $this->assertSame(15, $paginator->perPage());
     }
 
-    protected function prepareScoutSearchMockUsing($searchQuery)
+    protected function prepareScoutSearchMockUsing($searchQuery, $totalCountForQueryCallback = null)
     {
         $engine = m::mock('MeiliSearch\Client');
         $indexes = m::mock('MeiliSearch\Endpoints\Indexes');
@@ -99,9 +112,10 @@ class BuilderTest extends TestCase
 
         $query = User::where('name', 'like', $searchQuery.'%');
 
+        $limit = 15;
         $engine->shouldReceive('index')->with('users')->andReturn($indexes);
-        $indexes->shouldReceive('rawSearch')->with($searchQuery, ['limit' => 15])->andReturn([
-            'hits' => $query->get()->transform(function ($result) {
+        $indexes->shouldReceive('rawSearch')->with($searchQuery, ['limit' => $limit])->andReturn([
+            'hits' => $query->get()->take($limit)->transform(function ($result) {
                 return [
                     'id' => $result->getKey(),
                     'name' => $result->name,
@@ -109,5 +123,17 @@ class BuilderTest extends TestCase
             }),
             'nbHits' => $query->count(),
         ]);
+
+        if ($totalCountForQueryCallback) {
+            $indexes->shouldReceive('rawSearch')->with($searchQuery, ['limit' => $totalCountForQueryCallback])->andReturn([
+                'hits' => $query->get()->take($totalCountForQueryCallback)->transform(function ($result) {
+                    return [
+                        'id' => $result->getKey(),
+                        'name' => $result->name,
+                    ];
+                }),
+                'nbHits' => $query->count(),
+            ]);
+        }
     }
 }

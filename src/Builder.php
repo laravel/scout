@@ -41,6 +41,13 @@ class Builder
     public $queryCallback;
 
     /**
+     * Allows to manually confirm that the query callback will not filter.
+     *
+     * @var bool
+     */
+    public $queryCallbackIsFiltering = true;
+
+    /**
      * The custom index specified for the search.
      *
      * @var string
@@ -246,9 +253,10 @@ class Builder
      * @param  callable  $callback
      * @return $this
      */
-    public function query($callback)
+    public function query($callback, $isFiltering = true)
     {
         $this->queryCallback = $callback;
+        $this->queryCallbackIsFiltering = $isFiltering;
 
         return $this;
     }
@@ -457,7 +465,7 @@ class Builder
 
         $totalCount = $engine->getTotalCount($results);
 
-        if (is_null($this->queryCallback)) {
+        if (is_null($this->queryCallback) || ! $this->queryCallbackIsFiltering) {
             return $totalCount;
         }
 
