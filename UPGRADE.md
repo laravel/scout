@@ -13,7 +13,7 @@ The following dependency versions have been updated:
 
 PR: https://github.com/laravel/scout/pull/509
 
-In Scout 10.x, the `getScoutKeyName` method will return the unqualified key name and no longer qualifies the key name with the table name. If you are overriding the `getScoutKeyName` method you will need to account for this change and make sure you return an unqualified key name.
+In Scout 10.x, the `getScoutKeyName` method will return the unqualified key name and no longer qualifies the key name with the table name. If your application is overriding the `getScoutKeyName` method you should ensure an unqualified key name is returned.
 
 ```diff
 public function getScoutKeyName()
