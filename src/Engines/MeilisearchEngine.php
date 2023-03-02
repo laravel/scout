@@ -5,15 +5,17 @@ namespace Laravel\Scout\Engines;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
-use MeiliSearch\MeiliSearch;
-use MeiliSearch\Search\SearchResult;
+use Meilisearch\Client as MeilisearchClient;
+use Meilisearch\Contracts\IndexesQuery;
+use Meilisearch\Meilisearch;
+use Meilisearch\Search\SearchResult;
 
-class MeiliSearchEngine extends Engine
+class MeilisearchEngine extends Engine
 {
     /**
-     * The MeiliSearch client.
+     * The Meilisearch client.
      *
-     * @var \MeiliSearch\Client|\Meilisearch\Client
+     * @var \Meilisearch\Client
      */
     protected $meilisearch;
 
@@ -25,13 +27,13 @@ class MeiliSearchEngine extends Engine
     protected $softDelete;
 
     /**
-     * Create a new MeiliSearchEngine instance.
+     * Create a new MeilisearchEngine instance.
      *
-     * @param  \MeiliSearch\Client|\Meilisearch\Client  $meilisearch
+     * @param  \Meilisearch\Client  $meilisearch
      * @param  bool  $softDelete
      * @return void
      */
-    public function __construct($meilisearch, $softDelete = false)
+    public function __construct(MeilisearchClient $meilisearch, $softDelete = false)
     {
         $this->meilisearch = $meilisearch;
         $this->softDelete = $softDelete;
@@ -43,7 +45,7 @@ class MeiliSearchEngine extends Engine
      * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      *
-     * @throws \MeiliSearch\Exceptions\ApiException|\Meilisearch\Exceptions\ApiException
+     * @throws \Meilisearch\Exceptions\ApiException
      */
     public function update($models)
     {
@@ -103,14 +105,16 @@ class MeiliSearchEngine extends Engine
     public function search(Builder $builder)
     {
         return $this->performSearch($builder, array_filter([
-            'filters' => $this->filters($builder),
-            'limit' => $builder->limit,
+            'filter' => $this->filters($builder),
+            'hitsPerPage' => $builder->limit,
             'sort' => $this->buildSortFromOrderByClauses($builder),
         ]));
     }
 
     /**
      * Perform the given search on the engine.
+     *
+     * page/hitsPerPage ensures that the search is exhaustive.
      *
      * @param  int  $perPage
      * @param  int  $page
@@ -119,9 +123,9 @@ class MeiliSearchEngine extends Engine
     public function paginate(Builder $builder, $perPage, $page)
     {
         return $this->performSearch($builder, array_filter([
-            'filters' => $this->filters($builder),
-            'limit' => (int) $perPage,
-            'offset' => ($page - 1) * $perPage,
+            'filter' => $this->filters($builder),
+            'hitsPerPage' => (int) $perPage,
+            'page' => $page,
             'sort' => $this->buildSortFromOrderByClauses($builder),
         ]));
     }
@@ -136,19 +140,6 @@ class MeiliSearchEngine extends Engine
     protected function performSearch(Builder $builder, array $searchParams = [])
     {
         $meilisearch = $this->meilisearch->index($builder->index ?: $builder->model->searchableAs());
-
-        $meilisearchVersionClassName = class_exists(MeiliSearch::class)
-            ? MeiliSearch::class
-            : \Meilisearch\Meilisearch::class;
-
-        // meilisearch-php 0.19.0 is compatible with meilisearch server 0.21.0...
-        if (version_compare($meilisearchVersionClassName::VERSION, '0.19.0') >= 0 && isset($searchParams['filters'])) {
-            $searchParams['filter'] = $searchParams['filters'];
-
-            unset($searchParams['filters']);
-        }
-
-        $searchParams = array_merge($builder->options, $searchParams);
 
         if ($builder->callback) {
             $result = call_user_func(
@@ -323,7 +314,7 @@ class MeiliSearchEngine extends Engine
      */
     public function getTotalCount($results)
     {
-        return $results['nbHits'];
+        return $results['totalHits'];
     }
 
     /**
@@ -346,7 +337,7 @@ class MeiliSearchEngine extends Engine
      * @param  array  $options
      * @return mixed
      *
-     * @throws \MeiliSearch\Exceptions\ApiException|\Meilisearch\Exceptions\ApiException
+     * @throws \Meilisearch\Exceptions\ApiException
      */
     public function createIndex($name, array $options = [])
     {
@@ -360,7 +351,7 @@ class MeiliSearchEngine extends Engine
      * @param  array  $options
      * @return array
      *
-     * @throws \MeiliSearch\Exceptions\ApiException|\Meilisearch\Exceptions\ApiException
+     * @throws \Meilisearch\Exceptions\ApiException
      */
     public function updateIndexSettings($name, array $options = [])
     {
@@ -373,7 +364,7 @@ class MeiliSearchEngine extends Engine
      * @param  string  $name
      * @return mixed
      *
-     * @throws \MeiliSearch\Exceptions\ApiException|\Meilisearch\Exceptions\ApiException
+     * @throws \Meilisearch\Exceptions\ApiException
      */
     public function deleteIndex($name)
     {
@@ -387,7 +378,19 @@ class MeiliSearchEngine extends Engine
      */
     public function deleteAllIndexes()
     {
-        return $this->meilisearch->deleteAllIndexes();
+        $tasks = [];
+        $limit = 1000000;
+
+        $query = new IndexesQuery();
+        $query->setLimit($limit);
+
+        $indexes = $this->meilisearch->getIndexes($query);
+
+        foreach ($indexes->getResults() as $index) {
+            $tasks[] = $index->delete();
+        }
+
+        return $tasks;
     }
 
     /**
@@ -402,7 +405,7 @@ class MeiliSearchEngine extends Engine
     }
 
     /**
-     * Dynamically call the MeiliSearch client instance.
+     * Dynamically call the Meilisearch client instance.
      *
      * @param  string  $method
      * @param  array  $parameters

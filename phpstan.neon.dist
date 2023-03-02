@@ -1,0 +1,9 @@
+parameters:
+  paths:
+    - config
+    - src
+
+  level: 0
+
+  ignoreErrors:
+    - "#\\(void\\) is used.#"
