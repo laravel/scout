@@ -248,7 +248,7 @@ class MeilisearchEngine extends Engine
      */
     public function keys(Builder $builder)
     {
-        $scoutKey = $builder->model->getUnqualifiedScoutKeyName();
+        $scoutKey = $builder->model->getScoutKeyName();
 
         return $this->mapIdsFrom($this->search($builder), $scoutKey);
     }
