@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.0.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.0.1...10.x)
+
+## [v10.0.1](https://github.com/laravel/scout/compare/v10.0.0...v10.0.1) - 2023-03-05
+
+- Fix missing function issue by @JerryBels in https://github.com/laravel/scout/pull/711
 
 ## [v10.0.0](https://github.com/laravel/scout/compare/v9.8.1...v10.0.0) - 2023-03-02
 
