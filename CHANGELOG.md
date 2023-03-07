@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.0.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.0.2...10.x)
+
+## [v10.0.2](https://github.com/laravel/scout/compare/v10.0.1...v10.0.2) - 2023-03-07
+
+- Use `newQuery()` instead of `query()` in `DatabaseEngine` by @jbelien in https://github.com/laravel/scout/pull/713
 
 ## [v10.0.1](https://github.com/laravel/scout/compare/v10.0.0...v10.0.1) - 2023-03-05
 
