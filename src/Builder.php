@@ -161,7 +161,7 @@ class Builder
         // If no operator is passed as a parameter, it will be assumed that the desired operator is '='
         // where('id', 5) <=> where('id', '=', 5)
         $this->wheres[$column] = $operator;
-        
+
         return $this;
     }
 
