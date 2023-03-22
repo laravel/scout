@@ -125,7 +125,7 @@ class Builder
     /**
      * Add a constraint to the search query.
      *
-     * @param  \Closure|string|array|\Illuminate\Contracts\Database\Query\Expression $column
+     * @param  \Closure|string|array|\Illuminate\Contracts\Database\Query\Expression  $column
      * @param  mixed  $operator
      * @param  mixed  $value
      * @return $this
@@ -137,7 +137,7 @@ class Builder
         // to the complexWheres array instead of the wheres array.
         // Any operator supported by the Eloquent Builder is now supported aswell, in addition to passing
         // an array of arrays as a parameter.
-        if(is_array($column)){
+        if (is_array($column)) {
             // This was added in order to support the following syntax used in the Eloquent Builder.
             // An array of arrays can be passed as a parameter :
             // where([
@@ -146,7 +146,7 @@ class Builder
             // ]);
             $this->complexWheres = $column;
             return $this;
-        } else if($value != null){
+        } elseif ($value != null) {
             // This was added in order to support the following syntax used in the Eloquent Builder.
             // Any operator supported by the Eloquent Builder is now supported aswell :
             // where('id', '>', 5)
