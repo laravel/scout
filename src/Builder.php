@@ -145,6 +145,7 @@ class Builder
             //    ['id', '<', 10]
             // ]);
             $this->complexWheres = $column;
+
             return $this;
         } elseif ($value != null) {
             // This was added in order to support the following syntax used in the Eloquent Builder.
@@ -153,12 +154,14 @@ class Builder
             // where('id', '<', 3)
             // '=', '<', '>', '<=', '>=', '!=', etc.
             $this->complexWheres[] = [$column, $operator, $value];
+
             return $this;
         }
         // The old scout builder syntax is still supported, all changes are fully backward compatible.
         // If no operator is passed as a parameter, it will be assumed that the desired operator is '='
         // where('id', 5) <=> where('id', '=', 5)
         $this->wheres[$column] = $operator;
+        
         return $this;
     }
 
