@@ -218,6 +218,16 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
                     $query->where($key, '=', $value);
                 }
             }
+        }) // If wheres is empty, and complexWheres isn't, it means the user sent a complex where clause.
+           // complexWheres is an array of arrays, we traverse it and call $query->where on each of its child arrays,
+           // passed as parameters.
+        ->when(! $builder->callback && count($builder->complexWheres) > 0, function ($query) use ($builder) {
+            foreach ($builder->complexWheres as $complexWhere) {
+                $key = $complexWhere[0];
+                $operator = $complexWhere[1];
+                $value = $complexWhere[2];
+                $query->where($key, $operator, $value);
+            }
         })->when(! $builder->callback && count($builder->whereIns) > 0, function ($query) use ($builder) {
             foreach ($builder->whereIns as $key => $values) {
                 $query->whereIn($key, $values);

@@ -55,6 +55,13 @@ class Builder
     public $wheres = [];
 
     /**
+     * The "complex where" constraints added to the query.
+     *
+     * @var array
+     */
+    public $complexWheres = [];
+
+    /**
      * The "where in" constraints added to the query.
      *
      * @var array
@@ -118,14 +125,40 @@ class Builder
     /**
      * Add a constraint to the search query.
      *
-     * @param  string  $field
+     * @param  \Closure|string|array|\Illuminate\Contracts\Database\Query\Expression $column
+     * @param  mixed  $operator
      * @param  mixed  $value
      * @return $this
      */
-    public function where($field, $value)
+    public function where($column, $operator = null, $value = null)
     {
-        $this->wheres[$field] = $value;
-
+        // The old where clauses only supported basic numeric equality checks.
+        // Any complex where clauses (containing more than basic numeric equality checks) will be added
+        // to the complexWheres array instead of the wheres array.
+        // Any operator supported by the Eloquent Builder is now supported aswell, in addition to passing
+        // an array of arrays as a parameter.
+        if(is_array($column)){
+            // This was added in order to support the following syntax used in the Eloquent Builder.
+            // An array of arrays can be passed as a parameter :
+            // where([
+            //    ['id', '>', 5],
+            //    ['id', '<', 10]
+            // ]);
+            $this->complexWheres = $column;
+            return $this;
+        } else if($value != null){
+            // This was added in order to support the following syntax used in the Eloquent Builder.
+            // Any operator supported by the Eloquent Builder is now supported aswell :
+            // where('id', '>', 5)
+            // where('id', '<', 3)
+            // '=', '<', '>', '<=', '>=', '!=', etc.
+            $this->complexWheres[] = [$column, $operator, $value];
+            return $this;
+        }
+        // The old scout builder syntax is still supported, all changes are fully backward compatible.
+        // If no operator is passed as a parameter, it will be assumed that the desired operator is '='
+        // where('id', 5) <=> where('id', '=', 5)
+        $this->wheres[$column] = $operator;
         return $this;
     }
 
