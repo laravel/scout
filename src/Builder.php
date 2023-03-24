@@ -3,6 +3,7 @@
 namespace Laravel\Scout;
 
 use Illuminate\Container\Container;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Traits\Macroable;
@@ -291,6 +292,17 @@ class Builder
     public function get()
     {
         return $this->engine()->get($this);
+    }
+
+   /**
+    * Get the results of the search with specific columns.
+    *
+    * @param mixed $column
+    * @return \Illuminate\Database\Eloquent\Collection
+    */
+    public function getColumn(...$column)
+    {
+        return $this->query(fn (EloquentBuilder $builder) => $builder->select($column))->get();
     }
 
     /**

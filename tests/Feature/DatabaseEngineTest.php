@@ -95,6 +95,22 @@ class DatabaseEngineTest extends TestCase
         $this->assertCount(0, $models);
     }
 
+    public function test_it_can_retrieve_results_with_specific_columns()
+    {
+        $models = SearchableUserDatabaseModel::search('laravel')->getColumn('name');
+
+        $this->assertCount(2, $models);
+        $this->assertEquals('Abigail Otwell', $models[0]->name);
+        $this->assertNull($models[0]->email);
+        
+
+        $models = SearchableUserDatabaseModel::search('laravel')->getColumn('name', 'email');
+
+        $this->assertCount(2, $models);
+        $this->assertEquals('Taylor Otwell', $models[1]->name);
+        $this->assertEquals('taylor@laravel.com', $models[1]->email);
+    }
+
     public function test_it_can_paginate_results()
     {
         $models = SearchableUserDatabaseModel::search('Taylor')->where('email', 'taylor@laravel.com')->paginate();
