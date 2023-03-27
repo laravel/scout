@@ -116,7 +116,7 @@ class BuilderTest extends TestCase
                 })->toArray(),
                 'hitsPerPage' => $hitsPerPage,
                 'page' => $page,
-                'totalHits' => $query->count(),
+                'nbHits' => $query->count(),
                 'totalPages' => $totalPages > 0 ? $totalPages : 0,
                 'processingTimeMs' => 1,
             ]);
