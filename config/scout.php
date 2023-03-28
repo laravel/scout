@@ -11,7 +11,7 @@ return [
     | using Laravel Scout. This connection is used when syncing all models
     | to the search service. You should adjust this based on your needs.
     |
-    | Supported: "algolia", "meilisearch", "database", "collection", "null"
+    | Supported: "algolia", "meilisearch", "opensearch", "database", "collection", "null"
     |
     */
 
@@ -139,4 +139,25 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | OpenSearch Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure your OpenSearch settings. OpenSearch is an open source
+    | search engine which works great with Scout out of the box.
+    |
+    */
+
+    'opensearch' => [
+        'host' => env('OPENSEARCH_HOST', 'http://localhost:9200'),
+        'access_key' => env('OPENSEARCH_ACCESS_KEY'),
+        'secret_key' => env('OPENSEARCH_SECRET_KEY'),
+        'options' => [
+            'ssl_verification' => env('OPENSEARCH_SSL_VERIFICATION', true),
+            // Used for AWS
+            'sigv4_enabled' => true,
+            'sigv4_region' => 'eu-west-1',
+        ]
+    ]
 ];

@@ -12,6 +12,7 @@ use Laravel\Scout\Engines\CollectionEngine;
 use Laravel\Scout\Engines\DatabaseEngine;
 use Laravel\Scout\Engines\MeilisearchEngine;
 use Laravel\Scout\Engines\NullEngine;
+use Laravel\Scout\Engines\OpensearchEngine;
 use Meilisearch\Client as MeilisearchClient;
 use Meilisearch\Meilisearch;
 
@@ -136,6 +137,48 @@ class EngineManager extends Manager
         }
 
         throw new Exception('Please install the suggested Meilisearch client: meilisearch/meilisearch-php.');
+    }
+
+    /**
+     * Create an OpenSearch engine instance.
+     *
+     * @return \Laravel\Scout\Engines\OpensearchEngine
+     */
+    public function createOpensearchDriver()
+    {
+        $this->ensureOpensearchClientIsInstalled();
+
+        $client = (new \OpenSearch\ClientBuilder())
+            ->setHosts([config('scout.opensearch.host')])
+            ->setSSLVerification(config('scout.opensearch.options.ssl_verification'));
+
+        if (config('scout.opensearch.options.sigv4_enabled')) {
+            $client = $client->setSigV4CredentialProvider([
+                    'key' => config('scout.opensearch.access_key'),
+                    'secret' => config('scout.opensearch.secret_key'),
+                ])
+                ->setSigV4Region(config('scout.opensearch.options.sigv4_region'));
+        } else {
+            $client = $client->setBasicAuthentication(config('scout.opensearch.access_key'), config('scout.opensearch.secret_key'));
+        }
+
+        return new OpensearchEngine($client->build(), config('scout.soft_delete'));
+    }
+
+    /**
+     * Ensure the OpenSearch client is installed.
+     *
+     * @return void
+     *
+     * @throws \Exception
+     */
+    protected function ensureOpensearchClientIsInstalled()
+    {
+        if (class_exists(\OpenSearch\Client::class) && version_compare(\OpenSearch\Client::VERSION, '7.0.0') >= 0) {
+            return;
+        }
+
+        throw new Exception('Please install the suggested OpenSearch client: opensearch-project/opensearch-php.');
     }
 
     /**
