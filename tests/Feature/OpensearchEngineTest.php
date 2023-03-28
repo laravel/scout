@@ -6,6 +6,7 @@ use Laravel\Scout\ScoutServiceProvider;
 use OpenSearch\Client;
 use Orchestra\Testbench\TestCase;
 
+
 class OpensearchEngineTest extends TestCase
 {
     protected function getPackageProviders($app)
