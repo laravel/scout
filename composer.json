@@ -21,8 +21,7 @@
         "illuminate/http": "^9.0|^10.0",
         "illuminate/pagination": "^9.0|^10.0",
         "illuminate/queue": "^9.0|^10.0",
-        "illuminate/support": "^9.0|^10.0",
-        "opensearch-project/opensearch-php": "^2.1"
+        "illuminate/support": "^9.0|^10.0"
     },
     "require-dev": {
         "algolia/algoliasearch-client-php": "^3.2",
