@@ -422,7 +422,7 @@ class MeilisearchEngineTest extends TestCase
 
             return $meilisearch->search($query, $options);
         });
-        $engine->paginate($builder, $perPage, $page);
+        $engine->paginate($builder, $perPage, 'page', $page);
     }
 
     public function test_pagination_sorted_parameter()
@@ -446,7 +446,7 @@ class MeilisearchEngineTest extends TestCase
             return $meilisearch->search($query, $options);
         });
         $builder->orderBy('name', 'asc');
-        $engine->paginate($builder, $perPage, $page);
+        $engine->paginate($builder, $perPage, 'page', $page);
     }
 
     public function test_update_empty_searchable_array_from_soft_deleted_model_does_not_add_documents_to_index()

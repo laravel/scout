@@ -63,10 +63,11 @@ class CollectionEngine extends Engine
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $perPage
+     * @param  string  $pageName
      * @param  int  $page
      * @return mixed
      */
-    public function paginate(Builder $builder, $perPage, $page)
+    public function paginate(Builder $builder, $perPage, $pageName, $page)
     {
         $models = $this->searchModels($builder);
 

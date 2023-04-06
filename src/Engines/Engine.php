@@ -35,10 +35,11 @@ abstract class Engine
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $perPage
+     * @param  string  $pageName
      * @param  int  $page
      * @return mixed
      */
-    abstract public function paginate(Builder $builder, $perPage, $page);
+    abstract public function paginate(Builder $builder, $perPage, $pageName, $page);
 
     /**
      * Pluck and return the primary keys of the given results.

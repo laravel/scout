@@ -115,10 +115,11 @@ class AlgoliaEngine extends Engine
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $perPage
+     * @param  string  $pageName
      * @param  int  $page
      * @return mixed
      */
-    public function paginate(Builder $builder, $perPage, $page)
+    public function paginate(Builder $builder, $perPage, $pageName, $page)
     {
         return $this->performSearch($builder, [
             'numericFilters' => $this->filters($builder),

@@ -66,10 +66,11 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $perPage
+     * @param  string  $pageName
      * @param  int  $page
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginate(Builder $builder, $perPage, $page)
+    public function paginate(Builder $builder, $perPage, $pageName, $page)
     {
         return $this->buildSearchQuery($builder)
                 ->when($builder->orders, function ($query) use ($builder) {
@@ -80,7 +81,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
                 ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
                     $query->orderBy($builder->model->getKeyName(), 'desc');
                 })
-                ->paginate($perPage, ['*'], 'page', $page);
+                ->paginate($perPage, ['*'], $pageName, $page);
     }
 
     /**
@@ -88,10 +89,11 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $perPage
+     * @param  string  $pageName
      * @param  int  $page
      * @return \Illuminate\Contracts\Pagination\Paginator
      */
-    public function simplePaginate(Builder $builder, $perPage, $page)
+    public function simplePaginate(Builder $builder, $perPage, $pageName, $page)
     {
         return $this->buildSearchQuery($builder)
                 ->when($builder->orders, function ($query) use ($builder) {
@@ -102,7 +104,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModels
                 ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
                     $query->orderBy($builder->model->getKeyName(), 'desc');
                 })
-                ->simplePaginate($perPage, ['*'], 'page', $page);
+                ->simplePaginate($perPage, ['*'], $pageName, $page);
     }
 
     /**

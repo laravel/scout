@@ -316,7 +316,7 @@ class Builder
         $engine = $this->engine();
 
         if ($engine instanceof PaginatesEloquentModels) {
-            return $engine->simplePaginate($this, $perPage, $page)->appends('query', $this->query);
+            return $engine->simplePaginate($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
@@ -324,7 +324,7 @@ class Builder
         $perPage = $perPage ?: $this->model->getPerPage();
 
         $results = $this->model->newCollection($engine->map(
-            $this, $rawResults = $engine->paginate($this, $perPage, $page), $this->model
+            $this, $rawResults = $engine->paginate($this, $perPage, $pageName, $page), $this->model
         )->all());
 
         $paginator = Container::getInstance()->makeWith(Paginator::class, [
@@ -353,14 +353,14 @@ class Builder
         $engine = $this->engine();
 
         if ($engine instanceof PaginatesEloquentModels) {
-            return $engine->simplePaginate($this, $perPage, $page)->appends('query', $this->query);
+            return $engine->simplePaginate($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
         $perPage = $perPage ?: $this->model->getPerPage();
 
-        $results = $engine->paginate($this, $perPage, $page);
+        $results = $engine->paginate($this, $perPage, $pageName, $page);
 
         $paginator = Container::getInstance()->makeWith(Paginator::class, [
             'items' => $results,
@@ -388,7 +388,7 @@ class Builder
         $engine = $this->engine();
 
         if ($engine instanceof PaginatesEloquentModels) {
-            return $engine->paginate($this, $perPage, $page)->appends('query', $this->query);
+            return $engine->paginate($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
@@ -396,7 +396,7 @@ class Builder
         $perPage = $perPage ?: $this->model->getPerPage();
 
         $results = $this->model->newCollection($engine->map(
-            $this, $rawResults = $engine->paginate($this, $perPage, $page), $this->model
+            $this, $rawResults = $engine->paginate($this, $perPage, $pageName, $page), $this->model
         )->all());
 
         return Container::getInstance()->makeWith(LengthAwarePaginator::class, [
@@ -424,14 +424,14 @@ class Builder
         $engine = $this->engine();
 
         if ($engine instanceof PaginatesEloquentModels) {
-            return $engine->paginate($this, $perPage, $page)->appends('query', $this->query);
+            return $engine->paginate($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
         $perPage = $perPage ?: $this->model->getPerPage();
 
-        $results = $engine->paginate($this, $perPage, $page);
+        $results = $engine->paginate($this, $perPage, $pageName, $page);
 
         return Container::getInstance()->makeWith(LengthAwarePaginator::class, [
             'items' => $results,

@@ -117,10 +117,11 @@ class MeilisearchEngine extends Engine
      * page/hitsPerPage ensures that the search is exhaustive.
      *
      * @param  int  $perPage
+     * @param  string  $pageName
      * @param  int  $page
      * @return mixed
      */
-    public function paginate(Builder $builder, $perPage, $page)
+    public function paginate(Builder $builder, $perPage, $pageName, $page)
     {
         return $this->performSearch($builder, array_filter([
             'filter' => $this->filters($builder),
