@@ -358,7 +358,7 @@ class Builder
         if ($engine instanceof PaginatesEloquentModels) {
             return $engine->simplePaginate($this, $perPage, $page)->appends('query', $this->query);
         } else if ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
-            return $engine->paginateDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
+            return $engine->simplePaginateDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
