@@ -318,7 +318,7 @@ class Builder
 
         if ($engine instanceof PaginatesEloquentModels) {
             return $engine->simplePaginate($this, $perPage, $page)->appends('query', $this->query);
-        } else if ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
+        } elseif ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
             return $engine->simplePaginateDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
@@ -357,7 +357,7 @@ class Builder
 
         if ($engine instanceof PaginatesEloquentModels) {
             return $engine->simplePaginate($this, $perPage, $page)->appends('query', $this->query);
-        } else if ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
+        } elseif ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
             return $engine->simplePaginateDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
@@ -394,7 +394,7 @@ class Builder
 
         if ($engine instanceof PaginatesEloquentModels) {
             return $engine->paginate($this, $perPage, $page)->appends('query', $this->query);
-        } else if ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
+        } elseif ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
             return $engine->paginateDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
@@ -432,7 +432,7 @@ class Builder
 
         if ($engine instanceof PaginatesEloquentModels) {
             return $engine->paginate($this, $perPage, $page)->appends('query', $this->query);
-        } else if ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
+        } elseif ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
             return $engine->paginateDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
