@@ -319,7 +319,7 @@ class Builder
         if ($engine instanceof PaginatesEloquentModels) {
             return $engine->simplePaginate($this, $perPage, $page)->appends('query', $this->query);
         } elseif ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
-            return $engine->simplePaginateDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
+            return $engine->simplePaginateUsingDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
@@ -358,7 +358,7 @@ class Builder
         if ($engine instanceof PaginatesEloquentModels) {
             return $engine->simplePaginate($this, $perPage, $page)->appends('query', $this->query);
         } elseif ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
-            return $engine->simplePaginateDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
+            return $engine->simplePaginateUsingDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
@@ -395,7 +395,7 @@ class Builder
         if ($engine instanceof PaginatesEloquentModels) {
             return $engine->paginate($this, $perPage, $page)->appends('query', $this->query);
         } elseif ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
-            return $engine->paginateDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
+            return $engine->paginateUsingDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
@@ -433,7 +433,7 @@ class Builder
         if ($engine instanceof PaginatesEloquentModels) {
             return $engine->paginate($this, $perPage, $page)->appends('query', $this->query);
         } elseif ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
-            return $engine->paginateDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
+            return $engine->paginateUsingDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);

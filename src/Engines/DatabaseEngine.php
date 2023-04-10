@@ -71,7 +71,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     public function paginate(Builder $builder, $perPage, $page)
     {
-        return $this->paginateDatabase($builder, $perPage, 'page', $page);
+        return $this->paginateUsingDatabase($builder, $perPage, 'page', $page);
     }
 
     /**
@@ -83,7 +83,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      * @param  int  $page
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginateDatabase(Builder $builder, $perPage, $pageName, $page)
+    public function paginateUsingDatabase(Builder $builder, $perPage, $pageName, $page)
     {
         return $this->buildSearchQuery($builder)
             ->when($builder->orders, function ($query) use ($builder) {
@@ -107,7 +107,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     public function simplePaginate(Builder $builder, $perPage, $page)
     {
-        return $this->simplePaginateDatabase($builder, $perPage, 'page', $page);
+        return $this->simplePaginateUsingDatabase($builder, $perPage, 'page', $page);
     }
 
     /**
@@ -118,7 +118,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      * @param  int|null  $page
      * @return \Illuminate\Contracts\Pagination\Paginator
      */
-    public function simplePaginateDatabase(Builder $builder, $perPage, $pageName, $page)
+    public function simplePaginateUsingDatabase(Builder $builder, $perPage, $pageName, $page)
     {
         return $this->buildSearchQuery($builder)
             ->when($builder->orders, function ($query) use ($builder) {

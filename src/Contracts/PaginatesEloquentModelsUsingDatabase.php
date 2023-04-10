@@ -15,7 +15,7 @@ interface PaginatesEloquentModelsUsingDatabase
      * @param  int  $page
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginateDatabase(Builder $builder, $perPage, $pageName, $page);
+    public function paginateUsingDatabase(Builder $builder, $perPage, $pageName, $page);
 
     /**
      * Paginate the given search on the engine using simple pagination.
@@ -26,5 +26,5 @@ interface PaginatesEloquentModelsUsingDatabase
      * @param  int  $page
      * @return \Illuminate\Contracts\Pagination\Paginator
      */
-    public function simplePaginateDatabase(Builder $builder, $perPage, $pageName, $page);
+    public function simplePaginateUsingDatabase(Builder $builder, $perPage, $pageName, $page);
 }
