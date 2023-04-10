@@ -7,6 +7,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Traits\Macroable;
 use Laravel\Scout\Contracts\PaginatesEloquentModels;
+use Laravel\Scout\Contracts\PaginatesEloquentModelsUsingDatabase;
 
 class Builder
 {
@@ -317,6 +318,8 @@ class Builder
 
         if ($engine instanceof PaginatesEloquentModels) {
             return $engine->simplePaginate($this, $perPage, $page)->appends('query', $this->query);
+        } elseif ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
+            return $engine->simplePaginateUsingDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
@@ -354,6 +357,8 @@ class Builder
 
         if ($engine instanceof PaginatesEloquentModels) {
             return $engine->simplePaginate($this, $perPage, $page)->appends('query', $this->query);
+        } elseif ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
+            return $engine->simplePaginateUsingDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
@@ -389,6 +394,8 @@ class Builder
 
         if ($engine instanceof PaginatesEloquentModels) {
             return $engine->paginate($this, $perPage, $page)->appends('query', $this->query);
+        } elseif ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
+            return $engine->paginateUsingDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
@@ -425,6 +432,8 @@ class Builder
 
         if ($engine instanceof PaginatesEloquentModels) {
             return $engine->paginate($this, $perPage, $page)->appends('query', $this->query);
+        } elseif ($engine instanceof PaginatesEloquentModelsUsingDatabase) {
+            return $engine->paginateUsingDatabase($this, $perPage, $pageName, $page)->appends('query', $this->query);
         }
 
         $page = $page ?: Paginator::resolveCurrentPage($pageName);

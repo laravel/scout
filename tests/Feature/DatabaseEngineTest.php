@@ -110,6 +110,30 @@ class DatabaseEngineTest extends TestCase
         $this->assertCount(2, $models);
     }
 
+    public function test_it_can_paginate_using_a_custom_page_name()
+    {
+        $models = SearchableUserDatabaseModel::search('Taylor')->where('email', 'taylor@laravel.com')->paginate();
+        $this->assertStringContainsString('page=1', $models->url(1));
+
+        $models = SearchableUserDatabaseModel::search('Taylor')->where('email', 'taylor@laravel.com')->paginate(pageName: 'foo');
+        $this->assertStringContainsString('foo=1', $models->url(1));
+
+        $models = SearchableUserDatabaseModel::search('Taylor')->where('email', 'taylor@laravel.com')->paginate(pageName: 'bar');
+        $this->assertStringContainsString('bar=1', $models->url(1));
+    }
+
+    public function test_it_can_simple_paginate_using_a_custom_page_name()
+    {
+        $models = SearchableUserDatabaseModel::search('Taylor')->where('email', 'taylor@laravel.com')->simplePaginate();
+        $this->assertStringContainsString('page=1', $models->url(1));
+
+        $models = SearchableUserDatabaseModel::search('Taylor')->where('email', 'taylor@laravel.com')->simplePaginate(pageName: 'foo');
+        $this->assertStringContainsString('foo=1', $models->url(1));
+
+        $models = SearchableUserDatabaseModel::search('Taylor')->where('email', 'taylor@laravel.com')->simplePaginate(pageName: 'bar');
+        $this->assertStringContainsString('bar=1', $models->url(1));
+    }
+
     public function test_limit_is_applied()
     {
         $models = SearchableUserDatabaseModel::search('laravel')->get();
