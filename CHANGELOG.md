@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.0.2...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.1.0...10.x)
+
+## [v10.1.0](https://github.com/laravel/scout/compare/v10.0.2...v10.1.0) - 2023-04-11
+
+- Removed redundant default value for config file by @siarheipashkevich in https://github.com/laravel/scout/pull/714
+- Adds support for custom page names using the database engine by @lukeraymonddowning in https://github.com/laravel/scout/pull/728
 
 ## [v10.0.2](https://github.com/laravel/scout/compare/v10.0.1...v10.0.2) - 2023-03-07
 
