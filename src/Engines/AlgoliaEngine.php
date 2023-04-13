@@ -167,6 +167,10 @@ class AlgoliaEngine extends Engine
         })->values();
 
         return $wheres->merge(collect($builder->whereIns)->map(function ($values, $key) {
+            if (empty($values)) {
+                return '0=1';
+            }
+
             return collect($values)->map(function ($value) use ($key) {
                 return $key.'='.$value;
             })->all();
