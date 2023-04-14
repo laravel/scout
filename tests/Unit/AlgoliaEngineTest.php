@@ -136,6 +136,20 @@ class AlgoliaEngineTest extends TestCase
         $engine->search($builder);
     }
 
+    public function test_search_sends_correct_parameters_to_algolia_for_empty_where_in_search()
+    {
+        $client = m::mock(SearchClient::class);
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
+        $index->shouldReceive('search')->with('zonda', [
+            'numericFilters' => ['foo=1', '0=1'],
+        ]);
+
+        $engine = new AlgoliaEngine($client);
+        $builder = new Builder(new SearchableModel, 'zonda');
+        $builder->where('foo', 1)->whereIn('bar', []);
+        $engine->search($builder);
+    }
+
     public function test_map_correctly_maps_results_to_models()
     {
         $client = m::mock(SearchClient::class);

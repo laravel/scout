@@ -514,7 +514,7 @@ class MeilisearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filter' => 'foo="bar" AND bar="baz" AND (qux=1 OR qux=2) AND (quux=1 OR quux=2)',
+            'filter' => 'foo="bar" AND bar="baz" AND qux IN [1, 2] AND quux IN [1, 2]',
             'hitsPerPage' => $builder->limit,
         ]))->andReturn([]);
 
@@ -530,7 +530,24 @@ class MeilisearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filter' => '(qux=1 OR qux=2) AND (quux=1 OR quux=2)',
+            'filter' => 'qux IN [1, 2] AND quux IN [1, 2]',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->search($builder);
+    }
+
+    public function test_empty_where_in_conditions_are_applied_correctly()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+        $builder->where('foo', 'bar');
+        $builder->where('bar', 'baz');
+        $builder->whereIn('qux', []);
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter' => 'foo="bar" AND bar="baz" AND qux IN []',
             'hitsPerPage' => $builder->limit,
         ]))->andReturn([]);
 

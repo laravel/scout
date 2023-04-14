@@ -173,20 +173,20 @@ class MeilisearchEngine extends Engine
             }
 
             return is_numeric($value)
-                            ? sprintf('%s=%s', $key, $value)
-                            : sprintf('%s="%s"', $key, $value);
+                ? sprintf('%s=%s', $key, $value)
+                : sprintf('%s="%s"', $key, $value);
         });
 
         foreach ($builder->whereIns as $key => $values) {
-            $filters->push(sprintf('(%s)', collect($values)->map(function ($value) use ($key) {
+            $filters->push(sprintf('%s IN [%s]', $key, collect($values)->map(function ($value) {
                 if (is_bool($value)) {
-                    return sprintf('%s=%s', $key, $value ? 'true' : 'false');
+                    return sprintf('%s', $value ? 'true' : 'false');
                 }
 
                 return filter_var($value, FILTER_VALIDATE_INT) !== false
-                                ? sprintf('%s=%s', $key, $value)
-                                : sprintf('%s="%s"', $key, $value);
-            })->values()->implode(' OR ')));
+                    ? sprintf('%s', $value)
+                    : sprintf('"%s"', $value);
+            })->values()->implode(', ')));
         }
 
         return $filters->values()->implode(' AND ');
