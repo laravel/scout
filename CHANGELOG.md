@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.1.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.1.1...10.x)
+
+## [v10.1.1](https://github.com/laravel/scout/compare/v10.1.0...v10.1.1) - 2023-04-18
+
+- Handle empty whereIn clause by @jshah4517 in https://github.com/laravel/scout/pull/729
 
 ## [v10.1.0](https://github.com/laravel/scout/compare/v10.0.2...v10.1.0) - 2023-04-11
 
