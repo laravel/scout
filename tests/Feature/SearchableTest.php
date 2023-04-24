@@ -20,6 +20,7 @@ class SearchableTest extends TestCase
     {
         $collection = m::mock();
         $collection->shouldReceive('isEmpty')->andReturn(false);
+        $collection->shouldReceive('first->makeSearchableUsing')->with($collection)->andReturn($collection);
         $collection->shouldReceive('first->searchableUsing->update')->with($collection);
 
         $model = new SearchableModel();
