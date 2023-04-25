@@ -152,7 +152,7 @@ trait Searchable
     }
 
     /**
-     * Modify the models used to make those models searchable.
+     * Modify the collection of models being made searchable.
      *
      * @param  \Illuminate\Support\Collection  models
      * @return \Illuminate\Support\Collection
