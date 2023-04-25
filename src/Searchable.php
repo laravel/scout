@@ -154,8 +154,8 @@ trait Searchable
     /**
      * Modify the collection of models being made searchable.
      *
-     * @param  \Illuminate\Support\Collection  models
-     * @return \Illuminate\Support\Collection
+     * @param  \Illuminate\Database\Eloquent\Collection  models
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     protected function makeSearchableUsing(BaseCollection $models)
     {
