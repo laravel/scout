@@ -60,7 +60,7 @@ trait Searchable
         }
 
         if (! config('scout.queue')) {
-            return $models->first()->searchableUsing()->update($models);
+            return $models->first()->makeSearchableUsing($models)->first()->searchableUsing()->update($models);
         }
 
         dispatch((new Scout::$makeSearchableJob($models))
@@ -149,6 +149,17 @@ trait Searchable
                 $self->qualifyColumn($self->getScoutKeyName())
             )
             ->searchable($chunk);
+    }
+
+    /**
+     * Modify the collection of models being made searchable.
+     *
+     * @param  \Illuminate\Support\Collection  $models
+     * @return \Illuminate\Support\Collection
+     */
+    protected function makeSearchableUsing(BaseCollection $models)
+    {
+        return $models;
     }
 
     /**
