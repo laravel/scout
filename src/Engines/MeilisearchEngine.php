@@ -141,6 +141,8 @@ class MeilisearchEngine extends Engine
     {
         $meilisearch = $this->meilisearch->index($builder->index ?: $builder->model->searchableAs());
 
+        $searchParams = array_merge($builder->options, $searchParams);
+
         if ($builder->callback) {
             $result = call_user_func(
                 $builder->callback,
