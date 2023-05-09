@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.1.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.2.0...10.x)
+
+## [v10.2.0](https://github.com/laravel/scout/compare/v10.1.1...v10.2.0) - 2023-05-09
+
+- Add 'makeSearchableUsing' method (to allow eager loading when making specific models searchable) by @gdebrauwer in https://github.com/laravel/scout/pull/732
+- Re-add options for search requests by @patrickweh in https://github.com/laravel/scout/pull/734
 
 ## [v10.1.1](https://github.com/laravel/scout/compare/v10.1.0...v10.1.1) - 2023-04-18
 
