@@ -157,7 +157,7 @@ trait Searchable
      * @param  \Illuminate\Support\Collection  $models
      * @return \Illuminate\Support\Collection
      */
-    protected function makeSearchableUsing(BaseCollection $models)
+    public function makeSearchableUsing(BaseCollection $models)
     {
         return $models;
     }
