@@ -316,8 +316,8 @@ class MeilisearchEngine extends Engine
      */
     public function getTotalCount($results)
     {
-        if (isset($result['estimatedTotalHits'])) {
-            return $result['estimatedTotalHits'];
+        if (isset($results['estimatedTotalHits'])) {
+            return $results['estimatedTotalHits'];
         }
 
         return $results['totalHits'];
