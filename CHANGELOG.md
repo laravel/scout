@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.2.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.2.1...10.x)
+
+## [v10.2.1](https://github.com/laravel/scout/compare/v10.2.0...v10.2.1) - 2023-05-10
+
+- Fixes `makeSearchableUsing` not being able to be called by @nunomaduro in https://github.com/laravel/scout/pull/739
 
 ## [v10.2.0](https://github.com/laravel/scout/compare/v10.1.1...v10.2.0) - 2023-05-09
 
