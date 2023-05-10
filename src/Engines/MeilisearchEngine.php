@@ -316,6 +316,10 @@ class MeilisearchEngine extends Engine
      */
     public function getTotalCount($results)
     {
+        if (isset($result['estimatedTotalHits'])) {
+            return $result['estimatedTotalHits'];
+        }
+
         return $results['totalHits'];
     }
 
