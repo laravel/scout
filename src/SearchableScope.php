@@ -32,19 +32,23 @@ class SearchableScope implements Scope
     public function extend(EloquentBuilder $builder)
     {
         $builder->macro('searchable', function (EloquentBuilder $builder, $chunk = null) {
+            $model = $builder->getModel();
+
             $builder->chunkById($chunk ?: config('scout.chunk.searchable', 500), function ($models) {
                 $models->filter->shouldBeSearchable()->searchable();
 
                 event(new ModelsImported($models));
-            }, $builder->qualifyColumn($builder->getModel()->getScoutKeyName()), $builder->getModel()->getKeyName());
+            }, $builder->qualifyColumn($model->getScoutKeyName()), $model->getScoutKeyName());
         });
 
         $builder->macro('unsearchable', function (EloquentBuilder $builder, $chunk = null) {
+            $model = $builder->getModel();
+
             $builder->chunkById($chunk ?: config('scout.chunk.unsearchable', 500), function ($models) {
                 $models->unsearchable();
 
                 event(new ModelsFlushed($models));
-            }, $builder->qualifyColumn($builder->getModel()->getScoutKeyName()), $builder->getModel()->getKeyName());
+            }, $builder->qualifyColumn($model->getScoutKeyName()), $model->getScoutKeyName());
         });
 
         HasManyThrough::macro('searchable', function ($chunk = null) {
