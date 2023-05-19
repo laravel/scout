@@ -32,8 +32,7 @@ class SearchableScope implements Scope
     public function extend(EloquentBuilder $builder)
     {
         $builder->macro('searchable', function (EloquentBuilder $builder, $chunk = null) {
-            $model = $builder->getModel();
-            $scoutKeyName = $model->getScoutKeyName();
+            $scoutKeyName = $builder->getModel()->getScoutKeyName();
 
             $builder->chunkById($chunk ?: config('scout.chunk.searchable', 500), function ($models) {
                 $models->filter->shouldBeSearchable()->searchable();
@@ -43,8 +42,7 @@ class SearchableScope implements Scope
         });
 
         $builder->macro('unsearchable', function (EloquentBuilder $builder, $chunk = null) {
-            $model = $builder->getModel();
-            $scoutKeyName = $model->getScoutKeyName();
+            $scoutKeyName = $builder->getModel()->getScoutKeyName();
 
             $builder->chunkById($chunk ?: config('scout.chunk.unsearchable', 500), function ($models) {
                 $models->unsearchable();
