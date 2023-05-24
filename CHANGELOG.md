@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.2.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.2.2...10.x)
+
+## [v10.2.2](https://github.com/laravel/scout/compare/v10.2.1...v10.2.2) - 2023-05-24
+
+- Fixes usage with `sqlsrv` databases by @nunomaduro in https://github.com/laravel/scout/pull/740
 
 ## [v10.2.1](https://github.com/laravel/scout/compare/v10.2.0...v10.2.1) - 2023-05-10
 
