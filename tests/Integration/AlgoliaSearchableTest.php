@@ -23,9 +23,9 @@ class AlgoliaSearchableTest extends TestCase
 
         $app['config']->set('scout.driver', 'algolia');
 
-        $this->beforeApplicationDestroyed(function () {
-            $this->resetScoutIndexes();
-        });
+
+
+
     }
     /**
      * Define database migrations.
