@@ -30,16 +30,16 @@ class DatabaseSearchableTest extends TestCase
         $results = $this->itCanUseBasicSearch();
 
         $this->assertSame([
-            44 => "Amos Larson Sr.",
-            43 => "Dana Larson Sr.",
-            42 => "Dax Larkin",
-            41 => "Gudrun Larkin",
-            40 => "Otis Larson MD",
-            39 => "Linkwood Larkin",
-            20 => "Prof. Larry Prosacco DVM",
-            12 => "Reta Larkin",
-            11 => "Larry Casper",
-            1 => "Laravel Framework",
+            44 => 'Amos Larson Sr.',
+            43 => 'Dana Larson Sr.',
+            42 => 'Dax Larkin',
+            41 => 'Gudrun Larkin',
+            40 => 'Otis Larson MD',
+            39 => 'Linkwood Larkin',
+            20 => 'Prof. Larry Prosacco DVM',
+            12 => 'Reta Larkin',
+            11 => 'Larry Casper',
+            1 => 'Laravel Framework',
         ], $results->pluck('name', 'id')->all());
     }
 
@@ -48,13 +48,13 @@ class DatabaseSearchableTest extends TestCase
         $results = $this->itCanUseBasicSearchWithQueryCallback();
 
         $this->assertSame([
-            44 => "Amos Larson Sr.",
-            43 => "Dana Larson Sr.",
-            42 => "Dax Larkin",
-            41 => "Gudrun Larkin",
-            40 => "Otis Larson MD",
-            12 => "Reta Larkin",
-            1 => "Laravel Framework",
+            44 => 'Amos Larson Sr.',
+            43 => 'Dana Larson Sr.',
+            42 => 'Dax Larkin',
+            41 => 'Gudrun Larkin',
+            40 => 'Otis Larson MD',
+            12 => 'Reta Larkin',
+            1 => 'Laravel Framework',
         ], $results->pluck('name', 'id')->all());
     }
 
@@ -96,19 +96,19 @@ class DatabaseSearchableTest extends TestCase
         [$page1, $page2] = $this->itCanUsePaginatedSearch();
 
         $this->assertSame([
-            44 => "Amos Larson Sr.",
-            43 => "Dana Larson Sr.",
-            42 => "Dax Larkin",
-            41 => "Gudrun Larkin",
-            40 => "Otis Larson MD",
+            44 => 'Amos Larson Sr.',
+            43 => 'Dana Larson Sr.',
+            42 => 'Dax Larkin',
+            41 => 'Gudrun Larkin',
+            40 => 'Otis Larson MD',
         ], $page1->pluck('name', 'id')->all());
 
         $this->assertSame([
-            39 => "Linkwood Larkin",
-            20 => "Prof. Larry Prosacco DVM",
-            12 => "Reta Larkin",
-            11 => "Larry Casper",
-            1 => "Laravel Framework",
+            39 => 'Linkwood Larkin',
+            20 => 'Prof. Larry Prosacco DVM',
+            12 => 'Reta Larkin',
+            11 => 'Larry Casper',
+            1 => 'Laravel Framework',
         ], $page2->pluck('name', 'id')->all());
     }
 
@@ -117,16 +117,16 @@ class DatabaseSearchableTest extends TestCase
         [$page1, $page2] = $this->itCanUsePaginatedSearchWithQueryCallback();
 
         $this->assertSame([
-            44 => "Amos Larson Sr.",
-            43 => "Dana Larson Sr.",
-            42 => "Dax Larkin",
-            41 => "Gudrun Larkin",
-            40 => "Otis Larson MD",
+            44 => 'Amos Larson Sr.',
+            43 => 'Dana Larson Sr.',
+            42 => 'Dax Larkin',
+            41 => 'Gudrun Larkin',
+            40 => 'Otis Larson MD',
         ], $page1->pluck('name', 'id')->all());
 
         $this->assertSame([
-            12 => "Reta Larkin",
-            1 => "Laravel Framework",
+            12 => 'Reta Larkin',
+            1 => 'Laravel Framework',
         ], $page2->pluck('name', 'id')->all());
     }
 }

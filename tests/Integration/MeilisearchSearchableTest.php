@@ -23,6 +23,7 @@ class MeilisearchSearchableTest extends TestCase
 
         $app['config']->set('scout.driver', 'meilisearch');
     }
+
     /**
      * Define database migrations.
      */
@@ -38,16 +39,16 @@ class MeilisearchSearchableTest extends TestCase
         $results = $this->itCanUseBasicSearch();
 
         $this->assertSame([
-            1 => "Laravel Framework",
-            11 => "Larry Casper",
-            12 => "Reta Larkin",
-            39 => "Linkwood Larkin",
-            40 => "Otis Larson MD",
-            41 => "Gudrun Larkin",
-            42 => "Dax Larkin",
-            43 => "Dana Larson Sr.",
-            44 => "Amos Larson Sr.",
-            20 => "Prof. Larry Prosacco DVM",
+            1 => 'Laravel Framework',
+            11 => 'Larry Casper',
+            12 => 'Reta Larkin',
+            39 => 'Linkwood Larkin',
+            40 => 'Otis Larson MD',
+            41 => 'Gudrun Larkin',
+            42 => 'Dax Larkin',
+            43 => 'Dana Larson Sr.',
+            44 => 'Amos Larson Sr.',
+            20 => 'Prof. Larry Prosacco DVM',
         ], $results->pluck('name', 'id')->all());
     }
 
@@ -56,13 +57,13 @@ class MeilisearchSearchableTest extends TestCase
         $results = $this->itCanUseBasicSearchWithQueryCallback();
 
         $this->assertSame([
-            1 => "Laravel Framework",
-            12 => "Reta Larkin",
-            40 => "Otis Larson MD",
-            41 => "Gudrun Larkin",
-            42 => "Dax Larkin",
-            43 => "Dana Larson Sr.",
-            44 => "Amos Larson Sr.",
+            1 => 'Laravel Framework',
+            12 => 'Reta Larkin',
+            40 => 'Otis Larson MD',
+            41 => 'Gudrun Larkin',
+            42 => 'Dax Larkin',
+            43 => 'Dana Larson Sr.',
+            44 => 'Amos Larson Sr.',
         ], $results->pluck('name', 'id')->all());
     }
 
@@ -115,19 +116,19 @@ class MeilisearchSearchableTest extends TestCase
         [$page1, $page2] = $this->itCanUsePaginatedSearch();
 
         $this->assertSame([
-            1 => "Laravel Framework",
-            11 => "Larry Casper",
-            12 => "Reta Larkin",
-            39 => "Linkwood Larkin",
-            40 => "Otis Larson MD",
+            1 => 'Laravel Framework',
+            11 => 'Larry Casper',
+            12 => 'Reta Larkin',
+            39 => 'Linkwood Larkin',
+            40 => 'Otis Larson MD',
         ], $page1->pluck('name', 'id')->all());
 
         $this->assertSame([
-            41 => "Gudrun Larkin",
-            42 => "Dax Larkin",
-            43 => "Dana Larson Sr.",
-            44 => "Amos Larson Sr.",
-            20 => "Prof. Larry Prosacco DVM",
+            41 => 'Gudrun Larkin',
+            42 => 'Dax Larkin',
+            43 => 'Dana Larson Sr.',
+            44 => 'Amos Larson Sr.',
+            20 => 'Prof. Larry Prosacco DVM',
         ], $page2->pluck('name', 'id')->all());
     }
 
@@ -136,16 +137,16 @@ class MeilisearchSearchableTest extends TestCase
         [$page1, $page2] = $this->itCanUsePaginatedSearchWithQueryCallback();
 
         $this->assertSame([
-            1 => "Laravel Framework",
-            12 => "Reta Larkin",
-            40 => "Otis Larson MD",
+            1 => 'Laravel Framework',
+            12 => 'Reta Larkin',
+            40 => 'Otis Larson MD',
         ], $page1->pluck('name', 'id')->all());
 
         $this->assertSame([
-            41 => "Gudrun Larkin",
-            42 => "Dax Larkin",
-            43 => "Dana Larson Sr.",
-            44 => "Amos Larson Sr.",
+            41 => 'Gudrun Larkin',
+            42 => 'Dax Larkin',
+            43 => 'Dana Larson Sr.',
+            44 => 'Amos Larson Sr.',
         ], $page2->pluck('name', 'id')->all());
     }
 }

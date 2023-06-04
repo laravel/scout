@@ -23,10 +23,8 @@ class AlgoliaSearchableTest extends TestCase
 
         $app['config']->set('scout.driver', 'algolia');
 
-
-
-
     }
+
     /**
      * Define database migrations.
      */
@@ -42,16 +40,16 @@ class AlgoliaSearchableTest extends TestCase
         $results = $this->itCanUseBasicSearch();
 
         $this->assertSame([
-            11 => "Larry Casper",
-            1 => "Laravel Framework",
-            44 => "Amos Larson Sr.",
-            43 => "Dana Larson Sr.",
-            42 => "Dax Larkin",
-            41 => "Gudrun Larkin",
-            40 => "Otis Larson MD",
-            39 => "Linkwood Larkin",
-            20 => "Prof. Larry Prosacco DVM",
-            12 => "Reta Larkin",
+            11 => 'Larry Casper',
+            1 => 'Laravel Framework',
+            44 => 'Amos Larson Sr.',
+            43 => 'Dana Larson Sr.',
+            42 => 'Dax Larkin',
+            41 => 'Gudrun Larkin',
+            40 => 'Otis Larson MD',
+            39 => 'Linkwood Larkin',
+            20 => 'Prof. Larry Prosacco DVM',
+            12 => 'Reta Larkin',
         ], $results->pluck('name', 'id')->all());
     }
 
@@ -60,13 +58,13 @@ class AlgoliaSearchableTest extends TestCase
         $results = $this->itCanUseBasicSearchWithQueryCallback();
 
         $this->assertSame([
-            1 => "Laravel Framework",
-            44 => "Amos Larson Sr.",
-            43 => "Dana Larson Sr.",
-            42 => "Dax Larkin",
-            41 => "Gudrun Larkin",
-            40 => "Otis Larson MD",
-            12 => "Reta Larkin",
+            1 => 'Laravel Framework',
+            44 => 'Amos Larson Sr.',
+            43 => 'Dana Larson Sr.',
+            42 => 'Dax Larkin',
+            41 => 'Gudrun Larkin',
+            40 => 'Otis Larson MD',
+            12 => 'Reta Larkin',
         ], $results->pluck('name', 'id')->all());
     }
 
@@ -119,19 +117,19 @@ class AlgoliaSearchableTest extends TestCase
         [$page1, $page2] = $this->itCanUsePaginatedSearch();
 
         $this->assertSame([
-            11 => "Larry Casper",
-            1 => "Laravel Framework",
-            44 => "Amos Larson Sr.",
-            43 => "Dana Larson Sr.",
-            42 => "Dax Larkin",
+            11 => 'Larry Casper',
+            1 => 'Laravel Framework',
+            44 => 'Amos Larson Sr.',
+            43 => 'Dana Larson Sr.',
+            42 => 'Dax Larkin',
         ], $page1->pluck('name', 'id')->all());
 
         $this->assertSame([
-            41 => "Gudrun Larkin",
-            40 => "Otis Larson MD",
-            39 => "Linkwood Larkin",
-            20 => "Prof. Larry Prosacco DVM",
-            12 => "Reta Larkin",
+            41 => 'Gudrun Larkin',
+            40 => 'Otis Larson MD',
+            39 => 'Linkwood Larkin',
+            20 => 'Prof. Larry Prosacco DVM',
+            12 => 'Reta Larkin',
         ], $page2->pluck('name', 'id')->all());
     }
 
@@ -140,16 +138,16 @@ class AlgoliaSearchableTest extends TestCase
         [$page1, $page2] = $this->itCanUsePaginatedSearchWithQueryCallback();
 
         $this->assertSame([
-            1 => "Laravel Framework",
-            44 => "Amos Larson Sr.",
-            43 => "Dana Larson Sr.",
-            42 => "Dax Larkin",
+            1 => 'Laravel Framework',
+            44 => 'Amos Larson Sr.',
+            43 => 'Dana Larson Sr.',
+            42 => 'Dax Larkin',
         ], $page1->pluck('name', 'id')->all());
 
         $this->assertSame([
-            41 => "Gudrun Larkin",
-            40 => "Otis Larson MD",
-            12 => "Reta Larkin",
+            41 => 'Gudrun Larkin',
+            40 => 'Otis Larson MD',
+            12 => 'Reta Larkin',
         ], $page2->pluck('name', 'id')->all());
     }
 }
