@@ -19,6 +19,8 @@ class MeilisearchSearchableTest extends TestCase
     {
         if (is_null(Env::get('MEILISEARCH_HOST'))) {
             $this->markTestSkipped();
+
+            return;
         }
 
         $app['config']->set('scout.driver', 'meilisearch');
