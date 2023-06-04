@@ -90,7 +90,7 @@ trait SearchableTests
 
         return [
             User::search('lar')->take(10)->query($queryCallback)->paginate(5, 'page', 1),
-            User::search('lar')->take(10)->query($queryCallback)->paginate(5, 'page', 2)
+            User::search('lar')->take(10)->query($queryCallback)->paginate(5, 'page', 2),
         ];
     }
 }
