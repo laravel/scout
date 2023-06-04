@@ -22,7 +22,6 @@ class AlgoliaSearchableTest extends TestCase
         }
 
         $app['config']->set('scout.driver', 'algolia');
-
     }
 
     /**
