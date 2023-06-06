@@ -3,6 +3,7 @@
 namespace Laravel\Scout\Tests\Integration;
 
 use Laravel\Scout\ScoutServiceProvider;
+
 use function Orchestra\Testbench\artisan;
 
 class TestCase extends \Orchestra\Testbench\TestCase
