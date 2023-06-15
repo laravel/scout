@@ -2,7 +2,9 @@
 
 namespace Laravel\Scout;
 
+use Carbon\CarbonPeriod;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Traits\Macroable;
@@ -54,6 +56,13 @@ class Builder
      * @var array
      */
     public $wheres = [];
+
+    /**
+     * The advanced "where" constraints added to the query.
+     *
+     * @var array
+     */
+    public $advancedWheres = [];
 
     /**
      * The "where in" constraints added to the query.
@@ -116,18 +125,89 @@ class Builder
         return $this;
     }
 
+//    /**
+//     * Add a constraint to the search query.
+//     *
+//     * @param  string  $field
+//     * @param  mixed  $value
+//     * @return $this
+//     */
+//    public function where($field, $value)
+//    {
+//        $this->wheres[$field] = $value;
+//
+//        return $this;
+//    }
+
     /**
-     * Add a constraint to the search query.
+     * Add an advanced where clause to the query.
      *
-     * @param  string  $field
+     * @param  \Closure|string  $field
+     * @param  mixed  $operator
+     * @param  mixed  $value
+     * @param  string  $boolean
+     * @return $this
+     */
+    public function where($field, $operator, $value = null, $boolean = 'AND', $not = false)
+    {
+        if ($field instanceof \Closure && is_null($operator)) {
+            return $this->whereNested($field, $boolean, $not);
+        } elseif (is_null($value)) {
+            $this->wheres[$field] = $operator;
+
+            // adding data to the old where collection for compatibility with custom engines.
+            // The below code can substitute the old method in future when all the engines will be updated
+
+//            $type = "Basic";
+//            $value = $operator;
+//            $operator = "=";
+//            $this->advancedWheres[] = compact('type', 'field', 'operator', 'value', 'boolean', 'not');
+        } else {
+            $type = "Basic";
+            $this->advancedWheres[] = compact('type', 'field', 'operator', 'value', 'boolean', 'not');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add an "or where" clause to the query.
+     *
+     * @param  \Closure|string  $field
+     * @param  mixed  $operator
      * @param  mixed  $value
      * @return $this
      */
-    public function where($field, $value)
+    public function orWhere($field, $operator = null, $value = null)
     {
-        $this->wheres[$field] = $value;
+        return $this->where($field, $operator, $value, 'OR');
+    }
 
-        return $this;
+    /**
+     * Add a basic "where not" clause to the query.
+     *
+     * @param  \Closure|string  $field
+     * @param  mixed  $operator
+     * @param  mixed  $value
+     * @param  string  $boolean
+     * @return $this
+     */
+    public function whereNot($field, $operator = null, $value = null, $boolean = 'AND')
+    {
+        return $this->where($field, $operator, $value, $boolean, true);
+    }
+
+    /**
+     * Add an "or where not" clause to the query.
+     *
+     * @param  \Closure|string  $field
+     * @param  mixed  $operator
+     * @param  mixed  $value
+     * @return $this
+     */
+    public function orWhereNot($field, $operator = null, $value = null)
+    {
+        return $this->whereNot($field, $operator, $value, 'OR');
     }
 
     /**
@@ -140,6 +220,150 @@ class Builder
     public function whereIn($field, array $values)
     {
         $this->whereIns[$field] = $values;
+
+        return $this;
+    }
+
+    /**
+     * Add an advanced "where in" clause to the query.
+     *
+     * @param  string  $field
+     * @param  mixed  $values
+     * @param  string  $boolean
+     * @param  bool  $not
+     * @return $this
+     */
+    public function whereInAdvanced($field, $values, $boolean = 'AND', $not = false)
+    {
+        //this method can substitute the old whereIn method in future, when all the custom engines will be updated
+
+        $type = 'In';
+
+        // Next, if the value is Arrayable we need to cast it to its raw array form so we
+        // have the underlying array value instead of an Arrayable object which is not
+        // able to be added as a binding, etc. We will then add to the wheres array.
+        if ($values instanceof Arrayable) {
+            $values = $values->toArray();
+        }
+
+        $this->advancedWheres[] = compact('type', 'field', 'values', 'boolean', 'not');
+
+        return $this;
+    }
+
+    /**
+     * Add an "or where in" clause to the query.
+     *
+     * @param  string  $field
+     * @param  mixed  $values
+     * @return $this
+     */
+    public function orWhereIn($field, $values)
+    {
+        return $this->whereInAdvanced($field, $values, 'OR');
+    }
+
+    /**
+     * Add a "where not in" clause to the query.
+     *
+     * @param  string  $field
+     * @param  mixed  $values
+     * @param  string  $boolean
+     * @return $this
+     */
+    public function whereNotIn($field, $values, $boolean = 'AND')
+    {
+        return $this->whereInAdvanced($field, $values, $boolean, true);
+    }
+
+    /**
+     * Add an "or where not in" clause to the query.
+     *
+     * @param  string  $field
+     * @param  mixed  $values
+     * @return $this
+     */
+    public function orWhereNotIn($field, $values)
+    {
+        return $this->whereNotIn($field, $values, 'OR');
+    }
+
+    /**
+     * Add a where between statement to the query.
+     *
+     * @param  string  $field
+     * @param  iterable  $values
+     * @param  string  $boolean
+     * @param  bool  $not
+     * @return $this
+     */
+    public function whereBetween($field, iterable $values, $boolean = 'AND', $not = false)
+    {
+        $type = 'Between';
+
+        if ($values instanceof CarbonPeriod) {
+            $values = [$values->start, $values->end];
+        }
+
+        $this->advancedWheres[] = compact('type', 'field', 'values', 'boolean', 'not');
+
+        return $this;
+    }
+
+    /**
+     * Add an or where between statement to the query.
+     *
+     * @param  string  $field
+     * @param  iterable  $values
+     * @return $this
+     */
+    public function orWhereBetween($field, iterable $values)
+    {
+        return $this->whereBetween($field, $values, 'OR');
+    }
+
+    /**
+     * Add a where not between statement to the query.
+     *
+     * @param  string  $field
+     * @param  iterable  $values
+     * @param  string  $boolean
+     * @return $this
+     */
+    public function whereNotBetween($field, iterable $values, $boolean = 'AND')
+    {
+        return $this->whereBetween($field, $values, $boolean, true);
+    }
+
+    /**
+     * Add an or where not between statement to the query.
+     *
+     * @param  string  $field
+     * @param  iterable  $values
+     * @return $this
+     */
+    public function orWhereNotBetween($field, iterable $values)
+    {
+        return $this->whereNotBetween($field, $values, 'OR');
+    }
+
+    /**
+     * Add a nested where statement to the query.
+     *
+     * @param  \Closure  $callback
+     * @param  string  $boolean
+     * @param  bool    $not
+     * @return $this
+     */
+    public function whereNested(\Closure $callback, $boolean = 'AND', $not = false)
+    {
+        $callback($builder = new Builder($this->model, null));
+
+        if (count($builder->advancedWheres)) {
+            $type = 'Nested';
+
+            $this->advancedWheres[] = compact('type', 'builder', 'boolean', 'not');
+        }
 
         return $this;
     }

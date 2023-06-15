@@ -7,6 +7,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Support\Str;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Builders\CollectionBuilder;
 
 class CollectionEngine extends Engine
 {
@@ -106,6 +107,12 @@ class CollectionEngine extends Engine
                             }
                         }, function ($query) use ($builder) {
                             $query->orderBy($builder->model->qualifyColumn($builder->model->getScoutKeyName()), 'desc');
+                        })->when(! $builder->callback && count($builder->advancedWheres) > 0, function ($query) use ($builder) {
+                            foreach ($builder->advancedWheres as $whereData) {
+                                if($whereData['type'] == "Nested" || $whereData['field'] !== '__soft_deleted') {
+                                    $this->applyAdvancedWhereRulesToQuery($whereData, $query);
+                                }
+                            }
                         });
 
         $models = $this->ensureSoftDeletesAreHandled($builder, $query)
@@ -139,6 +146,52 @@ class CollectionEngine extends Engine
 
             return false;
         })->values();
+    }
+
+    /**
+     * Apply constrains to the query builder, recursively
+     *
+     * @param array $whereData
+     * @param  \Illuminate\Database\Query\Builder  $query
+     *
+     * @return void
+     */
+    protected function applyAdvancedWhereRulesToQuery(array $whereData, $query)
+    {
+        switch($whereData['type']) {
+            case "In":
+                $query->whereIn($whereData['field'], $whereData['values'], $whereData['boolean'], $whereData['not']);
+                break;
+
+            case "Null":
+                $query->whereNull($whereData['field'], $whereData['boolean'], $whereData['not']);
+                break;
+
+            case "Between":
+                $query->whereBetween($whereData['field'], $whereData['values'], $whereData['boolean'], $whereData['not']);
+                break;
+
+            case "Exists":
+                $query->whereExists($whereData['field'], $whereData['boolean'], $whereData['not']);
+                break;
+
+            case "Nested":
+                if(count($whereData['builder']->advancedWheres) > 0) {
+                    $subQuery = $whereData['builder']->model->getQuery()->forNestedWhere();
+                    foreach ($whereData['builder']->wheres as $field => $value) {
+                        $subQuery->where($field, '=', $value);
+                    }
+                    foreach ($whereData['builder']->advancedWheres as $subWhereData) {
+                        $this->applyAdvancedWhereRulesToQuery($subWhereData, $subQuery);
+                    }
+                    $query->addNestedWhereQuery($subQuery, $whereData['boolean']);
+                }
+                break;
+
+            case "Basic":
+            default:
+                $query->where($whereData['field'], $whereData['operator'], $whereData['value'], $whereData['boolean'], $whereData['not']);
+        }
     }
 
     /**
@@ -285,5 +338,14 @@ class CollectionEngine extends Engine
     public function deleteIndex($name)
     {
         //
+    }
+
+    /**
+     * Return a custom builder class with added functionality for the engine, or null to use the default
+     * @return string|null
+     */
+    public function getCustomBuilderClass()
+    {
+        return CollectionBuilder::class;
     }
 }

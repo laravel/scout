@@ -412,4 +412,14 @@ trait Searchable
     {
         return in_array(SoftDeletes::class, class_uses_recursive(get_called_class()));
     }
+
+    /**
+     * Return a custom builder class with added functionality for the engine, or the custom builder
+     * @return string
+     */
+    protected static function getBuilderClass()
+    {
+        $self = new static;
+        return $self->searchableUsing()->getCustomBuilderClass() ?? Builder::class;
+    }
 }

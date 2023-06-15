@@ -113,7 +113,7 @@ class AlgoliaEngineTest extends TestCase
         $client = m::mock(SearchClient::class);
         $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('search')->with('zonda', [
-            'numericFilters' => ['foo=1'],
+            'filters' => 'foo:1',
         ]);
 
         $engine = new AlgoliaEngine($client);
@@ -127,7 +127,7 @@ class AlgoliaEngineTest extends TestCase
         $client = m::mock(SearchClient::class);
         $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('search')->with('zonda', [
-            'numericFilters' => ['foo=1', ['bar=1', 'bar=2']],
+            'filters' => 'foo:1 AND (bar:1 OR bar:2)',
         ]);
 
         $engine = new AlgoliaEngine($client);
@@ -141,7 +141,7 @@ class AlgoliaEngineTest extends TestCase
         $client = m::mock(SearchClient::class);
         $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('search')->with('zonda', [
-            'numericFilters' => ['foo=1', '0=1'],
+            'filters' => 'foo:1 AND (0=1)',
         ]);
 
         $engine = new AlgoliaEngine($client);
@@ -149,6 +149,79 @@ class AlgoliaEngineTest extends TestCase
         $builder->where('foo', 1)->whereIn('bar', []);
         $engine->search($builder);
     }
+
+    public function test_advanced_where_query_are_constructed_correctly()
+    {
+        $client = m::mock(SearchClient::class);
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
+        $index->shouldReceive('search')->with('zonda', [
+            'filters' => 'field1>1 OR field2<2 OR NOT field3:"test word" AND NOT field4:true',
+        ]);
+
+        $engine = new AlgoliaEngine($client);
+        $builder = new Builder(new SearchableModel, 'zonda');
+        $builder->where('field1', '>', 1)
+            ->orWhere('field2', '<', 2)
+            ->orWhereNot('field3', '=', 'test word')
+            ->whereNot('field4', '=', true);
+
+        $engine->search($builder);
+    }
+
+    public function test_advanced_where_between_query_are_constructed_correctly()
+    {
+        $client = m::mock(SearchClient::class);
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
+        $index->shouldReceive('search')->with('zonda', [
+            'filters' => 'field1: 1 TO 2 OR field2: 3 TO 4 OR NOT field3: 5 TO 6 AND NOT field4: 7 TO 8',
+        ]);
+
+        $engine = new AlgoliaEngine($client);
+        $builder = new Builder(new SearchableModel, 'zonda');
+        $builder->whereBetween('field1', [1,2])
+            ->orWhereBetween('field2', [3,4])
+            ->orWhereNotBetween('field3', [5,6])
+            ->whereNotBetween('field4', [7,8]);
+
+        $engine->search($builder);
+    }
+
+    public function test_advanced_where_in_query_are_constructed_correctly()
+    {
+        $client = m::mock(SearchClient::class);
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
+        $index->shouldReceive('search')->with('zonda', [
+            'filters' => '(field1:1 OR field1:2 OR field1:3) OR (field2:4 OR field2:5 OR field2:6) OR NOT (field3:7 OR field3:8 OR field3:9) AND NOT (field4:"string1" OR field4:"string2" OR field4:"string3")',
+        ]);
+
+        $engine = new AlgoliaEngine($client);
+        $builder = new Builder(new SearchableModel, 'zonda');
+        $builder->whereInAdvanced('field1', [1,2,3])
+            ->orWhereIn('field2', [4,5,6])
+            ->orWhereNotIn('field3', [7,8,9])
+            ->whereNotIn('field4', ['string1', 'string2', 'string3']);
+
+        $engine->search($builder);
+    }
+
+    public function test_advanced_nested_where_query_are_constructed_correctly()
+    {
+        $client = m::mock(SearchClient::class);
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
+        $index->shouldReceive('search')->with('zonda', [
+            'filters' => 'field1:1 OR (subField1:"string1" AND subField2>2 OR subField3:"string3")',
+        ]);
+
+        $engine = new AlgoliaEngine($client);
+        $builder = new Builder(new SearchableModel, 'zonda');
+        $builder->where('field1', '=', 1)
+                ->orWhere(fn(Builder $subBuilder) =>
+                                $subBuilder->where('subField1', 'string1')
+                                            ->where('subField2', '>', 2)
+                                            ->orWhere('subField3', '=', 'string3'));
+        $engine->search($builder);
+    }
+
 
     public function test_map_correctly_maps_results_to_models()
     {

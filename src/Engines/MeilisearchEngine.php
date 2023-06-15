@@ -4,6 +4,7 @@ namespace Laravel\Scout\Engines;
 
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Builders\MeilisearchBuilder;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Meilisearch\Client as MeilisearchClient;
 use Meilisearch\Contracts\IndexesQuery;
@@ -169,29 +170,125 @@ class MeilisearchEngine extends Engine
      */
     protected function filters(Builder $builder)
     {
-        $filters = collect($builder->wheres)->map(function ($value, $key) {
-            if (is_bool($value)) {
-                return sprintf('%s=%s', $key, $value ? 'true' : 'false');
-            }
-
-            return is_numeric($value)
-                ? sprintf('%s=%s', $key, $value)
-                : sprintf('%s="%s"', $key, $value);
-        });
+        $filters = collect($builder->wheres)->map(fn($value, $key) => $this->prepareValueForFilterString($key, $value));
 
         foreach ($builder->whereIns as $key => $values) {
-            $filters->push(sprintf('%s IN [%s]', $key, collect($values)->map(function ($value) {
-                if (is_bool($value)) {
-                    return sprintf('%s', $value ? 'true' : 'false');
-                }
-
-                return filter_var($value, FILTER_VALIDATE_INT) !== false
-                    ? sprintf('%s', $value)
-                    : sprintf('"%s"', $value);
-            })->values()->implode(', ')));
+            $filters->push($this->prepareInFilterString($key, $values));
         }
 
-        return $filters->values()->implode(' AND ');
+        $filtersQuery = $filters->values()->implode(' AND ');
+        $firstItem = $filters->empty();
+        foreach ($builder->advancedWheres as $whereData) {
+            $filtersQuery .= $this->prepareFilterFromAdvancedWhereRule($whereData, !$firstItem);
+
+            if($firstItem) {
+                $firstItem = false;
+            }
+        }
+
+        return $filtersQuery;
+    }
+
+    /**
+     * Prepare the query string for a single advanced where rule
+     *
+     * @param array $whereData
+     * @param bool $prependBooleanOperator
+     *
+     * @return string
+     */
+    protected function prepareFilterFromAdvancedWhereRule(array $whereData, bool $prependBooleanOperator = false)
+    {
+        $prependString = $prependBooleanOperator ? (" ".$whereData['boolean'].($whereData['not']?" NOT":"")." ") : "";
+
+        switch($whereData['type']) {
+            case "In":
+                return $prependString.$this->prepareInFilterString($whereData['field'], $whereData['values']);
+
+            case "Between":
+                if(count($whereData['values']) > 1) {
+                    return $prependString.(is_numeric($whereData['values'][0]) ?
+                            "{$whereData['field']} {$whereData['values'][0]} TO {$whereData['field']} {$whereData['values'][1]}" :
+                            "{$whereData['field']} \"{$whereData['values'][0]}\" TO {$whereData['field']} \"{$whereData['values'][1]}\"");
+                }
+
+            case "Null":
+                return $prependString.$whereData['field']." IS NULL";
+
+            case "Exists":
+                return $prependString.$whereData['field']." EXISTS";
+
+            case "Empty":
+                return $prependString.$whereData['field']." IS EMPTY";
+
+            case "Nested":
+                if(count($whereData['builder']->wheres) > 0 || count($whereData['builder']->advancedWheres) > 0) {
+                    $firstItem = true;
+                    $subQuery = "";
+                    foreach ($whereData['builder']->wheres as $field => $value) {
+                        $subQuery .= (!$firstItem?" AND ":"").$this->prepareValueForFilterString($field, $value);
+
+                        if($firstItem) {
+                            $firstItem = false;
+                        }
+                    }
+                    foreach ($whereData['builder']->advancedWheres as $subWhereData) {
+                        $subQuery .= $this->prepareFilterFromAdvancedWhereRule($subWhereData, !$firstItem);
+
+                        if($firstItem) {
+                            $firstItem = false;
+                        }
+                    }
+                    return $prependString."(".$subQuery.")";
+                }
+                break;
+
+            case "Basic":
+            default:
+                if(!isset($whereData['operator']) || $whereData['operator'] == "eq") {
+                    $whereData['operator'] = "=";
+                }
+
+                return $prependString.$this->prepareValueForFilterString($whereData['field'], $whereData['value'], $whereData['operator']);
+        }
+
+        return "";
+    }
+
+    /**
+     * Concatenate an array of values in a single query string for a field
+     *
+     * @param string $field
+     * @param array $values
+     * @param bool $not
+     *
+     * @return string
+     */
+    protected function prepareInFilterString($field, $values, $not=false)
+    {
+        return sprintf('%s %s [%s]', $field, $not?"NOT IN":"IN", collect($values)->map(function ($value) {
+            if (is_bool($value)) {
+                return sprintf('%s', $value ? 'true' : 'false');
+            }
+
+            return filter_var($value, FILTER_VALIDATE_INT) !== false
+                ? sprintf('%s', $value)
+                : sprintf('"%s"', $value);
+        })->values()->implode(', '));
+    }
+
+    /**
+     * Prepare the basic query string for a single value
+     *
+     * @param string $field
+     * @param mixed $value
+     * @param string $operator
+     *
+     * @return string
+     */
+    protected function prepareValueForFilterString($field, $value, $operator="=")
+    {
+        return $field.$operator.(is_bool($value) ? ($value?"true":"false") : (is_numeric($value) ? $value : '"'.$value.'"'));
     }
 
     /**
@@ -416,5 +513,14 @@ class MeilisearchEngine extends Engine
     public function __call($method, $parameters)
     {
         return $this->meilisearch->$method(...$parameters);
+    }
+
+    /**
+     * Return a custom builder class with added functionality for the engine, or null to use the default
+     * @return string|null
+     */
+    public function getCustomBuilderClass()
+    {
+        return MeilisearchBuilder::class;
     }
 }

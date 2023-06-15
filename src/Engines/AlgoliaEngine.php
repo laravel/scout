@@ -105,7 +105,8 @@ class AlgoliaEngine extends Engine
     public function search(Builder $builder)
     {
         return $this->performSearch($builder, array_filter([
-            'numericFilters' => $this->filters($builder),
+//            'numericFilters' => $this->numericFilters($builder),   //filters are more powerful and suggested way, can this be removed?
+            'filters' => $this->queryFilters($builder),
             'hitsPerPage' => $builder->limit,
         ]));
     }
@@ -121,7 +122,8 @@ class AlgoliaEngine extends Engine
     public function paginate(Builder $builder, $perPage, $page)
     {
         return $this->performSearch($builder, [
-            'numericFilters' => $this->filters($builder),
+//            'numericFilters' => $this->numericFilters($builder),   //filters are more powerful and suggested way, can this be removed?
+            'filters' => $this->queryFilters($builder),
             'hitsPerPage' => $perPage,
             'page' => $page - 1,
         ]);
@@ -154,13 +156,14 @@ class AlgoliaEngine extends Engine
         return $algolia->search($builder->query, $options);
     }
 
+    //filters are more powerful and suggested way, can this be removed?
     /**
-     * Get the filter array for the query.
+     * Get the numeric filters array for the query.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @return array
      */
-    protected function filters(Builder $builder)
+    protected function numericFilters(Builder $builder)
     {
         $wheres = collect($builder->wheres)->map(function ($value, $key) {
             return $key.'='.$value;
@@ -175,6 +178,136 @@ class AlgoliaEngine extends Engine
                 return $key.'='.$value;
             })->all();
         })->values())->values()->all();
+    }
+
+    /**
+     * Get the filters array for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return string
+     */
+    protected function queryFilters(Builder $builder)
+    {
+        $filtersQuery = "";
+        $firstItem = true;
+
+        foreach($builder->wheres as $field => $value) {
+            if($firstItem) {
+                $firstItem = false;
+            } else {
+                $filtersQuery .= " AND ";
+            }
+
+            $filtersQuery .= $this->prepareValueForFilterString($field, $value);
+        }
+
+        if(count($builder->whereIns) > 0) {
+            if($firstItem) {
+                $firstItem = false;
+            } else {
+                $filtersQuery .= " AND ";
+            }
+
+            $filtersQuery .= "(".collect($builder->whereIns)->map(fn ($values, $key) => empty($values) ? '0=1' : $this->concatenateValuesForFilterString($key, $values))->join(" AND ").")";
+        }
+
+        foreach ($builder->advancedWheres as $whereData) {
+            $filtersQuery .= $this->prepareFilterFromAdvancedWhereRule($whereData, !$firstItem);
+
+            if($firstItem) {
+                $firstItem = false;
+            }
+        }
+
+        return $filtersQuery;
+    }
+
+    /**
+     * Prepare the query string for a single advanced where rule
+     *
+     * @param array $whereData
+     * @param bool $prependBooleanOperator
+     *
+     * @return string
+     */
+    protected function prepareFilterFromAdvancedWhereRule(array $whereData, bool $prependBooleanOperator = false)
+    {
+        $prependString = $prependBooleanOperator ? (" ".$whereData['boolean'].($whereData['not']?" NOT":"")." ") : "";
+
+        switch($whereData['type']) {
+            case "In":
+                return $prependString."(".$this->concatenateValuesForFilterString($whereData['field'], $whereData['values']).")";
+
+            case "Between":
+                if(count($whereData['values']) > 1) {
+                    return $prependString."{$whereData['field']}: ".
+                           (is_numeric($whereData['values'][0]) ?
+                            "{$whereData['values'][0]} TO {$whereData['values'][1]}" :
+                            "\"{$whereData['values'][0]}\" TO \"{$whereData['values'][1]}\"");
+                }
+
+            case "Nested":
+                if(count($whereData['builder']->wheres) > 0 || count($whereData['builder']->advancedWheres) > 0) {
+                    $firstItem = true;
+                    $subQuery = "";
+                    foreach ($whereData['builder']->wheres as $field => $value) {
+                        $subQuery .= (!$firstItem?" AND ":"").$this->prepareValueForFilterString($field, $value);
+
+                        if($firstItem) {
+                            $firstItem = false;
+                        }
+                    }
+                    foreach ($whereData['builder']->advancedWheres as $subWhereData) {
+                        $subQuery .= $this->prepareFilterFromAdvancedWhereRule($subWhereData, !$firstItem);
+
+                        if($firstItem) {
+                            $firstItem = false;
+                        }
+                    }
+                    return $prependString."(".$subQuery.")";
+                }
+                break;
+
+            case "Basic":
+            default:
+                if(!isset($whereData['operator']) || $whereData['operator'] == "=" || $whereData['operator'] == "eq") {
+                   $whereData['operator'] = ":";
+                }
+
+                return $prependString.$this->prepareValueForFilterString($whereData['field'], $whereData['value'], $whereData['operator']);
+        }
+
+        return "";
+    }
+
+    /**
+     * Concatenate an array of values in a single query string for a field
+     *
+     * @param string $field
+     * @param array $values
+     * @param string $operator
+     *
+     * @return string
+     */
+    protected function concatenateValuesForFilterString($field, $values, $operator = "OR")
+    {
+        return collect($values)
+            ->map(fn($value, $key) => $this->prepareValueForFilterString($field, $value))
+            ->join(" {$operator} ");
+    }
+
+    /**
+     * Prepare the basic query string for a single value
+     *
+     * @param string $field
+     * @param mixed $value
+     * @param string $operator
+     *
+     * @return string
+     */
+    protected function prepareValueForFilterString($field, $value, $operator=":")
+    {
+        return $field.$operator.(is_bool($value) ? ($value?"true":"false") : (is_numeric($value) ? $value : '"'.$value.'"'));
     }
 
     /**

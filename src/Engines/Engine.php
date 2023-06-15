@@ -149,4 +149,13 @@ abstract class Engine
             $builder, $this->search($builder), $builder->model
         );
     }
+
+    /**
+     * Return a custom builder class with added functionality for the engine, or null to use the default
+     * @return string|null
+     */
+    public function getCustomBuilderClass()
+    {
+        return null;
+    }
 }

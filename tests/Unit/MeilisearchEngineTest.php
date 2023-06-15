@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Builders\MeilisearchBuilder;
 use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\MeilisearchEngine;
 use Laravel\Scout\Jobs\RemoveFromSearch;
@@ -127,6 +128,114 @@ class MeilisearchEngineTest extends TestCase
 
             return $meilisearch->search($query, $options);
         });
+        $engine->search($builder);
+    }
+
+    public function test_advanced_where_query_are_constructed_correctly()
+    {
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->with('mustang', [
+            'filter' => 'field1>1 OR field2<2 OR NOT field3="test word" AND NOT field4=true',
+        ]);
+
+        $engine = new MeilisearchEngine($client);
+        $builder = new MeilisearchBuilder(new SearchableModel, 'mustang');
+        $builder->where('field1', '>', 1)
+                ->orWhere('field2', '<', 2)
+                ->orWhereNot('field3', '=', 'test word')
+                ->whereNot('field4', '=', true);
+
+        $engine->search($builder);
+    }
+
+    public function test_advanced_where_between_query_are_constructed_correctly()
+    {
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->with('mustang', [
+            'filter' => 'field1 1 TO field1 2 OR field2 3 TO field2 4 OR NOT field3 5 TO field3 6 AND NOT field4 7 TO field4 8',
+        ]);
+
+        $engine = new MeilisearchEngine($client);
+        $builder = new MeilisearchBuilder(new SearchableModel, 'mustang');
+        $builder->whereBetween('field1', [1,2])
+                ->orWhereBetween('field2', [3,4])
+                ->orWhereNotBetween('field3', [5,6])
+                ->whereNotBetween('field4', [7,8]);
+
+        $engine->search($builder);
+    }
+
+    public function test_advanced_where_in_query_are_constructed_correctly()
+    {
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->with('mustang', [
+            'filter' => 'field1 IN [1, 2, 3] OR field2 IN [4, 5, 6] OR NOT field3 IN [7, 8, 9] AND NOT field4 IN ["string1", "string2", "string3"]',
+        ]);
+
+        $engine = new MeilisearchEngine($client);
+        $builder = new MeilisearchBuilder(new SearchableModel, 'mustang');
+        $builder->whereInAdvanced('field1', [1,2,3])
+                ->orWhereIn('field2', [4,5,6])
+                ->orWhereNotIn('field3', [7,8,9])
+                ->whereNotIn('field4', ['string1', 'string2', 'string3']);
+
+        $engine->search($builder);
+    }
+
+    public function test_advanced_nested_where_query_are_constructed_correctly()
+    {
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->with('mustang', [
+            'filter' => 'field1=1 OR (subField1="string1" AND subField2>2 OR subField3="string3")',
+        ]);
+
+        $engine = new MeilisearchEngine($client);
+        $builder = new MeilisearchBuilder(new SearchableModel, 'mustang');
+        $builder->where('field1', '=', 1)
+                ->orWhere(fn(Builder $subBuilder) =>
+                $subBuilder->where('subField1', 'string1')
+                           ->where('subField2', '>', 2)
+                           ->orWhere('subField3', '=', 'string3'));
+        $engine->search($builder);
+    }
+
+    public function test_advanced_where_null_query_are_constructed_correctly()
+    {
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->with('mustang', [
+            'filter' => 'field1 IS NULL OR field2 IS NULL OR NOT field3 IS NULL AND NOT field4 IS NULL',
+        ]);
+
+        $engine = new MeilisearchEngine($client);
+        $builder = new MeilisearchBuilder(new SearchableModel, 'mustang');
+        $builder->whereNull('field1')
+                ->orWhereNull('field2')
+                ->orWhereNotNull('field3')
+                ->whereNotNull('field4');
+
+        $engine->search($builder);
+    }
+
+    public function test_advanced_where_exists_query_are_constructed_correctly()
+    {
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->with('mustang', [
+            'filter' => 'field1 EXISTS OR field2 EXISTS OR NOT field3 EXISTS AND NOT field4 EXISTS',
+        ]);
+
+        $engine = new MeilisearchEngine($client);
+        $builder = new MeilisearchBuilder(new SearchableModel, 'mustang');
+        $builder->whereExists('field1')
+                ->orWhereExists('field2')
+                ->orWhereNotExists('field3')
+                ->whereNotExists('field4');
+
         $engine->search($builder);
     }
 
