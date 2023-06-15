@@ -163,7 +163,7 @@ class Builder
 //            $operator = "=";
 //            $this->advancedWheres[] = compact('type', 'field', 'operator', 'value', 'boolean', 'not');
         } else {
-            $type = "Basic";
+            $type = 'Basic';
             $this->advancedWheres[] = compact('type', 'field', 'operator', 'value', 'boolean', 'not');
         }
 
@@ -352,7 +352,7 @@ class Builder
      *
      * @param  \Closure  $callback
      * @param  string  $boolean
-     * @param  bool    $not
+     * @param  bool  $not
      * @return $this
      */
     public function whereNested(\Closure $callback, $boolean = 'AND', $not = false)

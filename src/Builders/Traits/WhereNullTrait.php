@@ -58,5 +58,4 @@ trait WhereNullTrait
     {
         return $this->whereNotNull($field, 'OR');
     }
-
 }

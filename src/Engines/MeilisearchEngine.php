@@ -170,7 +170,7 @@ class MeilisearchEngine extends Engine
      */
     protected function filters(Builder $builder)
     {
-        $filters = collect($builder->wheres)->map(fn($value, $key) => $this->prepareValueForFilterString($key, $value));
+        $filters = collect($builder->wheres)->map(fn ($value, $key) => $this->prepareValueForFilterString($key, $value));
 
         foreach ($builder->whereIns as $key => $values) {
             $filters->push($this->prepareInFilterString($key, $values));
@@ -179,9 +179,9 @@ class MeilisearchEngine extends Engine
         $filtersQuery = $filters->values()->implode(' AND ');
         $firstItem = $filters->empty();
         foreach ($builder->advancedWheres as $whereData) {
-            $filtersQuery .= $this->prepareFilterFromAdvancedWhereRule($whereData, !$firstItem);
+            $filtersQuery .= $this->prepareFilterFromAdvancedWhereRule($whereData, ! $firstItem);
 
-            if($firstItem) {
+            if ($firstItem) {
                 $firstItem = false;
             }
         }
@@ -190,83 +190,82 @@ class MeilisearchEngine extends Engine
     }
 
     /**
-     * Prepare the query string for a single advanced where rule
+     * Prepare the query string for a single advanced where rule.
      *
-     * @param array $whereData
-     * @param bool $prependBooleanOperator
-     *
+     * @param  array  $whereData
+     * @param  bool  $prependBooleanOperator
      * @return string
      */
     protected function prepareFilterFromAdvancedWhereRule(array $whereData, bool $prependBooleanOperator = false)
     {
-        $prependString = $prependBooleanOperator ? (" ".$whereData['boolean'].($whereData['not']?" NOT":"")." ") : "";
+        $prependString = $prependBooleanOperator ? (' '.$whereData['boolean'].($whereData['not'] ? ' NOT' : '').' ') : '';
 
         switch($whereData['type']) {
-            case "In":
+            case 'In':
                 return $prependString.$this->prepareInFilterString($whereData['field'], $whereData['values']);
 
-            case "Between":
-                if(count($whereData['values']) > 1) {
+            case 'Between':
+                if (count($whereData['values']) > 1) {
                     return $prependString.(is_numeric($whereData['values'][0]) ?
                             "{$whereData['field']} {$whereData['values'][0]} TO {$whereData['field']} {$whereData['values'][1]}" :
                             "{$whereData['field']} \"{$whereData['values'][0]}\" TO {$whereData['field']} \"{$whereData['values'][1]}\"");
                 }
 
-            case "Null":
-                return $prependString.$whereData['field']." IS NULL";
+            case 'Null':
+                return $prependString.$whereData['field'].' IS NULL';
 
-            case "Exists":
-                return $prependString.$whereData['field']." EXISTS";
+            case 'Exists':
+                return $prependString.$whereData['field'].' EXISTS';
 
-            case "Empty":
-                return $prependString.$whereData['field']." IS EMPTY";
+            case 'Empty':
+                return $prependString.$whereData['field'].' IS EMPTY';
 
-            case "Nested":
-                if(count($whereData['builder']->wheres) > 0 || count($whereData['builder']->advancedWheres) > 0) {
+            case 'Nested':
+                if (count($whereData['builder']->wheres) > 0 || count($whereData['builder']->advancedWheres) > 0) {
                     $firstItem = true;
-                    $subQuery = "";
+                    $subQuery = '';
                     foreach ($whereData['builder']->wheres as $field => $value) {
-                        $subQuery .= (!$firstItem?" AND ":"").$this->prepareValueForFilterString($field, $value);
+                        $subQuery .= (! $firstItem ? ' AND ' : '').$this->prepareValueForFilterString($field, $value);
 
-                        if($firstItem) {
+                        if ($firstItem) {
                             $firstItem = false;
                         }
                     }
                     foreach ($whereData['builder']->advancedWheres as $subWhereData) {
-                        $subQuery .= $this->prepareFilterFromAdvancedWhereRule($subWhereData, !$firstItem);
+                        $subQuery .= $this->prepareFilterFromAdvancedWhereRule($subWhereData, ! $firstItem);
 
-                        if($firstItem) {
+                        if ($firstItem) {
                             $firstItem = false;
                         }
                     }
-                    return $prependString."(".$subQuery.")";
+
+                    return $prependString.'('.$subQuery.')';
                 }
                 break;
 
-            case "Basic":
+            case 'Basic':
             default:
-                if(!isset($whereData['operator']) || $whereData['operator'] == "eq") {
-                    $whereData['operator'] = "=";
+                if (! isset($whereData['operator']) || $whereData['operator'] == 'eq') {
+                    $whereData['operator'] = '=';
                 }
 
                 return $prependString.$this->prepareValueForFilterString($whereData['field'], $whereData['value'], $whereData['operator']);
         }
 
-        return "";
+        return '';
     }
 
     /**
-     * Concatenate an array of values in a single query string for a field
+     * Concatenate an array of values in a single query string for a field.
      *
-     * @param string $field
-     * @param array $values
-     * @param bool $not
-     *
+     * @param  string  $field
+     * @param  array  $values
+     * @param  bool  $not
      * @return string
      */
-    protected function prepareInFilterString($field, $values, $not=false)
+    protected function prepareInFilterString($field, $values, $not = false)
     {
-        return sprintf('%s %s [%s]', $field, $not?"NOT IN":"IN", collect($values)->map(function ($value) {
+        return sprintf('%s %s [%s]', $field, $not ? 'NOT IN' : 'IN', collect($values)->map(function ($value) {
             if (is_bool($value)) {
                 return sprintf('%s', $value ? 'true' : 'false');
             }
@@ -278,17 +277,16 @@ class MeilisearchEngine extends Engine
     }
 
     /**
-     * Prepare the basic query string for a single value
+     * Prepare the basic query string for a single value.
      *
-     * @param string $field
-     * @param mixed $value
-     * @param string $operator
-     *
+     * @param  string  $field
+     * @param  mixed  $value
+     * @param  string  $operator
      * @return string
      */
-    protected function prepareValueForFilterString($field, $value, $operator="=")
+    protected function prepareValueForFilterString($field, $value, $operator = '=')
     {
-        return $field.$operator.(is_bool($value) ? ($value?"true":"false") : (is_numeric($value) ? $value : '"'.$value.'"'));
+        return $field.$operator.(is_bool($value) ? ($value ? 'true' : 'false') : (is_numeric($value) ? $value : '"'.$value.'"'));
     }
 
     /**
@@ -516,7 +514,8 @@ class MeilisearchEngine extends Engine
     }
 
     /**
-     * Return a custom builder class with added functionality for the engine, or null to use the default
+     * Return a custom builder class with added functionality for the engine, or null to use the default.
+     *
      * @return string|null
      */
     public function getCustomBuilderClass()

@@ -254,7 +254,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             call_user_func($builder->queryCallback, $query);
         })->when(! $builder->callback && count($builder->advancedWheres) > 0, function ($query) use ($builder) {
             foreach ($builder->advancedWheres as $whereData) {
-                if($whereData['type'] == "Nested" || $whereData['field'] !== '__soft_deleted') {
+                if ($whereData['type'] == 'Nested' || $whereData['field'] !== '__soft_deleted') {
                     $this->applyAdvancedWhereRulesToQuery($whereData, $query);
                 }
             }
@@ -262,34 +262,33 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     }
 
     /**
-     * Apply constrains to the query builder, recursively
+     * Apply constrains to the query builder, recursively.
      *
-     * @param array $whereData
+     * @param  array  $whereData
      * @param  \Illuminate\Database\Eloquent\Builder  $query
-     *
      * @return void
      */
     protected function applyAdvancedWhereRulesToQuery(array $whereData, $query)
     {
         switch($whereData['type']) {
-            case "In":
+            case 'In':
                 $query->whereIn($whereData['field'], $whereData['values'], $whereData['boolean'], $whereData['not']);
                 break;
 
-            case "Null":
+            case 'Null':
                 $query->whereNull($whereData['field'], $whereData['boolean'], $whereData['not']);
                 break;
 
-            case "Between":
+            case 'Between':
                 $query->whereBetween($whereData['field'], $whereData['values'], $whereData['boolean'], $whereData['not']);
                 break;
 
-            case "Exists":
+            case 'Exists':
                 $query->whereExists($whereData['field'], $whereData['boolean'], $whereData['not']);
                 break;
 
-            case "Nested":
-                if(count($whereData['builder']->advancedWheres) > 0) {
+            case 'Nested':
+                if (count($whereData['builder']->advancedWheres) > 0) {
                     $subQuery = $whereData['builder']->model->getQuery()->forNestedWhere();
                     foreach ($whereData['builder']->wheres as $field => $value) {
                         $subQuery->where($field, '=', $value);
@@ -301,7 +300,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 }
                 break;
 
-            case "Basic":
+            case 'Basic':
             default:
                 $query->where($whereData['field'], $whereData['operator'], $whereData['value'], $whereData['boolean'], $whereData['not']);
         }
@@ -488,7 +487,8 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     }
 
     /**
-     * Return a custom builder class with added functionality for the engine, or null to use the default
+     * Return a custom builder class with added functionality for the engine, or null to use the default.
+     *
      * @return string|null
      */
     public function getCustomBuilderClass()

@@ -14,7 +14,7 @@ trait WhereExistsTrait
      */
     public function whereExists($field, $boolean = 'AND', $not = false)
     {
-        $type = "Exists";
+        $type = 'Exists';
 
         $this->advancedWheres[] = compact('type', 'field', 'boolean', 'not');
 

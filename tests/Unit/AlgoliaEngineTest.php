@@ -178,10 +178,10 @@ class AlgoliaEngineTest extends TestCase
 
         $engine = new AlgoliaEngine($client);
         $builder = new Builder(new SearchableModel, 'zonda');
-        $builder->whereBetween('field1', [1,2])
-            ->orWhereBetween('field2', [3,4])
-            ->orWhereNotBetween('field3', [5,6])
-            ->whereNotBetween('field4', [7,8]);
+        $builder->whereBetween('field1', [1, 2])
+            ->orWhereBetween('field2', [3, 4])
+            ->orWhereNotBetween('field3', [5, 6])
+            ->whereNotBetween('field4', [7, 8]);
 
         $engine->search($builder);
     }
@@ -196,9 +196,9 @@ class AlgoliaEngineTest extends TestCase
 
         $engine = new AlgoliaEngine($client);
         $builder = new Builder(new SearchableModel, 'zonda');
-        $builder->whereInAdvanced('field1', [1,2,3])
-            ->orWhereIn('field2', [4,5,6])
-            ->orWhereNotIn('field3', [7,8,9])
+        $builder->whereInAdvanced('field1', [1, 2, 3])
+            ->orWhereIn('field2', [4, 5, 6])
+            ->orWhereNotIn('field3', [7, 8, 9])
             ->whereNotIn('field4', ['string1', 'string2', 'string3']);
 
         $engine->search($builder);
@@ -215,13 +215,11 @@ class AlgoliaEngineTest extends TestCase
         $engine = new AlgoliaEngine($client);
         $builder = new Builder(new SearchableModel, 'zonda');
         $builder->where('field1', '=', 1)
-                ->orWhere(fn(Builder $subBuilder) =>
-                                $subBuilder->where('subField1', 'string1')
+                ->orWhere(fn (Builder $subBuilder) => $subBuilder->where('subField1', 'string1')
                                             ->where('subField2', '>', 2)
                                             ->orWhere('subField3', '=', 'string3'));
         $engine->search($builder);
     }
-
 
     public function test_map_correctly_maps_results_to_models()
     {

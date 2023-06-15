@@ -151,7 +151,8 @@ abstract class Engine
     }
 
     /**
-     * Return a custom builder class with added functionality for the engine, or null to use the default
+     * Return a custom builder class with added functionality for the engine, or null to use the default.
+     *
      * @return string|null
      */
     public function getCustomBuilderClass()

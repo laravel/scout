@@ -34,7 +34,6 @@ class CollectionEngineTest extends TestCase
         $dbQuery->shouldReceive('where')->with('field3', '=', 'test word', 'OR', true)->andReturn($dbQuery);
         $dbQuery->shouldReceive('where')->with('field4', '=', true, 'AND', true)->andReturn($dbQuery);
 
-
         $engine = new CollectionEngine();
         $builder = new CollectionBuilder($model, '');
         $builder->where('field1', '>', 1)
@@ -49,17 +48,17 @@ class CollectionEngineTest extends TestCase
     {
         [$model, $dbQuery] = $this->prepareQueryBuilderMock();
 
-        $dbQuery->shouldReceive('whereBetween')->with('field1', [1,2], 'AND', false)->andReturn($dbQuery);
-        $dbQuery->shouldReceive('whereBetween')->with('field2', [3,4], 'OR', false)->andReturn($dbQuery);
-        $dbQuery->shouldReceive('whereBetween')->with('field3', [5,6], 'OR', true)->andReturn($dbQuery);
-        $dbQuery->shouldReceive('whereBetween')->with('field4', [7,8], 'AND', true)->andReturn($dbQuery);
+        $dbQuery->shouldReceive('whereBetween')->with('field1', [1, 2], 'AND', false)->andReturn($dbQuery);
+        $dbQuery->shouldReceive('whereBetween')->with('field2', [3, 4], 'OR', false)->andReturn($dbQuery);
+        $dbQuery->shouldReceive('whereBetween')->with('field3', [5, 6], 'OR', true)->andReturn($dbQuery);
+        $dbQuery->shouldReceive('whereBetween')->with('field4', [7, 8], 'AND', true)->andReturn($dbQuery);
 
         $engine = new CollectionEngine();
         $builder = new CollectionBuilder($model, '');
-        $builder->whereBetween('field1', [1,2])
-            ->orWhereBetween('field2', [3,4])
-            ->orWhereNotBetween('field3', [5,6])
-            ->whereNotBetween('field4', [7,8]);
+        $builder->whereBetween('field1', [1, 2])
+            ->orWhereBetween('field2', [3, 4])
+            ->orWhereNotBetween('field3', [5, 6])
+            ->whereNotBetween('field4', [7, 8]);
 
         $engine->search($builder);
     }
@@ -68,16 +67,16 @@ class CollectionEngineTest extends TestCase
     {
         [$model, $dbQuery] = $this->prepareQueryBuilderMock();
 
-        $dbQuery->shouldReceive('whereIn')->with('field1', [1,2,3], 'AND', false)->andReturn($dbQuery);
-        $dbQuery->shouldReceive('whereIn')->with('field2', [4,5,6], 'OR', false)->andReturn($dbQuery);
-        $dbQuery->shouldReceive('whereIn')->with('field3', [7,8,9], 'OR', true)->andReturn($dbQuery);
+        $dbQuery->shouldReceive('whereIn')->with('field1', [1, 2, 3], 'AND', false)->andReturn($dbQuery);
+        $dbQuery->shouldReceive('whereIn')->with('field2', [4, 5, 6], 'OR', false)->andReturn($dbQuery);
+        $dbQuery->shouldReceive('whereIn')->with('field3', [7, 8, 9], 'OR', true)->andReturn($dbQuery);
         $dbQuery->shouldReceive('whereIn')->with('field4', ['string1', 'string2', 'string3'], 'AND', true)->andReturn($dbQuery);
 
         $engine = new CollectionEngine();
         $builder = new CollectionBuilder($model, '');
-        $builder->whereInAdvanced('field1', [1,2,3])
-            ->orWhereIn('field2', [4,5,6])
-            ->orWhereNotIn('field3', [7,8,9])
+        $builder->whereInAdvanced('field1', [1, 2, 3])
+            ->orWhereIn('field2', [4, 5, 6])
+            ->orWhereNotIn('field3', [7, 8, 9])
             ->whereNotIn('field4', ['string1', 'string2', 'string3']);
 
         $engine->search($builder);
@@ -87,8 +86,8 @@ class CollectionEngineTest extends TestCase
     {
         [$model, $dbQuery] = $this->prepareQueryBuilderMock();
 
-        $dbSubQuery = m::mock( \Illuminate\Database\Query\Builder::class);
-        $dbSubQuery->grammar = m::mock( \Illuminate\Database\Query\Grammars\Grammar::class)->makePartial();
+        $dbSubQuery = m::mock(\Illuminate\Database\Query\Builder::class);
+        $dbSubQuery->grammar = m::mock(\Illuminate\Database\Query\Grammars\Grammar::class)->makePartial();
         $dbQuery->shouldReceive('forNestedWhere')->andReturn($dbSubQuery);
         $dbQuery->shouldReceive('addNestedWhereQuery');
         $dbQuery->shouldReceive('where')->with('field1', '=', 1, 'AND', false)->andReturn($dbQuery);
@@ -99,8 +98,7 @@ class CollectionEngineTest extends TestCase
         $engine = new CollectionEngine();
         $builder = new CollectionBuilder($model, '');
         $builder->where('field1', '=', 1)
-                ->orWhere(fn(Builder $subBuilder) =>
-                                $subBuilder->where('subField1', 'string1')
+                ->orWhere(fn (Builder $subBuilder) => $subBuilder->where('subField1', 'string1')
                                             ->where('subField2', '>', 2)
                                             ->orWhere('subField3', '=', 'string3'));
         $engine->search($builder);
@@ -108,21 +106,20 @@ class CollectionEngineTest extends TestCase
 
     protected function prepareQueryBuilderMock()
     {
-        $dbQuery = m::mock( \Illuminate\Database\Query\Builder::class);
-        $dbQuery->grammar = m::mock( \Illuminate\Database\Query\Grammars\Grammar::class)->makePartial();
-        $eloquentBuilder = m::mock( \Illuminate\Database\Eloquent\Builder::class)->makePartial();
+        $dbQuery = m::mock(\Illuminate\Database\Query\Builder::class);
+        $dbQuery->grammar = m::mock(\Illuminate\Database\Query\Grammars\Grammar::class)->makePartial();
+        $eloquentBuilder = m::mock(\Illuminate\Database\Eloquent\Builder::class)->makePartial();
         $eloquentBuilder->setQuery($dbQuery);
         $eloquentBuilder->shouldReceive('get')->andReturn(collect([]));
         $model = m::mock(SearchableModel::class)->makePartial();
         $model->shouldReceive('toSearchableArray')->andReturns([]);
-        $model->shouldReceive('qualifyColumn')->with('id')->andReturns("id");
+        $model->shouldReceive('qualifyColumn')->with('id')->andReturns('id');
         $model->shouldReceive('query')->andReturns($eloquentBuilder);
         $model->shouldReceive('newQuery')->andReturns($eloquentBuilder);
-        $dbQuery->shouldReceive('where')->with( \Mockery::type(\Closure::class))->andReturn($dbQuery);
+        $dbQuery->shouldReceive('where')->with(\Mockery::type(\Closure::class))->andReturn($dbQuery);
         $dbQuery->shouldReceive('take')->with(null)->andReturn($dbQuery);
         $dbQuery->shouldReceive('orderBy')->with('id', 'desc')->andReturn($dbQuery);
 
         return [$model, $dbQuery];
     }
-
 }

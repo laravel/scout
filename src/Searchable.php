@@ -414,12 +414,14 @@ trait Searchable
     }
 
     /**
-     * Return a custom builder class with added functionality for the engine, or the custom builder
+     * Return a custom builder class with added functionality for the engine, or the custom builder.
+     *
      * @return string
      */
     protected static function getBuilderClass()
     {
         $self = new static;
+
         return $self->searchableUsing()->getCustomBuilderClass() ?? Builder::class;
     }
 }
