@@ -4,6 +4,7 @@ namespace Laravel\Scout\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Laravel\Scout\EngineManager;
 
 class DeleteIndexCommand extends Command
@@ -31,11 +32,28 @@ class DeleteIndexCommand extends Command
     public function handle(EngineManager $manager)
     {
         try {
-            $manager->engine()->deleteIndex($this->argument('name'));
+            $manager->engine()->deleteIndex($name = $this->indexName($this->argument('name')));
 
-            $this->info('Index "'.$this->argument('name').'" deleted.');
+            $this->info('Index "'.$name.'" deleted.');
         } catch (Exception $exception) {
             $this->error($exception->getMessage());
         }
+    }
+
+    /**
+     * Get the fully-qualified index name for the given index.
+     *
+     * @param  string  $name
+     * @return string
+     */
+    protected function indexName($name)
+    {
+        if (class_exists($name)) {
+            return (new $name)->searchableAs();
+        }
+
+        $prefix = config('scout.prefix');
+
+        return ! Str::startsWith($name, $prefix) ? $prefix.$name : $name;
     }
 }

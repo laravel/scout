@@ -23,6 +23,6 @@ class SearchableModelWithCustomKey extends Model
 
     public function getScoutKeyName()
     {
-        return $this->qualifyColumn('other_id');
+        return 'other_id';
     }
 }

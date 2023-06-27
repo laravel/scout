@@ -50,7 +50,7 @@ class CollectionEngine extends Engine
      */
     public function search(Builder $builder)
     {
-        $models = $this->searchModels($builder);
+        $models = $this->searchModels($builder)->take($builder->limit);
 
         return [
             'results' => $models->all(),
@@ -100,7 +100,13 @@ class CollectionEngine extends Engine
                                 $query->whereIn($key, $values);
                             }
                         })
-                        ->orderBy($builder->model->getKeyName(), 'desc');
+                        ->when($builder->orders, function ($query) use ($builder) {
+                            foreach ($builder->orders as $order) {
+                                $query->orderBy($order['column'], $order['direction']);
+                            }
+                        }, function ($query) use ($builder) {
+                            $query->orderBy($builder->model->qualifyColumn($builder->model->getScoutKeyName()), 'desc');
+                        });
 
         $models = $this->ensureSoftDeletesAreHandled($builder, $query)
                         ->get()
@@ -110,17 +116,23 @@ class CollectionEngine extends Engine
             return $models;
         }
 
-        $columns = array_keys($models->first()->toSearchableArray());
-
-        return $models->filter(function ($model) use ($builder, $columns) {
+        return $models->filter(function ($model) use ($builder) {
             if (! $model->shouldBeSearchable()) {
                 return false;
             }
 
-            foreach ($columns as $column) {
-                $attribute = $model->{$column};
+            if (! $builder->query) {
+                return true;
+            }
 
-                if (Str::contains(Str::lower($attribute), Str::lower($builder->query))) {
+            $searchables = $model->toSearchableArray();
+
+            foreach ($searchables as $value) {
+                if (! is_scalar($value)) {
+                    $value = json_encode($value);
+                }
+
+                if (Str::contains(Str::lower($value), Str::lower($builder->query))) {
                     return true;
                 }
             }
@@ -158,10 +170,10 @@ class CollectionEngine extends Engine
      */
     public function mapIds($results)
     {
-        $results = $results['results'];
+        $results = array_values($results['results']);
 
         return count($results) > 0
-                    ? collect($results)->pluck($results[0]->getKeyName())->values()
+                    ? collect($results)->pluck($results[0]->getScoutKeyName())
                     : collect();
     }
 
@@ -182,7 +194,7 @@ class CollectionEngine extends Engine
         }
 
         $objectIds = collect($results)
-                ->pluck($model->getKeyName())
+                ->pluck($model->getScoutKeyName())
                 ->values()
                 ->all();
 
@@ -214,18 +226,18 @@ class CollectionEngine extends Engine
         }
 
         $objectIds = collect($results)
-                ->pluck($model->getKeyName())
+                ->pluck($model->getScoutKeyName())
                 ->values()->all();
 
         $objectIdPositions = array_flip($objectIds);
 
         return $model->queryScoutModelsByIds(
-                $builder, $objectIds
-            )->cursor()->filter(function ($model) use ($objectIds) {
-                return in_array($model->getScoutKey(), $objectIds);
-            })->sortBy(function ($model) use ($objectIdPositions) {
-                return $objectIdPositions[$model->getScoutKey()];
-            })->values();
+            $builder, $objectIds
+        )->cursor()->filter(function ($model) use ($objectIds) {
+            return in_array($model->getScoutKey(), $objectIds);
+        })->sortBy(function ($model) use ($objectIdPositions) {
+            return $objectIdPositions[$model->getScoutKey()];
+        })->values();
     }
 
     /**

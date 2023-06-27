@@ -4,6 +4,8 @@ namespace Laravel\Scout\Console;
 
 use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 use Laravel\Scout\EngineManager;
 
 class IndexCommand extends Command
@@ -41,11 +43,54 @@ class IndexCommand extends Command
                 $options = ['primaryKey' => $this->option('key')];
             }
 
-            $engine->createIndex($this->argument('name'), $options);
+            if (class_exists($modelName = $this->argument('name'))) {
+                $model = new $modelName;
+            }
 
-            $this->info('Index ["'.$this->argument('name').'"] created successfully.');
+            $name = $this->indexName($this->argument('name'));
+
+            $engine->createIndex($name, $options);
+
+            if (method_exists($engine, 'updateIndexSettings')) {
+                $driver = config('scout.driver');
+
+                $class = isset($model) ? get_class($model) : null;
+
+                $settings = config('scout.'.$driver.'.index-settings.'.$name)
+                                ?? config('scout.'.$driver.'.index-settings.'.$class)
+                                ?? [];
+
+                if (isset($model) &&
+                    config('scout.soft_delete', false) &&
+                    in_array(SoftDeletes::class, class_uses_recursive($model))) {
+                    $settings['filterableAttributes'][] = '__soft_deleted';
+                }
+
+                if ($settings) {
+                    $engine->updateIndexSettings($name, $settings);
+                }
+            }
+
+            $this->info('Index ["'.$name.'"] created successfully.');
         } catch (Exception $exception) {
             $this->error($exception->getMessage());
         }
+    }
+
+    /**
+     * Get the fully-qualified index name for the given index.
+     *
+     * @param  string  $name
+     * @return string
+     */
+    protected function indexName($name)
+    {
+        if (class_exists($name)) {
+            return (new $name)->searchableAs();
+        }
+
+        $prefix = config('scout.prefix');
+
+        return ! Str::startsWith($name, $prefix) ? $prefix.$name : $name;
     }
 }

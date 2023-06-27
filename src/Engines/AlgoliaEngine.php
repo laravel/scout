@@ -7,6 +7,7 @@ use Exception;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Jobs\RemoveableScoutCollection;
 
 class AlgoliaEngine extends Engine
 {
@@ -63,9 +64,9 @@ class AlgoliaEngine extends Engine
             }
 
             return array_merge(
-                ['objectID' => $model->getScoutKey()],
                 $searchableData,
-                $model->scoutMetadata()
+                $model->scoutMetadata(),
+                ['objectID' => $model->getScoutKey()],
             );
         })->filter()->values()->all();
 
@@ -82,13 +83,17 @@ class AlgoliaEngine extends Engine
      */
     public function delete($models)
     {
+        if ($models->isEmpty()) {
+            return;
+        }
+
         $index = $this->algolia->initIndex($models->first()->searchableAs());
 
-        $index->deleteObjects(
-            $models->map(function ($model) {
-                return $model->getScoutKey();
-            })->values()->all()
-        );
+        $keys = $models instanceof RemoveableScoutCollection
+            ? $models->pluck($models->first()->getScoutKeyName())
+            : $models->map->getScoutKey();
+
+        $index->deleteObjects($keys->all());
     }
 
     /**
@@ -135,6 +140,8 @@ class AlgoliaEngine extends Engine
             $builder->index ?: $builder->model->searchableAs()
         );
 
+        $options = array_merge($builder->options, $options);
+
         if ($builder->callback) {
             return call_user_func(
                 $builder->callback,
@@ -160,6 +167,10 @@ class AlgoliaEngine extends Engine
         })->values();
 
         return $wheres->merge(collect($builder->whereIns)->map(function ($values, $key) {
+            if (empty($values)) {
+                return '0=1';
+            }
+
             return collect($values)->map(function ($value) use ($key) {
                 return $key.'='.$value;
             })->all();
@@ -222,12 +233,12 @@ class AlgoliaEngine extends Engine
         $objectIdPositions = array_flip($objectIds);
 
         return $model->queryScoutModelsByIds(
-                $builder, $objectIds
-            )->cursor()->filter(function ($model) use ($objectIds) {
-                return in_array($model->getScoutKey(), $objectIds);
-            })->sortBy(function ($model) use ($objectIdPositions) {
-                return $objectIdPositions[$model->getScoutKey()];
-            })->values();
+            $builder, $objectIds
+        )->cursor()->filter(function ($model) use ($objectIds) {
+            return in_array($model->getScoutKey(), $objectIds);
+        })->sortBy(function ($model) use ($objectIdPositions) {
+            return $objectIdPositions[$model->getScoutKey()];
+        })->values();
     }
 
     /**

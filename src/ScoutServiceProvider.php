@@ -3,11 +3,13 @@
 namespace Laravel\Scout;
 
 use Illuminate\Support\ServiceProvider;
+use Laravel\Scout\Console\DeleteAllIndexesCommand;
 use Laravel\Scout\Console\DeleteIndexCommand;
 use Laravel\Scout\Console\FlushCommand;
 use Laravel\Scout\Console\ImportCommand;
 use Laravel\Scout\Console\IndexCommand;
-use MeiliSearch\Client as MeiliSearch;
+use Laravel\Scout\Console\SyncIndexSettingsCommand;
+use Meilisearch\Client as Meilisearch;
 
 class ScoutServiceProvider extends ServiceProvider
 {
@@ -20,11 +22,15 @@ class ScoutServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/scout.php', 'scout');
 
-        if (class_exists(MeiliSearch::class)) {
-            $this->app->singleton(MeiliSearch::class, function ($app) {
+        if (class_exists(Meilisearch::class)) {
+            $this->app->singleton(Meilisearch::class, function ($app) {
                 $config = $app['config']->get('scout.meilisearch');
 
-                return new MeiliSearch($config['host'], $config['key']);
+                return new Meilisearch(
+                    $config['host'],
+                    $config['key'],
+                    clientAgents: [sprintf('Meilisearch Laravel Scout (v%s)', Scout::VERSION)],
+                );
             });
         }
 
@@ -45,7 +51,9 @@ class ScoutServiceProvider extends ServiceProvider
                 FlushCommand::class,
                 ImportCommand::class,
                 IndexCommand::class,
+                SyncIndexSettingsCommand::class,
                 DeleteIndexCommand::class,
+                DeleteAllIndexesCommand::class,
             ]);
 
             $this->publishes([

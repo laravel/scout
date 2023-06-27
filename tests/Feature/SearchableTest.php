@@ -20,6 +20,7 @@ class SearchableTest extends TestCase
     {
         $collection = m::mock();
         $collection->shouldReceive('isEmpty')->andReturn(false);
+        $collection->shouldReceive('first->makeSearchableUsing')->with($collection)->andReturn($collection);
         $collection->shouldReceive('first->searchableUsing->update')->with($collection);
 
         $model = new SearchableModel();
@@ -151,7 +152,7 @@ class ModelStubForMakeAllSearchable extends SearchableModel
                 });
 
         $mock->shouldReceive('orderBy')
-            ->with('id')
+            ->with('model_stub_for_make_all_searchables.id')
             ->andReturnSelf()
             ->shouldReceive('searchable');
 

@@ -2,22 +2,39 @@
 
 namespace Laravel\Scout\Tests\Unit;
 
+use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
-use Laravel\Scout\Engines\MeiliSearchEngine;
+use Laravel\Scout\EngineManager;
+use Laravel\Scout\Engines\MeilisearchEngine;
+use Laravel\Scout\Jobs\RemoveFromSearch;
 use Laravel\Scout\Tests\Fixtures\EmptySearchableModel;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Laravel\Scout\Tests\Fixtures\SoftDeletedEmptySearchableModel;
-use MeiliSearch\Client;
-use MeiliSearch\Endpoints\Indexes;
-use MeiliSearch\Search\SearchResult;
+use Meilisearch\Client;
+use Meilisearch\Contracts\IndexesResults;
+use Meilisearch\Endpoints\Indexes;
+use Meilisearch\Search\SearchResult;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class MeiliSearchEngineTest extends TestCase
+class MeilisearchEngineTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Config::shouldReceive('get')->with('scout.after_commit', m::any())->andReturn(false);
+        Config::shouldReceive('get')->with('scout.soft_delete', m::any())->andReturn(false);
+    }
+
+    protected function tearDown(): void
+    {
+        Container::getInstance()->flush();
+        m::close();
+    }
+
     public function test_update_adds_objects_to_index()
     {
         $client = m::mock(Client::class);
@@ -29,7 +46,7 @@ class MeiliSearchEngineTest extends TestCase
             'id',
         ]);
 
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
         $engine->update(Collection::make([new SearchableModel()]));
     }
 
@@ -39,8 +56,61 @@ class MeiliSearchEngineTest extends TestCase
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('deleteDocuments')->with([1]);
 
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
         $engine->delete(Collection::make([new SearchableModel(['id' => 1])]));
+    }
+
+    public function test_delete_removes_objects_to_index_with_a_custom_search_key()
+    {
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('deleteDocuments')->once()->with(['my-meilisearch-key.5']);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->delete(Collection::make([new MeilisearchCustomKeySearchableModel(['id' => 5])]));
+    }
+
+    public function test_delete_with_removeable_scout_collection_using_custom_search_key()
+    {
+        $job = new RemoveFromSearch(Collection::make([
+            new MeilisearchCustomKeySearchableModel(['id' => 5]),
+        ]));
+
+        $job = unserialize(serialize($job));
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('deleteDocuments')->once()->with(['my-meilisearch-key.5']);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->delete($job->models);
+    }
+
+    public function test_remove_from_search_job_uses_custom_search_key()
+    {
+        $job = new RemoveFromSearch(Collection::make([
+            new MeilisearchCustomKeySearchableModel(['id' => 5]),
+        ]));
+
+        $job = unserialize(serialize($job));
+
+        Container::getInstance()->bind(EngineManager::class, function () {
+            $engine = m::mock(MeilisearchEngine::class);
+
+            $engine->shouldReceive('delete')->once()->with(m::on(function ($collection) {
+                $keyName = ($model = $collection->first())->getScoutKeyName();
+
+                return $model->getAttributes()[$keyName] === 'my-meilisearch-key.5';
+            }));
+
+            $manager = m::mock(EngineManager::class);
+
+            $manager->shouldReceive('engine')->andReturn($engine);
+
+            return $manager;
+        });
+
+        $job->handle();
     }
 
     public function test_search_sends_correct_parameters_to_meilisearch()
@@ -48,12 +118,12 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('search')->with('mustang', [
-            'filters' => 'foo=1 AND bar=2',
+            'filter' => 'foo=1 AND bar=2',
         ]);
 
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
         $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
-            $options['filters'] = 'foo=1 AND bar=2';
+            $options['filter'] = 'foo=1 AND bar=2';
 
             return $meilisearch->search($query, $options);
         });
@@ -66,24 +136,24 @@ class MeiliSearchEngineTest extends TestCase
             new SearchableModel(),
             $query = 'mustang',
             $callable = function ($meilisearch, $query, $options) {
-                $options['filters'] = 'foo=1';
+                $options['filter'] = 'foo=1';
 
                 return $meilisearch->search($query, $options);
             }
         );
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('search')->with($query, ['filters' => 'foo=1'])->andReturn(new SearchResult($expectedResult = [
+        $index->shouldReceive('search')->with($query, ['filter' => 'foo=1'])->andReturn(new SearchResult($expectedResult = [
             'hits' => [],
-            'offset' => 0,
-            'limit' => 20,
-            'nbHits' => 0,
-            'exhaustiveNbHits' => false,
+            'page' => 1,
+            'hitsPerPage' => $builder->limit,
+            'totalPages' => 1,
+            'totalHits' => 0,
             'processingTimeMs' => 1,
             'query' => 'mustang',
         ]));
 
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
         $result = $engine->search($builder);
 
         $this->assertSame($expectedResult, $result);
@@ -95,24 +165,24 @@ class MeiliSearchEngineTest extends TestCase
             new SearchableModel(),
             $query = 'mustang',
             $callable = function ($meilisearch, $query, $options) {
-                $options['filters'] = 'foo=1';
+                $options['filter'] = 'foo=1';
 
                 return $meilisearch->rawSearch($query, $options);
             }
         );
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('rawSearch')->with($query, ['filters' => 'foo=1'])->andReturn($expectedResult = [
+        $index->shouldReceive('rawSearch')->with($query, ['filter' => 'foo=1'])->andReturn($expectedResult = [
             'hits' => [],
-            'offset' => 0,
-            'limit' => 20,
-            'nbHits' => 0,
-            'exhaustiveNbHits' => false,
+            'page' => 1,
+            'hitsPerPage' => $builder->limit,
+            'totalPages' => 1,
+            'totalHits' => 0,
             'processingTimeMs' => 1,
-            'query' => 'mustang',
+            'query' => $query,
         ]);
 
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
         $result = $engine->search($builder);
 
         $this->assertSame($expectedResult, $result);
@@ -121,27 +191,88 @@ class MeiliSearchEngineTest extends TestCase
     public function test_map_ids_returns_empty_collection_if_no_hits()
     {
         $client = m::mock(Client::class);
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
 
-        $results = $engine->mapIds([
-            'nbHits' => 0, 'hits' => [],
-        ]);
+        $results = $engine->mapIdsFrom([
+            'totalHits' => 0,
+            'hits' => [],
+        ], 'id');
 
         $this->assertEquals(0, count($results));
+    }
+
+    public function test_map_ids_returns_correct_values_of_primary_key()
+    {
+        $client = m::mock(Client::class);
+        $engine = new MeilisearchEngine($client);
+
+        $results = $engine->mapIdsFrom([
+            'totalHits' => 5,
+            'hits' => [
+                [
+                    'some_field' => 'something',
+                    'id' => 1,
+                ],
+                [
+                    'some_field' => 'foo',
+                    'id' => 2,
+                ],
+                [
+                    'some_field' => 'bar',
+                    'id' => 3,
+                ],
+                [
+                    'some_field' => 'baz',
+                    'id' => 4,
+                ],
+            ],
+        ], 'id');
+
+        $this->assertEquals($results->all(), [
+            1,
+            2,
+            3,
+            4,
+        ]);
+    }
+
+    public function test_returns_primary_keys_when_custom_array_order_present()
+    {
+        $engine = m::mock(MeilisearchEngine::class);
+        $builder = m::mock(Builder::class);
+
+        $model = m::mock(stdClass::class);
+        $model->shouldReceive(['getScoutKeyName' => 'custom_key']);
+        $builder->model = $model;
+
+        $engine->shouldReceive('keys')->passthru();
+
+        $engine
+            ->shouldReceive('search')
+            ->once()
+            ->andReturn([]);
+
+        $engine
+            ->shouldReceive('mapIdsFrom')
+            ->once()
+            ->with([], 'custom_key');
+
+        $engine->keys($builder);
     }
 
     public function test_map_correctly_maps_results_to_models()
     {
         $client = m::mock(Client::class);
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getKeyName' => 'id']);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
         $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([new SearchableModel(['id' => 1])]));
         $builder = m::mock(Builder::class);
 
         $results = $engine->map($builder, [
-            'nbHits' => 1, 'hits' => [
+            'totalHits' => 1,
+            'hits' => [
                 ['id' => 1],
             ],
         ], $model);
@@ -152,10 +283,10 @@ class MeiliSearchEngineTest extends TestCase
     public function test_map_method_respects_order()
     {
         $client = m::mock(Client::class);
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getKeyName' => 'id']);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
         $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([
             new SearchableModel(['id' => 1]),
             new SearchableModel(['id' => 2]),
@@ -166,7 +297,8 @@ class MeiliSearchEngineTest extends TestCase
         $builder = m::mock(Builder::class);
 
         $results = $engine->map($builder, [
-            'nbHits' => 4, 'hits' => [
+            'totalHits' => 4,
+            'hits' => [
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 4],
@@ -186,15 +318,16 @@ class MeiliSearchEngineTest extends TestCase
     public function test_lazy_map_correctly_maps_results_to_models()
     {
         $client = m::mock(Client::class);
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getKeyName' => 'id']);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
         $model->shouldReceive('queryScoutModelsByIds->cursor')->andReturn($models = LazyCollection::make([new SearchableModel(['id' => 1])]));
         $builder = m::mock(Builder::class);
 
         $results = $engine->lazyMap($builder, [
-            'nbHits' => 1, 'hits' => [
+            'totalHits' => 1,
+            'hits' => [
                 ['id' => 1],
             ],
         ], $model);
@@ -205,10 +338,10 @@ class MeiliSearchEngineTest extends TestCase
     public function test_lazy_map_method_respects_order()
     {
         $client = m::mock(Client::class);
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
 
         $model = m::mock(stdClass::class);
-        $model->shouldReceive(['getKeyName' => 'id']);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
         $model->shouldReceive('queryScoutModelsByIds->cursor')->andReturn($models = LazyCollection::make([
             new SearchableModel(['id' => 1]),
             new SearchableModel(['id' => 2]),
@@ -219,7 +352,8 @@ class MeiliSearchEngineTest extends TestCase
         $builder = m::mock(Builder::class);
 
         $results = $engine->lazyMap($builder, [
-            'nbHits' => 4, 'hits' => [
+            'totalHits' => 4,
+            'hits' => [
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 4],
@@ -240,10 +374,13 @@ class MeiliSearchEngineTest extends TestCase
     {
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('addDocuments')->with([['id' => 'my-meilisearch-key.1']], 'id');
+        $index->shouldReceive('addDocuments')->once()->with([[
+            'meilisearch-key' => 'my-meilisearch-key.5',
+            'id' => 5,
+        ]], 'meilisearch-key');
 
-        $engine = new MeiliSearchEngine($client);
-        $engine->update(Collection::make([new MeiliSearchCustomKeySearchableModel()]));
+        $engine = new MeilisearchEngine($client);
+        $engine->update(Collection::make([new MeilisearchCustomKeySearchableModel(['id' => 5])]));
     }
 
     public function test_flush_a_model_with_a_custom_meilisearch_key()
@@ -252,8 +389,8 @@ class MeiliSearchEngineTest extends TestCase
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('deleteAllDocuments');
 
-        $engine = new MeiliSearchEngine($client);
-        $engine->flush(new MeiliSearchCustomKeySearchableModel());
+        $engine = new MeilisearchEngine($client);
+        $engine->flush(new MeilisearchCustomKeySearchableModel());
     }
 
     public function test_update_empty_searchable_array_does_not_add_documents_to_index()
@@ -262,7 +399,7 @@ class MeiliSearchEngineTest extends TestCase
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldNotReceive('addDocuments');
 
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
         $engine->update(Collection::make([new EmptySearchableModel()]));
     }
 
@@ -274,17 +411,41 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('search')->with('mustang', [
-            'filters' => 'foo=1',
-            'limit' => $perPage,
-            'offset' => ($page - 1) * $perPage,
+            'filter' => 'foo=1',
+            'hitsPerPage' => $perPage,
+            'page' => $page,
         ]);
 
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
         $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
-            $options['filters'] = 'foo=1';
+            $options['filter'] = 'foo=1';
 
             return $meilisearch->search($query, $options);
         });
+        $engine->paginate($builder, $perPage, $page);
+    }
+
+    public function test_pagination_sorted_parameter()
+    {
+        $perPage = 5;
+        $page = 2;
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('search')->with('mustang', [
+            'filter' => 'foo=1',
+            'hitsPerPage' => $perPage,
+            'page' => $page,
+            'sort' => ['name:asc'],
+        ]);
+
+        $engine = new MeilisearchEngine($client);
+        $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
+            $options['filter'] = 'foo=1';
+
+            return $meilisearch->search($query, $options);
+        });
+        $builder->orderBy('name', 'asc');
         $engine->paginate($builder, $perPage, $page);
     }
 
@@ -295,7 +456,7 @@ class MeiliSearchEngineTest extends TestCase
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldNotReceive('addDocuments');
 
-        $engine = new MeiliSearchEngine($client, true);
+        $engine = new MeilisearchEngine($client, true);
         $engine->update(Collection::make([new SoftDeletedEmptySearchableModel()]));
     }
 
@@ -304,14 +465,14 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('testMethodOnClient')->once();
 
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
         $engine->testMethodOnClient();
     }
 
     public function test_updating_empty_eloquent_collection_does_nothing()
     {
         $client = m::mock(Client::class);
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
         $engine->update(new Collection());
         $this->assertTrue(true);
     }
@@ -322,7 +483,7 @@ class MeiliSearchEngineTest extends TestCase
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->andReturn([]);
 
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
         $builder = new Builder(new SearchableModel(), '');
         $engine->search($builder);
     }
@@ -335,11 +496,11 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filters' => 'foo="bar" AND key="value"',
-            'limit' => $builder->limit,
+            'filter' => 'foo="bar" AND key="value"',
+            'hitsPerPage' => $builder->limit,
         ]))->andReturn([]);
 
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
         $engine->search($builder);
     }
 
@@ -353,11 +514,11 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filters' => 'foo="bar" AND bar="baz" AND (qux=1 OR qux=2) AND (quux=1 OR quux=2)',
-            'limit' => $builder->limit,
+            'filter' => 'foo="bar" AND bar="baz" AND qux IN [1, 2] AND quux IN [1, 2]',
+            'hitsPerPage' => $builder->limit,
         ]))->andReturn([]);
 
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
         $engine->search($builder);
     }
 
@@ -369,26 +530,59 @@ class MeiliSearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filters' => '(qux=1 OR qux=2) AND (quux=1 OR quux=2)',
-            'limit' => $builder->limit,
+            'filter' => 'qux IN [1, 2] AND quux IN [1, 2]',
+            'hitsPerPage' => $builder->limit,
         ]))->andReturn([]);
 
-        $engine = new MeiliSearchEngine($client);
+        $engine = new MeilisearchEngine($client);
+        $engine->search($builder);
+    }
+
+    public function test_empty_where_in_conditions_are_applied_correctly()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+        $builder->where('foo', 'bar');
+        $builder->where('bar', 'baz');
+        $builder->whereIn('qux', []);
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter' => 'foo="bar" AND bar="baz" AND qux IN []',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeilisearchEngine($client);
         $engine->search($builder);
     }
 
     public function test_engine_returns_hits_entry_from_search_response()
     {
-        $this->assertTrue(3 === (new MeiliSearchEngine(m::mock(Client::class)))->getTotalCount([
-            'nbHits' => 3,
+        $this->assertTrue(3 === (new MeilisearchEngine(m::mock(Client::class)))->getTotalCount([
+            'totalHits' => 3,
         ]));
+    }
+
+    public function test_delete_all_indexes_works_with_pagination()
+    {
+        $client = m::mock(Client::class);
+        $client->shouldReceive('getIndexes')->andReturn($indexesResults = m::mock(IndexesResults::class));
+
+        $indexesResults->shouldReceive('getResults')->once();
+
+        $engine = new MeilisearchEngine($client);
+        $engine->deleteAllIndexes();
     }
 }
 
-class MeiliSearchCustomKeySearchableModel extends SearchableModel
+class MeilisearchCustomKeySearchableModel extends SearchableModel
 {
     public function getScoutKey()
     {
         return 'my-meilisearch-key.'.$this->getKey();
+    }
+
+    public function getScoutKeyName()
+    {
+        return 'meilisearch-key';
     }
 }

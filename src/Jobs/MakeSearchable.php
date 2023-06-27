@@ -59,6 +59,6 @@ class MakeSearchable implements ShouldQueue, ShouldBeUnique
             return;
         }
 
-        $this->models->first()->searchableUsing()->update($this->models);
+        $this->models->first()->makeSearchableUsing($this->models)->first()->searchableUsing()->update($this->models);
     }
 }

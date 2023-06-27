@@ -67,7 +67,7 @@ class RemoveFromSearchTest extends TestCase
         $this->assertInstanceOf(SearchableModelWithCustomKey::class, $job->models->first());
         $this->assertTrue($model->is($job->models->first()));
         $this->assertEquals(1234, $job->models->first()->getScoutKey());
-        $this->assertEquals('searchable_model_with_custom_keys.other_id', $job->models->first()->getScoutKeyName());
+        $this->assertEquals('other_id', $job->models->first()->getScoutKeyName());
     }
 
     public function test_removeable_scout_collection_returns_scout_keys()

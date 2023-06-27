@@ -3,11 +3,14 @@
 namespace Laravel\Scout\Tests\Unit;
 
 use Algolia\AlgoliaSearch\SearchClient;
+use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
+use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\AlgoliaEngine;
+use Laravel\Scout\Jobs\RemoveFromSearch;
 use Laravel\Scout\Tests\Fixtures\EmptySearchableModel;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Laravel\Scout\Tests\Fixtures\SoftDeletedEmptySearchableModel;
@@ -25,6 +28,7 @@ class AlgoliaEngineTest extends TestCase
 
     protected function tearDown(): void
     {
+        Container::getInstance()->flush();
         m::close();
     }
 
@@ -49,6 +53,59 @@ class AlgoliaEngineTest extends TestCase
 
         $engine = new AlgoliaEngine($client);
         $engine->delete(Collection::make([new SearchableModel(['id' => 1])]));
+    }
+
+    public function test_delete_removes_objects_to_index_with_a_custom_search_key()
+    {
+        $client = m::mock(SearchClient::class);
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('deleteObjects')->once()->with(['my-algolia-key.5']);
+
+        $engine = new AlgoliaEngine($client);
+        $engine->delete(Collection::make([new AlgoliaCustomKeySearchableModel(['id' => 5])]));
+    }
+
+    public function test_delete_with_removeable_scout_collection_using_custom_search_key()
+    {
+        $job = new RemoveFromSearch(Collection::make([
+            new AlgoliaCustomKeySearchableModel(['id' => 5]),
+        ]));
+
+        $job = unserialize(serialize($job));
+
+        $client = m::mock(SearchClient::class);
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
+        $index->shouldReceive('deleteObjects')->once()->with(['my-algolia-key.5']);
+
+        $engine = new AlgoliaEngine($client);
+        $engine->delete($job->models);
+    }
+
+    public function test_remove_from_search_job_uses_custom_search_key()
+    {
+        $job = new RemoveFromSearch(Collection::make([
+            new AlgoliaCustomKeySearchableModel(['id' => 5]),
+        ]));
+
+        $job = unserialize(serialize($job));
+
+        Container::getInstance()->bind(EngineManager::class, function () {
+            $engine = m::mock(AlgoliaEngine::class);
+
+            $engine->shouldReceive('delete')->once()->with(m::on(function ($collection) {
+                $keyName = ($model = $collection->first())->getScoutKeyName();
+
+                return $model->getAttributes()[$keyName] === 'my-algolia-key.5';
+            }));
+
+            $manager = m::mock(EngineManager::class);
+
+            $manager->shouldReceive('engine')->andReturn($engine);
+
+            return $manager;
+        });
+
+        $job->handle();
     }
 
     public function test_search_sends_correct_parameters_to_algolia()
@@ -76,6 +133,20 @@ class AlgoliaEngineTest extends TestCase
         $engine = new AlgoliaEngine($client);
         $builder = new Builder(new SearchableModel, 'zonda');
         $builder->where('foo', 1)->whereIn('bar', [1, 2]);
+        $engine->search($builder);
+    }
+
+    public function test_search_sends_correct_parameters_to_algolia_for_empty_where_in_search()
+    {
+        $client = m::mock(SearchClient::class);
+        $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
+        $index->shouldReceive('search')->with('zonda', [
+            'numericFilters' => ['foo=1', '0=1'],
+        ]);
+
+        $engine = new AlgoliaEngine($client);
+        $builder = new Builder(new SearchableModel, 'zonda');
+        $builder->where('foo', 1)->whereIn('bar', []);
         $engine->search($builder);
     }
 
@@ -230,7 +301,7 @@ class AlgoliaEngineTest extends TestCase
 
     public function test_update_empty_searchable_array_from_soft_deleted_model_does_not_add_objects_to_index()
     {
-        $client = m::mock('Algolia\AlgoliaSearch\SearchClient');
+        $client = m::mock(SearchClient::class);
         $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock('StdClass'));
         $index->shouldNotReceive('saveObjects');
 

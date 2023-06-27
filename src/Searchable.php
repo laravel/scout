@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout;
 
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
 
@@ -59,7 +60,7 @@ trait Searchable
         }
 
         if (! config('scout.queue')) {
-            return $models->first()->searchableUsing()->update($models);
+            return $models->first()->makeSearchableUsing($models)->first()->searchableUsing()->update($models);
         }
 
         dispatch((new Scout::$makeSearchableJob($models))
@@ -144,8 +145,21 @@ trait Searchable
             ->when($softDelete, function ($query) {
                 $query->withTrashed();
             })
-            ->orderBy($self->getKeyName())
+            ->orderBy(
+                $self->qualifyColumn($self->getScoutKeyName())
+            )
             ->searchable($chunk);
+    }
+
+    /**
+     * Modify the collection of models being made searchable.
+     *
+     * @param  \Illuminate\Support\Collection  $models
+     * @return \Illuminate\Support\Collection
+     */
+    public function makeSearchableUsing(BaseCollection $models)
+    {
+        return $models;
     }
 
     /**
@@ -154,7 +168,7 @@ trait Searchable
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function makeAllSearchableUsing($query)
+    protected function makeAllSearchableUsing(EloquentBuilder $query)
     {
         return $query;
     }
@@ -239,8 +253,12 @@ trait Searchable
             call_user_func($builder->queryCallback, $query);
         }
 
-        return $query->whereIn(
-            $this->getScoutKeyName(), $ids
+        $whereIn = in_array($this->getKeyType(), ['int', 'integer']) ?
+            'whereIntegerInRaw' :
+            'whereIn';
+
+        return $query->{$whereIn}(
+            $this->qualifyColumn($this->getScoutKeyName()), $ids
         );
     }
 
@@ -382,7 +400,7 @@ trait Searchable
      */
     public function getScoutKeyName()
     {
-        return $this->getQualifiedKeyName();
+        return $this->getKeyName();
     }
 
     /**

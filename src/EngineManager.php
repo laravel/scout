@@ -9,9 +9,11 @@ use Exception;
 use Illuminate\Support\Manager;
 use Laravel\Scout\Engines\AlgoliaEngine;
 use Laravel\Scout\Engines\CollectionEngine;
-use Laravel\Scout\Engines\MeiliSearchEngine;
+use Laravel\Scout\Engines\DatabaseEngine;
+use Laravel\Scout\Engines\MeilisearchEngine;
 use Laravel\Scout\Engines\NullEngine;
-use MeiliSearch\Client as MeiliSearch;
+use Meilisearch\Client as MeilisearchClient;
+use Meilisearch\Meilisearch;
 
 class EngineManager extends Manager
 {
@@ -35,7 +37,7 @@ class EngineManager extends Manager
     {
         $this->ensureAlgoliaClientIsInstalled();
 
-        UserAgent::addCustomUserAgent('Laravel Scout', '9.2.3');
+        UserAgent::addCustomUserAgent('Laravel Scout', Scout::VERSION);
 
         $config = SearchConfig::create(
             config('scout.algolia.id'),
@@ -73,10 +75,10 @@ class EngineManager extends Manager
         }
 
         if (class_exists('AlgoliaSearch\Client')) {
-            throw new Exception('Please upgrade your Algolia client to version: ^2.2.');
+            throw new Exception('Please upgrade your Algolia client to version: ^3.2.');
         }
 
-        throw new Exception('Please install the Algolia client: algolia/algoliasearch-client-php.');
+        throw new Exception('Please install the suggested Algolia client: algolia/algoliasearch-client-php.');
     }
 
     /**
@@ -106,34 +108,44 @@ class EngineManager extends Manager
     }
 
     /**
-     * Create an MeiliSearch engine instance.
+     * Create a Meilisearch engine instance.
      *
-     * @return \Laravel\Scout\Engines\MeiliSearchEngine
+     * @return \Laravel\Scout\Engines\MeilisearchEngine
      */
     public function createMeilisearchDriver()
     {
-        $this->ensureMeiliSearchClientIsInstalled();
+        $this->ensureMeilisearchClientIsInstalled();
 
-        return new MeiliSearchEngine(
-            $this->container->make(MeiliSearch::class),
+        return new MeilisearchEngine(
+            $this->container->make(MeilisearchClient::class),
             config('scout.soft_delete', false)
         );
     }
 
     /**
-     * Ensure the MeiliSearch client is installed.
+     * Ensure the Meilisearch client is installed.
      *
      * @return void
      *
      * @throws \Exception
      */
-    protected function ensureMeiliSearchClientIsInstalled()
+    protected function ensureMeilisearchClientIsInstalled()
     {
-        if (class_exists(MeiliSearch::class)) {
+        if (class_exists(Meilisearch::class) && version_compare(Meilisearch::VERSION, '1.0.0') >= 0) {
             return;
         }
 
-        throw new Exception('Please install the MeiliSearch client: meilisearch/meilisearch-php.');
+        throw new Exception('Please install the suggested Meilisearch client: meilisearch/meilisearch-php.');
+    }
+
+    /**
+     * Create a database engine instance.
+     *
+     * @return \Laravel\Scout\Engines\DatabaseEngine
+     */
+    public function createDatabaseDriver()
+    {
+        return new DatabaseEngine;
     }
 
     /**
