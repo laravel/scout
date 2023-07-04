@@ -143,6 +143,13 @@ class MeilisearchEngine extends Engine
 
         $searchParams = array_merge($builder->options, $searchParams);
 
+        if (array_key_exists('attributesToRetrieve', $searchParams)) {
+            $searchParams['attributesToRetrieve'] = array_merge(
+                [$builder->model->getScoutKeyName()],
+                $searchParams['attributesToRetrieve'],
+            );
+        }
+
         if ($builder->callback) {
             $result = call_user_func(
                 $builder->callback,
