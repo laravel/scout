@@ -130,6 +130,25 @@ class MeilisearchEngineTest extends TestCase
         $engine->search($builder);
     }
 
+    public function test_search_includes_at_least_scoutKeyName_in_attributesToRetrieve_on_builder_options()
+    {
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('search')->with('mustang', [
+            'filter' => 'foo=1 AND bar=2',
+            'attributesToRetrieve' => ['id', 'foo'],
+        ]);
+
+        $engine = new MeilisearchEngine($client);
+        $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
+            $options['filter'] = 'foo=1 AND bar=2';
+
+            return $meilisearch->search($query, $options);
+        });
+        $builder->options = ['attributesToRetrieve' => ['foo']];
+        $engine->search($builder);
+    }
+
     public function test_submitting_a_callable_search_with_search_method_returns_array()
     {
         $builder = new Builder(
