@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.2.2...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.2.3...10.x)
+
+## [v10.2.3](https://github.com/laravel/scout/compare/v10.2.2...v10.2.3) - 2023-07-11
+
+- Override attributesToRetrieve config to ensure search result is complete by [@mmachatschek](https://github.com/mmachatschek) in https://github.com/laravel/scout/pull/751
 
 ## [v10.2.2](https://github.com/laravel/scout/compare/v10.2.1...v10.2.2) - 2023-05-24
 
