@@ -102,6 +102,36 @@ class SearchableTest extends TestCase
         $this->assertTrue($model->wasSearchableBeforeDelete());
     }
 
+    public function test_it_queries_searchable_models_by_their_ids_with_integer_key_type()
+    {
+        $model = M::mock(SearchableModel::class)->makePartial();
+        $model->shouldReceive('newQuery')->andReturnSelf();
+        $model->shouldReceive('getScoutKeyType')->andReturn('int');
+        $model->shouldReceive('getScoutKeyName')->andReturn('id');
+        $model->shouldReceive('qualifyColumn')->with('id')->andReturn('qualified_id');
+        $model->shouldReceive('whereIntegerInRaw')->with('qualified_id', [1, 2, 3])->andReturnSelf();
+
+        $scoutBuilder = M::mock(\Laravel\Scout\Builder::class);
+        $scoutBuilder->queryCallback = null;
+
+        $model->queryScoutModelsByIds($scoutBuilder, [1, 2, 3]);
+    }
+
+    public function test_it_queries_searchable_models_by_their_ids_with_string_key_type()
+    {
+        $model = M::mock(SearchableModel::class)->makePartial();
+        $model->shouldReceive('newQuery')->andReturnSelf();
+        $model->shouldReceive('getScoutKeyType')->andReturn('string');
+        $model->shouldReceive('getScoutKeyName')->andReturn('id');
+        $model->shouldReceive('qualifyColumn')->with('id')->andReturn('qualified_id');
+        $model->shouldReceive('whereIn')->with('qualified_id', [1, 2, 3])->andReturnSelf();
+
+        $scoutBuilder = M::mock(\Laravel\Scout\Builder::class);
+        $scoutBuilder->queryCallback = null;
+
+        $model->queryScoutModelsByIds($scoutBuilder, [1, 2, 3]);
+    }
+
     public function test_was_searchable_before_update_works_from_true_to_false()
     {
         $model = new SearchableModelWithSoftDeletes([
