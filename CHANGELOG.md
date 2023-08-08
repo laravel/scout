@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.2.3...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.2.4...10.x)
+
+## [v10.2.4](https://github.com/laravel/scout/compare/v10.2.3...v10.2.4) - 2023-08-08
+
+- Add Configurable Scout Key Type by [@geisi](https://github.com/geisi) in https://github.com/laravel/scout/pull/752
 
 ## [v10.2.3](https://github.com/laravel/scout/compare/v10.2.2...v10.2.3) - 2023-07-11
 
