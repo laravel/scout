@@ -125,7 +125,7 @@ return [
     | source search engine with minimal configuration. Below, you can state
     | the host and key information for your own Meilisearch installation.
     |
-    | See: https://docs.meilisearch.com/guides/advanced_guides/configuration.html
+    | See: https://www.meilisearch.com/docs/learn/configuration/instance_options#all-instance-options
     |
     */
 
