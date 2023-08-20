@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Engines;
 
+use BackedEnum;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
@@ -179,6 +180,10 @@ class MeilisearchEngine extends Engine
         $filters = collect($builder->wheres)->map(function ($value, $key) {
             if (is_bool($value)) {
                 return sprintf('%s=%s', $key, $value ? 'true' : 'false');
+            }
+
+            if ($value instanceof BackedEnum) {
+                return sprintf('%s=%s', $key, $value->value);
             }
 
             return is_numeric($value)
