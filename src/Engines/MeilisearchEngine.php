@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Engines;
 
+use BackedEnum;
 use Illuminate\Support\Arr;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
@@ -181,6 +182,10 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
     {
         $filters = collect($builder->wheres)
             ->map(function ($value, $key) {
+                if ($value instanceof BackedEnum) {
+                    return sprintf('%s=%s', $key, $value->value);
+                }
+
                 if (is_bool($value)) {
                     return sprintf('%s=%s', $key, $value ? 'true' : 'false');
                 }
