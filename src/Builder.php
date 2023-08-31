@@ -63,6 +63,13 @@ class Builder
     public $whereIns = [];
 
     /**
+     * The "where not in" constraints added to the query.
+     *
+     * @var array
+     */
+    public $whereNotIns = [];
+
+    /**
      * The "limit" that should be applied to the search.
      *
      * @var int
@@ -140,6 +147,20 @@ class Builder
     public function whereIn($field, array $values)
     {
         $this->whereIns[$field] = $values;
+
+        return $this;
+    }
+
+    /**
+     * Add a "where not in" constraint to the search query.
+     *
+     * @param  string  $field
+     * @param  array  $values
+     * @return $this
+     */
+    public function whereNotIn($field, array $values)
+    {
+        $this->whereNotIns[$field] = $values;
 
         return $this;
     }
