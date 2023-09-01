@@ -188,7 +188,7 @@ class MeilisearchEngine extends Engine
 
         $whereInOperators = [
             'whereIns'    => 'IN',
-            'whereNotIns' => 'NOT IN'
+            'whereNotIns' => 'NOT IN',
         ];
 
         foreach ($whereInOperators as $property => $operator) {
