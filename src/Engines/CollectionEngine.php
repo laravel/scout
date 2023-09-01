@@ -100,6 +100,11 @@ class CollectionEngine extends Engine
                                 $query->whereIn($key, $values);
                             }
                         })
+                        ->when(! $builder->callback && count($builder->whereNotIns) > 0, function ($query) use ($builder) {
+                            foreach ($builder->whereNotIns as $key => $values) {
+                                $query->whereNotIn($key, $values);
+                            }
+                        })
                         ->when($builder->orders, function ($query) use ($builder) {
                             foreach ($builder->orders as $order) {
                                 $query->orderBy($order['column'], $order['direction']);

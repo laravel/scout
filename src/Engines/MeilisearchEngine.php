@@ -186,16 +186,25 @@ class MeilisearchEngine extends Engine
                 : sprintf('%s="%s"', $key, $value);
         });
 
-        foreach ($builder->whereIns as $key => $values) {
-            $filters->push(sprintf('%s IN [%s]', $key, collect($values)->map(function ($value) {
-                if (is_bool($value)) {
-                    return sprintf('%s', $value ? 'true' : 'false');
-                }
+        $whereInOperators = [
+            'whereIns'    => 'IN',
+            'whereNotIns' => 'NOT IN'
+        ];
 
-                return filter_var($value, FILTER_VALIDATE_INT) !== false
-                    ? sprintf('%s', $value)
-                    : sprintf('"%s"', $value);
-            })->values()->implode(', ')));
+        foreach ($whereInOperators as $property => $operator) {
+            if (property_exists($builder, $property)) {
+                foreach ($builder->{$property} as $key => $values) {
+                    $filters->push(sprintf('%s %s [%s]', $key, $operator, collect($values)->map(function ($value) {
+                        if (is_bool($value)) {
+                            return sprintf('%s', $value ? 'true' : 'false');
+                        }
+
+                        return filter_var($value, FILTER_VALIDATE_INT) !== false
+                            ? sprintf('%s', $value)
+                            : sprintf('"%s"', $value);
+                    })->values()->implode(', ')));
+                }
+            }
         }
 
         return $filters->values()->implode(' AND ');
