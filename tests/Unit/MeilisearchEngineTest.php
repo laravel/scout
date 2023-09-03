@@ -121,7 +121,7 @@ class MeilisearchEngineTest extends TestCase
             'filter' => 'foo=1 AND bar=2',
         ]);
 
-        $engine = new MeilisearchEngine($client);
+        $engine  = new MeilisearchEngine($client);
         $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
             $options['filter'] = 'foo=1 AND bar=2';
 
@@ -135,12 +135,12 @@ class MeilisearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('search')->with('mustang', [
-            'filter' => 'foo=1 AND bar=2',
+            'filter'               => 'foo=1 AND bar=2',
             'attributesToRetrieve' => ['id', 'foo'],
         ]);
 
-        $engine = new MeilisearchEngine($client);
-        $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
+        $engine           = new MeilisearchEngine($client);
+        $builder          = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
             $options['filter'] = 'foo=1 AND bar=2';
 
             return $meilisearch->search($query, $options);
@@ -160,16 +160,17 @@ class MeilisearchEngineTest extends TestCase
                 return $meilisearch->search($query, $options);
             }
         );
-        $client = m::mock(Client::class);
+        $client  = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('search')->with($query, ['filter' => 'foo=1'])->andReturn(new SearchResult($expectedResult = [
-            'hits' => [],
-            'page' => 1,
-            'hitsPerPage' => $builder->limit,
-            'totalPages' => 1,
-            'totalHits' => 0,
+        $index->shouldReceive('search')->with($query,
+            ['filter' => 'foo=1'])->andReturn(new SearchResult($expectedResult = [
+            'hits'             => [],
+            'page'             => 1,
+            'hitsPerPage'      => $builder->limit,
+            'totalPages'       => 1,
+            'totalHits'        => 0,
             'processingTimeMs' => 1,
-            'query' => 'mustang',
+            'query'            => 'mustang',
         ]));
 
         $engine = new MeilisearchEngine($client);
@@ -189,16 +190,16 @@ class MeilisearchEngineTest extends TestCase
                 return $meilisearch->rawSearch($query, $options);
             }
         );
-        $client = m::mock(Client::class);
+        $client  = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->with($query, ['filter' => 'foo=1'])->andReturn($expectedResult = [
-            'hits' => [],
-            'page' => 1,
-            'hitsPerPage' => $builder->limit,
-            'totalPages' => 1,
-            'totalHits' => 0,
+            'hits'             => [],
+            'page'             => 1,
+            'hitsPerPage'      => $builder->limit,
+            'totalPages'       => 1,
+            'totalHits'        => 0,
             'processingTimeMs' => 1,
-            'query' => $query,
+            'query'            => $query,
         ]);
 
         $engine = new MeilisearchEngine($client);
@@ -214,7 +215,7 @@ class MeilisearchEngineTest extends TestCase
 
         $results = $engine->mapIdsFrom([
             'totalHits' => 0,
-            'hits' => [],
+            'hits'      => [],
         ], 'id');
 
         $this->assertEquals(0, count($results));
@@ -227,22 +228,22 @@ class MeilisearchEngineTest extends TestCase
 
         $results = $engine->mapIdsFrom([
             'totalHits' => 5,
-            'hits' => [
+            'hits'      => [
                 [
                     'some_field' => 'something',
-                    'id' => 1,
+                    'id'         => 1,
                 ],
                 [
                     'some_field' => 'foo',
-                    'id' => 2,
+                    'id'         => 2,
                 ],
                 [
                     'some_field' => 'bar',
-                    'id' => 3,
+                    'id'         => 3,
                 ],
                 [
                     'some_field' => 'baz',
-                    'id' => 4,
+                    'id'         => 4,
                 ],
             ],
         ], 'id');
@@ -257,7 +258,7 @@ class MeilisearchEngineTest extends TestCase
 
     public function test_returns_primary_keys_when_custom_array_order_present()
     {
-        $engine = m::mock(MeilisearchEngine::class);
+        $engine  = m::mock(MeilisearchEngine::class);
         $builder = m::mock(Builder::class);
 
         $model = m::mock(stdClass::class);
@@ -269,12 +270,14 @@ class MeilisearchEngineTest extends TestCase
         $engine
             ->shouldReceive('search')
             ->once()
-            ->andReturn([]);
+            ->andReturn([])
+        ;
 
         $engine
             ->shouldReceive('mapIdsFrom')
             ->once()
-            ->with([], 'custom_key');
+            ->with([], 'custom_key')
+        ;
 
         $engine->keys($builder);
     }
@@ -291,7 +294,7 @@ class MeilisearchEngineTest extends TestCase
 
         $results = $engine->map($builder, [
             'totalHits' => 1,
-            'hits' => [
+            'hits'      => [
                 ['id' => 1],
             ],
         ], $model);
@@ -317,7 +320,7 @@ class MeilisearchEngineTest extends TestCase
 
         $results = $engine->map($builder, [
             'totalHits' => 4,
-            'hits' => [
+            'hits'      => [
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 4],
@@ -346,7 +349,7 @@ class MeilisearchEngineTest extends TestCase
 
         $results = $engine->lazyMap($builder, [
             'totalHits' => 1,
-            'hits' => [
+            'hits'      => [
                 ['id' => 1],
             ],
         ], $model);
@@ -372,7 +375,7 @@ class MeilisearchEngineTest extends TestCase
 
         $results = $engine->lazyMap($builder, [
             'totalHits' => 4,
-            'hits' => [
+            'hits'      => [
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 4],
@@ -393,10 +396,12 @@ class MeilisearchEngineTest extends TestCase
     {
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('addDocuments')->once()->with([[
-            'meilisearch-key' => 'my-meilisearch-key.5',
-            'id' => 5,
-        ]], 'meilisearch-key');
+        $index->shouldReceive('addDocuments')->once()->with([
+            [
+                'meilisearch-key' => 'my-meilisearch-key.5',
+                'id'              => 5,
+            ]
+        ], 'meilisearch-key');
 
         $engine = new MeilisearchEngine($client);
         $engine->update(Collection::make([new MeilisearchCustomKeySearchableModel(['id' => 5])]));
@@ -425,17 +430,17 @@ class MeilisearchEngineTest extends TestCase
     public function test_pagination_correct_parameters()
     {
         $perPage = 5;
-        $page = 2;
+        $page    = 2;
 
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('search')->with('mustang', [
-            'filter' => 'foo=1',
+            'filter'      => 'foo=1',
             'hitsPerPage' => $perPage,
-            'page' => $page,
+            'page'        => $page,
         ]);
 
-        $engine = new MeilisearchEngine($client);
+        $engine  = new MeilisearchEngine($client);
         $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
             $options['filter'] = 'foo=1';
 
@@ -447,18 +452,18 @@ class MeilisearchEngineTest extends TestCase
     public function test_pagination_sorted_parameter()
     {
         $perPage = 5;
-        $page = 2;
+        $page    = 2;
 
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('search')->with('mustang', [
-            'filter' => 'foo=1',
+            'filter'      => 'foo=1',
             'hitsPerPage' => $perPage,
-            'page' => $page,
-            'sort' => ['name:asc'],
+            'page'        => $page,
+            'sort'        => ['name:asc'],
         ]);
 
-        $engine = new MeilisearchEngine($client);
+        $engine  = new MeilisearchEngine($client);
         $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
             $options['filter'] = 'foo=1';
 
@@ -502,7 +507,7 @@ class MeilisearchEngineTest extends TestCase
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->andReturn([]);
 
-        $engine = new MeilisearchEngine($client);
+        $engine  = new MeilisearchEngine($client);
         $builder = new Builder(new SearchableModel(), '');
         $engine->search($builder);
     }
@@ -515,7 +520,28 @@ class MeilisearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filter' => 'foo="bar" AND key="value"',
+            'filter'      => 'foo="bar" AND key="value"',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->search($builder);
+    }
+
+    public function test_where_conditions_are_applied_using_new_query_builder()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+
+        $builder
+            ->enableMeilisearchNewQueryBuilder()
+            ->where('foo', '=', 'bar')
+            ->where('key', 'value')
+        ;
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter'      => 'foo="bar" AND key="value"',
             'hitsPerPage' => $builder->limit,
         ]))->andReturn([]);
 
@@ -533,7 +559,30 @@ class MeilisearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filter' => 'foo="bar" AND bar="baz" AND qux IN [1, 2] AND quux IN [1, 2]',
+            'filter'      => 'foo="bar" AND bar="baz" AND qux IN [1, 2] AND quux IN [1, 2]',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->search($builder);
+    }
+
+    public function test_where_in_conditions_are_applied_using_new_query_builder()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+
+        $builder
+            ->enableMeilisearchNewQueryBuilder()
+            ->where('foo', '=', 'bar')
+            ->where('bar', 'baz')
+            ->whereIn('qux', [1, 2])
+            ->whereIn('quux', [1, 2])
+        ;
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter'      => 'foo="bar" AND bar="baz" AND qux IN [1, 2] AND quux IN [1, 2]',
             'hitsPerPage' => $builder->limit,
         ]))->andReturn([]);
 
@@ -552,7 +601,31 @@ class MeilisearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filter' => 'foo="bar" AND bar="baz" AND qux IN [1, 2] AND quux IN [1, 2] AND eaea NOT IN [3]',
+            'filter'      => 'foo="bar" AND bar="baz" AND qux IN [1, 2] AND quux IN [1, 2] AND eaea NOT IN [3]',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->search($builder);
+    }
+
+    public function test_where_not_in_conditions_are_applied_using_new_query_builder()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+
+        $builder
+            ->enableMeilisearchNewQueryBuilder()
+            ->where('foo', '=', 'bar')
+            ->where('bar', 'baz')
+            ->whereIn('qux', [1, 2])
+            ->whereIn('quux', [1, 2])
+            ->whereNotIn('eaea', 3) // It could receive non-arrays...
+        ;
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter'      => 'foo="bar" AND bar="baz" AND qux IN [1, 2] AND quux IN [1, 2] AND eaea NOT IN [3]',
             'hitsPerPage' => $builder->limit,
         ]))->andReturn([]);
 
@@ -568,7 +641,28 @@ class MeilisearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filter' => 'qux IN [1, 2] AND quux IN [1, 2]',
+            'filter'      => 'qux IN [1, 2] AND quux IN [1, 2]',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->search($builder);
+    }
+
+    public function test_where_in_conditions_are_applied_without_other_conditions_using_new_query_builder()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+
+        $builder
+            ->enableMeilisearchNewQueryBuilder()
+            ->whereIn('qux', [1, 2])
+            ->whereIn('quux', [1, 2])
+        ;
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter'      => 'qux IN [1, 2] AND quux IN [1, 2]',
             'hitsPerPage' => $builder->limit,
         ]))->andReturn([]);
 
@@ -585,7 +679,28 @@ class MeilisearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filter' => 'qux IN [1, 2] AND quux IN [1, 2] AND eaea NOT IN [3]',
+            'filter'      => 'qux IN [1, 2] AND quux IN [1, 2] AND eaea NOT IN [3]',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->search($builder);
+    }
+
+    public function test_where_not_in_conditions_are_applied_without_other_conditions_using_new_query_builder()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+
+        $builder->enableMeilisearchNewQueryBuilder()
+                ->whereIn('qux', [1, 2])
+                ->whereIn('quux', [1, 2])
+                ->whereNotIn('eaea', [3])
+        ;
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter'      => 'qux IN [1, 2] AND quux IN [1, 2] AND eaea NOT IN [3]',
             'hitsPerPage' => $builder->limit,
         ]))->andReturn([]);
 
@@ -602,7 +717,128 @@ class MeilisearchEngineTest extends TestCase
         $client = m::mock(Client::class);
         $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filter' => 'foo="bar" AND bar="baz" AND qux IN []',
+            'filter'      => 'foo="bar" AND bar="baz" AND qux IN []',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->search($builder);
+    }
+
+    public function test_empty_where_in_conditions_are_applied_correctly_using_new_query_builder()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+
+        $builder->enableMeilisearchNewQueryBuilder()
+                ->where('foo', 'bar')
+                ->where('bar', 'baz')
+                ->whereIn('qux', [])
+        ;
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter'      => 'foo="bar" AND bar="baz" AND qux IN []',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->search($builder);
+    }
+
+    public function test_new_query_builder_custom_boolean_clauses()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+
+        $builder->enableMeilisearchNewQueryBuilder()
+                ->where([
+                    ['foo', 'bar'],
+                    ['bar', 'baz'],
+                ])
+                ->orWhere(function ($query) {
+                    $query->where('name', 'Foals')
+                          ->orWhere('name', 'Radiohead')
+                    ;
+                })
+        ;
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter'      => '(foo="bar" AND bar="baz") OR (name="Foals" OR name="Radiohead")',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->search($builder);
+    }
+
+    public function test_where_exists_and_null_not_null_using_new_query_builder()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+
+        $builder->enableMeilisearchNewQueryBuilder()
+                ->whereExists('foo')
+                ->whereNotNull('bar')
+                ->whereIsNotEmpty('eaea')
+        ;
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter'      => 'foo EXISTS AND bar IS NOT NULL AND eaea IS NOT EMPTY',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->search($builder);
+    }
+
+    public function test_between_equivalent_operator_using_new_query_builder()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+
+        $builder->enableMeilisearchNewQueryBuilder()
+                ->whereBetween('foo', [1, 100])
+                ->where('power', '>=', 9000)
+        ;
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter'      => 'foo 1 TO 100 AND power>=9000',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->search($builder);
+    }
+
+    public function test_combining_multiple_scopes_using_new_query_builder()
+    {
+        $builder = new Builder(new SearchableModel(), '');
+
+        $builder->enableMeilisearchNewQueryBuilder()
+                ->where([
+                    ['foo', '!=', 'bar'],
+                    ['bar', '<', 3],
+                    ['power', '>', 900]
+                ])
+                ->orWhere([
+                    ['name', 'John'],
+                    ['lastname', '=', 'Doe'],
+                ])
+                ->orWhere(function ($query) {
+                    $query->where('name', 'Edgar')
+                          ->orWhere('lastname', 'Pimienta')
+                    ;
+                })
+        ;
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter'      => '(foo!="bar" AND bar<3 AND power>900) OR (name="John" AND lastname="Doe") OR (name="Edgar" OR lastname="Pimienta")',
             'hitsPerPage' => $builder->limit,
         ]))->andReturn([]);
 
@@ -613,8 +849,8 @@ class MeilisearchEngineTest extends TestCase
     public function test_engine_returns_hits_entry_from_search_response()
     {
         $this->assertTrue(3 === (new MeilisearchEngine(m::mock(Client::class)))->getTotalCount([
-            'totalHits' => 3,
-        ]));
+                'totalHits' => 3,
+            ]));
     }
 
     public function test_delete_all_indexes_works_with_pagination()
