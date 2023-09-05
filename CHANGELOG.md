@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.2.4...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.3.0...10.x)
+
+## [v10.3.0](https://github.com/laravel/scout/compare/v10.2.4...v10.3.0) - 2023-09-05
+
+- Add "whereNotIn" native support to Meilisearch, Database and Collection engines by [@guestpectacular](https://github.com/guestpectacular) in https://github.com/laravel/scout/pull/760
 
 ## [v10.2.4](https://github.com/laravel/scout/compare/v10.2.3...v10.2.4) - 2023-08-08
 
