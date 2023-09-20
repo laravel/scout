@@ -4,33 +4,29 @@ namespace Laravel\Scout\Tests\Feature;
 
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Auth\User;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\MeilisearchEngine;
-use Laravel\Scout\ScoutServiceProvider;
 use Laravel\Scout\Tests\Fixtures\SearchableUserModel;
 use Mockery as m;
+use Orchestra\Testbench\Concerns\WithLaravelMigrations;
+use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\Factories\UserFactory;
 use Orchestra\Testbench\TestCase;
 
 class BuilderTest extends TestCase
 {
-    use WithFaker;
-
-    protected function getPackageProviders($app)
-    {
-        return [ScoutServiceProvider::class];
-    }
+    use LazilyRefreshDatabase, WithFaker, WithLaravelMigrations, WithWorkbench;
 
     protected function defineEnvironment($app)
     {
         $app->make('config')->set('scout.driver', 'fake');
     }
 
-    protected function defineDatabaseMigrations()
+    protected function afterRefreshingDatabase()
     {
         $this->setUpFaker();
-        $this->loadLaravelMigrations();
 
         UserFactory::new()->count(50)->state(new Sequence(function () {
             return ['name' => 'Laravel '.$this->faker()->name()];
