@@ -27,7 +27,7 @@
         "algolia/algoliasearch-client-php": "^3.2",
         "meilisearch/meilisearch-php": "^1.0",
         "mockery/mockery": "^1.0",
-        "orchestra/testbench": "^7.0|^8.0",
+        "orchestra/testbench": "^7.31|^8.11",
         "php-http/guzzle7-adapter": "^1.0",
         "phpstan/phpstan": "^1.10",
         "phpunit/phpunit": "^9.3"
