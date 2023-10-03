@@ -12,8 +12,10 @@ use Laravel\Scout\Engines\CollectionEngine;
 use Laravel\Scout\Engines\DatabaseEngine;
 use Laravel\Scout\Engines\MeilisearchEngine;
 use Laravel\Scout\Engines\NullEngine;
+use Laravel\Scout\Engines\TypesenseEngine;
 use Meilisearch\Client as MeilisearchClient;
 use Meilisearch\Meilisearch;
+use Typesense\Client as Typesense;
 
 class EngineManager extends Manager
 {
@@ -136,6 +138,30 @@ class EngineManager extends Manager
         }
 
         throw new Exception('Please install the suggested Meilisearch client: meilisearch/meilisearch-php.');
+    }
+
+    /**
+     * @return TypesenseEngine
+     * @throws \Typesense\Exceptions\ConfigError
+     */
+    public function createTypesenseDriver()
+    {
+//        $this->ensureTypesenseClientIsInstalled();
+
+        return new TypesenseEngine(new Typesense(config('scout.typesense')));
+    }
+
+    /**
+     * @return void
+     * @throws Exception
+     */
+    protected function ensureTypesenseClientIsInstalled()
+    {
+        if (class_exists(Typesense::class)) {
+            return;
+        }
+
+        throw new Exception('Please install the suggested Typesense client: typesense/typesense-php.');
     }
 
     /**
