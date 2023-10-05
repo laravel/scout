@@ -146,7 +146,7 @@ class EngineManager extends Manager
      */
     public function createTypesenseDriver()
     {
-//        $this->ensureTypesenseClientIsInstalled();
+        $this->ensureTypesenseClientIsInstalled();
 
         return new TypesenseEngine(new Typesense(config('scout.typesense')));
     }
