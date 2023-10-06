@@ -30,6 +30,11 @@ class TypesenseEngine extends Engine
     private Typesense $typesense;
 
     /**
+     * @var $serachOptions
+     */
+    private $serachOptions = [];
+
+    /**
      * TypesenseEngine constructor.
      *
      * @param Typesense $typesense
@@ -272,6 +277,13 @@ class TypesenseEngine extends Engine
         return sprintf('%s:=%s', $key, '[' . implode(', ', $value) . ']');
     }
 
+    public function setSearchOptions(array $options)
+    {
+        $this->serachOptions = $options;
+
+        return $this;
+    }
+
     /**
      * @param \Laravel\Scout\Builder $builder
      * @param array $options
@@ -357,6 +369,10 @@ class TypesenseEngine extends Engine
             'enable_overrides'           => true,
             'highlight_affix_num_tokens' => 4,
         ];
+
+        if (!empty($this->serachOptions)) {
+            $params = array_merge($params, $this->serachOptions);
+        }
 
         if (!empty($builder->orders)) {
             if (!empty($params['sort_by'])) {
