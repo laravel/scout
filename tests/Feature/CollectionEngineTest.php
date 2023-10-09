@@ -24,11 +24,13 @@ class CollectionEngineTest extends TestCase
         UserFactory::new()->create([
             'name' => 'Taylor Otwell',
             'email' => 'taylor@laravel.com',
+            'created_at' => now()->addDay(),
         ]);
 
         UserFactory::new()->create([
             'name' => 'Abigail Otwell',
             'email' => 'abigail@laravel.com',
+            'created_at' => now()->addDays(2),
         ]);
     }
 
@@ -123,6 +125,17 @@ class CollectionEngineTest extends TestCase
         $this->assertEquals('Abigail Otwell', $models[0]->name);
 
         $models = SearchableUserModel::search('laravel')->orderBy('name', 'desc')->paginate(1, 'page', 1);
+        $this->assertCount(1, $models);
+        $this->assertEquals('Taylor Otwell', $models[0]->name);
+    }
+
+    public function test_it_can_order_by_latest_and_oldest()
+    {
+        $models = SearchableUserModel::search('laravel')->latest()->paginate(1, 'page', 1);
+        $this->assertCount(1, $models);
+        $this->assertEquals('Abigail Otwell', $models[0]->name);
+
+        $models = SearchableUserModel::search('laravel')->oldest()->paginate(1, 'page', 1);
         $this->assertCount(1, $models);
         $this->assertEquals('Taylor Otwell', $models[0]->name);
     }
