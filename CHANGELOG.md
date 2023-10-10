@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.4.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.5.0...10.x)
+
+## [v10.5.0](https://github.com/laravel/scout/compare/v10.4.0...v10.5.0) - 2023-10-10
+
+- Adds latest and oldest sorting options by [@peterfox](https://github.com/peterfox) in https://github.com/laravel/scout/pull/770
 
 ## [v10.4.0](https://github.com/laravel/scout/compare/v10.3.0...v10.4.0) - 2023-09-26
 
