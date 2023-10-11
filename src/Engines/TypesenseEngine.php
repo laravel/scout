@@ -293,7 +293,7 @@ class TypesenseEngine extends Engine
      *
      * @throws \Typesense\Exceptions\TypesenseClientError
      */
-    protected function performSearch(Builder $builder, array $options = []): mixed
+    public function performSearch(Builder $builder, array $options = []): mixed
     {
         $documents = $this->getOrCreateCollectionFromModel($builder->model)
             ->getDocuments();
@@ -302,6 +302,72 @@ class TypesenseEngine extends Engine
         }
 
         return $documents->search($options);
+    }
+
+    /**
+     * @param \Laravel\Scout\Builder $builder
+     * @param int $page
+     * @param int|null $perPage
+     *
+     * @return array
+     */
+    public function buildSearchParams(Builder $builder, int $page, int|null $perPage): array
+    {
+        $params = [
+            'q'                          => $builder->query,
+            'query_by'                   => implode(',', $builder->model->typesenseQueryBy()),
+            'filter_by'                  => $this->filters($builder),
+            'per_page'                   => $perPage,
+            'page'                       => $page,
+            'highlight_start_tag'        => '<mark>',
+            'highlight_end_tag'          => '</mark>',
+            'snippet_threshold'          => 30,
+            'exhaustive_search'          => false,
+            'use_cache'                  => false,
+            'cache_ttl'                  => 60,
+            'prioritize_exact_match'     => true,
+            'enable_overrides'           => true,
+            'highlight_affix_num_tokens' => 4,
+        ];
+
+        if (!empty($this->serachOptions)) {
+            $params = array_merge($params, $this->serachOptions);
+        }
+
+        if (!empty($builder->orders)) {
+            if (!empty($params['sort_by'])) {
+                $params['sort_by'] .= ',';
+            } else {
+                $params['sort_by'] = '';
+            }
+            $params['sort_by'] .= $this->parseOrderBy($builder->orders);
+        }
+
+        return $params;
+    }
+
+    /**
+     * @param $model
+     *
+     * @throws \Typesense\Exceptions\TypesenseClientError
+     * @throws \Http\Client\Exception
+     *
+     * @return TypesenseCollection
+     */
+    public function getOrCreateCollectionFromModel($model): TypesenseCollection
+    {
+        $index = $this->typesense->getCollections()->{$model->searchableAs()};
+
+        try {
+            $index->retrieve();
+
+            return $index;
+        } catch (ObjectNotFound $exception) {
+            $this->typesense->getCollections()
+                         ->create($model->getCollectionSchema());
+
+            return $this->typesense->getCollections()->{$model->searchableAs()};
+        }
     }
 
     /**
@@ -345,48 +411,6 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * @param \Laravel\Scout\Builder $builder
-     * @param int $page
-     * @param int|null $perPage
-     *
-     * @return array
-     */
-    private function buildSearchParams(Builder $builder, int $page, int|null $perPage): array
-    {
-        $params = [
-            'q'                          => $builder->query,
-            'query_by'                   => implode(',', $builder->model->typesenseQueryBy()),
-            'filter_by'                  => $this->filters($builder),
-            'per_page'                   => $perPage,
-            'page'                       => $page,
-            'highlight_start_tag'        => '<mark>',
-            'highlight_end_tag'          => '</mark>',
-            'snippet_threshold'          => 30,
-            'exhaustive_search'          => false,
-            'use_cache'                  => false,
-            'cache_ttl'                  => 60,
-            'prioritize_exact_match'     => true,
-            'enable_overrides'           => true,
-            'highlight_affix_num_tokens' => 4,
-        ];
-
-        if (!empty($this->serachOptions)) {
-            $params = array_merge($params, $this->serachOptions);
-        }
-
-        if (!empty($builder->orders)) {
-            if (!empty($params['sort_by'])) {
-                $params['sort_by'] .= ',';
-            } else {
-                $params['sort_by'] = '';
-            }
-            $params['sort_by'] .= $this->parseOrderBy($builder->orders);
-        }
-
-        return $params;
-    }
-
-    /**
      * Parse sort_by fields.
      *
      * @param array $orders
@@ -401,30 +425,6 @@ class TypesenseEngine extends Engine
         }
 
         return implode(',', $sortByArr);
-    }
-
-    /**
-     * @param $model
-     *
-     * @throws \Typesense\Exceptions\TypesenseClientError
-     * @throws \Http\Client\Exception
-     *
-     * @return TypesenseCollection
-     */
-    private function getOrCreateCollectionFromModel($model): TypesenseCollection
-    {
-        $index = $this->typesense->getCollections()->{$model->searchableAs()};
-
-        try {
-            $index->retrieve();
-
-            return $index;
-        } catch (ObjectNotFound $exception) {
-            $this->typesense->getCollections()
-                         ->create($model->getCollectionSchema());
-
-            return $this->typesense->getCollections()->{$model->searchableAs()};
-        }
     }
 
     /**
