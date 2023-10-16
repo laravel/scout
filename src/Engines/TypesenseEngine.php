@@ -3,17 +3,16 @@
 namespace Laravel\Scout\Engines;
 
 use Exception;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Builder;
-use Laravel\Scout\Classes\TypesenseDocumentIndexResponse;
-use Typesense\Client as Typesense;
-use Typesense\Collection as TypesenseCollection;
 use Typesense\Document;
+use Typesense\Client as Typesense;
 use Typesense\Exceptions\ObjectNotFound;
 use Typesense\Exceptions\TypesenseClientError;
+use Typesense\Collection as TypesenseCollection;
 
 /**
  * Class TypesenseEngine.
@@ -30,9 +29,9 @@ class TypesenseEngine extends Engine
     private Typesense $typesense;
 
     /**
-     * @var $serachOptions
+     * @var $searchOptions
      */
-    private $serachOptions = [];
+    private $searchOptions = [];
 
     /**
      * TypesenseEngine constructor.
@@ -279,7 +278,7 @@ class TypesenseEngine extends Engine
 
     public function setSearchOptions(array $options)
     {
-        $this->serachOptions = $options;
+        $this->searchOptions = $options;
 
         return $this;
     }
@@ -330,8 +329,8 @@ class TypesenseEngine extends Engine
             'highlight_affix_num_tokens' => 4,
         ];
 
-        if (!empty($this->serachOptions)) {
-            $params = array_merge($params, $this->serachOptions);
+        if (!empty($this->searchOptions)) {
+            $params = array_merge($params, $this->searchOptions);
         }
 
         if (!empty($builder->orders)) {
@@ -475,9 +474,25 @@ class TypesenseEngine extends Engine
                 throw new TypesenseClientError("Error importing document: {$importedDocument['error']}");
             }
 
-            $result[] = new TypesenseDocumentIndexResponse($importedDocument['code'] ?? 0, $importedDocument['success'], $importedDocument['error'] ?? null, json_decode($importedDocument['document'] ?? '[]', true, 512, JSON_THROW_ON_ERROR));
+            $result[] = $this->sortingData($importedDocument);
         }
 
         return collect($result);
+    }
+
+    /**
+     * @param $document
+     * @return \stdClass
+     * @throws \JsonException
+     */
+    private function sortingData($document)
+    {
+        $data = new \stdClass();
+        $data->code = $document['code'] ?? 0;
+        $data->success = $document['success'];
+        $data->error = $document['error'] ?? null;
+        $data->document = json_decode($document['document'] ?? '[]', true, 512, JSON_THROW_ON_ERROR);
+
+        return $data;
     }
 }
