@@ -2,14 +2,14 @@
 
 namespace Laravel\Scout\Tests\Unit;
 
-use Illuminate\Support\Collection;
-use PHPUnit\Framework\TestCase;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\TypesenseEngine;
+use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use PHPUnit\Framework\TestCase;
 use Typesense\Client as TypesenseClient;
 use Typesense\Collection as TypesenseCollection;
-use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Typesense\Documents;
 
 class TypesenseEngineTest extends TestCase
@@ -32,7 +32,7 @@ class TypesenseEngineTest extends TestCase
     {
         // Mock models and their methods
         $models = [
-            $this->createMock(SearchableModel::class)
+            $this->createMock(SearchableModel::class),
         ];
 
         $models[0]->expects($this->once())
@@ -51,7 +51,7 @@ class TypesenseEngineTest extends TestCase
                 [['id' => 1, 'name' => 'Model 1']], ['action' => 'upsert'],
             )
             ->willReturn([[
-                'success' => true
+                'success' => true,
             ]]);
 
         $this->engine->expects($this->once())

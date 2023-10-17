@@ -3,16 +3,16 @@
 namespace Laravel\Scout\Engines;
 
 use Exception;
-use Illuminate\Support\Collection;
-use Illuminate\Support\LazyCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
-use Typesense\Document;
 use Typesense\Client as Typesense;
+use Typesense\Collection as TypesenseCollection;
+use Typesense\Document;
 use Typesense\Exceptions\ObjectNotFound;
 use Typesense\Exceptions\TypesenseClientError;
-use Typesense\Collection as TypesenseCollection;
 
 class TypesenseEngine extends Engine
 {
@@ -22,7 +22,7 @@ class TypesenseEngine extends Engine
     private Typesense $typesense;
 
     /**
-     * @var array $searchOptions
+     * @var array
      */
     private $searchOptions = [];
 
