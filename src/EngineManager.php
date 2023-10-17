@@ -141,7 +141,10 @@ class EngineManager extends Manager
     }
 
     /**
+     * Create a Typesense engine instance.
+     *
      * @return TypesenseEngine
+     *
      * @throws \Typesense\Exceptions\ConfigError
      */
     public function createTypesenseDriver()
@@ -152,7 +155,10 @@ class EngineManager extends Manager
     }
 
     /**
+     * Ensure the Typesense client is installed.
+     *
      * @return void
+     *
      * @throws Exception
      */
     protected function ensureTypesenseClientIsInstalled()
