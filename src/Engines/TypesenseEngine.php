@@ -66,7 +66,7 @@ class TypesenseEngine extends Engine
         }
 
         if (! $this->usesSoftDelete($models->first()) || is_null($models->first()?->deleted_at) || config('scout.soft_delete', false)) {
-            $this->importDocuments($collection, $models->map(fn($m) => $m->toSearchableArray())
+            $this->importDocuments($collection, $models->map(fn ($m) => $m->toSearchableArray())
                 ->toArray());
         }
     }
@@ -259,7 +259,7 @@ class TypesenseEngine extends Engine
      */
     public function parseWhereInFilter(array $value, string $key): string
     {
-        return sprintf('%s:=%s', $key, '['.implode(', ', $value) . ']');
+        return sprintf('%s:=%s', $key, '['.implode(', ', $value).']');
     }
 
     /**
@@ -392,7 +392,7 @@ class TypesenseEngine extends Engine
 
         return $whereFilter.(
             ($whereFilter !== '' && $whereInFilter !== '') ? ' && ' : ''
-            ).$whereInFilter;
+        ).$whereInFilter;
     }
 
     /**
