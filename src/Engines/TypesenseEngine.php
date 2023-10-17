@@ -14,22 +14,15 @@ use Typesense\Exceptions\ObjectNotFound;
 use Typesense\Exceptions\TypesenseClientError;
 use Typesense\Collection as TypesenseCollection;
 
-/**
- * Class TypesenseEngine.
- *
- * @date    4/5/20
- *
- * @author  Abdullah Al-Faqeir <abdullah@devloops.net>
- */
 class TypesenseEngine extends Engine
 {
     /**
-     * @var Typesense
+     * @var Typesense\Client
      */
     private Typesense $typesense;
 
     /**
-     * @var $searchOptions
+     * @var array $searchOptions
      */
     private $searchOptions = [];
 
@@ -79,6 +72,7 @@ class TypesenseEngine extends Engine
 
     /**
      * @param \Illuminate\Database\Eloquent\Collection $models
+     * @return void
      *
      * @throws \Http\Client\Exception
      * @throws \Typesense\Exceptions\TypesenseClientError
@@ -93,10 +87,9 @@ class TypesenseEngine extends Engine
 
     /**
      * @param \Laravel\Scout\Builder $builder
-     *
      * @return mixed
-     * @throws \Http\Client\Exception
      *
+     * @throws \Http\Client\Exception
      * @throws \Typesense\Exceptions\TypesenseClientError
      */
     public function search(Builder $builder): mixed
@@ -108,10 +101,9 @@ class TypesenseEngine extends Engine
      * @param \Laravel\Scout\Builder $builder
      * @param int $perPage
      * @param int $page
-     *
      * @return mixed
-     * @throws \Http\Client\Exception
      *
+     * @throws \Http\Client\Exception
      * @throws \Typesense\Exceptions\TypesenseClientError
      */
     public function paginate(Builder $builder, $perPage, $page): mixed
@@ -121,7 +113,6 @@ class TypesenseEngine extends Engine
 
     /**
      * @param mixed $results
-     *
      * @return \Illuminate\Support\Collection
      */
     public function mapIds($results): Collection
@@ -135,7 +126,6 @@ class TypesenseEngine extends Engine
      * @param \Laravel\Scout\Builder $builder
      * @param mixed $results
      * @param \Illuminate\Database\Eloquent\Model $model
-     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function map(Builder $builder, $results, $model): \Illuminate\Database\Eloquent\Collection
@@ -172,7 +162,6 @@ class TypesenseEngine extends Engine
      * @param \Laravel\Scout\Builder $builder
      * @param mixed $results
      * @param \Illuminate\Database\Eloquent\Model $model
-     *
      * @return \Illuminate\Support\LazyCollection
      */
     public function lazyMap(Builder $builder, $results, $model): LazyCollection
@@ -222,10 +211,9 @@ class TypesenseEngine extends Engine
     /**
      * @param string $name
      * @param array $options
-     *
      * @return void
-     * @throws \Exception
      *
+     * @throws \Exception
      */
     public function createIndex($name, array $options = []): void
     {
@@ -234,11 +222,10 @@ class TypesenseEngine extends Engine
 
     /**
      * @param string $name
-     *
      * @return array
+     *
      * @throws \Typesense\Exceptions\TypesenseClientError
      * @throws \Http\Client\Exception
-     *
      * @throws \Typesense\Exceptions\ObjectNotFound
      */
     public function deleteIndex($name): array
@@ -251,7 +238,6 @@ class TypesenseEngine extends Engine
      *
      * @param array|string $value
      * @param string $key
-     *
      * @return string
      */
     public function parseWhereFilter(array|string $value, string $key): string
@@ -268,7 +254,6 @@ class TypesenseEngine extends Engine
      *
      * @param array $value
      * @param string $key
-     *
      * @return string
      */
     public function parseWhereInFilter(array $value, string $key): string
@@ -276,6 +261,10 @@ class TypesenseEngine extends Engine
         return sprintf('%s:=%s', $key, '[' . implode(', ', $value) . ']');
     }
 
+    /**
+     * @param array $options
+     * @return $this
+     */
     public function setSearchOptions(array $options)
     {
         $this->searchOptions = $options;
@@ -286,10 +275,9 @@ class TypesenseEngine extends Engine
     /**
      * @param \Laravel\Scout\Builder $builder
      * @param array $options
-     *
      * @return mixed
-     * @throws \Http\Client\Exception
      *
+     * @throws \Http\Client\Exception
      * @throws \Typesense\Exceptions\TypesenseClientError
      */
     public function performSearch(Builder $builder, array $options = []): mixed
@@ -307,7 +295,6 @@ class TypesenseEngine extends Engine
      * @param \Laravel\Scout\Builder $builder
      * @param int $page
      * @param int|null $perPage
-     *
      * @return array
      */
     public function buildSearchParams(Builder $builder, int $page, int|null $perPage): array
@@ -329,16 +316,17 @@ class TypesenseEngine extends Engine
             'highlight_affix_num_tokens' => 4,
         ];
 
-        if (!empty($this->searchOptions)) {
+        if (! empty($this->searchOptions)) {
             $params = array_merge($params, $this->searchOptions);
         }
 
-        if (!empty($builder->orders)) {
-            if (!empty($params['sort_by'])) {
+        if (! empty($builder->orders)) {
+            if (! empty($params['sort_by'])) {
                 $params['sort_by'] .= ',';
             } else {
                 $params['sort_by'] = '';
             }
+
             $params['sort_by'] .= $this->parseOrderBy($builder->orders);
         }
 
@@ -347,11 +335,10 @@ class TypesenseEngine extends Engine
 
     /**
      * @param $model
+     * @return TypesenseCollection
      *
      * @throws \Typesense\Exceptions\TypesenseClientError
      * @throws \Http\Client\Exception
-     *
-     * @return TypesenseCollection
      */
     public function getOrCreateCollectionFromModel($model): TypesenseCollection
     {
@@ -371,7 +358,6 @@ class TypesenseEngine extends Engine
 
     /**
      * @param $model
-     *
      * @return bool
      */
     protected function usesSoftDelete($model): bool
@@ -383,7 +369,6 @@ class TypesenseEngine extends Engine
      * Prepare filters.
      *
      * @param Builder $builder
-     *
      * @return string
      */
     protected function filters(Builder $builder): string
@@ -413,7 +398,6 @@ class TypesenseEngine extends Engine
      * Parse sort_by fields.
      *
      * @param array $orders
-     *
      * @return string
      */
     private function parseOrderBy(array $orders): string
@@ -429,12 +413,11 @@ class TypesenseEngine extends Engine
     /**
      * @param TypesenseCollection $collectionIndex
      * @param                       $modelId
+     * @return array
      *
      * @throws \Typesense\Exceptions\ObjectNotFound
      * @throws \Typesense\Exceptions\TypesenseClientError
      * @throws \Http\Client\Exception
-     *
-     * @return array
      */
     private function deleteDocument(TypesenseCollection $collectionIndex, $modelId): array
     {
@@ -456,12 +439,11 @@ class TypesenseEngine extends Engine
      * @param TypesenseCollection   $collectionIndex
      * @param                       $documents
      * @param string                $action
+     * @return \Illuminate\Support\Collection
      *
      * @throws \JsonException
      * @throws \Typesense\Exceptions\TypesenseClientError
      * @throws \Http\Client\Exception
-     *
-     * @return \Illuminate\Support\Collection
      */
     private function importDocuments(TypesenseCollection $collectionIndex, $documents, string $action = 'upsert'): \Illuminate\Support\Collection
     {
@@ -483,6 +465,7 @@ class TypesenseEngine extends Engine
     /**
      * @param $document
      * @return \stdClass
+     *
      * @throws \JsonException
      */
     private function sortingData($document)

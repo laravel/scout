@@ -143,7 +143,7 @@ class EngineManager extends Manager
     /**
      * Create a Typesense engine instance.
      *
-     * @return TypesenseEngine
+     * @return \Laravel\Scout\Engines\TypesenseEngine
      *
      * @throws \Typesense\Exceptions\ConfigError
      */
