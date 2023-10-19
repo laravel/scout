@@ -49,6 +49,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Update the given model in the index.
+     *
      * @param  \Illuminate\Database\Eloquent\Collection<int, Model>|Model[]  $models
      *
      * @throws \Http\Client\Exception
@@ -72,6 +74,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Remove the given model from the index.
+     *
      * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      *
@@ -87,6 +91,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Perform the given search on the engine.
+     *
      * @param  \Laravel\Scout\Builder  $builder
      * @return mixed
      *
@@ -99,6 +105,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Perform the given search on the engine with pagination
+     *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $perPage
      * @param  int  $page
@@ -113,6 +121,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Pluck and return the primary keys of the given results.
+     *
      * @param  mixed  $results
      * @return \Illuminate\Support\Collection
      */
@@ -124,6 +134,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Map the given results to instances of the given model.
+     *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -160,6 +172,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Map the given results to instances of the given model via a lazy collection.
+     *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -190,7 +204,10 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * @inheritDoc
+     * Get the total count from a raw result returned by the engine.
+     *
+     * @param  mixed  $results
+     * @return int
      */
     public function getTotalCount($results): int
     {
@@ -198,6 +215,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Flush all the model's records from the engine.
+     *
      * @param  \Illuminate\Database\Eloquent\Model  $model
      *
      * @throws \Http\Client\Exception
@@ -210,6 +229,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Create a search index.
+     *
      * @param  string  $name
      * @param  array  $options
      * @return void
@@ -222,6 +243,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Delete a search index.
+     *
      * @param  string  $name
      * @return array
      *
@@ -251,7 +274,7 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * Parse typesense  whereIn filter.
+     * Parse typesense whereIn filter.
      *
      * @param  array  $value
      * @param  string  $key
@@ -263,10 +286,12 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Set the search options provided by user
+     *
      * @param  array  $options
      * @return $this
      */
-    public function setSearchOptions(array $options)
+    public function setSearchOptions(array $options): static
     {
         $this->searchOptions = $options;
 
@@ -274,6 +299,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Perform the given search on the engine.
+     *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  array  $options
      * @return mixed
@@ -293,6 +320,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Prepare Search Params
+     *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $page
      * @param  int|null  $perPage
@@ -303,7 +332,7 @@ class TypesenseEngine extends Engine
         $params = [
             'q'                          => $builder->query,
             'query_by'                   => implode(',', $builder->model->typesenseQueryBy()),
-            'filter_by'                  => $this->filters($builder),
+            'filter_by'                   => $this->filters($builder),
             'per_page'                   => $perPage,
             'page'                       => $page,
             'highlight_start_tag'        => '<mark>',
@@ -335,6 +364,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Get collection from model or create new one
+     *
      * @param  $model
      * @return TypesenseCollection
      *
@@ -358,6 +389,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Determine if model uses soft deletes
+     *
      * @param  $model
      * @return bool
      */
@@ -412,6 +445,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Delete document from index
+     *
      * @param  TypesenseCollection  $collectionIndex
      * @param  $modelId
      * @return array
@@ -437,6 +472,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Import document to index
+     *
      * @param  TypesenseCollection  $collectionIndex
      * @param  $documents
      * @param  string  $action
@@ -464,6 +501,8 @@ class TypesenseEngine extends Engine
     }
 
     /**
+     * Create sorting data
+     *
      * @param  $document
      * @return \stdClass
      *
