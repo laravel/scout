@@ -105,7 +105,7 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * Perform the given search on the engine with pagination
+     * Perform the given search on the engine with pagination.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $perPage
@@ -286,7 +286,7 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * Set the search options provided by user
+     * Set the search options provided by user.
      *
      * @param  array  $options
      * @return $this
@@ -320,7 +320,7 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * Prepare Search Params
+     * Prepare Search Params.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $page
@@ -364,7 +364,7 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * Get collection from model or create new one
+     * Get collection from model or create new one.
      *
      * @param  $model
      * @return TypesenseCollection
@@ -389,7 +389,7 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * Determine if model uses soft deletes
+     * Determine if model uses soft deletes.
      *
      * @param  $model
      * @return bool
@@ -445,7 +445,7 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * Delete document from index
+     * Delete document from index.
      *
      * @param  TypesenseCollection  $collectionIndex
      * @param  $modelId
@@ -472,7 +472,7 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * Import document to index
+     * Import document to index.
      *
      * @param  TypesenseCollection  $collectionIndex
      * @param  $documents
@@ -501,7 +501,7 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * Create sorting data
+     * Create sorting data.
      *
      * @param  $document
      * @return \stdClass
