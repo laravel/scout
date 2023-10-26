@@ -29,7 +29,7 @@ class TypesenseEngine extends Engine
      *
      * @var array
      */
-    protected $searchOptions = [];
+    protected array $searchOptions = [];
 
     /**
      * Create new Typesense engine instance.
