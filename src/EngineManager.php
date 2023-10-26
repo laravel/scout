@@ -163,11 +163,9 @@ class EngineManager extends Manager
      */
     protected function ensureTypesenseClientIsInstalled()
     {
-        if (class_exists(Typesense::class)) {
-            return;
+        if (! class_exists(Typesense::class)) {
+            throw new Exception('Please install the suggested Typesense client: typesense/typesense-php.');
         }
-
-        throw new Exception('Please install the suggested Typesense client: typesense/typesense-php.');
     }
 
     /**

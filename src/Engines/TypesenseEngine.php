@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
+use stdClass;
 use Typesense\Client as Typesense;
 use Typesense\Collection as TypesenseCollection;
 use Typesense\Document;
@@ -17,35 +18,27 @@ use Typesense\Exceptions\TypesenseClientError;
 class TypesenseEngine extends Engine
 {
     /**
-     * @var Typesense\Client
+     * The Typesense client instance.
+     *
+     * @var \Typesense\Client
      */
-    private Typesense $typesense;
+    protected Typesense $typesense;
 
     /**
+     * The specified search options.
+     *
      * @var array
      */
-    private $searchOptions = [];
+    protected $searchOptions = [];
 
     /**
-     * TypesenseEngine constructor.
+     * Create new Typesense engine instance.
      *
-     * @param  Typesense  $typesense
+     * @param  \Typesense  $typesense
      */
     public function __construct(Typesense $typesense)
     {
         $this->typesense = $typesense;
-    }
-
-    /**
-     * Dynamically call the Typesense client instance.
-     *
-     * @param  string  $method
-     * @param  array  $parameters
-     * @return mixed
-     */
-    public function __call($method, $parameters)
-    {
-        return $this->typesense->$method(...$parameters);
     }
 
     /**
@@ -59,7 +52,7 @@ class TypesenseEngine extends Engine
      *
      * @noinspection NotOptimalIfConditionsInspection
      */
-    public function update($models): void
+    public function update($models)
     {
         $collection = $this->getOrCreateCollectionFromModel($models->first());
 
@@ -67,10 +60,65 @@ class TypesenseEngine extends Engine
             $models->each->pushSoftDeleteMetadata();
         }
 
-        if (! $this->usesSoftDelete($models->first()) || is_null($models->first()?->deleted_at) || config('scout.soft_delete', false)) {
-            $this->importDocuments($collection, $models->map(fn ($m) => $m->toSearchableArray())
-                ->toArray());
+        if (! $this->usesSoftDelete($models->first()) ||
+            is_null($models->first()?->deleted_at) ||
+            config('scout.soft_delete', false)) {
+            $this->importDocuments(
+                $collection,
+                $models->map(fn ($m) => $m->toSearchableArray())->all()
+            );
         }
+    }
+
+    /**
+     * Import document to index.
+     *
+     * @param  \TypesenseCollection  $collectionIndex
+     * @param  array  $documents
+     * @param  string  $action
+     * @return \Illuminate\Support\Collection
+     *
+     * @throws \JsonException
+     * @throws \Typesense\Exceptions\TypesenseClientError
+     * @throws \Http\Client\Exception
+     */
+    protected function importDocuments(TypesenseCollection $collectionIndex, array $documents, string $action = 'upsert'): Collection
+    {
+        $importedDocuments = $collectionIndex->getDocuments()->import($documents, ['action' => $action]);
+
+        $results = [];
+
+        foreach ($importedDocuments as $importedDocument) {
+            if (! $importedDocument['success']) {
+                throw new TypesenseClientError("Error importing document: {$importedDocument['error']}");
+            }
+
+            $results[] = $this->createImportSortingDataObject(
+                $importedDocument
+            );
+        }
+
+        return collect($results);
+    }
+
+    /**
+     * Create an import sorting data object for a given document.
+     *
+     * @param  array  $document
+     * @return \stdClass
+     *
+     * @throws \JsonException
+     */
+    protected function createImportSortingDataObject($document)
+    {
+        $data = new stdClass;
+
+        $data->code = $document['code'] ?? 0;
+        $data->success = $document['success'];
+        $data->error = $document['error'] ?? null;
+        $data->document = json_decode($document['document'] ?? '[]', true, 512, JSON_THROW_ON_ERROR);
+
+        return $data;
     }
 
     /**
@@ -82,12 +130,36 @@ class TypesenseEngine extends Engine
      * @throws \Http\Client\Exception
      * @throws \Typesense\Exceptions\TypesenseClientError
      */
-    public function delete($models): void
+    public function delete($models)
     {
         $models->each(function (Model $model) {
             $collectionIndex = $this->getOrCreateCollectionFromModel($model);
             $this->deleteDocument($collectionIndex, $model->getScoutKey());
         });
+    }
+
+    /**
+     * Delete a document from the index.
+     *
+     * @param  \TypesenseCollection  $collectionIndex
+     * @param  mixed  $modelId
+     * @return array
+     *
+     * @throws \Typesense\Exceptions\ObjectNotFound
+     * @throws \Typesense\Exceptions\TypesenseClientError
+     * @throws \Http\Client\Exception
+     */
+    protected function deleteDocument(TypesenseCollection $collectionIndex, $modelId): array
+    {
+        $document = $collectionIndex->getDocuments()[(string) $modelId];
+
+        try {
+            $document->retrieve();
+
+            return $document->delete();
+        } catch (Exception $exception) {
+            return [];
+        }
     }
 
     /**
@@ -99,9 +171,12 @@ class TypesenseEngine extends Engine
      * @throws \Http\Client\Exception
      * @throws \Typesense\Exceptions\TypesenseClientError
      */
-    public function search(Builder $builder): mixed
+    public function search(Builder $builder)
     {
-        return $this->performSearch($builder, array_filter($this->buildSearchParams($builder, 1, $builder->limit)));
+        return $this->performSearch(
+            $builder,
+            array_filter($this->buildSearchParameters($builder, 1, $builder->limit))
+        );
     }
 
     /**
@@ -115,9 +190,145 @@ class TypesenseEngine extends Engine
      * @throws \Http\Client\Exception
      * @throws \Typesense\Exceptions\TypesenseClientError
      */
-    public function paginate(Builder $builder, $perPage, $page): mixed
+    public function paginate(Builder $builder, $perPage, $page)
     {
-        return $this->performSearch($builder, array_filter($this->buildSearchParams($builder, $page, $perPage)));
+        return $this->performSearch(
+            $builder,
+            array_filter($this->buildSearchParameters($builder, $page, $perPage))
+        );
+    }
+
+    /**
+     * Perform the given search on the engine.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  array  $options
+     * @return mixed
+     *
+     * @throws \Http\Client\Exception
+     * @throws \Typesense\Exceptions\TypesenseClientError
+     */
+    protected function performSearch(Builder $builder, array $options = []): mixed
+    {
+        $documents = $this->getOrCreateCollectionFromModel($builder->model)->getDocuments();
+
+        if ($builder->callback) {
+            return call_user_func($builder->callback, $documents, $builder->query, $options);
+        }
+
+        return $documents->search($options);
+    }
+
+    /**
+     * Build the search parameters for a given Scout query builder.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  int  $page
+     * @param  int|null  $perPage
+     * @return array
+     */
+    public function buildSearchParameters(Builder $builder, int $page, int|null $perPage): array
+    {
+        $params = [
+            'q' => $builder->query,
+            'query_by'  => implode(',', $builder->model->typesenseQueryBy()),
+            'filter_by' => $this->filters($builder),
+            'per_page' => $perPage,
+            'page' => $page,
+            'highlight_start_tag' => '<mark>',
+            'highlight_end_tag' => '</mark>',
+            'snippet_threshold' => 30,
+            'exhaustive_search' => false,
+            'use_cache' => false,
+            'cache_ttl' => 60,
+            'prioritize_exact_match' => true,
+            'enable_overrides' => true,
+            'highlight_affix_num_tokens' => 4,
+        ];
+
+        if (! empty($this->searchOptions)) {
+            $params = array_merge($params, $this->searchOptions);
+        }
+
+        if (! empty($builder->orders)) {
+            if (! empty($params['sort_by'])) {
+                $params['sort_by'] .= ',';
+            } else {
+                $params['sort_by'] = '';
+            }
+
+            $params['sort_by'] .= $this->parseOrderBy($builder->orders);
+        }
+
+        return $params;
+    }
+
+    /**
+     * Prepare the filters for a given search query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return string
+     */
+    protected function filters(Builder $builder): string
+    {
+        $whereFilter = collect($builder->wheres)
+            ->map(fn ($where) => $this->parseWhereFilter($where))
+            ->values()
+            ->implode(' && ');
+
+        $whereInFilter = collect($builder->whereIns)
+            ->map(fn ($whereIn) => $this->parseWhereInFilter($whereIn))
+            ->values()
+            ->implode(' && ');
+
+        return $whereFilter.(
+            ($whereFilter !== '' && $whereInFilter !== '') ? ' && ' : ''
+        ).$whereInFilter;
+    }
+
+    /**
+     * Create a "where" filter string.
+     *
+     * @param  array|string  $value
+     * @param  string  $key
+     * @return string
+     */
+    protected function parseWhereFilter(array|string $value, string $key): string
+    {
+        if (is_array($value)) {
+            return sprintf('%s:%s', $key, implode('', $value));
+        }
+
+        return sprintf('%s:=%s', $key, $value);
+    }
+
+    /**
+     * Create a "where in" filter string.
+     *
+     * @param  array  $value
+     * @param  string  $key
+     * @return string
+     */
+    protected function parseWhereInFilter(array $value, string $key): string
+    {
+        return sprintf('%s:=%s', $key, '['.implode(', ', $value).']');
+    }
+
+    /**
+     * Parse the order by fields for the query.
+     *
+     * @param  array  $orders
+     * @return string
+     */
+    protected function parseOrderBy(array $orders): string
+    {
+        $orderBy = [];
+
+        foreach ($orders as $order) {
+            $orderBy[] = $order['column'].':'.$order['direction'];
+        }
+
+        return implode(',', $orderBy);
     }
 
     /**
@@ -126,7 +337,7 @@ class TypesenseEngine extends Engine
      * @param  mixed  $results
      * @return \Illuminate\Support\Collection
      */
-    public function mapIds($results): Collection
+    public function mapIds($results)
     {
         return collect($results['hits'])
             ->pluck('document.id')
@@ -141,18 +352,19 @@ class TypesenseEngine extends Engine
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function map(Builder $builder, $results, $model): \Illuminate\Database\Eloquent\Collection
+    public function map(Builder $builder, $results, $model)
     {
         if ($this->getTotalCount($results) === 0) {
             return $model->newCollection();
         }
 
-        $hits = isset($results['grouped_hits']) && ! empty($results['grouped_hits']) ?
-            $results['grouped_hits'] :
-            $results['hits'];
-        $pluck = isset($results['grouped_hits']) && ! empty($results['grouped_hits']) ?
-            'hits.0.document.id' :
-            'document.id';
+        $hits = isset($results['grouped_hits']) && ! empty($results['grouped_hits'])
+            ? $results['grouped_hits']
+            : $results['hits'];
+
+        $pluck = isset($results['grouped_hits']) && ! empty($results['grouped_hits'])
+            ? 'hits.0.document.id'
+            : 'document.id';
 
         $objectIds = collect($hits)
             ->pluck($pluck)
@@ -179,7 +391,7 @@ class TypesenseEngine extends Engine
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return \Illuminate\Support\LazyCollection
      */
-    public function lazyMap(Builder $builder, $results, $model): LazyCollection
+    public function lazyMap(Builder $builder, $results, $model)
     {
         if ((int) ($results['found'] ?? 0) === 0) {
             return LazyCollection::make($model->newCollection());
@@ -209,7 +421,7 @@ class TypesenseEngine extends Engine
      * @param  mixed  $results
      * @return int
      */
-    public function getTotalCount($results): int
+    public function getTotalCount($results)
     {
         return (int) ($results['found'] ?? 0);
     }
@@ -222,10 +434,9 @@ class TypesenseEngine extends Engine
      * @throws \Http\Client\Exception
      * @throws \Typesense\Exceptions\TypesenseClientError
      */
-    public function flush($model): void
+    public function flush($model)
     {
-        $collection = $this->getOrCreateCollectionFromModel($model);
-        $collection->delete();
+        $this->getOrCreateCollectionFromModel($model)->delete();
     }
 
     /**
@@ -237,7 +448,7 @@ class TypesenseEngine extends Engine
      *
      * @throws \Exception
      */
-    public function createIndex($name, array $options = []): void
+    public function createIndex($name, array $options = [])
     {
         throw new Exception('Typesense indexes are created automatically upon adding objects.');
     }
@@ -252,37 +463,9 @@ class TypesenseEngine extends Engine
      * @throws \Http\Client\Exception
      * @throws \Typesense\Exceptions\ObjectNotFound
      */
-    public function deleteIndex($name): array
+    public function deleteIndex($name)
     {
         return $this->typesense->getCollections()->{$name}->delete();
-    }
-
-    /**
-     * Parse typesense where filter.
-     *
-     * @param  array|string  $value
-     * @param  string  $key
-     * @return string
-     */
-    public function parseWhereFilter(array|string $value, string $key): string
-    {
-        if (is_array($value)) {
-            return sprintf('%s:%s', $key, implode('', $value));
-        }
-
-        return sprintf('%s:=%s', $key, $value);
-    }
-
-    /**
-     * Parse typesense whereIn filter.
-     *
-     * @param  array  $value
-     * @param  string  $key
-     * @return string
-     */
-    public function parseWhereInFilter(array $value, string $key): string
-    {
-        return sprintf('%s:=%s', $key, '['.implode(', ', $value).']');
     }
 
     /**
@@ -299,80 +482,15 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * Perform the given search on the engine.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @param  array  $options
-     * @return mixed
-     *
-     * @throws \Http\Client\Exception
-     * @throws \Typesense\Exceptions\TypesenseClientError
-     */
-    public function performSearch(Builder $builder, array $options = []): mixed
-    {
-        $documents = $this->getOrCreateCollectionFromModel($builder->model)
-            ->getDocuments();
-        if ($builder->callback) {
-            return call_user_func($builder->callback, $documents, $builder->query, $options);
-        }
-
-        return $documents->search($options);
-    }
-
-    /**
-     * Prepare Search Params.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @param  int  $page
-     * @param  int|null  $perPage
-     * @return array
-     */
-    public function buildSearchParams(Builder $builder, int $page, int|null $perPage): array
-    {
-        $params = [
-            'q'                          => $builder->query,
-            'query_by'                   => implode(',', $builder->model->typesenseQueryBy()),
-            'filter_by'                   => $this->filters($builder),
-            'per_page'                   => $perPage,
-            'page'                       => $page,
-            'highlight_start_tag'        => '<mark>',
-            'highlight_end_tag'          => '</mark>',
-            'snippet_threshold'          => 30,
-            'exhaustive_search'          => false,
-            'use_cache'                  => false,
-            'cache_ttl'                  => 60,
-            'prioritize_exact_match'     => true,
-            'enable_overrides'           => true,
-            'highlight_affix_num_tokens' => 4,
-        ];
-
-        if (! empty($this->searchOptions)) {
-            $params = array_merge($params, $this->searchOptions);
-        }
-
-        if (! empty($builder->orders)) {
-            if (! empty($params['sort_by'])) {
-                $params['sort_by'] .= ',';
-            } else {
-                $params['sort_by'] = '';
-            }
-
-            $params['sort_by'] .= $this->parseOrderBy($builder->orders);
-        }
-
-        return $params;
-    }
-
-    /**
      * Get collection from model or create new one.
      *
-     * @param  $model
-     * @return TypesenseCollection
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return \TypesenseCollection
      *
      * @throws \Typesense\Exceptions\TypesenseClientError
      * @throws \Http\Client\Exception
      */
-    public function getOrCreateCollectionFromModel($model): TypesenseCollection
+    protected function getOrCreateCollectionFromModel($model): TypesenseCollection
     {
         $index = $this->typesense->getCollections()->{$model->searchableAs()};
 
@@ -381,8 +499,7 @@ class TypesenseEngine extends Engine
 
             return $index;
         } catch (ObjectNotFound $exception) {
-            $this->typesense->getCollections()
-                         ->create($model->getCollectionSchema());
+            $this->typesense->getCollections()->create($model->getCollectionSchema());
 
             return $this->typesense->getCollections()->{$model->searchableAs()};
         }
@@ -391,7 +508,7 @@ class TypesenseEngine extends Engine
     /**
      * Determine if model uses soft deletes.
      *
-     * @param  $model
+     * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return bool
      */
     protected function usesSoftDelete($model): bool
@@ -400,122 +517,14 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * Prepare filters.
+     * Dynamically proxy missing methods to the Typesense client instance.
      *
-     * @param  Builder  $builder
-     * @return string
+     * @param  string  $method
+     * @param  array  $parameters
+     * @return mixed
      */
-    protected function filters(Builder $builder): string
+    public function __call($method, $parameters)
     {
-        $whereFilter = collect($builder->wheres)
-            ->map([
-                $this,
-                'parseWhereFilter',
-            ])
-            ->values()
-            ->implode(' && ');
-
-        $whereInFilter = collect($builder->whereIns)
-            ->map([
-                $this,
-                'parseWhereInFilter',
-            ])
-            ->values()
-            ->implode(' && ');
-
-        return $whereFilter.(
-            ($whereFilter !== '' && $whereInFilter !== '') ? ' && ' : ''
-        ).$whereInFilter;
-    }
-
-    /**
-     * Parse sort_by fields.
-     *
-     * @param  array  $orders
-     * @return string
-     */
-    private function parseOrderBy(array $orders): string
-    {
-        $sortByArr = [];
-        foreach ($orders as $order) {
-            $sortByArr[] = $order['column'].':'.$order['direction'];
-        }
-
-        return implode(',', $sortByArr);
-    }
-
-    /**
-     * Delete document from index.
-     *
-     * @param  TypesenseCollection  $collectionIndex
-     * @param  $modelId
-     * @return array
-     *
-     * @throws \Typesense\Exceptions\ObjectNotFound
-     * @throws \Typesense\Exceptions\TypesenseClientError
-     * @throws \Http\Client\Exception
-     */
-    private function deleteDocument(TypesenseCollection $collectionIndex, $modelId): array
-    {
-        /**
-         * @var $document Document
-         */
-        $document = $collectionIndex->getDocuments()[(string) $modelId];
-
-        try {
-            $document->retrieve();
-
-            return $document->delete();
-        } catch (\Exception $exception) {
-            return [];
-        }
-    }
-
-    /**
-     * Import document to index.
-     *
-     * @param  TypesenseCollection  $collectionIndex
-     * @param  $documents
-     * @param  string  $action
-     * @return \Illuminate\Support\Collection
-     *
-     * @throws \JsonException
-     * @throws \Typesense\Exceptions\TypesenseClientError
-     * @throws \Http\Client\Exception
-     */
-    private function importDocuments(TypesenseCollection $collectionIndex, $documents, string $action = 'upsert'): \Illuminate\Support\Collection
-    {
-        $importedDocuments = $collectionIndex->getDocuments()
-                                             ->import($documents, ['action' => $action]);
-
-        $result = [];
-        foreach ($importedDocuments as $importedDocument) {
-            if (! $importedDocument['success']) {
-                throw new TypesenseClientError("Error importing document: {$importedDocument['error']}");
-            }
-
-            $result[] = $this->sortingData($importedDocument);
-        }
-
-        return collect($result);
-    }
-
-    /**
-     * Create sorting data.
-     *
-     * @param  $document
-     * @return \stdClass
-     *
-     * @throws \JsonException
-     */
-    private function sortingData($document)
-    {
-        $data = new \stdClass();
-        $data->code = $document['code'] ?? 0;
-        $data->success = $document['success'];
-        $data->error = $document['error'] ?? null;
-        $data->document = json_decode($document['document'] ?? '[]', true, 512, JSON_THROW_ON_ERROR);
-
-        return $data;
+        return $this->typesense->$method(...$parameters);
     }
 }

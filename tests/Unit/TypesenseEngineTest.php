@@ -24,7 +24,7 @@ class TypesenseEngineTest extends TestCase
         $typesenseClient = $this->createMock(TypesenseClient::class);
         $this->engine = $this->getMockBuilder(TypesenseEngine::class)
             ->setConstructorArgs([$typesenseClient])
-            ->onlyMethods(['getOrCreateCollectionFromModel', 'buildSearchParams'])
+            ->onlyMethods(['getOrCreateCollectionFromModel', 'buildSearchParameters'])
             ->getMock();
     }
 
@@ -93,9 +93,9 @@ class TypesenseEngineTest extends TestCase
         // Mock the Builder
         $builder = $this->createMock(Builder::class);
 
-        // Mock the buildSearchParams method
+        // Mock the buildSearchParameters method
         $this->engine->expects($this->once())
-            ->method('buildSearchParams')
+            ->method('buildSearchParameters')
             ->with($builder, 1)
             ->willReturn([
                 'q'                          => $builder->query,
@@ -123,9 +123,9 @@ class TypesenseEngineTest extends TestCase
         // Mock the Builder
         $builder = $this->createMock(Builder::class);
 
-        // Mock the buildSearchParams method
+        // Mock the buildSearchParameters method
         $this->engine->expects($this->once())
-            ->method('buildSearchParams')
+            ->method('buildSearchParameters')
             ->with($builder, 2, 10)
             ->willReturn([
                 'q'                          => $builder->query,
