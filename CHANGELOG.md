@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.5.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.5.1...10.x)
+
+## [v10.5.1](https://github.com/laravel/scout/compare/v10.5.0...v10.5.1) - 2023-10-31
+
+- Call makeSearchableUsing before searching on CollectionEngine by [@Magnesium38](https://github.com/Magnesium38) in https://github.com/laravel/scout/pull/777
 
 ## [v10.5.0](https://github.com/laravel/scout/compare/v10.4.0...v10.5.0) - 2023-10-10
 
