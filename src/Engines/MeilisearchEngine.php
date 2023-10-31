@@ -186,6 +186,12 @@ class MeilisearchEngine extends Engine
                 : sprintf('%s="%s"', $key, $value);
         });
 
+        if (property_exists($builder, 'whereBetween')) {
+            foreach ($builder->whereBetween as $key => $values) {
+                $filters->push(sprintf('%s %s TO %s', $key, $values[0], $values[1]));
+            }
+        }
+
         $whereInOperators = [
             'whereIns'    => 'IN',
             'whereNotIns' => 'NOT IN',

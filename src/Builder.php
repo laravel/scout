@@ -70,6 +70,13 @@ class Builder
     public $whereNotIns = [];
 
     /**
+     * The "between" constraints added to the query.
+     *
+     * @var array
+     */
+    public $whereBetween = [];
+
+    /**
      * The "limit" that should be applied to the search.
      *
      * @var int
@@ -161,6 +168,20 @@ class Builder
     public function whereNotIn($field, array $values)
     {
         $this->whereNotIns[$field] = $values;
+
+        return $this;
+    }
+
+    /**
+     * Add a "between" constraint to the search query.
+     *
+     * @param  string  $field
+     * @param  array  $values
+     * @return $this
+     */
+    public function whereBetween($field, array $values)
+    {
+        $this->whereBetween[$field] = $values;
 
         return $this;
     }
