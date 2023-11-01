@@ -56,6 +56,13 @@ class Builder
     public $wheres = [];
 
     /**
+     * The "where comparison" constraints added to the query.
+     *
+     * @var array
+     */
+    public $whereComparisons = [];
+
+    /**
      * The "where in" constraints added to the query.
      *
      * @var array
