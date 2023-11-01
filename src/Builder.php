@@ -141,12 +141,19 @@ class Builder
      * Add a constraint to the search query.
      *
      * @param  string  $field
+     * @param  string  $operator
      * @param  mixed  $value
      * @return $this
      */
-    public function where($field, $value)
+    public function where($field, $operator = null, $value = null)
     {
-        $this->wheres[$field] = $value;
+        if (func_num_args() === 2) {
+            $this->wheres[$field] = $operator;
+        } elseif (trim($operator) === '=') {
+            $this->wheres[$field] = $value;
+        } else {
+            $this->whereComparisons[$field] = ['operator' => $operator, 'value' => $value];
+        }
 
         return $this;
     }
