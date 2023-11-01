@@ -171,29 +171,32 @@ class MeilisearchEngine extends Engine
     /**
      * Get the filter array for the query.
      *
-     * @param  \Laravel\Scout\Builder  $builder
      * @return string
      */
     protected function filters(Builder $builder)
     {
-        $filters = collect($builder->wheres)->map(function ($value, $key) {
-            if (is_bool($value)) {
-                return sprintf('%s=%s', $key, $value ? 'true' : 'false');
+        $wheres = array_map(function ($value) {
+            return ['operator' => '=', 'value' => $value];
+        }, $builder->wheres);
+
+        $filters = collect(array_merge($wheres, $builder->whereComparisons))->map(function ($value, $key) {
+            if (is_bool($value['value'])) {
+                return sprintf('%s'.$value['operator'].'%s', $key, $value['value'] ? 'true' : 'false');
             }
 
-            return is_numeric($value)
-                ? sprintf('%s=%s', $key, $value)
-                : sprintf('%s="%s"', $key, $value);
+            return is_numeric($value['value'])
+                ? sprintf('%s'.$value['operator'].'%s', $key, $value['value'])
+                : sprintf('%s'.$value['operator'].'"%s"', $key, $value['value']);
         });
 
         if (property_exists($builder, 'whereBetween')) {
             foreach ($builder->whereBetween as $key => $values) {
-                $filters->push(sprintf('%s %s TO %s', $key, $values[0], $values[1]));
+                $filters->push(sprintf('%s "%s" TO "%s"', $key, $values[0], end($values)));
             }
         }
 
         $whereInOperators = [
-            'whereIns'    => 'IN',
+            'whereIns' => 'IN',
             'whereNotIns' => 'NOT IN',
         ];
 
