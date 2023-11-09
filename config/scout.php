@@ -172,5 +172,25 @@ return [
         'healthcheck_interval_seconds' => env('TYPESENSE_HEALTHCHECK_INTERVAL_SECONDS', 30),
         'num_retries' => env('TYPESENSE_NUM_RETRIES', 3),
         'retry_interval_seconds' => env('TYPESENSE_RETRY_INTERVAL_SECONDS', 1),
+        'table_configurations' => [
+//            'users' => [ // name of the table
+//                'name' => 'users', // name of the table
+//                'fields' => [
+//                    [
+//                        'name' => 'id',
+//                        'type' => 'string',
+//                    ],
+//                    [
+//                        'name' => 'name',
+//                        'type' => 'string',
+//                    ],
+//                    [
+//                        'name' => 'created_at',
+//                        'type' => 'int64',
+//                    ],
+//                ],
+//                'default_sorting_field' => 'created_at',
+//            ],
+        ]
     ],
 ];

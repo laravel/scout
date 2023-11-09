@@ -231,7 +231,7 @@ class TypesenseEngine extends Engine
     {
         $params = [
             'q' => $builder->query,
-            'query_by'  => implode(',', $builder->model->typesenseQueryBy()),
+            'query_by'  => '',
             'filter_by' => $this->filters($builder),
             'per_page' => $perPage,
             'page' => $page,
@@ -248,6 +248,10 @@ class TypesenseEngine extends Engine
 
         if (! empty($this->searchOptions)) {
             $params = array_merge($params, $this->searchOptions);
+
+            if ($this->searchOptions['query_by']) {
+                $params['query_by'] = implode(',', $this->searchOptions['query_by']);
+            }
         }
 
         if (! empty($builder->orders)) {
@@ -499,7 +503,10 @@ class TypesenseEngine extends Engine
 
             return $index;
         } catch (ObjectNotFound $exception) {
-            $this->typesense->getCollections()->create($model->getCollectionSchema());
+
+            $schema = config('scout.typesense.table_configurations.' . $model->getTable()) ?? [];
+
+            $this->typesense->getCollections()->create($schema);
 
             return $this->typesense->getCollections()->{$model->searchableAs()};
         }
