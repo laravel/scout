@@ -509,7 +509,7 @@ class TypesenseEngine extends Engine
 
             return $index;
         } catch (ObjectNotFound $exception) {
-            $schema = config('scout.typesense.table_configurations.'.$model->getTable()) ?? [];
+            $schema = config('scout.typesense.model_configuration.'.$model->getTable()) ?? [];
 
             $this->typesense->getCollections()->create($schema);
 
