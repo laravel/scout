@@ -174,9 +174,9 @@ return [
             'num_retries' => env('TYPESENSE_NUM_RETRIES', 3),
             'retry_interval_seconds' => env('TYPESENSE_RETRY_INTERVAL_SECONDS', 1),
         ],
-        'collection-settings' => [
+        'model-settings' => [
             //                        User::class => [
-            //                            'schema' => [
+            //                            'collection-schema' => [
             //                                'fields' => [
             //                                    [
             //                                        'name' => 'id',
@@ -193,7 +193,7 @@ return [
             //                                ],
             //                                'default_sorting_field' => 'created_at',
             //                            ],
-            //                            'search-options' => [
+            //                            'search-parameters' => [
             //                                'query_by' => [
             //                                    'name',
             //                                ],

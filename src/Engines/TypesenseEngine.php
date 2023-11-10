@@ -29,7 +29,7 @@ class TypesenseEngine extends Engine
      *
      * @var array
      */
-    protected array $searchOptions = [];
+    protected array $searchParameters = [];
 
     /**
      * Create new Typesense engine instance.
@@ -231,7 +231,7 @@ class TypesenseEngine extends Engine
     {
         $params = [
             'q' => $builder->query,
-            'query_by'  => implode(',', config('scout.typesense.collection-settings.'.get_class($builder->model).'.search-options.query_by')) ?? '',
+            'query_by'  => implode(',', config('scout.typesense.model-settings.'.get_class($builder->model).'.search-parameters.query_by')) ?? '',
             'filter_by' => $this->filters($builder),
             'per_page' => $perPage,
             'page' => $page,
@@ -246,11 +246,11 @@ class TypesenseEngine extends Engine
             'highlight_affix_num_tokens' => 4,
         ];
 
-        if (! empty($this->searchOptions)) {
-            $params = array_merge($params, $this->searchOptions);
+        if (! empty($this->searchParameters)) {
+            $params = array_merge($params, $this->searchParameters);
 
-            if ($this->searchOptions['query_by']) {
-                $params['query_by'] = implode(',', $this->searchOptions['query_by']);
+            if ($this->searchParameters['query_by']) {
+                $params['query_by'] = implode(',', $this->searchParameters['query_by']);
             }
         }
 
@@ -484,9 +484,9 @@ class TypesenseEngine extends Engine
      * @param  array  $options
      * @return $this
      */
-    public function setSearchOptions(array $options): static
+    public function setSearchParameters(array $options): static
     {
-        $this->searchOptions = $options;
+        $this->searchParameters = $options;
 
         return $this;
     }
@@ -509,7 +509,7 @@ class TypesenseEngine extends Engine
 
             return $index;
         } catch (ObjectNotFound $exception) {
-            $schema = config('scout.typesense.collection-settings.'.get_class($model).'.schema') ?? [];
+            $schema = config('scout.typesense.model-settings.'.get_class($model).'.collection-schema') ?? [];
 
             if (! isset($schema['name'])) {
                 $schema['name'] = $model->searchableAs();
