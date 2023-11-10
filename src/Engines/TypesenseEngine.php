@@ -511,7 +511,7 @@ class TypesenseEngine extends Engine
         } catch (ObjectNotFound $exception) {
             $schema = config('scout.typesense.collection-settings.'.get_class($model).'.schema') ?? [];
 
-            if (!isset($schema['name'])) {
+            if (! isset($schema['name'])) {
                 $schema['name'] = $model->searchableAs();
             }
 

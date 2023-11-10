@@ -175,30 +175,30 @@ return [
             'retry_interval_seconds' => env('TYPESENSE_RETRY_INTERVAL_SECONDS', 1),
         ],
         'collection-settings' => [
-//                        User::class => [
-//                            'schema' => [
-//                                'fields' => [
-//                                    [
-//                                        'name' => 'id',
-//                                        'type' => 'string',
-//                                    ],
-//                                    [
-//                                        'name' => 'name',
-//                                        'type' => 'string',
-//                                    ],
-//                                    [
-//                                        'name' => 'created_at',
-//                                        'type' => 'int64',
-//                                    ],
-//                                ],
-//                                'default_sorting_field' => 'created_at',
-//                            ],
-//                            'search-options' => [
-//                                'query_by' => [
-//                                    'name',
-//                                ],
-//                            ],
-//                        ],
+                        //                        User::class => [
+                        //                            'schema' => [
+                        //                                'fields' => [
+                        //                                    [
+                        //                                        'name' => 'id',
+                        //                                        'type' => 'string',
+                        //                                    ],
+                        //                                    [
+                        //                                        'name' => 'name',
+                        //                                        'type' => 'string',
+                        //                                    ],
+                        //                                    [
+                        //                                        'name' => 'created_at',
+                        //                                        'type' => 'int64',
+                        //                                    ],
+                        //                                ],
+                        //                                'default_sorting_field' => 'created_at',
+                        //                            ],
+                        //                            'search-options' => [
+                        //                                'query_by' => [
+                        //                                    'name',
+                        //                                ],
+                        //                            ],
+                        //                        ],
         ],
     ],
 ];
