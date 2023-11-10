@@ -231,7 +231,7 @@ class TypesenseEngine extends Engine
     {
         $params = [
             'q' => $builder->query,
-            'query_by'  => implode(',', config('scout.typesense.model-settings.'.get_class($builder->model).'.search-parameters.query_by')) ?? '',
+            'query_by' => config('scout.typesense.model-settings.'.get_class($builder->model).'.search-parameters.query_by') ?? '',
             'filter_by' => $this->filters($builder),
             'per_page' => $perPage,
             'page' => $page,
@@ -248,10 +248,6 @@ class TypesenseEngine extends Engine
 
         if (! empty($this->searchParameters)) {
             $params = array_merge($params, $this->searchParameters);
-
-            if ($this->searchParameters['query_by']) {
-                $params['query_by'] = implode(',', $this->searchParameters['query_by']);
-            }
         }
 
         if (! empty($builder->orders)) {

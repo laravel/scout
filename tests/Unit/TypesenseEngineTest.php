@@ -28,7 +28,7 @@ class TypesenseEngineTest extends TestCase
             ->getMock();
     }
 
-    public function testUpdateMethod(): void
+    public function test_update_method(): void
     {
         // Mock models and their methods
         $models = [
@@ -62,7 +62,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->update(collect($models));
     }
 
-    public function testDeleteMethod(): void
+    public function test_delete_method(): void
     {
         // Mock models and their methods
         $models = [
@@ -88,7 +88,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->delete(collect($models));
     }
 
-    public function testSearchMethod(): void
+    public function test_search_method(): void
     {
         // Mock the Builder
         $builder = $this->createMock(Builder::class);
@@ -98,19 +98,19 @@ class TypesenseEngineTest extends TestCase
             ->method('buildSearchParameters')
             ->with($builder, 1)
             ->willReturn([
-                'q'                          => $builder->query,
-                'query_by'                   => implode(',', ['id']),
-                'filter_by'                  => '',
-                'per_page'                   => 10,
-                'page'                       => 1,
-                'highlight_start_tag'        => '<mark>',
-                'highlight_end_tag'          => '</mark>',
-                'snippet_threshold'          => 30,
-                'exhaustive_search'          => false,
-                'use_cache'                  => false,
-                'cache_ttl'                  => 60,
-                'prioritize_exact_match'     => true,
-                'enable_overrides'           => true,
+                'q' => $builder->query,
+                'query_by' => 'id',
+                'filter_by' => '',
+                'per_page' => 10,
+                'page' => 1,
+                'highlight_start_tag' => '<mark>',
+                'highlight_end_tag' => '</mark>',
+                'snippet_threshold' => 30,
+                'exhaustive_search' => false,
+                'use_cache' => false,
+                'cache_ttl' => 60,
+                'prioritize_exact_match' => true,
+                'enable_overrides' => true,
                 'highlight_affix_num_tokens' => 4,
             ]);
 
@@ -118,7 +118,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->search($builder);
     }
 
-    public function testPaginateMethod(): void
+    public function test_paginate_method(): void
     {
         // Mock the Builder
         $builder = $this->createMock(Builder::class);
@@ -128,19 +128,19 @@ class TypesenseEngineTest extends TestCase
             ->method('buildSearchParameters')
             ->with($builder, 2, 10)
             ->willReturn([
-                'q'                          => $builder->query,
-                'query_by'                   => implode(',', ['id']),
-                'filter_by'                  => '',
-                'per_page'                   => 10,
-                'page'                       => 2,
-                'highlight_start_tag'        => '<mark>',
-                'highlight_end_tag'          => '</mark>',
-                'snippet_threshold'          => 30,
-                'exhaustive_search'          => false,
-                'use_cache'                  => false,
-                'cache_ttl'                  => 60,
-                'prioritize_exact_match'     => true,
-                'enable_overrides'           => true,
+                'q' => $builder->query,
+                'query_by' => 'id',
+                'filter_by' => '',
+                'per_page' => 10,
+                'page' => 2,
+                'highlight_start_tag' => '<mark>',
+                'highlight_end_tag' => '</mark>',
+                'snippet_threshold' => 30,
+                'exhaustive_search' => false,
+                'use_cache' => false,
+                'cache_ttl' => 60,
+                'prioritize_exact_match' => true,
+                'enable_overrides' => true,
                 'highlight_affix_num_tokens' => 4,
             ]);
 
@@ -148,7 +148,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->paginate($builder, 10, 2);
     }
 
-    public function testMapIdsMethod(): void
+    public function test_map_ids_method(): void
     {
         // Sample search results
         $results = [
@@ -169,7 +169,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals([1, 2, 3], $mappedIds->toArray());
     }
 
-    public function testGetTotalCountMethod(): void
+    public function test_get_total_count_method(): void
     {
         // Sample search results with 'found' key
         $resultsWithFound = ['found' => 5];
@@ -188,7 +188,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals(0, $totalCountWithoutFound);
     }
 
-    public function testFlushMethod(): void
+    public function test_flush_method(): void
     {
         // Mock a model instance
         $model = $this->createMock(Model::class);
@@ -208,7 +208,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->flush($model);
     }
 
-    public function testCreateIndexMethodThrowsException(): void
+    public function test_create_index_method_throws_exception(): void
     {
         // Define the expected exception class and message
         $expectedException = \Exception::class;
@@ -220,5 +220,35 @@ class TypesenseEngineTest extends TestCase
 
         // Call the createIndex method which should throw an exception
         $this->engine->createIndex('test_index');
+    }
+
+    public function test_set_search_params_method(): void
+    {
+        // Mock the Builder
+        $builder = $this->createMock(Builder::class);
+
+        // Mock the buildSearchParameters method
+        $this->engine->expects($this->once())
+            ->method('buildSearchParameters')
+            ->with($builder, 1)
+            ->willReturn([
+                'q' => $builder->query,
+                'query_by' => 'id',
+                'filter_by' => '',
+                'per_page' => 10,
+                'page' => 1,
+                'highlight_start_tag' => '<mark>',
+                'highlight_end_tag' => '</mark>',
+                'snippet_threshold' => 30,
+                'exhaustive_search' => false,
+                'use_cache' => false,
+                'cache_ttl' => 60,
+                'prioritize_exact_match' => true,
+                'enable_overrides' => true,
+                'highlight_affix_num_tokens' => 4,
+            ]);
+
+        // Call the search method
+        $this->engine->setSearchParameters(['query_by' => 'id'])->search($builder);
     }
 }
