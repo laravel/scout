@@ -151,7 +151,7 @@ class EngineManager extends Manager
     {
         $this->ensureTypesenseClientIsInstalled();
 
-        return new TypesenseEngine(new Typesense(config('scout.typesense.client_configuration')));
+        return new TypesenseEngine(new Typesense(config('scout.typesense.client-settings')));
     }
 
     /**

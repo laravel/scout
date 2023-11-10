@@ -153,7 +153,7 @@ return [
     */
 
     'typesense' => [
-        'client_configuration' => [
+        'client-settings' => [
             'api_key' => env('TYPESENSE_API_KEY', 'xyz'),
             'nodes' => [
                 [
@@ -174,25 +174,31 @@ return [
             'num_retries' => env('TYPESENSE_NUM_RETRIES', 3),
             'retry_interval_seconds' => env('TYPESENSE_RETRY_INTERVAL_SECONDS', 1),
         ],
-        'model_configuration' => [
-            //            'users' => [ // name of the table
-            //                'name' => 'users', // name of the table
-            //                'fields' => [
-            //                    [
-            //                        'name' => 'id',
-            //                        'type' => 'string',
-            //                    ],
-            //                    [
-            //                        'name' => 'name',
-            //                        'type' => 'string',
-            //                    ],
-            //                    [
-            //                        'name' => 'created_at',
-            //                        'type' => 'int64',
-            //                    ],
-            //                ],
-            //                'default_sorting_field' => 'created_at',
-            //            ],
+        'collection-settings' => [
+//                        User::class => [
+//                            'schema' => [
+//                                'fields' => [
+//                                    [
+//                                        'name' => 'id',
+//                                        'type' => 'string',
+//                                    ],
+//                                    [
+//                                        'name' => 'name',
+//                                        'type' => 'string',
+//                                    ],
+//                                    [
+//                                        'name' => 'created_at',
+//                                        'type' => 'int64',
+//                                    ],
+//                                ],
+//                                'default_sorting_field' => 'created_at',
+//                            ],
+//                            'search-options' => [
+//                                'query_by' => [
+//                                    'name',
+//                                ],
+//                            ],
+//                        ],
         ],
     ],
 ];

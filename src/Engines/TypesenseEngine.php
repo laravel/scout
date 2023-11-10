@@ -231,7 +231,7 @@ class TypesenseEngine extends Engine
     {
         $params = [
             'q' => $builder->query,
-            'query_by'  => '',
+            'query_by'  => implode(',', config('scout.typesense.collection-settings.'.get_class($builder->model).'.search-options.query_by')) ?? '',
             'filter_by' => $this->filters($builder),
             'per_page' => $perPage,
             'page' => $page,
@@ -509,7 +509,11 @@ class TypesenseEngine extends Engine
 
             return $index;
         } catch (ObjectNotFound $exception) {
-            $schema = config('scout.typesense.model_configuration.'.$model->getTable()) ?? [];
+            $schema = config('scout.typesense.collection-settings.'.get_class($model).'.schema') ?? [];
+
+            if (!isset($schema['name'])) {
+                $schema['name'] = $model->searchableAs();
+            }
 
             $this->typesense->getCollections()->create($schema);
 
