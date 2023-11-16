@@ -286,17 +286,22 @@ class MeilisearchEngineTest extends TestCase
 
         $model = m::mock(stdClass::class);
         $model->shouldReceive(['getScoutKeyName' => 'id']);
-        $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([new SearchableModel(['id' => 1])]));
+        $model->shouldReceive('getScoutModelsByIds')->andReturn($models = Collection::make([
+            new SearchableModel(['id' => 1, 'name' => 'test']),
+        ]));
+
         $builder = m::mock(Builder::class);
 
         $results = $engine->map($builder, [
             'totalHits' => 1,
             'hits' => [
-                ['id' => 1],
-            ],
+                ['id' => 1, '_rankingScore' => 0.86],
+            ]
         ], $model);
 
-        $this->assertEquals(1, count($results));
+        $this->assertCount(1, $results);
+        $this->assertEquals(['id' => 1, 'name' => 'test'], $results->first()->toArray());
+        $this->assertEquals(['_rankingScore' => 0.86], $results->first()->scoutMetadata());
     }
 
     public function test_map_method_respects_order()
@@ -633,7 +638,7 @@ class MeilisearchCustomKeySearchableModel extends SearchableModel
 {
     public function getScoutKey()
     {
-        return 'my-meilisearch-key.'.$this->getKey();
+        return 'my-meilisearch-key.' . $this->getKey();
     }
 
     public function getScoutKeyName()
