@@ -346,17 +346,21 @@ class MeilisearchEngineTest extends TestCase
 
         $model = m::mock(stdClass::class);
         $model->shouldReceive(['getScoutKeyName' => 'id']);
-        $model->shouldReceive('queryScoutModelsByIds->cursor')->andReturn($models = LazyCollection::make([new SearchableModel(['id' => 1])]));
+        $model->shouldReceive('queryScoutModelsByIds->cursor')->andReturn($models = LazyCollection::make([
+            new SearchableModel(['id' => 1, 'name' => 'test']),
+        ]));
         $builder = m::mock(Builder::class);
 
         $results = $engine->lazyMap($builder, [
             'totalHits' => 1,
             'hits' => [
-                ['id' => 1],
+                ['id' => 1, '_rankingScore' => 0.86],
             ],
         ], $model);
 
         $this->assertEquals(1, count($results));
+        $this->assertEquals(['id' => 1, 'name' => 'test'], $results->first()->toArray());
+        $this->assertEquals(['_rankingScore' => 0.86], $results->first()->scoutMetadata());
     }
 
     public function test_lazy_map_method_respects_order()
