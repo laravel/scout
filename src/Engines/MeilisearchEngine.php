@@ -293,6 +293,7 @@ class MeilisearchEngine extends Engine
             $builder, $objectIds
         )->map(function ($model) use ($results, $objectIdPositions) {
             $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
+
             foreach ($result as $key => $value) {
                 if (substr($key, 0, 1) === '_') {
                     $model->withScoutMetadata($key, $value);
