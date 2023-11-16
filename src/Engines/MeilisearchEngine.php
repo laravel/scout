@@ -291,7 +291,9 @@ class MeilisearchEngine extends Engine
 
         return $model->getScoutModelsByIds(
             $builder, $objectIds
-        )->map(function ($model) use ($results, $objectIdPositions) {
+        )->filter(function ($model) use ($objectIds) {
+            return in_array($model->getScoutKey(), $objectIds);
+        })->map(function ($model) use ($results, $objectIdPositions) {
             $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
 
             foreach ($result as $key => $value) {
@@ -301,8 +303,6 @@ class MeilisearchEngine extends Engine
             }
 
             return $model;
-        })->filter(function ($model) use ($objectIds) {
-            return in_array($model->getScoutKey(), $objectIds);
         })->sortBy(function ($model) use ($objectIdPositions) {
             return $objectIdPositions[$model->getScoutKey()];
         })->values();
