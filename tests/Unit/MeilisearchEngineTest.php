@@ -296,7 +296,7 @@ class MeilisearchEngineTest extends TestCase
             'totalHits' => 1,
             'hits' => [
                 ['id' => 1, '_rankingScore' => 0.86],
-            ]
+            ],
         ], $model);
 
         $this->assertCount(1, $results);
@@ -642,7 +642,7 @@ class MeilisearchCustomKeySearchableModel extends SearchableModel
 {
     public function getScoutKey()
     {
-        return 'my-meilisearch-key.' . $this->getKey();
+        return 'my-meilisearch-key.'.$this->getKey();
     }
 
     public function getScoutKeyName()

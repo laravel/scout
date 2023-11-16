@@ -167,7 +167,7 @@ class AlgoliaEngineTest extends TestCase
             'nbHits' => 1,
             'hits' => [
                 ['objectID' => 1, 'id' => 1, '_rankingInfo' => ['nbTypos' => 0]],
-            ]
+            ],
         ], $model);
 
         $this->assertCount(1, $results);
@@ -322,6 +322,6 @@ class AlgoliaCustomKeySearchableModel extends SearchableModel
 {
     public function getScoutKey()
     {
-        return 'my-algolia-key.' . $this->getKey();
+        return 'my-algolia-key.'.$this->getKey();
     }
 }
