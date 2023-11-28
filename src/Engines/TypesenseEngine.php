@@ -25,7 +25,7 @@ class TypesenseEngine extends Engine
     protected Typesense $typesense;
 
     /**
-     * The specified search options.
+     * The specified search parameters.
      *
      * @var array
      */
@@ -71,7 +71,7 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * Import document to index.
+     * Import the given documents into the index.
      *
      * @param  \TypesenseCollection  $collectionIndex
      * @param  array  $documents
@@ -133,8 +133,10 @@ class TypesenseEngine extends Engine
     public function delete($models)
     {
         $models->each(function (Model $model) {
-            $collectionIndex = $this->getOrCreateCollectionFromModel($model);
-            $this->deleteDocument($collectionIndex, $model->getScoutKey());
+            $this->deleteDocument(
+                $this->getOrCreateCollectionFromModel($model),
+                $model->getScoutKey()
+            );
         });
     }
 
@@ -229,7 +231,7 @@ class TypesenseEngine extends Engine
      */
     public function buildSearchParameters(Builder $builder, int $page, int|null $perPage): array
     {
-        $params = [
+        $parameters = [
             'q' => $builder->query,
             'query_by' => config('scout.typesense.model-settings.'.get_class($builder->model).'.search-parameters.query_by') ?? '',
             'filter_by' => $this->filters($builder),
@@ -247,20 +249,20 @@ class TypesenseEngine extends Engine
         ];
 
         if (! empty($this->searchParameters)) {
-            $params = array_merge($params, $this->searchParameters);
+            $parameters = array_merge($parameters, $this->searchParameters);
         }
 
         if (! empty($builder->orders)) {
-            if (! empty($params['sort_by'])) {
-                $params['sort_by'] .= ',';
+            if (! empty($parameters['sort_by'])) {
+                $parameters['sort_by'] .= ',';
             } else {
-                $params['sort_by'] = '';
+                $parameters['sort_by'] = '';
             }
 
-            $params['sort_by'] .= $this->parseOrderBy($builder->orders);
+            $parameters['sort_by'] .= $this->parseOrderBy($builder->orders);
         }
 
-        return $params;
+        return $parameters;
     }
 
     /**
@@ -272,18 +274,12 @@ class TypesenseEngine extends Engine
     protected function filters(Builder $builder): string
     {
         $whereFilter = collect($builder->wheres)
-            ->map([
-                $this,
-                'parseWhereFilter',
-            ])
+            ->map([$this, 'parseWhereFilter'])
             ->values()
             ->implode(' && ');
 
         $whereInFilter = collect($builder->whereIns)
-            ->map([
-                $this,
-                'parseWhereInFilter',
-            ])
+            ->map([$this, 'parseWhereInFilter'])
             ->values()
             ->implode(' && ');
 
@@ -301,11 +297,9 @@ class TypesenseEngine extends Engine
      */
     protected function parseWhereFilter(array|string $value, string $key): string
     {
-        if (is_array($value)) {
-            return sprintf('%s:%s', $key, implode('', $value));
-        }
-
-        return sprintf('%s:=%s', $key, $value);
+        return is_array($value)
+            ? sprintf('%s:%s', $key, implode('', $value))
+            : sprintf('%s:=%s', $key, $value);
     }
 
     /**
@@ -475,19 +469,6 @@ class TypesenseEngine extends Engine
     }
 
     /**
-     * Set the search options provided by user.
-     *
-     * @param  array  $options
-     * @return $this
-     */
-    public function setSearchParameters(array $options): static
-    {
-        $this->searchParameters = $options;
-
-        return $this;
-    }
-
-    /**
      * Get collection from model or create new one.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -526,6 +507,19 @@ class TypesenseEngine extends Engine
     protected function usesSoftDelete($model): bool
     {
         return in_array(SoftDeletes::class, class_uses_recursive($model), true);
+    }
+
+    /**
+     * Set the search options provided by user.
+     *
+     * @param  array  $options
+     * @return $this
+     */
+    public function setSearchParameters(array $options): static
+    {
+        $this->searchParameters = $options;
+
+        return $this;
     }
 
     /**
