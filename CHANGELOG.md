@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.5.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.6.0...10.x)
+
+## [v10.6.0](https://github.com/laravel/scout/compare/v10.5.1...v10.6.0) - 2023-11-28
+
+* Add search engine meta data to results by [@tobz-nz](https://github.com/tobz-nz) in https://github.com/laravel/scout/pull/780
 
 ## [v10.5.1](https://github.com/laravel/scout/compare/v10.5.0...v10.5.1) - 2023-10-31
 
@@ -12,7 +16,7 @@
 
 ## [v10.4.0](https://github.com/laravel/scout/compare/v10.3.0...v10.4.0) - 2023-09-26
 
-- Allow configuration of Algolia batch size by [@samlev](https://github.com/samlev) in https://github.com/laravel/scout/pull/768   
+- Allow configuration of Algolia batch size by [@samlev](https://github.com/samlev) in https://github.com/laravel/scout/pull/768
   **Full Changelog**: https://github.com/laravel/scout/compare/v10.3.0...v10.4.0
 
 ## [v10.3.0](https://github.com/laravel/scout/compare/v10.2.4...v10.3.0) - 2023-09-05
