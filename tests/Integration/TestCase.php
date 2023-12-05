@@ -3,8 +3,8 @@
 namespace Laravel\Scout\Tests\Integration;
 
 use Illuminate\Support\ProcessUtil;
-use Laravel\Scout\ScoutServiceProvider;
 use Orchestra\Testbench\Concerns\WithWorkbench;
+
 use function Orchestra\Testbench\remote;
 
 class TestCase extends \Orchestra\Testbench\TestCase
