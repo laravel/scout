@@ -2,3 +2,6 @@ providers:
   - Laravel\Scout\ScoutServiceProvider
 
 migrations: true
+
+workbench:
+  install: true
