@@ -89,3 +89,4 @@ jobs:
         run: vendor/bin/phpunit --verbose --group external-network,meilisearch
         env:
           MEILISEARCH_HOST: "http://localhost:7700"
+          MEILISEARCH_KEY: 'masterKey'
