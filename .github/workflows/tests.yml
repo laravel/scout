@@ -13,6 +13,15 @@ jobs:
   tests:
     runs-on: ubuntu-22.04
 
+    services:
+      meilisearch:
+        image: getmeili/meilisearch:latest
+        ports:
+          - 7700:7700
+        env:
+          MEILI_MASTER_KEY: masterKey
+          MEILI_NO_ANALYTICS: true
+
     strategy:
       fail-fast: true
       matrix:
@@ -46,3 +55,5 @@ jobs:
 
       - name: Execute tests
         run: vendor/bin/phpunit --verbose
+        env:
+          MEILISEARCH_HOST: "http://localhost:7700"
