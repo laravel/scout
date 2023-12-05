@@ -34,8 +34,8 @@
         <env name="APP_KEY" value="AckfSECXIvnK5r28GVIWUAxmbBSjTsmF"/>
         <env name="DB_CONNECTION" value="testing"/>
         <!--
-        <env name="ALGOLIA_APP_ID" value=""/>
-        <env name="ALGOLIA_SECRET" value=""/>
+        <env name="ALGOLIA_APP_ID" value="(null)"/>
+        <env name="ALGOLIA_SECRET" value="(null)"/>
         <env name="MEILISEARCH_HOST" value="(null)"/>
         -->
     </php>

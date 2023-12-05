@@ -2,34 +2,22 @@
 
 namespace Laravel\Scout\Tests\Integration;
 
+use Illuminate\Support\ProcessUtil;
 use Laravel\Scout\ScoutServiceProvider;
-
-use function Orchestra\Testbench\artisan;
+use Orchestra\Testbench\Concerns\WithWorkbench;
+use function Orchestra\Testbench\remote;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
+    use WithWorkbench;
+
     protected function importScoutIndexFrom($model = null)
     {
-        rescue(function () use ($model) {
-            artisan($this, 'scout:import', ['model' => $model]);
-        });
+        rescue(fn () => remote(sprintf('scout:import --model=%s', ProcessUtil::escapeArgument($model)))->mustRun());
     }
 
     protected function resetScoutIndexes()
     {
-        rescue(function () {
-            artisan($this, 'scout:delete-all-indexes');
-        });
-    }
-
-    /**
-     * Get package providers.
-     *
-     * @param  \Illuminate\Foundation\Application  $app
-     * @return array<int, class-string<\Illuminate\Support\ServiceProvider>>
-     */
-    protected function getPackageProviders($app)
-    {
-        return [ScoutServiceProvider::class];
+        rescue(fn () => remote('scout:delete-all-indexes')->mustRun());
     }
 }

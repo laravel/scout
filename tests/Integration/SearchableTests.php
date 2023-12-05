@@ -57,9 +57,7 @@ trait SearchableTests
 
     protected function itCanUseBasicSearchWithQueryCallback()
     {
-        return User::search('lar')->take(10)->query(function ($query) {
-            return $query->whereNotNull('email_verified_at');
-        })->get();
+        return User::search('lar')->take(10)->query(fn ($query) => $query->whereNotNull('email_verified_at'))->get();
     }
 
     protected function itCanUseBasicSearchToFetchKeys()
@@ -69,9 +67,7 @@ trait SearchableTests
 
     protected function itCanUseBasicSearchWithQueryCallbackToFetchKeys()
     {
-        return User::search('lar')->take(10)->query(function ($query) {
-            return $query->whereNotNull('email_verified_at');
-        })->keys();
+        return User::search('lar')->take(10)->query(fn ($query) => $query->whereNotNull('email_verified_at'))->keys();
     }
 
     protected function itCanUsePaginatedSearch()
@@ -84,9 +80,7 @@ trait SearchableTests
 
     protected function itCanUsePaginatedSearchWithQueryCallback()
     {
-        $queryCallback = function ($query) {
-            return $query->whereNotNull('email_verified_at');
-        };
+        $queryCallback = fn ($query) => $query->whereNotNull('email_verified_at');
 
         return [
             User::search('lar')->take(10)->query($queryCallback)->paginate(5, 'page', 1),
