@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.6.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.6.1...10.x)
+
+## [v10.6.1](https://github.com/laravel/scout/compare/v10.6.0...v10.6.1) - 2023-12-05
+
+* Fix unsearchable config by [@Casmo](https://github.com/Casmo) in https://github.com/laravel/scout/pull/783
 
 ## [v10.6.0](https://github.com/laravel/scout/compare/v10.5.1...v10.6.0) - 2023-11-28
 
