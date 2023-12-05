@@ -3,7 +3,6 @@
 namespace Laravel\Scout\Tests\Integration;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 
 use function Orchestra\Testbench\artisan;
