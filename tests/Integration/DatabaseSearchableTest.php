@@ -14,7 +14,7 @@ class DatabaseSearchableTest extends TestCase
      */
     protected function defineEnvironment($app)
     {
-        $app['config']->set('scout.driver', 'database');
+        $this->defineScoutEnvironment($app);
     }
 
     /**
@@ -128,5 +128,10 @@ class DatabaseSearchableTest extends TestCase
             12 => 'Reta Larkin',
             1 => 'Laravel Framework',
         ], $page2->pluck('name', 'id')->all());
+    }
+
+    protected static function scoutDriver(): string
+    {
+        return 'database';
     }
 }

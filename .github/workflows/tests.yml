@@ -13,15 +13,6 @@ jobs:
   tests:
     runs-on: ubuntu-22.04
 
-    services:
-      meilisearch:
-        image: getmeili/meilisearch:latest
-        ports:
-          - 7700:7700
-        env:
-          MEILI_MASTER_KEY: masterKey
-          MEILI_NO_ANALYTICS: true
-
     strategy:
       fail-fast: true
       matrix:
@@ -57,5 +48,44 @@ jobs:
 
       - name: Execute tests
         run: vendor/bin/phpunit --verbose
+
+  tests-using-meilisearch:
+    runs-on: ubuntu-22.04
+
+    services:
+      meilisearch:
+        image: getmeili/meilisearch:latest
+        ports:
+          - 7700:7700
+        env:
+          MEILI_MASTER_KEY: masterKey
+          MEILI_NO_ANALYTICS: true
+
+    strategy:
+      fail-fast: true
+      matrix:
+        php: ['8.0', 8.1, 8.2, 8.3]
+
+    name: PHP ${{ matrix.php }} using Meilisearch
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip
+          ini-values: error_reporting=E_ALL
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: |
+           composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Execute tests
+        run: vendor/bin/phpunit --verbose --group external-network,meilisearch
         env:
           MEILISEARCH_HOST: "http://localhost:7700"

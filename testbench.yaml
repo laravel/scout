@@ -1,4 +1,2 @@
 providers:
   - Laravel\Scout\ScoutServiceProvider
-
-migrations: true

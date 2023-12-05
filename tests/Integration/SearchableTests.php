@@ -10,6 +10,17 @@ use Orchestra\Testbench\Factories\UserFactory;
 trait SearchableTests
 {
     /**
+     * Define environment setup.
+     *
+     * @param  \Illuminate\Foundation\Application  $app
+     * @return void
+     */
+    protected function defineScoutEnvironment($app)
+    {
+        $app['config']->set('scout.driver', static::scoutDriver());
+    }
+
+    /**
      * Define database migrations.
      */
     protected function defineScoutDatabaseMigrations(): void

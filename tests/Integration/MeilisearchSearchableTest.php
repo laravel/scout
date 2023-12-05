@@ -6,6 +6,7 @@ use Illuminate\Support\Env;
 use Laravel\Scout\Tests\Fixtures\User;
 
 /**
+ * @group meilisearch
  * @group external-network
  */
 class MeilisearchSearchableTest extends TestCase
@@ -26,16 +27,26 @@ class MeilisearchSearchableTest extends TestCase
             return;
         }
 
-        $app['config']->set('scout.driver', 'meilisearch');
+        $this->defineScoutEnvironment($app);
     }
 
     /**
      * Define database migrations.
+     *
+     * @return void
      */
-    protected function defineDatabaseMigrations(): void
+    protected function defineDatabaseMigrations()
     {
         $this->defineScoutDatabaseMigrations();
+    }
 
+    /**
+     * Perform any work that should take place once the database has finished refreshing.
+     *
+     * @return void
+     */
+    protected function afterRefreshingDatabase()
+    {
         $this->importScoutIndexFrom(User::class);
     }
 
@@ -153,5 +164,10 @@ class MeilisearchSearchableTest extends TestCase
             43 => 'Dana Larson Sr.',
             44 => 'Amos Larson Sr.',
         ], $page2->pluck('name', 'id')->all());
+    }
+
+    protected static function scoutDriver(): string
+    {
+        return 'meilisearch';
     }
 }

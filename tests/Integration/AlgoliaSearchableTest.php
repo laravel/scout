@@ -6,6 +6,7 @@ use Illuminate\Support\Env;
 use Laravel\Scout\Tests\Fixtures\User;
 
 /**
+ * @group algolia
  * @group external-network
  */
 class AlgoliaSearchableTest extends TestCase
@@ -24,16 +25,26 @@ class AlgoliaSearchableTest extends TestCase
             $this->markTestSkipped();
         }
 
-        $app['config']->set('scout.driver', 'algolia');
+        $this->defineScoutEnvironment($app);
     }
 
     /**
      * Define database migrations.
+     *
+     * @return void
      */
-    protected function defineDatabaseMigrations(): void
+    protected function defineDatabaseMigrations()
     {
         $this->defineScoutDatabaseMigrations();
+    }
 
+    /**
+     * Perform any work that should take place once the database has finished refreshing.
+     *
+     * @return void
+     */
+    protected function afterRefreshingDatabase()
+    {
         $this->importScoutIndexFrom(User::class);
     }
 
@@ -151,5 +162,10 @@ class AlgoliaSearchableTest extends TestCase
             40 => 'Otis Larson MD',
             12 => 'Reta Larkin',
         ], $page2->pluck('name', 'id')->all());
+    }
+
+    protected static function scoutDriver(): string
+    {
+        return 'algolia';
     }
 }

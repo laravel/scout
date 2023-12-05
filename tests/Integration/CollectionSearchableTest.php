@@ -12,7 +12,7 @@ class CollectionSearchableTest extends DatabaseSearchableTest
      */
     protected function defineEnvironment($app)
     {
-        $app['config']->set('scout.driver', 'collection');
+        $this->defineScoutEnvironment($app);
     }
 
     public function test_it_can_use_basic_search_with_query_callback_to_fetch_keys()
@@ -30,5 +30,10 @@ class CollectionSearchableTest extends DatabaseSearchableTest
         ], $results->all());
 
         $this->assertSame($this->itCanUseBasicSearchToFetchKeys()->all(), $results->all());
+    }
+
+    protected static function scoutDriver(): string
+    {
+        return 'collection';
     }
 }
