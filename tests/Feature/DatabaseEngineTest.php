@@ -2,31 +2,25 @@
 
 namespace Laravel\Scout\Tests\Feature;
 
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Laravel\Scout\ScoutServiceProvider;
 use Laravel\Scout\Tests\Fixtures\SearchableUserDatabaseModel;
+use Orchestra\Testbench\Concerns\WithLaravelMigrations;
+use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\Factories\UserFactory;
 use Orchestra\Testbench\TestCase;
 
 class DatabaseEngineTest extends TestCase
 {
-    use WithFaker;
-
-    protected function getPackageProviders($app)
-    {
-        return [ScoutServiceProvider::class];
-    }
+    use LazilyRefreshDatabase, WithFaker, WithLaravelMigrations, WithWorkbench;
 
     protected function defineEnvironment($app)
     {
         $app->make('config')->set('scout.driver', 'database');
     }
 
-    protected function defineDatabaseMigrations()
+    protected function afterRefreshingDatabase()
     {
-        $this->setUpFaker();
-        $this->loadLaravelMigrations();
-
         UserFactory::new()->create([
             'name' => 'Taylor Otwell',
             'email' => 'taylor@laravel.com',

@@ -2,40 +2,37 @@
 
 namespace Laravel\Scout\Tests\Feature;
 
-use Illuminate\Foundation\Testing\WithFaker;
-use Laravel\Scout\ScoutServiceProvider;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Laravel\Scout\Tests\Fixtures\SearchableModelWithUnloadedValue;
 use Laravel\Scout\Tests\Fixtures\SearchableUserModel;
 use Laravel\Scout\Tests\Fixtures\SearchableUserModelWithCustomSearchableData;
+use Orchestra\Testbench\Concerns\WithLaravelMigrations;
+use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\Factories\UserFactory;
 use Orchestra\Testbench\TestCase;
 
 class CollectionEngineTest extends TestCase
 {
-    use WithFaker;
-
-    protected function getPackageProviders($app)
-    {
-        return [ScoutServiceProvider::class];
-    }
+    use LazilyRefreshDatabase, WithLaravelMigrations, WithWorkbench;
 
     protected function defineEnvironment($app)
     {
         $app->make('config')->set('scout.driver', 'collection');
     }
 
-    protected function defineDatabaseMigrations()
+    protected function afterRefreshingDatabase()
     {
-        $this->setUpFaker();
-        $this->loadLaravelMigrations();
-
         UserFactory::new()->create([
             'name' => 'Taylor Otwell',
             'email' => 'taylor@laravel.com',
+            'created_at' => now()->addDay(),
         ]);
 
         UserFactory::new()->create([
             'name' => 'Abigail Otwell',
             'email' => 'abigail@laravel.com',
+            'created_at' => now()->addDays(2),
         ]);
     }
 
@@ -132,5 +129,25 @@ class CollectionEngineTest extends TestCase
         $models = SearchableUserModel::search('laravel')->orderBy('name', 'desc')->paginate(1, 'page', 1);
         $this->assertCount(1, $models);
         $this->assertEquals('Taylor Otwell', $models[0]->name);
+    }
+
+    public function test_it_can_order_by_latest_and_oldest()
+    {
+        $models = SearchableUserModel::search('laravel')->latest()->paginate(1, 'page', 1);
+        $this->assertCount(1, $models);
+        $this->assertEquals('Abigail Otwell', $models[0]->name);
+
+        $models = SearchableUserModel::search('laravel')->oldest()->paginate(1, 'page', 1);
+        $this->assertCount(1, $models);
+        $this->assertEquals('Taylor Otwell', $models[0]->name);
+    }
+
+    public function test_it_calls_make_searchable_using_before_searching()
+    {
+        Model::preventAccessingMissingAttributes(true);
+
+        $models = SearchableModelWithUnloadedValue::search('loaded')->get();
+
+        $this->assertCount(2, $models);
     }
 }

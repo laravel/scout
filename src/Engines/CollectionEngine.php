@@ -121,7 +121,7 @@ class CollectionEngine extends Engine
             return $models;
         }
 
-        return $models->filter(function ($model) use ($builder) {
+        return $models->first()->makeSearchableUsing($models)->filter(function ($model) use ($builder) {
             if (! $model->shouldBeSearchable()) {
                 return false;
             }

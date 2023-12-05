@@ -293,6 +293,16 @@ class MeilisearchEngine extends Engine
             $builder, $objectIds
         )->filter(function ($model) use ($objectIds) {
             return in_array($model->getScoutKey(), $objectIds);
+        })->map(function ($model) use ($results, $objectIdPositions) {
+            $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
+
+            foreach ($result as $key => $value) {
+                if (substr($key, 0, 1) === '_') {
+                    $model->withScoutMetadata($key, $value);
+                }
+            }
+
+            return $model;
         })->sortBy(function ($model) use ($objectIdPositions) {
             return $objectIdPositions[$model->getScoutKey()];
         })->values();
@@ -319,6 +329,16 @@ class MeilisearchEngine extends Engine
             $builder, $objectIds
         )->cursor()->filter(function ($model) use ($objectIds) {
             return in_array($model->getScoutKey(), $objectIds);
+        })->map(function ($model) use ($results, $objectIdPositions) {
+            $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
+
+            foreach ($result as $key => $value) {
+                if (substr($key, 0, 1) === '_') {
+                    $model->withScoutMetadata($key, $value);
+                }
+            }
+
+            return $model;
         })->sortBy(function ($model) use ($objectIdPositions) {
             return $objectIdPositions[$model->getScoutKey()];
         })->values();

@@ -58,6 +58,10 @@ class EngineManager extends Manager
             $config->setWriteTimeout($writeTimeout);
         }
 
+        if (is_int($batchSize = config('scout.algolia.batch_size'))) {
+            $config->setBatchSize($batchSize);
+        }
+
         return new AlgoliaEngine(Algolia::createWithConfig($config), config('scout.soft_delete'));
     }
 
