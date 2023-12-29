@@ -39,6 +39,10 @@ class TypesenseEngineTest extends TestCase
             ->method('toSearchableArray')
             ->willReturn(['id' => 1, 'name' => 'Model 1']);
 
+        $models[0]->expects($this->once())
+            ->method('scoutMetadata')
+            ->willReturn([]);
+
         // Mock the getOrCreateCollectionFromModel method
         $collection = $this->createMock(TypesenseCollection::class);
         $documents = $this->createMock(Documents::class);
