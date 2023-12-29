@@ -54,18 +54,31 @@ class TypesenseEngine extends Engine
      */
     public function update($models)
     {
+        if ($models->isEmpty()) {
+            return;
+        }
+
         $collection = $this->getOrCreateCollectionFromModel($models->first());
 
         if ($this->usesSoftDelete($models->first()) && config('scout.soft_delete', false)) {
             $models->each->pushSoftDeleteMetadata();
         }
 
-        if (! $this->usesSoftDelete($models->first()) ||
-            is_null($models->first()?->deleted_at) ||
-            config('scout.soft_delete', false)) {
+        $objects = $models->map(function ($model) {
+            if (empty($searchableData = $model->toSearchableArray())) {
+                return;
+            }
+
+            return array_merge(
+                $searchableData,
+                $model->scoutMetadata(),
+            );
+        })->filter()->values()->all();
+
+        if (! empty($objects)) {
             $this->importDocuments(
                 $collection,
-                $models->map(fn ($m) => $m->toSearchableArray())->all()
+                $objects
             );
         }
     }
