@@ -2,8 +2,10 @@
 
 namespace Laravel\Scout\Tests\Unit;
 
+use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\TypesenseEngine;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
@@ -11,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 use Typesense\Client as TypesenseClient;
 use Typesense\Collection as TypesenseCollection;
 use Typesense\Documents;
+use Mockery as m;
 
 class TypesenseEngineTest extends TestCase
 {
@@ -26,6 +29,12 @@ class TypesenseEngineTest extends TestCase
             ->setConstructorArgs([$typesenseClient])
             ->onlyMethods(['getOrCreateCollectionFromModel', 'buildSearchParameters'])
             ->getMock();
+    }
+
+    protected function tearDown(): void
+    {
+        Container::getInstance()->flush();
+        m::close();
     }
 
     public function test_update_method(): void
@@ -254,5 +263,45 @@ class TypesenseEngineTest extends TestCase
 
         // Call the search method
         $this->engine->setSearchParameters(['query_by' => 'id'])->search($builder);
+    }
+
+    public function test_soft_deleted_objects_are_returned_with_only_trashed_method()
+    {
+        // Create a mock of SearchableModel
+        $searchableModel = m::mock(SearchableModel::class)->makePartial();
+
+        // Mock the search method to return a collection with a soft-deleted object
+        $searchableModel->shouldReceive('search')->with('Soft Deleted Object')->andReturnSelf();
+        $searchableModel->shouldReceive('onlyTrashed')->andReturnSelf();
+        $searchableModel->shouldReceive('get')->andReturn(collect([
+            new SearchableModel(['id' => 1, 'name' => 'Soft Deleted Object']),
+        ]));
+
+        // Perform the search with onlyTrashed() using the mocked model
+        $results = $searchableModel::search('Soft Deleted Object')->onlyTrashed()->get();
+
+        // Assert that the soft deleted object is returned
+        $this->assertCount(1, $results);
+        $this->assertEquals(1, $results->first()->id);
+    }
+
+    public function test_soft_deleted_objects_are_returned_with_with_trashed_method()
+    {
+        // Create a mock of SearchableModel
+        $searchableModel = m::mock(SearchableModel::class)->makePartial();
+
+        // Mock the search method to return a collection with a soft-deleted object
+        $searchableModel->shouldReceive('search')->with('Soft Deleted Object')->andReturnSelf();
+        $searchableModel->shouldReceive('withTrashed')->andReturnSelf();
+        $searchableModel->shouldReceive('get')->andReturn(collect([
+            new SearchableModel(['id' => 1, 'name' => 'Soft Deleted Object']),
+        ]));
+
+        // Perform the search with withTrashed() using the mocked model
+        $results = $searchableModel::search('Soft Deleted Object')->withTrashed()->get();
+
+        // Assert that the soft deleted object is returned
+        $this->assertCount(1, $results);
+        $this->assertEquals(1, $results->first()->id);
     }
 }
