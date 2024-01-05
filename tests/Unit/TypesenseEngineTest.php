@@ -5,15 +5,14 @@ namespace Laravel\Scout\Tests\Unit;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Config;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\TypesenseEngine;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use Mockery as m;
 use PHPUnit\Framework\TestCase;
 use Typesense\Client as TypesenseClient;
 use Typesense\Collection as TypesenseCollection;
 use Typesense\Documents;
-use Mockery as m;
 
 class TypesenseEngineTest extends TestCase
 {
