@@ -11,7 +11,8 @@ return [
     | using Laravel Scout. This connection is used when syncing all models
     | to the search service. You should adjust this based on your needs.
     |
-    | Supported: "algolia", "meilisearch", "database", "collection", "null"
+    | Supported: "algolia", "meilisearch", "typesense",
+    |            "database", "collection", "null"
     |
     */
 
@@ -145,10 +146,10 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may configure your Typesense settings. Typesense is an open
-    | source search engine with minimal configuration. Below, you can state
-    | the host and key information for your own Typesense installation.
+    | source search engine using minimal configuration. Below, you will
+    | state the host, key, and schema configuration for the instance.
     |
-    | See: https://typesense.org/docs/0.25.1/api/authentication.html
+    | See: https://typesense.org/docs/0.25.2/api/authentication.html
     |
     */
 
@@ -175,28 +176,29 @@ return [
             'retry_interval_seconds' => env('TYPESENSE_RETRY_INTERVAL_SECONDS', 1),
         ],
         'model-settings' => [
-            //                        User::class => [
-            //                            'collection-schema' => [
-            //                                'fields' => [
-            //                                    [
-            //                                        'name' => 'id',
-            //                                        'type' => 'string',
-            //                                    ],
-            //                                    [
-            //                                        'name' => 'name',
-            //                                        'type' => 'string',
-            //                                    ],
-            //                                    [
-            //                                        'name' => 'created_at',
-            //                                        'type' => 'int64',
-            //                                    ],
-            //                                ],
-            //                                'default_sorting_field' => 'created_at',
-            //                            ],
-            //                            'search-parameters' => [
-            //                                'query_by' => 'name'
-            //                            ],
-            //                        ],
+            // User::class => [
+            //     'collection-schema' => [
+            //         'fields' => [
+            //             [
+            //                 'name' => 'id',
+            //                 'type' => 'string',
+            //             ],
+            //             [
+            //                 'name' => 'name',
+            //                 'type' => 'string',
+            //             ],
+            //             [
+            //                 'name' => 'created_at',
+            //                 'type' => 'int64',
+            //             ],
+            //         ],
+            //         'default_sorting_field' => 'created_at',
+            //     ],
+            //     'search-parameters' => [
+            //         'query_by' => 'name'
+            //     ],
+            // ],
         ],
     ],
+
 ];
