@@ -149,8 +149,6 @@ return [
     | source search engine using minimal configuration. Below, you will
     | state the host, key, and schema configuration for the instance.
     |
-    | See: https://typesense.org/docs/0.25.2/api/authentication.html
-    |
     */
 
     'typesense' => [
