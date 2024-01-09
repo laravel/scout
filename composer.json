@@ -25,6 +25,7 @@
     },
     "require-dev": {
         "algolia/algoliasearch-client-php": "^3.2",
+        "typesense/typesense-php": "^4.9",
         "meilisearch/meilisearch-php": "^1.0",
         "mockery/mockery": "^1.0",
         "orchestra/testbench": "^7.31|^8.11",
@@ -54,7 +55,8 @@
     },
     "suggest": {
         "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^3.2).",
-        "meilisearch/meilisearch-php": "Required to use the Meilisearch engine (^1.0)."
+        "meilisearch/meilisearch-php": "Required to use the Meilisearch engine (^1.0).",
+        "typesense/typesense-php": "Required to use the Typesense engine (^4.9)."
     },
     "config": {
         "sort-packages": true,
