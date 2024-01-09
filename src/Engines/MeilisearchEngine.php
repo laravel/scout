@@ -187,7 +187,7 @@ class MeilisearchEngine extends Engine
         });
 
         $whereInOperators = [
-            'whereIns'    => 'IN',
+            'whereIns' => 'IN',
             'whereNotIns' => 'NOT IN',
         ];
 
