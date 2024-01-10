@@ -13,6 +13,7 @@ Laravel Scout provides a simple, driver-based solution for adding full-text sear
 
 - [Algolia](https://www.algolia.com/)
 - [Meilisearch](https://github.com/meilisearch/meilisearch)
+- [Typesense](https://github.com/typesense/typesense)
 
 ## Official Documentation
 
