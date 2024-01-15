@@ -11,7 +11,9 @@ use Laravel\Scout\Tests\Fixtures\User;
  */
 class MeilisearchSearchableTest extends TestCase
 {
-    use SearchableTests;
+    use SearchableTests {
+        defineScoutDatabaseMigrations as baseDefineScoutDatabaseMigrations;
+    }
 
     /**
      * Define environment setup.
@@ -40,13 +42,10 @@ class MeilisearchSearchableTest extends TestCase
         $this->defineScoutDatabaseMigrations();
     }
 
-    /**
-     * Perform any work that should take place once the database has finished refreshing.
-     *
-     * @return void
-     */
-    protected function afterRefreshingDatabase()
+    protected function defineScoutDatabaseMigrations()
     {
+        $this->baseDefineScoutDatabaseMigrations();
+
         $this->importScoutIndexFrom(User::class);
     }
 
