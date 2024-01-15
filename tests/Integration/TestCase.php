@@ -2,7 +2,6 @@
 
 namespace Laravel\Scout\Tests\Integration;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 
 use function Orchestra\Testbench\artisan;
@@ -10,7 +9,7 @@ use function Orchestra\Testbench\remote;
 
 abstract class TestCase extends \Orchestra\Testbench\TestCase
 {
-    use RefreshDatabase, WithWorkbench;
+    use WithWorkbench;
 
     protected function importScoutIndexFrom($model = null)
     {
