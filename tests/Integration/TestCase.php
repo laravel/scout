@@ -2,7 +2,6 @@
 
 namespace Laravel\Scout\Tests\Integration;
 
-
 use function Orchestra\Testbench\artisan;
 use function Orchestra\Testbench\remote;
 
