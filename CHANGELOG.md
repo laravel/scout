@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.7.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.8.0...10.x)
+
+## [v10.8.0](https://github.com/laravel/scout/compare/v10.7.0...v10.8.0) - 2024-01-16
+
+* [10.x] Laravel v11 support by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/scout/pull/789
 
 ## [v10.7.0](https://github.com/laravel/scout/compare/v10.6.1...v10.7.0) - 2024-01-09
 
