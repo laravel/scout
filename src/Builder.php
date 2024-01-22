@@ -42,6 +42,13 @@ class Builder
     public $queryCallback;
 
     /**
+     * Loadable relations list.
+     *
+     * @var array
+     */
+    protected $relations = [];
+
+    /**
      * The custom index specified for the search.
      *
      * @var string
@@ -108,6 +115,19 @@ class Builder
         if ($softDelete) {
             $this->wheres['__soft_deleted'] = 0;
         }
+    }
+
+    /**
+     * Eager load relations on the model.
+     *
+     * @param  array|string  $relations
+     * @return $this
+     */
+    public function loadRelations($relations)
+    {
+        $this->relations = $relations;
+
+        return $this;
     }
 
     /**
@@ -374,7 +394,7 @@ class Builder
         )->all());
 
         $paginator = Container::getInstance()->makeWith(Paginator::class, [
-            'items' => $results,
+            'items' => $results->load($this->relations),
             'perPage' => $perPage,
             'currentPage' => $page,
             'options' => [
@@ -450,7 +470,7 @@ class Builder
         )->all());
 
         return Container::getInstance()->makeWith(LengthAwarePaginator::class, [
-            'items' => $results,
+            'items' => $results->load($this->relations),
             'total' => $this->getTotalCount($rawResults),
             'perPage' => $perPage,
             'currentPage' => $page,
