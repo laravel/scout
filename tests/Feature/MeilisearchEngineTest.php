@@ -2,16 +2,13 @@
 
 namespace Laravel\Scout\Tests\Feature;
 
-use Laravel\Scout\ScoutServiceProvider;
 use Meilisearch\Client;
+use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 
 class MeilisearchEngineTest extends TestCase
 {
-    protected function getPackageProviders($app)
-    {
-        return [ScoutServiceProvider::class];
-    }
+    use WithWorkbench;
 
     protected function defineEnvironment($app)
     {
