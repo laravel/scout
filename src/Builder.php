@@ -3,6 +3,7 @@
 namespace Laravel\Scout;
 
 use Illuminate\Container\Container;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Traits\Macroable;
@@ -394,7 +395,9 @@ class Builder
         )->all());
 
         $paginator = Container::getInstance()->makeWith(Paginator::class, [
-            'items' => $results->load($this->relations),
+            'items' => $results instanceof Collection
+                ? $results->load($this->relations)
+                : $results,
             'perPage' => $perPage,
             'currentPage' => $page,
             'options' => [
@@ -470,7 +473,9 @@ class Builder
         )->all());
 
         return Container::getInstance()->makeWith(LengthAwarePaginator::class, [
-            'items' => $results->load($this->relations),
+            'items' => $results instanceof Collection
+                ? $results->load($this->relations)
+                : $results,
             'total' => $this->getTotalCount($rawResults),
             'perPage' => $perPage,
             'currentPage' => $page,
