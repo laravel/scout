@@ -20,6 +20,7 @@ body:
         - Meilisearch
         - Database
         - Collection
+        - Typesense
     validations:
       required: true
   - type: input
