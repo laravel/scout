@@ -34,7 +34,7 @@ class TypesenseEngine extends Engine
     /**
      * Create new Typesense engine instance.
      *
-     * @param  \Typesense  $typesense
+     * @param  Typesense  $typesense
      */
     public function __construct(Typesense $typesense)
     {
@@ -261,8 +261,8 @@ class TypesenseEngine extends Engine
             'highlight_affix_num_tokens' => 4,
         ];
 
-        if (! empty($this->searchParameters)) {
-            $parameters = array_merge($parameters, $this->searchParameters);
+        if (! empty($builder->options)) {
+            $parameters = array_merge($parameters, $builder->options);
         }
 
         if (! empty($builder->orders)) {
@@ -520,30 +520,6 @@ class TypesenseEngine extends Engine
     protected function usesSoftDelete($model): bool
     {
         return in_array(SoftDeletes::class, class_uses_recursive($model), true);
-    }
-
-    /**
-     * Set the search options provided by user.
-     *
-     * @param  array  $options
-     * @return $this
-     */
-    public function withSearchParameters(array $options): static
-    {
-        return $this->setSearchParameters($options);
-    }
-
-    /**
-     * Set the search options provided by user.
-     *
-     * @param  array  $options
-     * @return $this
-     */
-    public function setSearchParameters(array $options): static
-    {
-        $this->searchParameters = $options;
-
-        return $this;
     }
 
     /**
