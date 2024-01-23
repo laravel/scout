@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Tests\Unit;
 
+use Http\Client\Exception;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -13,6 +14,7 @@ use PHPUnit\Framework\TestCase;
 use Typesense\Client as TypesenseClient;
 use Typesense\Collection as TypesenseCollection;
 use Typesense\Documents;
+use Typesense\Exceptions\TypesenseClientError;
 
 class TypesenseEngineTest extends TestCase
 {
@@ -234,6 +236,10 @@ class TypesenseEngineTest extends TestCase
         $this->engine->createIndex('test_index');
     }
 
+    /**
+     * @throws Exception
+     * @throws TypesenseClientError
+     */
     public function test_set_search_params_method(): void
     {
         // Mock the Builder
@@ -260,8 +266,10 @@ class TypesenseEngineTest extends TestCase
                 'highlight_affix_num_tokens' => 4,
             ]);
 
+        // Set search options
+        $builder->options(['query_by' => 'id']);
         // Call the search method
-        $this->engine->setSearchParameters(['query_by' => 'id'])->search($builder);
+        $this->engine->search($builder);
     }
 
     public function test_soft_deleted_objects_are_returned_with_only_trashed_method()
