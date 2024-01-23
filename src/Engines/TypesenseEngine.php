@@ -528,6 +528,17 @@ class TypesenseEngine extends Engine
      * @param  array  $options
      * @return $this
      */
+    public function withSearchParameters(array $options): static
+    {
+        return $this->setSearchParameters($options);
+    }
+
+    /**
+     * Set the search options provided by user.
+     *
+     * @param  array  $options
+     * @return $this
+     */
     public function setSearchParameters(array $options): static
     {
         $this->searchParameters = $options;

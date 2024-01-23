@@ -1,6 +1,26 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.5.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.8.0...10.x)
+
+## [v10.8.0](https://github.com/laravel/scout/compare/v10.7.0...v10.8.0) - 2024-01-16
+
+* [10.x] Laravel v11 support by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/scout/pull/789
+
+## [v10.7.0](https://github.com/laravel/scout/compare/v10.6.1...v10.7.0) - 2024-01-09
+
+* [10.x] Add Typesense engine by [@jasonbosco](https://github.com/jasonbosco) in https://github.com/laravel/scout/pull/773
+
+## [v10.6.1](https://github.com/laravel/scout/compare/v10.6.0...v10.6.1) - 2023-12-05
+
+* Fix unsearchable config by [@Casmo](https://github.com/Casmo) in https://github.com/laravel/scout/pull/783
+
+## [v10.6.0](https://github.com/laravel/scout/compare/v10.5.1...v10.6.0) - 2023-11-28
+
+* Add search engine meta data to results by [@tobz-nz](https://github.com/tobz-nz) in https://github.com/laravel/scout/pull/780
+
+## [v10.5.1](https://github.com/laravel/scout/compare/v10.5.0...v10.5.1) - 2023-10-31
+
+- Call makeSearchableUsing before searching on CollectionEngine by [@Magnesium38](https://github.com/Magnesium38) in https://github.com/laravel/scout/pull/777
 
 ## [v10.5.0](https://github.com/laravel/scout/compare/v10.4.0...v10.5.0) - 2023-10-10
 
@@ -8,7 +28,7 @@
 
 ## [v10.4.0](https://github.com/laravel/scout/compare/v10.3.0...v10.4.0) - 2023-09-26
 
-- Allow configuration of Algolia batch size by [@samlev](https://github.com/samlev) in https://github.com/laravel/scout/pull/768   
+- Allow configuration of Algolia batch size by [@samlev](https://github.com/samlev) in https://github.com/laravel/scout/pull/768
   **Full Changelog**: https://github.com/laravel/scout/compare/v10.3.0...v10.4.0
 
 ## [v10.3.0](https://github.com/laravel/scout/compare/v10.2.4...v10.3.0) - 2023-09-05

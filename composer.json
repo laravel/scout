@@ -15,23 +15,23 @@
     ],
     "require": {
         "php": "^8.0",
-        "illuminate/bus": "^9.0|^10.0",
-        "illuminate/contracts": "^9.0|^10.0",
-        "illuminate/database": "^9.0|^10.0",
-        "illuminate/http": "^9.0|^10.0",
-        "illuminate/pagination": "^9.0|^10.0",
-        "illuminate/queue": "^9.0|^10.0",
-        "illuminate/support": "^9.0|^10.0"
+        "illuminate/bus": "^9.0|^10.0|^11.0",
+        "illuminate/contracts": "^9.0|^10.0|^11.0",
+        "illuminate/database": "^9.0|^10.0|^11.0",
+        "illuminate/http": "^9.0|^10.0|^11.0",
+        "illuminate/pagination": "^9.0|^10.0|^11.0",
+        "illuminate/queue": "^9.0|^10.0|^11.0",
+        "illuminate/support": "^9.0|^10.0|^11.0"
     },
     "require-dev": {
         "algolia/algoliasearch-client-php": "^3.2",
         "typesense/typesense-php": "^4.9",
         "meilisearch/meilisearch-php": "^1.0",
         "mockery/mockery": "^1.0",
-        "orchestra/testbench": "^7.31|^8.11",
+        "orchestra/testbench": "^7.31|^8.11|^9.0",
         "php-http/guzzle7-adapter": "^1.0",
         "phpstan/phpstan": "^1.10",
-        "phpunit/phpunit": "^9.3"
+        "phpunit/phpunit": "^9.3|^10.4"
     },
     "autoload": {
         "psr-4": {

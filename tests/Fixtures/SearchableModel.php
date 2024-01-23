@@ -14,15 +14,10 @@ class SearchableModel extends Model
      *
      * @var array
      */
-    protected $fillable = ['id'];
+    protected $fillable = ['id', 'name'];
 
     public function searchableAs()
     {
         return 'table';
-    }
-
-    public function scoutMetadata()
-    {
-        return [];
     }
 }
