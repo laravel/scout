@@ -27,7 +27,7 @@ class TypesenseEngine extends Engine
     /**
      * Create new Typesense engine instance.
      *
-     * @param Typesense $typesense
+     * @param  Typesense  $typesense
      */
     public function __construct(Typesense $typesense)
     {
