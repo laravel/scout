@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.8.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.8.1...10.x)
+
+## [v10.8.1](https://github.com/laravel/scout/compare/v10.8.0...v10.8.1) - 2024-01-23
+
+* [10.x] Fix Typesense search parameters issue  by [@karakhanyans](https://github.com/karakhanyans) in https://github.com/laravel/scout/pull/795
 
 ## [v10.8.0](https://github.com/laravel/scout/compare/v10.7.0...v10.8.0) - 2024-01-16
 
