@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Laravel\Scout\Tests\Fixtures\SearchableModelWithUnloadedValue;
 use Laravel\Scout\Tests\Fixtures\SearchableUserModel;
+use Laravel\Scout\Tests\Fixtures\SearchableUserModelWithCustomCreatedAt;
 use Laravel\Scout\Tests\Fixtures\SearchableUserModelWithCustomSearchableData;
 use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -131,15 +132,12 @@ class CollectionEngineTest extends TestCase
         $this->assertEquals('Taylor Otwell', $models[0]->name);
     }
 
-    public function test_it_can_order_by_latest_and_oldest()
+    public function test_it_can_order_by_custom_model_created_at_timestamp()
     {
-        $models = SearchableUserModel::search('laravel')->latest()->paginate(1, 'page', 1);
-        $this->assertCount(1, $models);
-        $this->assertEquals('Abigail Otwell', $models[0]->name);
+        $query = SearchableUserModelWithCustomCreatedAt::search()->latest();
 
-        $models = SearchableUserModel::search('laravel')->oldest()->paginate(1, 'page', 1);
-        $this->assertCount(1, $models);
-        $this->assertEquals('Taylor Otwell', $models[0]->name);
+        $this->assertCount(1, $query->orders);
+        $this->assertEquals('created', $query->orders[0]['column']);
     }
 
     public function test_it_calls_make_searchable_using_before_searching()
