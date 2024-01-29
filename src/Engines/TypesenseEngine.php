@@ -190,7 +190,7 @@ class TypesenseEngine extends Engine
     {
         return $this->performSearch(
             $builder,
-            array_filter($this->buildSearchParameters($builder, 1, $builder->limit))
+            $this->buildSearchParameters($builder, 1, $builder->limit)
         );
     }
 
@@ -209,7 +209,7 @@ class TypesenseEngine extends Engine
     {
         return $this->performSearch(
             $builder,
-            array_filter($this->buildSearchParameters($builder, $page, $perPage))
+            $this->buildSearchParameters($builder, $page, $perPage)
         );
     }
 
