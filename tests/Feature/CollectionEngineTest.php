@@ -132,6 +132,17 @@ class CollectionEngineTest extends TestCase
         $this->assertEquals('Taylor Otwell', $models[0]->name);
     }
 
+    public function test_it_can_order_by_latest_and_oldest()
+    {
+        $models = SearchableUserModel::search('laravel')->latest()->paginate(1, 'page', 1);
+        $this->assertCount(1, $models);
+        $this->assertEquals('Abigail Otwell', $models[0]->name);
+
+        $models = SearchableUserModel::search('laravel')->oldest()->paginate(1, 'page', 1);
+        $this->assertCount(1, $models);
+        $this->assertEquals('Taylor Otwell', $models[0]->name);
+    }
+
     public function test_it_can_order_by_custom_model_created_at_timestamp()
     {
         $query = SearchableUserModelWithCustomCreatedAt::search()->latest();
