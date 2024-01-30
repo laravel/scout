@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.8.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.8.2...10.x)
+
+## [v10.8.2](https://github.com/laravel/scout/compare/v10.8.1...v10.8.2) - 2024-01-30
+
+* [10.x] Ordering by model's custom `created_at` column by [@stevebauman](https://github.com/stevebauman) in https://github.com/laravel/scout/pull/801
 
 ## [v10.8.1](https://github.com/laravel/scout/compare/v10.8.0...v10.8.1) - 2024-01-23
 
