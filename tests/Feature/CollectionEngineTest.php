@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Laravel\Scout\Tests\Fixtures\SearchableModelWithUnloadedValue;
 use Laravel\Scout\Tests\Fixtures\SearchableUserModel;
+use Laravel\Scout\Tests\Fixtures\SearchableUserModelWithCustomCreatedAt;
 use Laravel\Scout\Tests\Fixtures\SearchableUserModelWithCustomSearchableData;
 use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -140,6 +141,14 @@ class CollectionEngineTest extends TestCase
         $models = SearchableUserModel::search('laravel')->oldest()->paginate(1, 'page', 1);
         $this->assertCount(1, $models);
         $this->assertEquals('Taylor Otwell', $models[0]->name);
+    }
+
+    public function test_it_can_order_by_custom_model_created_at_timestamp()
+    {
+        $query = SearchableUserModelWithCustomCreatedAt::search()->latest();
+
+        $this->assertCount(1, $query->orders);
+        $this->assertEquals('created', $query->orders[0]['column']);
     }
 
     public function test_it_calls_make_searchable_using_before_searching()

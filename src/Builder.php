@@ -225,8 +225,12 @@ class Builder
      * @param  string  $column
      * @return $this
      */
-    public function latest($column = 'created_at')
+    public function latest($column = null)
     {
+        if (is_null($column)) {
+            $column = $this->model->getCreatedAtColumn() ?? 'created_at';
+        }
+
         return $this->orderBy($column, 'desc');
     }
 
@@ -236,8 +240,12 @@ class Builder
      * @param  string  $column
      * @return $this
      */
-    public function oldest($column = 'created_at')
+    public function oldest($column = null)
     {
+        if (is_null($column)) {
+            $column = $this->model->getCreatedAtColumn() ?? 'created_at';
+        }
+
         return $this->orderBy($column, 'asc');
     }
 
