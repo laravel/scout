@@ -62,19 +62,6 @@ class BuilderTest extends TestCase
         $this->assertSame(15, $paginator->perPage());
     }
 
-    public function test_it_can_paginate_scoped_with_custom_query_callback()
-    {
-        $this->prepareScoutSearchMockUsing('Laravel');
-
-        $paginator = SearchableUserModel::where(function ($builder) {
-            return $builder->where('id', '<', 11);
-        })->search('Laravel')->paginate();
-
-        $this->assertSame(10, $paginator->total());
-        $this->assertSame(1, $paginator->lastPage());
-        $this->assertSame(15, $paginator->perPage());
-    }
-
     public function test_it_can_paginate_raw_without_custom_query_callback()
     {
         $this->prepareScoutSearchMockUsing('Laravel');
@@ -99,7 +86,20 @@ class BuilderTest extends TestCase
         $this->assertSame(15, $paginator->perPage());
     }
 
-    public function test_it_can_paginate_raw_scoped_with_custom_query_callback()
+    public function test_it_can_paginate_on_locally_scoped_search_after_query()
+    {
+        $this->prepareScoutSearchMockUsing('Laravel');
+
+        $paginator = SearchableUserModel::where(function ($builder) {
+            return $builder->where('id', '<', 11);
+        })->search('Laravel')->paginate();
+
+        $this->assertSame(10, $paginator->total());
+        $this->assertSame(1, $paginator->lastPage());
+        $this->assertSame(15, $paginator->perPage());
+    }
+
+    public function test_it_can_paginate_raw_on_locally_scoped_search_after_query()
     {
         $this->prepareScoutSearchMockUsing('Laravel');
 
@@ -109,6 +109,30 @@ class BuilderTest extends TestCase
 
         $this->assertSame(10, $paginator->total());
         $this->assertSame(1, $paginator->lastPage());
+        $this->assertSame(15, $paginator->perPage());
+    }
+
+    public function test_it_can_paginate_on_locally_scoped_search_after_order_by()
+    {
+        $this->prepareScoutSearchMockUsing('Laravel');
+
+        $paginator = SearchableUserModel::orderBy('id', 'DESC')->search('Laravel')->paginate();
+
+        // We get 50 as that is how many 'Laravel' records we have
+        $this->assertSame(50, $paginator->total());
+        $this->assertSame(4, $paginator->lastPage());
+        $this->assertSame(15, $paginator->perPage());
+    }
+
+    public function test_it_can_paginate_raw_on_locally_scoped_search_after_order_by()
+    {
+        $this->prepareScoutSearchMockUsing('Laravel');
+
+        $paginator = SearchableUserModel::orderBy('id', 'DESC')->search('Laravel')->paginateRaw();
+
+        // We get 50 as that is how many 'Laravel' records we have
+        $this->assertSame(50, $paginator->total());
+        $this->assertSame(4, $paginator->lastPage());
         $this->assertSame(15, $paginator->perPage());
     }
 
