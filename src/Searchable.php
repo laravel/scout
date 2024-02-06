@@ -278,7 +278,8 @@ trait Searchable
             'whereIntegerInRaw' :
             'whereIn';
 
-        return $query->{$whereIn}($this->qualifyColumn($this->getScoutKeyName()), $ids);
+        return $query->{$whereIn}(
+            $this->qualifyColumn($this->getScoutKeyName()), $ids);
     }
 
     /**
