@@ -119,7 +119,7 @@ trait Searchable
     public static function search($query = '', $callback = null)
     {
         return app(Builder::class, [
-            'model' => new static(),
+            'model' => new static,
             'query' => $query,
             'callback' => $callback,
             'softDelete' => static::usesSoftDelete() && config('scout.soft_delete', false),
@@ -155,7 +155,7 @@ trait Searchable
      */
     public static function makeAllSearchable($chunk = null)
     {
-        $self = new static();
+        $self = new static;
 
         $softDelete = static::usesSoftDelete() && config('scout.soft_delete', false);
 
@@ -211,7 +211,7 @@ trait Searchable
      */
     public static function removeAllFromSearch()
     {
-        $self = new static();
+        $self = new static;
 
         $self->searchableUsing()->flush($self);
     }
