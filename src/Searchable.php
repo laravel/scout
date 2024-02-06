@@ -22,11 +22,11 @@ trait Searchable
      */
     public static function bootSearchable()
     {
-        static::addGlobalScope(new SearchableScope);
+        static::addGlobalScope(new SearchableScope());
 
-        static::observe(new ModelObserver);
+        static::observe(new ModelObserver());
 
-        (new static)->registerSearchableMacros();
+        (new static())->registerSearchableMacros();
     }
 
     /**
@@ -59,7 +59,7 @@ trait Searchable
             return;
         }
 
-        if (! config('scout.queue')) {
+        if (!config('scout.queue')) {
             return $models->first()->makeSearchableUsing($models)->first()->searchableUsing()->update($models);
         }
 
@@ -80,7 +80,7 @@ trait Searchable
             return;
         }
 
-        if (! config('scout.queue')) {
+        if (!config('scout.queue')) {
             return $models->first()->searchableUsing()->delete($models);
         }
 
@@ -119,11 +119,28 @@ trait Searchable
     public static function search($query = '', $callback = null)
     {
         return app(Builder::class, [
-            'model' => new static,
+            'model' => new static(),
             'query' => $query,
             'callback' => $callback,
             'softDelete' => static::usesSoftDelete() && config('scout.soft_delete', false),
         ]);
+    }
+
+    /**
+     * Perform a search against the model's indexed data. This method is an alias of the search method.
+     * Using a scoped search method allows you to use the search method in a query scope.
+     * This will not work after queries such as groupBy, having, or other aggregate functions.
+     *
+     * @param  \EloquentBuilder $eloquentQuery
+     * @param  string  $query
+     * @param  \Closure  $callback
+     * @return \Laravel\Scout\Builder
+     */
+    public static function scopeSearch($eloquentQuery, $query = '', $callback = null)
+    {
+        // Given some eloquent query (that we know has not been executed), we can run our search first,
+        // and then merge the constraints from the eloquent query into the search query.
+        return static::search($query, $callback)->query(fn (EloquentBuilder $builder) => $builder->mergeConstraintsFrom($eloquentQuery));
     }
 
     /**
@@ -134,7 +151,7 @@ trait Searchable
      */
     public static function makeAllSearchable($chunk = null)
     {
-        $self = new static;
+        $self = new static();
 
         $softDelete = static::usesSoftDelete() && config('scout.soft_delete', false);
 
@@ -190,7 +207,7 @@ trait Searchable
      */
     public static function removeAllFromSearch()
     {
-        $self = new static;
+        $self = new static();
 
         $self->searchableUsing()->flush($self);
     }
@@ -258,7 +275,8 @@ trait Searchable
             'whereIn';
 
         return $query->{$whereIn}(
-            $this->qualifyColumn($this->getScoutKeyName()), $ids
+            $this->qualifyColumn($this->getScoutKeyName()),
+            $ids
         );
     }
 
