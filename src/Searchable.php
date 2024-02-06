@@ -128,8 +128,7 @@ trait Searchable
 
     /**
      * Perform a search against the model's indexed data. This method is an alias of the search method.
-     * Using a scoped search method allows you to use the search method in a query scope.
-     * This will not work after queries such as groupBy, having, or other aggregate functions.
+     * Uses locally scoped search function to enable flexible queries.
      *
      * @param  \EloquentBuilder  $eloquentQuery
      * @param  string  $query
