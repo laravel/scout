@@ -17,10 +17,7 @@ use Orchestra\Testbench\TestCase;
 
 class BuilderTest extends TestCase
 {
-    use LazilyRefreshDatabase;
-    use WithFaker;
-    use WithLaravelMigrations;
-    use WithWorkbench;
+    use LazilyRefreshDatabase, WithFaker, WithLaravelMigrations, WithWorkbench;
 
     protected function defineEnvironment($app)
     {
