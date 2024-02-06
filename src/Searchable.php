@@ -59,7 +59,7 @@ trait Searchable
             return;
         }
 
-        if (!config('scout.queue')) {
+        if (! config('scout.queue')) {
             return $models->first()->makeSearchableUsing($models)->first()->searchableUsing()->update($models);
         }
 
@@ -80,7 +80,7 @@ trait Searchable
             return;
         }
 
-        if (!config('scout.queue')) {
+        if (! config('scout.queue')) {
             return $models->first()->searchableUsing()->delete($models);
         }
 
@@ -131,7 +131,7 @@ trait Searchable
      * Using a scoped search method allows you to use the search method in a query scope.
      * This will not work after queries such as groupBy, having, or other aggregate functions.
      *
-     * @param  \EloquentBuilder $eloquentQuery
+     * @param  \EloquentBuilder  $eloquentQuery
      * @param  string  $query
      * @param  \Closure  $callback
      * @return \Laravel\Scout\Builder
