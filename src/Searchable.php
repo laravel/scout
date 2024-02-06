@@ -140,7 +140,11 @@ trait Searchable
     {
         // Given some eloquent query (that we know has not been executed), we can run our search first,
         // and then merge the constraints from the eloquent query into the search query.
-        return static::search($query, $callback)->query(fn (EloquentBuilder $builder) => $builder->mergeConstraintsFrom($eloquentQuery));
+        return static::search($query, $callback)->query(
+            function (EloquentBuilder $builder) use ($eloquentQuery) {
+                return $builder->setQuery($eloquentQuery->getQuery());
+            }
+        );
     }
 
     /**
