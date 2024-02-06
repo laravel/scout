@@ -104,4 +104,9 @@ trait SearchableTests
             User::search('lar')->take(10)->query($queryCallback)->paginate(5, 'page', 2),
         ];
     }
+
+    protected function itCanUseLocalScopeSearch()
+    {
+        return User::where('email_verified_at', null)->search('lar')->take(10)->get();
+    }
 }

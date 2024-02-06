@@ -17,7 +17,10 @@ use Orchestra\Testbench\TestCase;
 
 class BuilderTest extends TestCase
 {
-    use LazilyRefreshDatabase, WithFaker, WithLaravelMigrations, WithWorkbench;
+    use LazilyRefreshDatabase;
+    use WithFaker;
+    use WithLaravelMigrations;
+    use WithWorkbench;
 
     protected function defineEnvironment($app)
     {
@@ -59,6 +62,19 @@ class BuilderTest extends TestCase
         $this->assertSame(15, $paginator->perPage());
     }
 
+    public function test_it_can_paginate_scoped_with_custom_query_callback()
+    {
+        $this->prepareScoutSearchMockUsing('Laravel');
+
+        $paginator = SearchableUserModel::where(function ($builder) {
+            return $builder->where('id', '<', 11);
+        })->search('Laravel')->paginate();
+
+        $this->assertSame(10, $paginator->total());
+        $this->assertSame(1, $paginator->lastPage());
+        $this->assertSame(15, $paginator->perPage());
+    }
+
     public function test_it_can_paginate_raw_without_custom_query_callback()
     {
         $this->prepareScoutSearchMockUsing('Laravel');
@@ -77,6 +93,19 @@ class BuilderTest extends TestCase
         $paginator = SearchableUserModel::search('Laravel')->query(function ($builder) {
             return $builder->where('id', '<', 11);
         })->paginateRaw();
+
+        $this->assertSame(10, $paginator->total());
+        $this->assertSame(1, $paginator->lastPage());
+        $this->assertSame(15, $paginator->perPage());
+    }
+
+    public function test_it_can_paginate_raw_scoped_with_custom_query_callback()
+    {
+        $this->prepareScoutSearchMockUsing('Laravel');
+
+        $paginator = SearchableUserModel::where(function ($builder) {
+            return $builder->where('id', '<', 11);
+        })->search('Laravel')->paginateRaw();
 
         $this->assertSame(10, $paginator->total());
         $this->assertSame(1, $paginator->lastPage());
