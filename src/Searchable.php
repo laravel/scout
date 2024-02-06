@@ -22,11 +22,11 @@ trait Searchable
      */
     public static function bootSearchable()
     {
-        static::addGlobalScope(new SearchableScope());
+        static::addGlobalScope(new SearchableScope);
 
-        static::observe(new ModelObserver());
+        static::observe(new ModelObserver);
 
-        (new static())->registerSearchableMacros();
+        (new static)->registerSearchableMacros();
     }
 
     /**
