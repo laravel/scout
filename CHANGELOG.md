@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.8.2...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.8.3...10.x)
+
+## [v10.8.3](https://github.com/laravel/scout/compare/v10.8.2...v10.8.3) - 2024-02-13
+
+* [10.x] Fix zero integer value in options parameter for Typesense by [@alignwebs](https://github.com/alignwebs) in https://github.com/laravel/scout/pull/802
 
 ## [v10.8.2](https://github.com/laravel/scout/compare/v10.8.1...v10.8.2) - 2024-01-30
 
