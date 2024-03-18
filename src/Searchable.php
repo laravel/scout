@@ -146,7 +146,7 @@ trait Searchable
                 $query->withTrashed();
             })
             ->orderBy(
-                $self->qualifyColumn($self->getScoutKeyName())
+                $self->getScoutKeyName()
             )
             ->searchable($chunk);
     }
@@ -258,7 +258,7 @@ trait Searchable
             'whereIn';
 
         return $query->{$whereIn}(
-            $this->qualifyColumn($this->getScoutKeyName()), $ids
+            $this->getScoutKeyName(), $ids
         );
     }
 
