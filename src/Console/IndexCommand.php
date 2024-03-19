@@ -7,7 +7,9 @@ use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Laravel\Scout\EngineManager;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'scout:index')]
 class IndexCommand extends Command
 {
     /**
