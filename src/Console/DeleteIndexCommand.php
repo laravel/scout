@@ -6,7 +6,9 @@ use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 use Laravel\Scout\EngineManager;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'scout:delete-index')]
 class DeleteIndexCommand extends Command
 {
     /**
