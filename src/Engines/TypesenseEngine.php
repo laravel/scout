@@ -501,8 +501,8 @@ class TypesenseEngine extends Engine
         } catch (ObjectNotFound $exception) {
             $schema = config('scout.typesense.model-settings.'.get_class($model).'.collection-schema') ?? [];
 
-            if (method_exists($model, 'typesenseCollectionSchemaFields')) {
-                $schema['fields'] = $model->typesenseCollectionSchemaFields();
+            if (method_exists($model, 'typesenseCollectionSchema')) {
+                $schema = $model->typesenseCollectionSchema();
             }
 
             if (! isset($schema['name'])) {
