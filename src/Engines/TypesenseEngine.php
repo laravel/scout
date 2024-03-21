@@ -500,8 +500,9 @@ class TypesenseEngine extends Engine
             return $index;
         } catch (ObjectNotFound $exception) {
             $schema = config('scout.typesense.model-settings.'.get_class($model).'.collection-schema') ?? [];
-            if(method_exists($model, 'typesenseCollectionSchemaFields')) {
-                $schema['fields'] = $model::typesenseCollectionSchemaFields();
+
+            if (method_exists($model, 'typesenseCollectionSchemaFields')) {
+                $schema['fields'] = $model->typesenseCollectionSchemaFields();
             }
 
             if (! isset($schema['name'])) {
