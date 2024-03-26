@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.8.3...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.8.4...10.x)
+
+## [v10.8.4](https://github.com/laravel/scout/compare/v10.8.3...v10.8.4) - 2024-03-26
+
+* Repaces when and tap functions with Conditionable and Tappable traits by [@ncharalampidis](https://github.com/ncharalampidis) in https://github.com/laravel/scout/pull/811
+* [10.x] Make commands lazy by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/scout/pull/815
+* [10.x] Optional field definitions on model by [@MortenDHansen](https://github.com/MortenDHansen) in https://github.com/laravel/scout/pull/812
 
 ## [v10.8.3](https://github.com/laravel/scout/compare/v10.8.2...v10.8.3) - 2024-02-13
 
