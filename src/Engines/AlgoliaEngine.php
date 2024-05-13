@@ -300,6 +300,20 @@ class AlgoliaEngine extends Engine
     }
 
     /**
+     * Update an index's settings.
+     *
+     * @param  string  $name
+     * @param  array  $options
+     * @return mix
+     */
+    public function updateIndexSettings($name, array $options = [])
+    {
+        $index = $this->algolia->initIndex($name);
+
+        return $index->setSettings($options);
+    }
+
+    /**
      * Delete a search index.
      *
      * @param  string  $name
