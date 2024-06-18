@@ -105,7 +105,7 @@ class AlgoliaEngine extends Engine
     public function search(Builder $builder)
     {
         return $this->performSearch($builder, array_filter([
-            'filters' => $this->filters($builder),
+            'numericFilters' => $this->filters($builder),
             'hitsPerPage' => $builder->limit,
         ]));
     }
@@ -121,7 +121,7 @@ class AlgoliaEngine extends Engine
     public function paginate(Builder $builder, $perPage, $page)
     {
         return $this->performSearch($builder, [
-            'filters' => $this->filters($builder),
+            'numericFilters' => $this->filters($builder),
             'hitsPerPage' => $perPage,
             'page' => $page - 1,
         ]);
@@ -163,18 +163,18 @@ class AlgoliaEngine extends Engine
     protected function filters(Builder $builder)
     {
         $wheres = collect($builder->wheres)->map(function ($value, $key) {
-            return $key.":'{$value}'";
+            return $key.'='.$value;
         })->values();
 
         return $wheres->merge(collect($builder->whereIns)->map(function ($values, $key) {
             if (empty($values)) {
-                return '0:1';
+                return '0=1';
             }
 
-            return '('.collect($values)->map(function ($value) use ($key) {
-                return $key.":'{$value}'";
-            })->implode(' OR ').')';
-        })->values()->implode(' AND '))->values()->filter()->implode(' AND ');
+            return collect($values)->map(function ($value) use ($key) {
+                return $key.'='.$value;
+            })->all();
+        })->values())->values()->all();
     }
 
     /**

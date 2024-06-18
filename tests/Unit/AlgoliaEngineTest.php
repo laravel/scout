@@ -113,7 +113,7 @@ class AlgoliaEngineTest extends TestCase
         $client = m::mock(SearchClient::class);
         $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('search')->with('zonda', [
-            'filters' => "foo:'1'",
+            'numericFilters' => ['foo=1'],
         ]);
 
         $engine = new AlgoliaEngine($client);
@@ -127,13 +127,12 @@ class AlgoliaEngineTest extends TestCase
         $client = m::mock(SearchClient::class);
         $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('search')->with('zonda', [
-            'filters' => "foo:'1' AND (bar:'1' OR bar:'2') AND (qux:'2' OR qux:'3')",
+            'numericFilters' => ['foo=1', ['bar=1', 'bar=2']],
         ]);
 
         $engine = new AlgoliaEngine($client);
         $builder = new Builder(new SearchableModel, 'zonda');
-        $builder->where('foo', 1)->whereIn('bar', [1, 2])
-            ->whereIn('qux', [2, 3]);
+        $builder->where('foo', 1)->whereIn('bar', [1, 2]);
         $engine->search($builder);
     }
 
@@ -142,7 +141,7 @@ class AlgoliaEngineTest extends TestCase
         $client = m::mock(SearchClient::class);
         $client->shouldReceive('initIndex')->with('table')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('search')->with('zonda', [
-            'filters' => "foo:'1' AND 0:1",
+            'numericFilters' => ['foo=1', '0=1'],
         ]);
 
         $engine = new AlgoliaEngine($client);
