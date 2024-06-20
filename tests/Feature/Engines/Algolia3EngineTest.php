@@ -112,7 +112,7 @@ class Algolia3EngineTest extends TestCase
 
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('search')->once()->with('zonda', [
-            'numericFilters' => ['foo=1'],
+            'filters' => "foo:'1'",
         ])->once();
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -127,7 +127,7 @@ class Algolia3EngineTest extends TestCase
 
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('search')->once()->with('zonda', [
-            'numericFilters' => ['foo=1', ['bar=1', 'bar=2']],
+            'filters' => "foo:'1' AND (bar:'1' OR bar:'2')",
         ]);
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -142,7 +142,7 @@ class Algolia3EngineTest extends TestCase
 
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('search')->once()->with('zonda', [
-            'numericFilters' => ['foo=1', '0=1'],
+            'filters' => "foo:'1' AND 0:1",
         ]);
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -250,10 +250,7 @@ class Algolia3EngineTest extends TestCase
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
 
         $index->shouldReceive('search')->once()->with('zonda', [
-            'numericFilters' => [
-                'foo!=1',
-                'foo!=2',
-            ],
+            'filters' => "(NOT foo:'1' OR NOT foo:'2')",
         ]);
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -281,12 +278,7 @@ class Algolia3EngineTest extends TestCase
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
 
         $index->shouldReceive('search')->once()->with('zonda', [
-            'numericFilters' => [
-                'foo=1',
-                ['bar=1', 'bar=2'],
-                'baz!=1',
-                'baz!=2',
-            ],
+            'filters' => "foo:'1' AND (bar:'1' OR bar:'2') AND (NOT baz:'1' OR NOT baz:'2')",
         ]);
 
         $builder = new Builder(new SearchableUser, 'zonda');

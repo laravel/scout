@@ -99,7 +99,7 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
     public function search(Builder $builder)
     {
         return $this->performSearch($builder, array_filter([
-            'numericFilters' => $this->filters($builder),
+            'filters' => $this->filters($builder),
             'hitsPerPage' => $builder->limit,
         ]));
     }
@@ -115,7 +115,7 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
     public function paginate(Builder $builder, $perPage, $page)
     {
         return $this->performSearch($builder, [
-            'numericFilters' => $this->filters($builder),
+            'filters' => $this->filters($builder),
             'hitsPerPage' => $perPage,
             'page' => $page - 1,
         ]);
@@ -125,35 +125,37 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
      * Get the filter array for the query.
      *
      * @param  \Laravel\Scout\Builder  $builder
-     * @return array
+     * @return string
      */
     protected function filters(Builder $builder)
     {
         $wheres = collect($builder->wheres)
-            ->map(fn ($value, $key) => $key.'='.$value)
+            ->map(fn ($value, $key) => $key.":'{$value}'")
             ->values();
 
-        $whereIns = collect($builder->whereIns)->map(function ($values, $key) {
-            if (empty($values)) {
-                return '0=1';
-            }
+        $whereIns = collect($builder->whereIns)
+            ->map(function ($values, $key) {
+                if (empty($values)) {
+                    return '0:1';
+                }
 
-            return collect($values)
-                ->map(fn ($value) => $key.'='.$value)
-                ->all();
-        })->values();
+                return '('.collect($values)->map(function ($value) use ($key) {
+                    return $key.":'{$value}'";
+                })->implode(' OR ').')';
+            })->values();
 
-        $whereNotIns = collect($builder->whereNotIns)->flatMap(function ($values, $key) {
-            if (empty($values)) {
-                return [];
-            }
+        $whereNotIns = collect($builder->whereNotIns)
+            ->map(function ($values, $key) {
+                if (empty($values)) {
+                    return '';
+                }
 
-            return collect($values)
-                ->map(fn ($value) => $key.'!='.$value)
-                ->all();
-        });
+                return '('.collect($values)->map(function ($value) use ($key) {
+                    return 'NOT '.$key.":'{$value}'";
+                })->implode(' OR ').')';
+            })->values();
 
-        return $wheres->merge($whereIns)->merge($whereNotIns)->values()->all();
+        return $wheres->merge($whereIns)->merge($whereNotIns)->filter()->implode(' AND ');
     }
 
     /**

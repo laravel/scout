@@ -108,7 +108,7 @@ class Algolia4EngineTest extends TestCase
 
         $this->client->shouldReceive('searchSingleIndex')->once()->with(
             'users',
-            ['query' => 'zonda', 'numericFilters' => ['foo=1']],
+            ['query' => 'zonda', 'filters' => "foo:'1'"],
         );
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -123,7 +123,7 @@ class Algolia4EngineTest extends TestCase
 
         $this->client->shouldReceive('searchSingleIndex')->once()->with(
             'users',
-            ['query' => 'zonda', 'numericFilters' => ['foo=1', ['bar=1', 'bar=2']]],
+            ['query' => 'zonda', 'filters' => "foo:'1' AND (bar:'1' OR bar:'2')"],
         );
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -138,7 +138,7 @@ class Algolia4EngineTest extends TestCase
 
         $this->client->shouldReceive('searchSingleIndex')->once()->with(
             'users',
-            ['query' => 'zonda', 'numericFilters' => ['foo=1', '0=1']],
+            ['query' => 'zonda', 'filters' => "foo:'1' AND 0:1"],
         );
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -243,10 +243,7 @@ class Algolia4EngineTest extends TestCase
             'users',
             [
                 'query' => 'zonda',
-                'numericFilters' => [
-                    'foo!=1',
-                    'foo!=2',
-                ],
+                'filters' => "(NOT foo:'1' OR NOT foo:'2')",
             ]
         );
 
@@ -279,12 +276,7 @@ class Algolia4EngineTest extends TestCase
             'users',
             [
                 'query' => 'zonda',
-                'numericFilters' => [
-                    'foo=1',
-                    ['bar=1', 'bar=2'],
-                    'baz!=1',
-                    'baz!=2',
-                ],
+                'filters' => "foo:'1' AND (bar:'1' OR bar:'2') AND (NOT baz:'1' OR NOT baz:'2')",
             ]
         );
 
