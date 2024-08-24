@@ -11,6 +11,9 @@ use Illuminate\Support\Traits\Tappable;
 use Laravel\Scout\Contracts\PaginatesEloquentModels;
 use Laravel\Scout\Contracts\PaginatesEloquentModelsUsingDatabase;
 
+/**
+ * @template TModel of \Illuminate\Database\Eloquent\Model
+ */
 class Builder
 {
     use Conditionable, Macroable, Tappable;
@@ -18,7 +21,7 @@ class Builder
     /**
      * The model instance.
      *
-     * @var \Illuminate\Database\Eloquent\Model
+     * @var TModel
      */
     public $model;
 
@@ -95,7 +98,7 @@ class Builder
     /**
      * Create a new search builder instance.
      *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  TModel  $model
      * @param  string  $query
      * @param  \Closure|null  $callback
      * @param  bool  $softDelete
@@ -300,7 +303,7 @@ class Builder
     /**
      * Get the first result from the search.
      *
-     * @return \Illuminate\Database\Eloquent\Model
+     * @return TModel
      */
     public function first()
     {
@@ -310,7 +313,7 @@ class Builder
     /**
      * Get the results of the search.
      *
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return \Illuminate\Database\Eloquent\Collection<int, TModel>
      */
     public function get()
     {
@@ -320,7 +323,7 @@ class Builder
     /**
      * Get the results of the search as a "lazy collection" instance.
      *
-     * @return \Illuminate\Support\LazyCollection
+     * @return \Illuminate\Support\LazyCollection<int, TModel>
      */
     public function cursor()
     {

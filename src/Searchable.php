@@ -114,7 +114,7 @@ trait Searchable
      *
      * @param  string  $query
      * @param  \Closure  $callback
-     * @return \Laravel\Scout\Builder
+     * @return \Laravel\Scout\Builder<static>
      */
     public static function search($query = '', $callback = null)
     {
