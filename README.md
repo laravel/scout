@@ -1,4 +1,4 @@
-<p align="center"><img src="/art/logo.svg" alt="Logo Laravel Scout"></p>
+<p align="center"><img width="316" height="81" src="/art/logo.svg" alt="Logo Laravel Scout"></p>
 
 <p align="center">
 <a href="https://github.com/laravel/scout/actions"><img src="https://github.com/laravel/scout/workflows/tests/badge.svg" alt="Build Status"></a>
