@@ -41,7 +41,6 @@ class EngineManager extends Manager
     {
         $this->ensureAlgoliaClientIsInstalled();
 
-        // UserAgent::addCustomUserAgent('Laravel Scout', Scout::VERSION);
         AlgoliaAgent::addAlgoliaAgent('Laravel Scout', 'Laravel Scout', Scout::VERSION);
 
         $config = SearchConfig::create(
@@ -64,7 +63,6 @@ class EngineManager extends Manager
         }
 
         if (is_int($batchSize = config('scout.algolia.batch_size'))) {
-            // $config->setBatchSize($batchSize);
             (new Event())->setBatchSize($batchSize);
         }
 
