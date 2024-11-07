@@ -90,7 +90,8 @@ jobs:
            composer update --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests
-        run: vendor/bin/phpunit --group meilisearch
+        run: vendor/bin/phpunit --no-configuration --no-coverage --color --bootstrap vendor/autoload.php --group meilisearch tests/Integration
         env:
           MEILISEARCH_HOST: "http://localhost:7700"
           MEILISEARCH_KEY: 'masterKey'
+          DB_CONNECTION: 'testing'
