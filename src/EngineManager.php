@@ -62,7 +62,7 @@ class EngineManager extends Manager
         }
 
         if (is_int($batchSize = config('scout.algolia.batch_size'))) {
-            (new Event())->setBatchSize($batchSize);
+            (new Event)->setBatchSize($batchSize);
         }
 
         return new AlgoliaEngine(Algolia::createWithConfig($config), config('scout.soft_delete'));
