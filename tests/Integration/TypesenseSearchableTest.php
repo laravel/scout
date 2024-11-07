@@ -3,6 +3,7 @@
 namespace Laravel\Scout\Tests\Integration;
 
 use Laravel\Scout\Tests\Fixtures\User;
+use Orchestra\Testbench\Attributes\RequiresEnv;
 
 /**
  * @group typesense
