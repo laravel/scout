@@ -20,8 +20,6 @@ jobs:
         laravel: [9, 10, 11]
         exclude:
           - php: '8.0'
-            laravel: 9
-          - php: '8.0'
             laravel: 10
           - php: '8.0'
             laravel: 11
