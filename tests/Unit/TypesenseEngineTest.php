@@ -65,10 +65,13 @@ class TypesenseEngineTest extends TestCase
         $builder->whereIns = [
             'category' => ['electronics', 'books'],
         ];
+        $builder->whereNotIns = [
+            'category' => ['furniture', 'phones'],
+        ];
 
         $result = $this->invokeMethod($this->engine, 'filters', [$builder]);
 
-        $expected = 'status:=active && age:=25 && category:=[electronics, books]';
+        $expected = 'status:=active && age:=25 && category:=[electronics, books] && category:!=[furniture, phones]';
         $this->assertEquals($expected, $result);
     }
 
@@ -100,6 +103,11 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals('id:=[1, 2, 3]', $this->invokeMethod($this->engine, 'parseWhereInFilter', [[1, 2, 3], 'id']));
     }
 
+    public function test_parse_where_not_in_filter_metheod()
+    {
+        $this->assertEquals('category:!=[electronics, books]', $this->invokeMethod($this->engine, 'parseWhereNotInFilter', [['electronics', 'books'], 'category']));
+        $this->assertEquals('id:!=[1, 2, 3]', $this->invokeMethod($this->engine, 'parseWhereNotInFilter', [[1, 2, 3], 'id']));
+    }
     public function test_update_method(): void
     {
         // Mock models and their methods
