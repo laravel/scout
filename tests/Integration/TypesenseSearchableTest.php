@@ -2,7 +2,6 @@
 
 namespace Laravel\Scout\Tests\Integration;
 
-use Illuminate\Support\Env;
 use Laravel\Scout\Tests\Fixtures\User;
 
 /**

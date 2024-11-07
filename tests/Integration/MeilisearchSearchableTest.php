@@ -3,7 +3,6 @@
 namespace Laravel\Scout\Tests\Integration;
 
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Env;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\MeilisearchEngine;
 use Laravel\Scout\Tests\Fixtures\User;

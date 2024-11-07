@@ -2,8 +2,8 @@
 
 namespace Laravel\Scout;
 
-use Algolia\AlgoliaSearch\Configuration\SearchConfig;
 use Algolia\AlgoliaSearch\Api\SearchClient as Algolia;
+use Algolia\AlgoliaSearch\Configuration\SearchConfig;
 use Algolia\AlgoliaSearch\Model\Ingestion\Event;
 use Algolia\AlgoliaSearch\Support\AlgoliaAgent;
 use Algolia\AlgoliaSearch\Support\UserAgent;
