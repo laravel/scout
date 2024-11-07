@@ -4,7 +4,6 @@ namespace Laravel\Scout;
 
 use Algolia\AlgoliaSearch\Api\SearchClient as Algolia;
 use Algolia\AlgoliaSearch\Configuration\SearchConfig;
-use Algolia\AlgoliaSearch\Model\Ingestion\Event;
 use Algolia\AlgoliaSearch\Support\AlgoliaAgent;
 use Exception;
 use Illuminate\Support\Manager;
@@ -42,10 +41,12 @@ class EngineManager extends Manager
 
         AlgoliaAgent::addAlgoliaAgent('Laravel Scout', 'Laravel Scout', Scout::VERSION);
 
-        $config = SearchConfig::create(
-            config('scout.algolia.id'),
-            config('scout.algolia.secret')
-        )->setDefaultHeaders(
+        $config = (new SearchConfig(array_merge([
+            'appId' => config('scout.algolia.id'),
+            'apiKey' => config('scout.algolia.secret'),
+        ]), array_filter([
+            'batchSize' => config('scout.algolia.batch_size'),
+        ])))->setDefaultHeaders(
             $this->defaultAlgoliaHeaders()
         );
 
@@ -59,10 +60,6 @@ class EngineManager extends Manager
 
         if (is_int($writeTimeout = config('scout.algolia.write_timeout'))) {
             $config->setWriteTimeout($writeTimeout);
-        }
-
-        if (is_int($batchSize = config('scout.algolia.batch_size'))) {
-            (new Event)->setBatchSize($batchSize);
         }
 
         return new AlgoliaEngine(Algolia::createWithConfig($config), config('scout.soft_delete'));
