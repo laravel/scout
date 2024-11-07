@@ -21,6 +21,9 @@ use Mockery as m;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
+/**
+ * @group meilisearch
+ */
 class MeilisearchEngineTest extends TestCase
 {
     protected function setUp(): void
