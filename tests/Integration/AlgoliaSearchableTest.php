@@ -16,6 +16,17 @@ class AlgoliaSearchableTest extends TestCase
     use SearchableTests;
 
     /**
+     * Define environment setup.
+     *
+     * @param  \Illuminate\Foundation\Application  $app
+     * @return void
+     */
+    protected function defineEnvironment($app)
+    {
+        $this->defineScoutEnvironment($app);
+    }
+
+    /**
      * Define database migrations.
      *
      * @return void

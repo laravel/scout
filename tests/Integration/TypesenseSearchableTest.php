@@ -9,6 +9,7 @@ use Laravel\Scout\Tests\Fixtures\User;
  * @group typesense
  * @group external-network
  */
+#[RequiresEnv('TYPESENSE_API_KEY')]
 class TypesenseSearchableTest extends TestCase
 {
     use SearchableTests;
@@ -21,10 +22,6 @@ class TypesenseSearchableTest extends TestCase
      */
     protected function defineEnvironment($app)
     {
-        if (is_null(Env::get('TYPESENSE_API_KEY'))) {
-            $this->markTestSkipped();
-        }
-
         $this->defineScoutEnvironment($app);
     }
 
