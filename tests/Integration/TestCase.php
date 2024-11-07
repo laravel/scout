@@ -29,11 +29,9 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
      */
     public static function tearDownAfterClass(): void
     {
-        rescue(function () {
-            remote('scout:delete-all-indexes', [
-                'SCOUT_DRIVER' => static::scoutDriver(),
-            ])->mustRun();
-        });
+        remote('scout:delete-all-indexes', [
+            'SCOUT_DRIVER' => static::scoutDriver(),
+        ])->mustRun();
 
         parent::tearDownAfterClass();
     }
