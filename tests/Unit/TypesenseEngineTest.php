@@ -108,6 +108,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals('category:!=[electronics, books]', $this->invokeMethod($this->engine, 'parseWhereNotInFilter', [['electronics', 'books'], 'category']));
         $this->assertEquals('id:!=[1, 2, 3]', $this->invokeMethod($this->engine, 'parseWhereNotInFilter', [[1, 2, 3], 'id']));
     }
+
     public function test_update_method(): void
     {
         // Mock models and their methods
