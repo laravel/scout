@@ -31,7 +31,7 @@ class EngineManager extends Manager
     }
 
     /**
-     * Create a Meilisearch engine instance.
+     * Create an Algolia engine instance.
      *
      * @return \Laravel\Scout\Engines\AlgoliaEngine
      */
@@ -45,7 +45,7 @@ class EngineManager extends Manager
     }
 
     /**
-     * Create an Algolia v4 engine instance.
+     * Create an Algolia v3 engine instance.
      *
      * @return \Laravel\Scout\Engines\Algolia3Engine
      */
