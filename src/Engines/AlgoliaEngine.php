@@ -9,12 +9,15 @@ use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 
-class AlgoliaEngine extends Engine
+/**
+ * @template TAlgoliaClient of object
+ */
+abstract class AlgoliaEngine extends Engine
 {
     /**
      * The Algolia client.
      *
-     * @var \Algolia\AlgoliaSearch\Api\SearchClient
+     * @var TAlgoliaClient
      */
     protected $algolia;
 
@@ -23,16 +26,16 @@ class AlgoliaEngine extends Engine
      *
      * @var bool
      */
-    protected $softDelete;
+    protected $softDelete = false;
 
     /**
      * Create a new engine instance.
      *
-     * @param  \Algolia\AlgoliaSearch\Api\SearchClient  $algolia
+     * @param  TAlgoliaClient  $algolia
      * @param  bool  $softDelete
      * @return void
      */
-    public function __construct(Algolia $algolia, $softDelete = false)
+    public function __construct($algolia, $softDelete = false)
     {
         $this->algolia = $algolia;
         $this->softDelete = $softDelete;
@@ -46,34 +49,7 @@ class AlgoliaEngine extends Engine
      *
      * @throws \Algolia\AlgoliaSearch\Exceptions\AlgoliaException
      */
-    public function update($models)
-    {
-        if ($models->isEmpty()) {
-            return;
-        }
-
-        $index = $models->first()->indexableAs();
-
-        if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
-            $models->each->pushSoftDeleteMetadata();
-        }
-
-        $objects = $models->map(function ($model) {
-            if (empty($searchableData = $model->toSearchableArray())) {
-                return;
-            }
-
-            return array_merge(
-                $searchableData,
-                $model->scoutMetadata(),
-                ['objectID' => $model->getScoutKey()],
-            );
-        })->filter()->values()->all();
-
-        if (! empty($objects)) {
-            $this->algolia->saveObjects($index, $objects);
-        }
-    }
+    abstract public function update($models);
 
     /**
      * Remove the given model from the index.
@@ -81,18 +57,32 @@ class AlgoliaEngine extends Engine
      * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
-    public function delete($models)
-    {
-        if ($models->isEmpty()) {
-            return;
-        }
+    abstract public function delete($models);
 
-        $keys = $models instanceof RemoveableScoutCollection
-            ? $models->pluck($models->first()->getScoutKeyName())
-            : $models->map->getScoutKey();
+    /**
+     * Delete a search index.
+     *
+     * @param  string  $name
+     * @return mixed
+     */
+    abstract public function deleteIndex($name);
 
-        $this->algolia->deleteObjects($models->first()->indexableAs(), $keys->all());
-    }
+    /**
+     * Flush all of the model's records from the engine.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return void
+     */
+    abstract public function flush($model);
+
+    /**
+     * Perform the given search on the engine.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  array  $options
+     * @return mixed
+     */
+    abstract protected function performSearch(Builder $builder, array $options = []);
 
     /**
      * Perform the given search on the engine.
@@ -123,35 +113,6 @@ class AlgoliaEngine extends Engine
             'hitsPerPage' => $perPage,
             'page' => $page - 1,
         ]);
-    }
-
-    /**
-     * Perform the given search on the engine.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @param  array  $options
-     * @return mixed
-     */
-    protected function performSearch(Builder $builder, array $options = [])
-    {
-        $options = array_merge($builder->options, $options);
-
-        if ($builder->callback) {
-            return call_user_func(
-                $builder->callback,
-                $this->algolia,
-                $builder->query,
-                $options
-            );
-        }
-
-        $queryParams = ['query' => $builder->query];
-
-        return $this->algolia->searchSingleIndex(
-            $builder->index ?: $builder->model->searchableAs(),
-            $queryParams,
-            $options
-        );
     }
 
     /**
@@ -273,17 +234,6 @@ class AlgoliaEngine extends Engine
     }
 
     /**
-     * Flush all of the model's records from the engine.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @return void
-     */
-    public function flush($model)
-    {
-        $this->algolia->clearObjects($model->indexableAs());
-    }
-
-    /**
      * Create a search index.
      *
      * @param  string  $name
@@ -295,17 +245,6 @@ class AlgoliaEngine extends Engine
     public function createIndex($name, array $options = [])
     {
         throw new Exception('Algolia indexes are created automatically upon adding objects.');
-    }
-
-    /**
-     * Delete a search index.
-     *
-     * @param  string  $name
-     * @return mixed
-     */
-    public function deleteIndex($name)
-    {
-        return $this->algolia->deleteIndex($name);
     }
 
     /**

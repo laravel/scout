@@ -2,9 +2,9 @@
 
 namespace Laravel\Scout;
 
-use Algolia\AlgoliaSearch\Api\SearchClient as Algolia;
-use Algolia\AlgoliaSearch\Configuration\SearchConfig;
-use Algolia\AlgoliaSearch\Support\AlgoliaAgent;
+use Algolia\AlgoliaSearch\Algolia;
+use Algolia\AlgoliaSearch\Support\AlgoliaAgent as Algolia4UserAgent;
+use Algolia\AlgoliaSearch\Support\UserAgent as Algolia3UserAgent;
 use Exception;
 use Illuminate\Support\Manager;
 use Laravel\Scout\Engines\AlgoliaEngine;
@@ -31,7 +31,7 @@ class EngineManager extends Manager
     }
 
     /**
-     * Create an Algolia engine instance.
+     * Create a Meilisearch engine instance.
      *
      * @return \Laravel\Scout\Engines\AlgoliaEngine
      */
@@ -39,14 +39,24 @@ class EngineManager extends Manager
     {
         $this->ensureAlgoliaClientIsInstalled();
 
-        AlgoliaAgent::addAlgoliaAgent('Laravel Scout', 'Laravel Scout', Scout::VERSION);
+        return version_compare(Algolia::VERSION, '4.0.0', '>=')
+            ? $this->configureAlgolia4Driver()
+            : $this->configureAlgolia3Driver();
+    }
 
-        $config = (new SearchConfig(array_merge([
-            'appId' => config('scout.algolia.id'),
-            'apiKey' => config('scout.algolia.secret'),
-        ]), array_filter([
-            'batchSize' => config('scout.algolia.batch_size'),
-        ])))->setDefaultHeaders(
+    /**
+     * Create an Algolia v4 engine instance.
+     *
+     * @return \Laravel\Scout\Engines\Algolia3Engine
+     */
+    protected function configureAlgolia3Driver()
+    {
+        Algolia3UserAgent::addCustomUserAgent('Laravel Scout', Scout::VERSION);
+
+        $config = SearchConfig::create(
+            config('scout.algolia.id'),
+            config('scout.algolia.secret')
+        )->setDefaultHeaders(
             $this->defaultAlgoliaHeaders()
         );
 
@@ -62,7 +72,23 @@ class EngineManager extends Manager
             $config->setWriteTimeout($writeTimeout);
         }
 
+        if (is_int($batchSize = config('scout.algolia.batch_size'))) {
+            $config->setBatchSize($batchSize);
+        }
+
         return new AlgoliaEngine(Algolia::createWithConfig($config), config('scout.soft_delete'));
+    }
+
+    /**
+     * Create an Algolia v4 engine instance.
+     *
+     * @return \Laravel\Scout\Engines\Algolia4Engine
+     */
+    protected function configureAlgolia4Driver()
+    {
+        Algolia4UserAgent::addAlgoliaAgent('Laravel Scout', 'Laravel Scout', Scout::VERSION);
+
+        return Algolia4Engine::make(config('scout.algolia'), config('scout.soft_delete'));
     }
 
     /**
@@ -79,7 +105,7 @@ class EngineManager extends Manager
         }
 
         if (class_exists('AlgoliaSearch\Client')) {
-            throw new Exception('Please upgrade your Algolia client to version: ^3.2.');
+            throw new Exception('Please upgrade your Algolia client to version: ^3.2|^4.0.');
         }
 
         throw new Exception('Please install the suggested Algolia client: algolia/algoliasearch-client-php.');

@@ -25,7 +25,7 @@
         "symfony/console": "^6.0|^7.0"
     },
     "require-dev": {
-        "algolia/algoliasearch-client-php": "^4.0",
+        "algolia/algoliasearch-client-php": "^3.2|^4.0",
         "typesense/typesense-php": "^4.9.3",
         "meilisearch/meilisearch-php": "^1.0",
         "mockery/mockery": "^1.0",
