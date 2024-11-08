@@ -26,7 +26,7 @@ abstract class AlgoliaEngine extends Engine
      *
      * @var bool
      */
-    protected $softDelete = false;
+    protected $softDelete;
 
     /**
      * Create a new engine instance.
