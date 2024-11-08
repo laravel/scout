@@ -4,9 +4,6 @@ namespace Laravel\Scout\Engines;
 
 use Algolia\AlgoliaSearch\Config\SearchConfig as Algolia3SearchConfig;
 use Algolia\AlgoliaSearch\SearchClient as Algolia3SearchClient;
-use Exception;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 
