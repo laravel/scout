@@ -2,7 +2,6 @@
 
 namespace Laravel\Scout\Engines;
 
-use Algolia\AlgoliaSearch\Api\SearchClient as Algolia;
 use Exception;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\LazyCollection;
