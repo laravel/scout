@@ -7,7 +7,8 @@ use Algolia\AlgoliaSearch\Support\AlgoliaAgent as Algolia4UserAgent;
 use Algolia\AlgoliaSearch\Support\UserAgent as Algolia3UserAgent;
 use Exception;
 use Illuminate\Support\Manager;
-use Laravel\Scout\Engines\AlgoliaEngine;
+use Laravel\Scout\Engines\Algolia3Engine;
+use Laravel\Scout\Engines\Algolia4Engine;
 use Laravel\Scout\Engines\CollectionEngine;
 use Laravel\Scout\Engines\DatabaseEngine;
 use Laravel\Scout\Engines\MeilisearchEngine;
@@ -51,32 +52,13 @@ class EngineManager extends Manager
      */
     protected function configureAlgolia3Driver()
     {
-        Algolia3UserAgent::addCustomUserAgent('Laravel Scout', Scout::VERSION);
+        Algolia3UserAgent::addCustomUserAgent('Laravel Scout', Scout::VERSION); // @phpstan-ignore class.notFound
 
-        $config = SearchConfig::create(
-            config('scout.algolia.id'),
-            config('scout.algolia.secret')
-        )->setDefaultHeaders(
-            $this->defaultAlgoliaHeaders()
+        return Algolia3Engine::make(
+            config: config('scout.algolia'),
+            headers: $this->defaultAlgoliaHeaders(),
+            softDelete: config('scout.soft_delete')
         );
-
-        if (is_int($connectTimeout = config('scout.algolia.connect_timeout'))) {
-            $config->setConnectTimeout($connectTimeout);
-        }
-
-        if (is_int($readTimeout = config('scout.algolia.read_timeout'))) {
-            $config->setReadTimeout($readTimeout);
-        }
-
-        if (is_int($writeTimeout = config('scout.algolia.write_timeout'))) {
-            $config->setWriteTimeout($writeTimeout);
-        }
-
-        if (is_int($batchSize = config('scout.algolia.batch_size'))) {
-            $config->setBatchSize($batchSize);
-        }
-
-        return new AlgoliaEngine(Algolia::createWithConfig($config), config('scout.soft_delete'));
     }
 
     /**
@@ -88,7 +70,11 @@ class EngineManager extends Manager
     {
         Algolia4UserAgent::addAlgoliaAgent('Laravel Scout', 'Laravel Scout', Scout::VERSION);
 
-        return Algolia4Engine::make(config('scout.algolia'), config('scout.soft_delete'));
+        return Algolia4Engine::make(
+            config: config('scout.algolia'),
+            headers: $this->defaultAlgoliaHeaders(),
+            softDelete: config('scout.soft_delete')
+        );
     }
 
     /**

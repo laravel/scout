@@ -32,19 +32,18 @@ class Algolia4Engine extends AlgoliaEngine
      * Make a new engine instance.
      *
      * @param  array  $config
+     * @param  array  $headers
      * @param  bool  $softDelete
      * @return static
      */
-    public static function make(array $config, bool $softDelete = false)
+    public static function make(array $config, array $headers, bool $softDelete = false)
     {
         $configuration = (new Algolia4SearchConfig(array_merge([
             'appId' => $config['id'],
             'apiKey' => $config['secret'],
         ]), array_filter([
             'batchSize' => $config['batch_size'],
-        ])))->setDefaultHeaders(
-            $this->defaultAlgoliaHeaders()
-        );
+        ])))->setDefaultHeaders($headers);
 
         if (is_int($connectTimeout = $config['connect_timeout'])) {
             $configuration->setConnectTimeout($connectTimeout);
