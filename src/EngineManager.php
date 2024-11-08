@@ -104,10 +104,6 @@ class EngineManager extends Manager
             return;
         }
 
-        if (class_exists('AlgoliaSearch\Client')) {
-            throw new Exception('Please upgrade your Algolia client to version: ^3.2|^4.0.');
-        }
-
         throw new Exception('Please install the suggested Algolia client: algolia/algoliasearch-client-php.');
     }
 

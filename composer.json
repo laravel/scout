@@ -34,6 +34,9 @@
         "phpstan/phpstan": "^1.10",
         "phpunit/phpunit": "^9.3|^10.4"
     },
+    "conflict": {
+        "algolia/algoliasearch-client-php": "<3.2.0|>=5.0.0"
+    },
     "autoload": {
         "psr-4": {
             "Laravel\\Scout\\": "src/"
