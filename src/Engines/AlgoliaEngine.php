@@ -40,6 +40,15 @@ abstract class AlgoliaEngine extends Engine
     }
 
     /**
+     * Perform the given search on the engine.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  array  $options
+     * @return mixed
+     */
+    abstract protected function performSearch(Builder $builder, array $options = []);
+
+    /**
      * Update the given model in the index.
      *
      * @param  \Illuminate\Database\Eloquent\Collection  $models
@@ -72,15 +81,6 @@ abstract class AlgoliaEngine extends Engine
      * @return void
      */
     abstract public function flush($model);
-
-    /**
-     * Perform the given search on the engine.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @param  array  $options
-     * @return mixed
-     */
-    abstract protected function performSearch(Builder $builder, array $options = []);
 
     /**
      * Perform the given search on the engine.
