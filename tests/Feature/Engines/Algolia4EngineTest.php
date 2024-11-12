@@ -23,7 +23,7 @@ use Workbench\Database\Factories\SearchableUserFactory;
 
 use function Orchestra\Testbench\after_resolving;
 
-#[WithConfig('scout.driver', 'algolia')]
+#[WithConfig('scout.driver', 'algolia4-testing')]
 #[WithMigration]
 class Algolia4EngineTest extends TestCase
 {
@@ -37,7 +37,7 @@ class Algolia4EngineTest extends TestCase
         after_resolving($app, EngineManager::class, function ($manager) {
             $this->client = m::spy(SearchClient::class);
 
-            $manager->extend('algolia', fn () => new Algolia4Engine($this->client, config('scout.soft_delete')));
+            $manager->extend('algolia4-testing', fn () => new Algolia4Engine($this->client, config('scout.soft_delete')));
         });
 
         $this->beforeApplicationDestroyed(function () {
@@ -49,14 +49,14 @@ class Algolia4EngineTest extends TestCase
     {
         $model = SearchableUserFactory::new()->createQuietly();
 
-        $engine = $this->app->make(EngineManager::class)->engine('algolia');
+        $engine = $this->app->make(EngineManager::class)->engine();
 
-        $this->client->shouldReceive('saveObjects')->with('users', [[
+        $this->client->shouldReceive('saveObjects')->once()->with('users', [[
             'id' => $model->getKey(),
             'name' => $model->name,
             'email' => $model->email,
             'objectID' => $model->getScoutKey(),
-        ]])->once();
+        ]]);
 
         $engine->update(Collection::make([$model]));
     }
@@ -65,9 +65,9 @@ class Algolia4EngineTest extends TestCase
     {
         $model = SearchableUserFactory::new()->createQuietly();
 
-        $engine = $this->app->make(EngineManager::class)->engine('algolia');
+        $engine = $this->app->make(EngineManager::class)->engine();
 
-        $this->client->shouldReceive('deleteObjects')->with('users', [1])->once();
+        $this->client->shouldReceive('deleteObjects')->once()->with('users', [1]);
 
         $engine->delete(Collection::make([$model]));
     }
@@ -78,7 +78,7 @@ class Algolia4EngineTest extends TestCase
             'scout_id' => 'my-algolia-key.5',
         ]);
 
-        $engine = $this->app->make(EngineManager::class)->engine('algolia');
+        $engine = $this->app->make(EngineManager::class)->engine();
 
         $this->client->shouldReceive('deleteObjects')->once()->with('chirps', ['my-algolia-key.5']);
 
@@ -91,7 +91,7 @@ class Algolia4EngineTest extends TestCase
             'scout_id' => 'my-algolia-key.5',
         ]);
 
-        $engine = $this->app->make(EngineManager::class)->engine('algolia');
+        $engine = $this->app->make(EngineManager::class)->engine();
 
         $job = new RemoveFromSearch(RemoveableScoutCollection::make([$model]));
 
@@ -104,15 +104,13 @@ class Algolia4EngineTest extends TestCase
 
     public function test_search_sends_correct_parameters_to_algolia()
     {
-        SearchableUserFactory::new()->createQuietly(['name' => 'zonda']);
+        $engine = $this->app->make(EngineManager::class)->engine();
 
-        $engine = $this->app->make(EngineManager::class)->engine('algolia');
-
-        $this->client->shouldReceive('searchSingleIndex')->with(
+        $this->client->shouldReceive('searchSingleIndex')->once()->with(
             'users',
             ['query' => 'zonda'],
             ['numericFilters' => ['foo=1']]
-        )->once();
+        );
 
         $builder = new Builder(new SearchableUser, 'zonda');
         $builder->where('foo', 1);
@@ -122,15 +120,13 @@ class Algolia4EngineTest extends TestCase
 
     public function test_search_sends_correct_parameters_to_algolia_for_where_in_search()
     {
-        SearchableUserFactory::new()->createQuietly(['name' => 'zonda']);
+        $engine = $this->app->make(EngineManager::class)->engine();
 
-        $engine = $this->app->make(EngineManager::class)->engine('algolia');
-
-        $this->client->shouldReceive('searchSingleIndex')->with(
+        $this->client->shouldReceive('searchSingleIndex')->once()->with(
             'users',
             ['query' => 'zonda'],
             ['numericFilters' => ['foo=1', ['bar=1', 'bar=2']]],
-        )->once();
+        );
 
         $builder = new Builder(new SearchableUser, 'zonda');
         $builder->where('foo', 1)->whereIn('bar', [1, 2]);
@@ -140,15 +136,13 @@ class Algolia4EngineTest extends TestCase
 
     public function test_search_sends_correct_parameters_to_algolia_for_empty_where_in_search()
     {
-        SearchableUserFactory::new()->createQuietly(['name' => 'zonda']);
+        $engine = $this->app->make(EngineManager::class)->engine();
 
-        $engine = $this->app->make(EngineManager::class)->engine('algolia');
-
-        $this->client->shouldReceive('searchSingleIndex')->with(
+        $this->client->shouldReceive('searchSingleIndex')->once()->with(
             'users',
             ['query' => 'zonda'],
             ['numericFilters' => ['foo=1', '0=1']]
-        )->once();
+        );
 
         $builder = new Builder(new SearchableUser, 'zonda');
         $builder->where('foo', 1)->whereIn('bar', []);
@@ -159,7 +153,7 @@ class Algolia4EngineTest extends TestCase
     {
         $model = SearchableUserFactory::new()->createQuietly(['name' => 'zonda']);
 
-        $engine = $this->app->make(EngineManager::class)->engine('algolia');
+        $engine = $this->app->make(EngineManager::class)->engine();
 
         $builder = m::mock(Builder::class);
 
@@ -181,12 +175,12 @@ class Algolia4EngineTest extends TestCase
             'scout_id' => 'my-algolia-key.1',
         ]);
 
-        $engine = $this->app->make(EngineManager::class)->engine('algolia');
+        $engine = $this->app->make(EngineManager::class)->engine();
 
-        $this->client->shouldReceive('saveObjects')->with('chirps', [[
+        $this->client->shouldReceive('saveObjects')->once()->with('chirps', [[
             'content' => $model->content,
             'objectID' => 'my-algolia-key.1',
-        ]])->once();
+        ]]);
 
         $engine->update(Collection::make([$model]));
     }
@@ -197,9 +191,9 @@ class Algolia4EngineTest extends TestCase
             'scout_id' => 'my-algolia-key.1',
         ]);
 
-        $engine = $this->app->make(EngineManager::class)->engine('algolia');
+        $engine = $this->app->make(EngineManager::class)->engine();
 
-        $this->client->shouldReceive('deleteObjects')->with('chirps', ['my-algolia-key.1'])->once();
+        $this->client->shouldReceive('deleteObjects')->once()->with('chirps', ['my-algolia-key.1']);
 
         $engine->delete(Collection::make([$model]));
     }
@@ -210,9 +204,9 @@ class Algolia4EngineTest extends TestCase
             'scout_id' => 'my-algolia-key.1',
         ]);
 
-        $engine = $this->app->make(EngineManager::class)->engine('algolia');
+        $engine = $this->app->make(EngineManager::class)->engine();
 
-        $this->client->shouldReceive('clearObjects')->with('chirps')->once();
+        $this->client->shouldReceive('clearObjects')->once()->with('chirps');
 
         $engine->flush(new Chirp);
     }
@@ -221,7 +215,7 @@ class Algolia4EngineTest extends TestCase
     {
         $_ENV['searchable.user'] = [];
 
-        $engine = $this->app->make(EngineManager::class)->engine('algolia');
+        $engine = $this->app->make(EngineManager::class)->engine();
 
         $this->client->shouldNotReceive('saveObjects')->with('users');
 
@@ -235,7 +229,7 @@ class Algolia4EngineTest extends TestCase
     {
         $_ENV['searchable.chirp'] = [];
 
-        $engine = $this->app->make(EngineManager::class)->engine('algolia');
+        $engine = $this->app->make(EngineManager::class)->engine();
 
         $this->client->shouldNotReceive('saveObjects')->with('chirps');
 

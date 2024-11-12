@@ -4,12 +4,14 @@ namespace Workbench\App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
 class Chirp extends Model
 {
     use HasUuids;
     use Searchable;
+    use SoftDeletes;
 
     /** {@inheritDoc} */
     protected $fillable = ['scout_id'];

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->uuid('scout_id');
             $table->text('content');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

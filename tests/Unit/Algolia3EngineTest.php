@@ -4,6 +4,7 @@ namespace Laravel\Scout\Tests\Unit;
 
 use Algolia\AlgoliaSearch\SearchClient;
 use Illuminate\Container\Container;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
