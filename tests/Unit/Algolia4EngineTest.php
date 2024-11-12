@@ -28,6 +28,7 @@ class Algolia4EngineTest extends TestCase
 
         m::close();
     }
+
     public function test_lazy_map_method_respects_order()
     {
         $client = m::mock(SearchClient::class);
