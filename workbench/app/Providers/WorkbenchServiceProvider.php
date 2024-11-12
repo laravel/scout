@@ -4,7 +4,6 @@ namespace Workbench\App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Laravel\Scout\EngineManager;
-use Laravel\Scout\Engines\Engine;
 use Laravel\Scout\Engines\NullEngine;
 use Mockery as m;
 

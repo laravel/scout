@@ -4,10 +4,9 @@ namespace Laravel\Scout\Tests\Feature\Jobs;
 
 //use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Laravel\Scout\Jobs\RemoveFromSearch;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
+use Laravel\Scout\Jobs\RemoveFromSearch;
 use Mockery as m;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
