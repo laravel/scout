@@ -19,6 +19,23 @@ class RemovableScoutCollectionTest extends TestCase
         $this->assertEquals([1, 2], $collection->getQueueableIds());
     }
 
+    public function test_get_queuable_ids_resolves_custom_scout_keys()
+    {
+        $collection = RemoveableScoutCollection::make([
+            ChirpFactory::new()->make(['scout_id' => 'custom-key.1']),
+            ChirpFactory::new()->make(['scout_id' => 'custom-key.2']),
+            ChirpFactory::new()->make(['scout_id' => 'custom-key.3']),
+            ChirpFactory::new()->make(['scout_id' => 'custom-key.4']),
+        ]);
+
+        $this->assertEquals([
+            'custom-key.1',
+            'custom-key.2',
+            'custom-key.3',
+            'custom-key.4',
+        ], $collection->getQueueableIds());
+    }
+
     public function test_removeable_scout_collection_returns_scout_keys()
     {
         $collection = RemoveableScoutCollection::make([

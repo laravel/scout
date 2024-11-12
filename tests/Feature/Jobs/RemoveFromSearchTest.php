@@ -2,8 +2,7 @@
 
 namespace Laravel\Scout\Tests\Feature\Jobs;
 
-//use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Laravel\Scout\Jobs\RemoveFromSearch;
@@ -23,7 +22,7 @@ use Workbench\Database\Factories\SearchableUserFactory;
 #[WithMigration]
 class RemoveFromSearchTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
     use WithWorkbench;
 
     public function test_handle_passes_the_collection_to_engine()

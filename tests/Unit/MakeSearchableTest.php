@@ -21,7 +21,7 @@ class MakeSearchableTest extends TestCase
             $model = m::mock(new SearchableModel)->makePartial(),
         ]));
 
-        $model->shouldReceive('searchableUsing->update')->with($collection);
+        $model->shouldReceive('searchableUsing->update')->with($collection)->once();
 
         $job->handle();
     }
