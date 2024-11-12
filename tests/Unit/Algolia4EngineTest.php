@@ -16,7 +16,6 @@ use stdClass;
 
 class Algolia4EngineTest extends TestCase
 {
-
     protected function setUp(): void
     {
         Config::shouldReceive('get')->with('scout.after_commit', m::any())->andReturn(false);
