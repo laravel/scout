@@ -27,6 +27,7 @@ class ChirpFactory extends Factory
     public function definition(): array
     {
         return [
+            'scout_id' => fake()->uuid(),
             'content' => fake()->realText(),
         ];
     }
