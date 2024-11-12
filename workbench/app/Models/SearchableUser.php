@@ -25,24 +25,40 @@ class SearchableUser extends User
     /** {@inheritDoc} */
     public function wasSearchableBeforeUpdate()
     {
-        return $_ENV['user.wasSearchableBeforeUpdate'] ?? true;
+        if (isset($_ENV['user.wasSearchableBeforeUpdate'])) {
+            return value($_ENV['user.wasSearchableBeforeUpdate'], $this);
+        }
+
+        return true;
     }
 
     /** {@inheritDoc} */
     public function wasSearchableBeforeDelete()
     {
-        return $_ENV['user.wasSearchableBeforeDelete'] ?? true;
+        if (isset($_ENV['user.wasSearchableBeforeDelete'])) {
+            return value($_ENV['user.wasSearchableBeforeDelete'], $this);
+        }
+
+        return true;
     }
 
     /** {@inheritDoc} */
     public function shouldBeSearchable()
     {
-        return $_ENV['user.shouldBeSearchable'] ?? true;
+        if (isset($_ENV['user.shouldBeSearchable'])) {
+            return value($_ENV['user.shouldBeSearchable'], $this);
+        }
+
+        return true;
     }
 
     /** {@inheritDoc} */
     public function searchIndexShouldBeUpdated()
     {
-        return $_ENV['user.searchIndexShouldBeUpdated'] ?? true;
+        if (isset($_ENV['user.searchIndexShouldBeUpdated'])) {
+            return value($_ENV['user.searchIndexShouldBeUpdated'], $this);
+        }
+
+        return true;
     }
 }

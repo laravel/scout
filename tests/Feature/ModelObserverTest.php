@@ -138,4 +138,88 @@ class ModelObserverTest extends TestCase
 
         $model->delete();
     }
+
+    public function test_update_on_sensitive_attributes_triggers_search()
+    {
+        $_ENV['user.searchIndexShouldBeUpdated'] = function ($model) {
+            $sensitiveAttributeKeys = ['name', 'email'];
+
+            return collect($model->getDirty())->keys()
+                ->intersect($sensitiveAttributeKeys)
+                ->isNotEmpty();
+        };
+
+        $model = SearchableUserFactory::new()->createQuietly([
+            'name' => 'taylor Otwell',
+            'remember_token' => 123,
+            'password' => 'secret',
+        ]);
+
+        $model->password = 'extremelySecurePassword';
+        $model->name = 'Taylor';
+
+        tap($this->app->make('scout.spied'), function ($scout) {
+            $scout->shouldReceive('update')->once();
+        });
+
+        $model->save();
+
+        unset($_ENV['user.searchIndexShouldBeUpdated']);
+    }
+
+    public function test_update_on_non_sensitive_attributes_doesnt_trigger_search()
+    {
+        $_ENV['user.searchIndexShouldBeUpdated'] = function ($model) {
+            $sensitiveAttributeKeys = ['name', 'email'];
+
+            return collect($model->getDirty())->keys()
+                ->intersect($sensitiveAttributeKeys)
+                ->isNotEmpty();
+        };
+
+        $model = SearchableUserFactory::new()->createQuietly([
+            'name' => 'taylor Otwell',
+            'remember_token' => 123,
+            'password' => 'secret',
+        ]);
+
+        $model->password = 'extremelySecurePassword';
+        $model->remember_token = 456;
+
+        tap($this->app->make('scout.spied'), function ($scout) {
+            $scout->shouldNotReceive('update');
+            $scout->shouldNotReceive('delete');
+        });
+
+        $model->save();
+
+        unset($_ENV['user.searchIndexShouldBeUpdated']);
+    }
+
+    public function test_unsearchable_should_be_called_when_deleting()
+    {
+
+        $_ENV['user.searchIndexShouldBeUpdated'] = function ($model) {
+            $sensitiveAttributeKeys = ['name', 'email'];
+
+            return collect($model->getDirty())->keys()
+                ->intersect($sensitiveAttributeKeys)
+                ->isNotEmpty();
+        };
+
+        $model = SearchableUserFactory::new()->createQuietly([
+            'name' => 'taylor Otwell',
+            'remember_token' => 123,
+            'password' => 'secret',
+        ]);
+
+        tap($this->app->make('scout.spied'), function ($scout) {
+            $scout->shouldNotReceive('update');
+            $scout->shouldReceive('delete')->once();
+        });
+
+        $model->delete();
+
+        unset($_ENV['user.searchIndexShouldBeUpdated']);
+    }
 }
