@@ -198,7 +198,6 @@ class ModelObserverTest extends TestCase
 
     public function test_unsearchable_should_be_called_when_deleting()
     {
-
         $_ENV['user.searchIndexShouldBeUpdated'] = function ($model) {
             $sensitiveAttributeKeys = ['name', 'email'];
 
