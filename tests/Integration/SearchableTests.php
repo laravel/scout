@@ -108,6 +108,7 @@ trait SearchableTests
     protected function itCanUsePaginatedSearchWithEmptyQueryCallback()
     {
         $queryCallback = function ($query) {
+            //
         };
 
         return User::search('*')->query($queryCallback)->paginate();
