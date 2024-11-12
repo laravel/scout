@@ -17,4 +17,10 @@ class SearchableUser extends User
             'email' => $this->email,
         ];
     }
+
+    /** {@inheritDoc} */
+    public function searchIndexShouldBeUpdated()
+    {
+        return $_ENV['search-index.user'] ?? true;
+    }
 }

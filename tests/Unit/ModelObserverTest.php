@@ -24,25 +24,7 @@ class ModelObserverTest extends TestCase
         m::close();
     }
 
-    public function test_saved_handler_makes_model_searchable()
-    {
-        $observer = new ModelObserver;
-        $model = m::mock();
-        $model->shouldReceive('searchIndexShouldBeUpdated')->andReturn(true);
-        $model->shouldReceive('shouldBeSearchable')->andReturn(true);
-        $model->shouldReceive('searchable')->once();
-        $observer->saved($model);
-    }
 
-    public function test_saved_handler_doesnt_make_model_searchable_when_search_shouldnt_update()
-    {
-        $observer = new ModelObserver;
-        $model = m::mock();
-        $model->shouldReceive('searchIndexShouldBeUpdated')->andReturn(false);
-        $model->shouldReceive('shouldBeSearchable')->andReturn(true);
-        $model->shouldReceive('searchable')->never();
-        $observer->saved($model);
-    }
 
     public function test_saved_handler_doesnt_make_model_searchable_when_disabled()
     {
