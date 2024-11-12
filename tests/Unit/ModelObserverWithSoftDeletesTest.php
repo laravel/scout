@@ -53,7 +53,7 @@ class ModelObserverWithSoftDeletesTest extends TestCase
         $observer = new ModelObserver;
         $model = m::mock(SearchableModelWithSoftDeletes::class);
         $model->shouldReceive('searchShouldUpdate')->never();
-        $model->shouldReceive('shouldBeSearchable')->andReturn(true);
+        $model->shouldReceive('shouldBeSearchable')->once()->andReturn(true);
         $model->shouldReceive('searchable')->once();
         $model->shouldReceive('unsearchable')->never();
         $observer->restored($model);
