@@ -11,7 +11,11 @@ class SearchableUser extends User
     /** {@inheritDoc} */
     public function toSearchableArray()
     {
-        return $_ENV['user.toSearchableArray'] ?? [
+        if (isset($_ENV['user.toSearchableArray'])) {
+            return value($_ENV['user.toSearchableArray'], $this);
+        }
+
+        return [
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,

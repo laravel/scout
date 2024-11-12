@@ -4,8 +4,8 @@ namespace Laravel\Scout\Tests\Integration;
 
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Support\LazyCollection;
-use Laravel\Scout\Tests\Fixtures\User;
-use Orchestra\Testbench\Factories\UserFactory;
+use Workbench\App\Models\SearchableUser;
+use Workbench\Database\Factories\UserFactory;
 
 trait SearchableTests
 {
@@ -17,6 +17,13 @@ trait SearchableTests
      */
     protected function defineScoutEnvironment($app)
     {
+        $_ENV['user.toSearchableArray'] = function ($model) {
+            return [
+                'id' => (int) $model->id,
+                'name' => $model->name,
+            ];
+        };
+
         $app['config']->set('scout.driver', static::scoutDriver());
     }
 
@@ -63,24 +70,24 @@ trait SearchableTests
 
     protected function itCanUseBasicSearch()
     {
-        return User::search('lar')->take(10)->get();
+        return SearchableUser::search('lar')->take(10)->get();
     }
 
     protected function itCanUseBasicSearchWithQueryCallback()
     {
-        return User::search('lar')->take(10)->query(function ($query) {
+        return SearchableUser::search('lar')->take(10)->query(function ($query) {
             return $query->whereNotNull('email_verified_at');
         })->get();
     }
 
     protected function itCanUseBasicSearchToFetchKeys()
     {
-        return User::search('lar')->take(10)->keys();
+        return SearchableUser::search('lar')->take(10)->keys();
     }
 
     protected function itCanUseBasicSearchWithQueryCallbackToFetchKeys()
     {
-        return User::search('lar')->take(10)->query(function ($query) {
+        return SearchableUser::search('lar')->take(10)->query(function ($query) {
             return $query->whereNotNull('email_verified_at');
         })->keys();
     }
@@ -88,8 +95,8 @@ trait SearchableTests
     protected function itCanUsePaginatedSearch()
     {
         return [
-            User::search('lar')->take(10)->paginate(5, 'page', 1),
-            User::search('lar')->take(10)->paginate(5, 'page', 2),
+            SearchableUser::search('lar')->take(10)->paginate(5, 'page', 1),
+            SearchableUser::search('lar')->take(10)->paginate(5, 'page', 2),
         ];
     }
 
@@ -100,8 +107,8 @@ trait SearchableTests
         };
 
         return [
-            User::search('lar')->take(10)->query($queryCallback)->paginate(5, 'page', 1),
-            User::search('lar')->take(10)->query($queryCallback)->paginate(5, 'page', 2),
+            SearchableUser::search('lar')->take(10)->query($queryCallback)->paginate(5, 'page', 1),
+            SearchableUser::search('lar')->take(10)->query($queryCallback)->paginate(5, 'page', 2),
         ];
     }
 
@@ -111,6 +118,6 @@ trait SearchableTests
             //
         };
 
-        return User::search('*')->query($queryCallback)->paginate();
+        return SearchableUser::search('*')->query($queryCallback)->paginate();
     }
 }

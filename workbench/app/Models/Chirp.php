@@ -36,7 +36,11 @@ class Chirp extends Model
 
     public function toSearchableArray()
     {
-        return $_ENV['chirp.toSearchableArray'] ?? [
+        if (isset($_ENV['chirp.toSearchableArray'])) {
+            return value($_ENV['chirp.toSearchableArray'], $this);
+        }
+
+        return [
             'content' => $this->content,
         ];
     }

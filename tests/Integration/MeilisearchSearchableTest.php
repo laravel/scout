@@ -5,12 +5,12 @@ namespace Laravel\Scout\Tests\Integration;
 use Illuminate\Database\Eloquent\Collection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\MeilisearchEngine;
-use Laravel\Scout\Tests\Fixtures\User;
 use Laravel\Scout\Tests\Fixtures\VersionableModel;
 use Meilisearch\Client;
 use Meilisearch\Endpoints\Indexes;
 use Mockery as m;
 use Orchestra\Testbench\Attributes\RequiresEnv;
+use Workbench\App\Models\SearchableUser;
 
 /**
  * @group meilisearch
@@ -48,7 +48,7 @@ class MeilisearchSearchableTest extends TestCase
     {
         $this->baseDefineScoutDatabaseMigrations();
 
-        $this->importScoutIndexFrom(User::class);
+        $this->importScoutIndexFrom(SearchableUser::class);
     }
 
     public function test_it_can_use_basic_search()
