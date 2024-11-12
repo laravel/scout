@@ -11,7 +11,7 @@ class SearchableUser extends User
     /** {@inheritDoc} */
     public function toSearchableArray()
     {
-        return $_ENV['searchable.user'] ?? [
+        return $_ENV['user.toSearchableArray'] ?? [
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
@@ -19,8 +19,27 @@ class SearchableUser extends User
     }
 
     /** {@inheritDoc} */
+    public function wasSearchableBeforeUpdate()
+    {
+        return $_ENV['user.wasSearchableBeforeUpdate'] ?? true;
+    }
+
+    /** {@inheritDoc} */
+    public function wasSearchableBeforeDelete()
+    {
+        return $_ENV['user.wasSearchableBeforeDelete'] ?? true;
+    }
+
+    /** {@inheritDoc} */
+    public function shouldBeSearchable()
+    {
+        return $_ENV['user.shouldBeSearchable'] ?? true;
+    }
+
+
+    /** {@inheritDoc} */
     public function searchIndexShouldBeUpdated()
     {
-        return $_ENV['search-index.user'] ?? true;
+        return $_ENV['user.searchIndexShouldBeUpdated'] ?? true;
     }
 }

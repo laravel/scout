@@ -10,6 +10,8 @@ use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
+use Workbench\App\Models\SearchableUser;
+use Workbench\Database\Factories\ChirpFactory;
 use Workbench\Database\Factories\SearchableUserFactory;
 
 #[WithConfig('scout.driver', 'testing')]
@@ -35,7 +37,7 @@ class ModelObserverTest extends TestCase
 
     public function test_saved_handler_doesnt_make_model_searchable_when_search_shouldnt_update()
     {
-        $_ENV['search-index.user'] = false;
+        $_ENV['user.searchIndexShouldBeUpdated'] = false;
 
         $model = SearchableUserFactory::new()->createQuietly(['name' => 'Laravel']);
 
@@ -43,23 +45,99 @@ class ModelObserverTest extends TestCase
             $scout->shouldNotReceive('update');
         });
 
+        $model->name = 'Laravel Scout';
         $model->save();
 
-        unset($_ENV['search-index.user']);
+        unset($_ENV['user.searchIndexShouldBeUpdated']);
     }
 
     public function test_saved_handler_doesnt_make_model_searchable_when_disabled()
     {
         $model = SearchableUserFactory::new()->createQuietly(['name' => 'Laravel']);
 
-        ModelObserver::disableSyncingFor($model::class);
+        ModelObserver::disableSyncingFor(SearchableUser::class);
 
         tap($this->app->make('scout.spied'), function ($scout) {
             $scout->shouldNotReceive('update');
         });
 
+        $model->name = 'Laravel Scout';
         $model->save();
 
-        ModelObserver::enableSyncingFor($model::class);
+        ModelObserver::enableSyncingFor(SearchableUser::class);
+    }
+
+    public function test_saved_handler_makes_model_unsearchable_when_disabled_per_model_rule()
+    {
+        $_ENV['user.shouldBeSearchable'] = false;
+
+        $model = SearchableUserFactory::new()->createQuietly(['name' => 'Laravel']);
+
+        tap($this->app->make('scout.spied'), function ($scout) {
+            $scout->shouldNotReceive('update');
+        });
+
+        $model->name = 'Laravel Scout';
+        $model->save();
+
+        unset($_ENV['user.shouldBeSearchable']);
+    }
+
+    public function saved_handler_doesnt_make_model_unsearchable_when_disabled_per_model_rule_and_already_unsearchable()
+    {
+        $_ENV['user.wasSearchableBeforeUpdate'] = false;
+        $_ENV['user.shouldBeSearchable'] = false;
+
+        $model = SearchableUserFactory::new()->createQuietly(['name' => 'Laravel']);
+
+        tap($this->app->make('scout.spied'), function ($scout) {
+            $scout->shouldNotReceive('update');
+        });
+
+        $model->name = 'Laravel Scout';
+        $model->save();
+
+        unset($_ENV['user.shouldBeSearchable'], $_ENV['user.wasSearchableBeforeUpdate']);
+    }
+
+    public function test_deleted_handler_doesnt_make_model_unsearchable_when_already_unsearchable()
+    {
+        $_ENV['user.wasSearchableBeforeDelete'] = false;
+
+        $model = SearchableUserFactory::new()->createQuietly();
+
+        tap($this->app->make('scout.spied'), function ($scout) {
+            $scout->shouldNotReceive('delete');
+        });
+
+        $model->delete();
+
+        unset($_ENV['user.wasSearchableBeforeDelete']);
+    }
+
+    public function test_deleted_handler_makes_model_unsearchable()
+    {
+        $_ENV['user.wasSearchableBeforeDelete'] = true;
+
+        $model = SearchableUserFactory::new()->createQuietly();
+
+        tap($this->app->make('scout.spied'), function ($scout) {
+            $scout->shouldReceive('delete')->once();
+        });
+
+        $model->forceDelete();
+
+        unset($_ENV['user.wasSearchableBeforeDelete']);
+    }
+
+    public function test_deleted_handler_on_soft_delete_model_makes_model_unsearchable()
+    {
+        $model = ChirpFactory::new()->createQuietly();
+
+        tap($this->app->make('scout.spied'), function ($scout) {
+            $scout->shouldReceive('delete')->once();
+        });
+
+        $model->delete();
     }
 }
