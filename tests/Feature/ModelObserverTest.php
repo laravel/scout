@@ -3,8 +3,6 @@
 namespace Laravel\Scout\Tests\Feature;
 
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
-use Illuminate\Support\Facades\Bus;
-use Laravel\Scout\Jobs\MakeSearchable;
 use Laravel\Scout\ModelObserver;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;

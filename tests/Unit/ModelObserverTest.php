@@ -2,11 +2,9 @@
 
 namespace Laravel\Scout\Tests\Unit;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
 use Laravel\Scout\ModelObserver;
 use Laravel\Scout\Tests\Fixtures\SearchableModelWithSensitiveAttributes;
-use Laravel\Scout\Tests\Fixtures\SearchableModelWithSoftDeletes;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 

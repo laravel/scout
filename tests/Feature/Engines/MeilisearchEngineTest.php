@@ -245,7 +245,7 @@ class MeilisearchEngineTest extends TestCase
 
     public function test_update_empty_searchable_array_does_not_add_documents_to_index()
     {
-        $_ENV['searchable.user'] = [];
+        $_ENV['user.toSearchableArray'] = [];
 
         $engine = $this->app->make(EngineManager::class)->engine();
 
@@ -254,7 +254,7 @@ class MeilisearchEngineTest extends TestCase
 
         $engine->update(Collection::make([new SearchableUser]));
 
-        unset($_ENV['searchable.user']);
+        unset($_ENV['user.toSearchableArray']);
     }
 
     public function test_pagination_correct_parameters()
@@ -308,7 +308,7 @@ class MeilisearchEngineTest extends TestCase
     #[WithConfig('scout.soft_delete', true)]
     public function test_update_empty_searchable_array_from_soft_deleted_model_does_not_add_documents_to_index()
     {
-        $_ENV['searchable.chirp'] = [];
+        $_ENV['chirp.toSearchableArray'] = [];
 
         $engine = $this->app->make(EngineManager::class)->engine();
 
@@ -317,7 +317,7 @@ class MeilisearchEngineTest extends TestCase
 
         $engine->update(Collection::make([new Chirp]));
 
-        unset($_ENV['searchable.chirp']);
+        unset($_ENV['chirp.toSearchableArray']);
     }
 
     public function test_performing_search_without_callback_works()
