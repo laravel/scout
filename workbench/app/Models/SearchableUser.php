@@ -40,7 +40,6 @@ class SearchableUser extends User
         return $_ENV['user.shouldBeSearchable'] ?? true;
     }
 
-
     /** {@inheritDoc} */
     public function searchIndexShouldBeUpdated()
     {
