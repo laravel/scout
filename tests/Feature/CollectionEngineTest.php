@@ -2,9 +2,9 @@
 
 namespace Laravel\Scout\Tests\Feature;
 
+use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
-use Laravel\Scout\Tests\Fixtures\SearchableModelWithUnloadedValue;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -152,7 +152,7 @@ class CollectionEngineTest extends TestCase
     {
         Model::preventAccessingMissingAttributes(true);
 
-        $models = SearchableModelWithUnloadedValue::search('loaded')->get();
+        $models = SearchableUserWithUnloadedValue::search('loaded')->get();
 
         $this->assertCount(2, $models);
     }
@@ -171,5 +171,24 @@ class SearchableUserWithCustomSearchableData extends SearchableUser
         return [
             'reversed_name' => strrev($this->name),
         ];
+    }
+}
+
+class SearchableUserWithUnloadedValue extends SearchableUser
+{
+    /** {@inheritDoc} */
+    public function toSearchableArray()
+    {
+        return [
+            'value' => $this->unloadedValue,
+        ];
+    }
+
+    /** {@inheritDoc} */
+    public function makeSearchableUsing(Collection $models)
+    {
+        return $models->each(
+            fn ($model) => $model->unloadedValue = 'loaded',
+        );
     }
 }
