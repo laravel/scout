@@ -24,8 +24,6 @@ class ModelObserverTest extends TestCase
         m::close();
     }
 
-
-
     public function test_saved_handler_doesnt_make_model_searchable_when_disabled()
     {
         $observer = new ModelObserver;
