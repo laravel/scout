@@ -3,7 +3,9 @@
 namespace Laravel\Scout\Tests\Unit;
 
 use Algolia\AlgoliaSearch\Api\SearchClient;
+use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Config;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\Algolia4Engine;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
@@ -13,6 +15,20 @@ use stdClass;
 
 class Algolia4EngineTest extends TestCase
 {
+
+    protected function setUp(): void
+    {
+        Config::shouldReceive('get')->with('scout.after_commit', m::any())->andReturn(false);
+        Config::shouldReceive('get')->with('scout.soft_delete', m::any())->andReturn(false);
+    }
+
+    protected function tearDown(): void
+    {
+        Container::getInstance()->flush();
+
+        m::close();
+    }
+
     public function test_map_method_respects_order()
     {
         $client = m::mock(SearchClient::class);

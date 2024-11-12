@@ -3,16 +3,35 @@
 namespace Laravel\Scout\Tests\Unit;
 
 use Algolia\AlgoliaSearch\SearchClient;
+use Illuminate\Container\Container;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
+use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\Algolia3Engine;
+use Laravel\Scout\Jobs\RemoveFromSearch;
+use Laravel\Scout\Tests\Fixtures\EmptySearchableModel;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use Laravel\Scout\Tests\Fixtures\SoftDeletedEmptySearchableModel;
 use Mockery as m;
-use Orchestra\Testbench\TestCase;
+use PHPUnit\Framework\TestCase;
 use stdClass;
 
 class Algolia3EngineTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Config::shouldReceive('get')->with('scout.after_commit', m::any())->andReturn(false);
+        Config::shouldReceive('get')->with('scout.soft_delete', m::any())->andReturn(false);
+    }
+
+    protected function tearDown(): void
+    {
+        Container::getInstance()->flush();
+        m::close();
+    }
+
     public function test_lazy_map_method_respects_order()
     {
         $client = m::mock(SearchClient::class);

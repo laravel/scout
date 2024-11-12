@@ -16,16 +16,6 @@ class RemoveableScoutCollectionTest extends TestCase
         Config::shouldReceive('get')->with('scout.soft_delete', m::any())->andReturn(false);
     }
 
-    public function test_get_queuable_ids()
-    {
-        $collection = RemoveableScoutCollection::make([
-            new SearchableModel(['id' => 1]),
-            new SearchableModel(['id' => 2]),
-        ]);
-
-        $this->assertEquals([1, 2], $collection->getQueueableIds());
-    }
-
     public function test_get_queuable_ids_resolves_custom_scout_keys()
     {
         $collection = RemoveableScoutCollection::make([

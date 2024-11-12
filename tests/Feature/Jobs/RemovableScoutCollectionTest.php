@@ -9,6 +9,16 @@ use Workbench\Database\Factories\SearchableUserFactory;
 
 class RemovableScoutCollectionTest extends TestCase
 {
+    public function test_get_queuable_ids()
+    {
+        $collection = RemoveableScoutCollection::make([
+            SearchableUserFactory::new()->make(['id' => 1]),
+            SearchableUserFactory::new()->make(['id' => 2]),
+        ]);
+
+        $this->assertEquals([1, 2], $collection->getQueueableIds());
+    }
+
     public function test_removeable_scout_collection_returns_scout_keys()
     {
         $collection = RemoveableScoutCollection::make([
