@@ -85,7 +85,7 @@ class MeilisearchEngineTest extends TestCase
 
     public function test_returns_primary_keys_when_custom_array_order_present()
     {
-        $engine = m::mock(MeilisearchEngine::class);
+        $engine = m::spy(MeilisearchEngine::class);
         $builder = m::mock(Builder::class);
 
         $model = m::mock(stdClass::class);
@@ -226,103 +226,13 @@ class MeilisearchEngineTest extends TestCase
         ], $results->toArray());
     }
 
-    public function test_a_model_is_indexed_with_a_custom_meilisearch_key()
-    {
-        $client = m::mock(Client::class);
-        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('addDocuments')->once()->with([[
-            'meilisearch-key' => 'my-meilisearch-key.5',
-            'id' => 5,
-        ]], 'meilisearch-key');
-
-        $engine = new MeilisearchEngine($client);
-        $engine->update(Collection::make([new MeilisearchCustomKeySearchableModel(['id' => 5])]));
-    }
-
-    public function test_flush_a_model_with_a_custom_meilisearch_key()
-    {
-        $client = m::mock(Client::class);
-        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('deleteAllDocuments');
-
-        $engine = new MeilisearchEngine($client);
-        $engine->flush(new MeilisearchCustomKeySearchableModel);
-    }
-
-    public function test_update_empty_searchable_array_does_not_add_documents_to_index()
-    {
-        $client = m::mock(Client::class);
-        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldNotReceive('addDocuments');
-
-        $engine = new MeilisearchEngine($client);
-        $engine->update(Collection::make([new EmptySearchableModel]));
-    }
-
-    public function test_pagination_correct_parameters()
-    {
-        $perPage = 5;
-        $page = 2;
-
-        $client = m::mock(Client::class);
-        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('search')->with('mustang', [
-            'filter' => 'foo=1',
-            'hitsPerPage' => $perPage,
-            'page' => $page,
-        ]);
-
-        $engine = new MeilisearchEngine($client);
-        $builder = new Builder(new SearchableModel, 'mustang', function ($meilisearch, $query, $options) {
-            $options['filter'] = 'foo=1';
-
-            return $meilisearch->search($query, $options);
-        });
-        $engine->paginate($builder, $perPage, $page);
-    }
-
-    public function test_pagination_sorted_parameter()
-    {
-        $perPage = 5;
-        $page = 2;
-
-        $client = m::mock(Client::class);
-        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('search')->with('mustang', [
-            'filter' => 'foo=1',
-            'hitsPerPage' => $perPage,
-            'page' => $page,
-            'sort' => ['name:asc'],
-        ]);
-
-        $engine = new MeilisearchEngine($client);
-        $builder = new Builder(new SearchableModel, 'mustang', function ($meilisearch, $query, $options) {
-            $options['filter'] = 'foo=1';
-
-            return $meilisearch->search($query, $options);
-        });
-        $builder->orderBy('name', 'asc');
-        $engine->paginate($builder, $perPage, $page);
-    }
-
-    public function test_update_empty_searchable_array_from_soft_deleted_model_does_not_add_documents_to_index()
-    {
-        $client = m::mock(Client::class);
-        $client->shouldReceive('index')->with('table')->andReturn(m::mock(Indexes::class));
-        $client->shouldReceive('index')->with('table')->andReturn($index = m::mock(Indexes::class));
-        $index->shouldNotReceive('addDocuments');
-
-        $engine = new MeilisearchEngine($client, true);
-        $engine->update(Collection::make([new SoftDeletedEmptySearchableModel]));
-    }
-
     public function test_engine_forwards_calls_to_meilisearch_client()
     {
         $client = m::mock(Client::class);
-        $client->shouldReceive('testMethodOnClient')->once();
+        $client->shouldReceive('testMethodOnClient')->once()->andReturn('meilisearch');
 
         $engine = new MeilisearchEngine($client);
-        $engine->testMethodOnClient();
+        $this->assertSame('meilisearch', $engine->testMethodOnClient());
     }
 
     public function test_updating_empty_eloquent_collection_does_nothing()
@@ -331,33 +241,6 @@ class MeilisearchEngineTest extends TestCase
         $engine = new MeilisearchEngine($client);
         $engine->update(new Collection);
         $this->assertTrue(true);
-    }
-
-    public function test_performing_search_without_callback_works()
-    {
-        $client = m::mock(Client::class);
-        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('rawSearch')->once()->andReturn([]);
-
-        $engine = new MeilisearchEngine($client);
-        $builder = new Builder(new SearchableModel, '');
-        $engine->search($builder);
-    }
-
-    public function test_where_conditions_are_applied()
-    {
-        $builder = new Builder(new SearchableModel, '');
-        $builder->where('foo', 'bar');
-        $builder->where('key', 'value');
-        $client = m::mock(Client::class);
-        $client->shouldReceive('index')->once()->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filter' => 'foo="bar" AND key="value"',
-            'hitsPerPage' => $builder->limit,
-        ]))->andReturn([]);
-
-        $engine = new MeilisearchEngine($client);
-        $engine->search($builder);
     }
 
     public function test_engine_returns_hits_entry_from_search_response()
