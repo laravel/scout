@@ -2,13 +2,13 @@
 
 namespace Laravel\Scout\Tests\Feature\Engines;
 
-use Algolia\AlgoliaSearch\SearchClient;
+use Algolia\AlgoliaSearch\Api\SearchClient;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Collection;
 use Illuminate\Testing\Assert;
 use Laravel\Scout\Builder;
 use Laravel\Scout\EngineManager;
-use Laravel\Scout\Engines\Algolia3Engine;
+use Laravel\Scout\Engines\Algolia4Engine;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Laravel\Scout\Jobs\RemoveFromSearch;
 use Mockery as m;
@@ -25,7 +25,7 @@ use function Orchestra\Testbench\after_resolving;
 
 #[WithConfig('scout.driver', 'algolia')]
 #[WithMigration]
-class Algolia3EngineTest extends TestCase
+class Algolia4EngineTest extends TestCase
 {
     use LazilyRefreshDatabase;
     use WithWorkbench;
@@ -37,7 +37,7 @@ class Algolia3EngineTest extends TestCase
         after_resolving($app, EngineManager::class, function ($manager) {
             $this->client = m::spy(SearchClient::class);
 
-            $manager->extend('algolia', fn () => new Algolia3Engine($this->client, config('scout.soft_delete')));
+            $manager->extend('algolia', fn () => new Algolia4Engine($this->client, config('scout.soft_delete')));
         });
 
         $this->beforeApplicationDestroyed(function () {
@@ -51,8 +51,7 @@ class Algolia3EngineTest extends TestCase
 
         $engine = $this->app->make(EngineManager::class)->engine('algolia');
 
-        $this->client->shouldReceive('initIndex')->with('users')->once()->andReturn($index = m::mock(stdClass::class));
-        $index->shouldReceive('saveObjects')->with([[
+        $this->client->shouldReceive('saveObjects')->with('users', [[
             'id' => $model->getKey(),
             'name' => $model->name,
             'email' => $model->email,
@@ -68,8 +67,7 @@ class Algolia3EngineTest extends TestCase
 
         $engine = $this->app->make(EngineManager::class)->engine('algolia');
 
-        $this->client->shouldReceive('initIndex')->with('users')->once()->andReturn($index = m::mock(stdClass::class));
-        $index->shouldReceive('deleteObjects')->with([1])->once();
+        $this->client->shouldReceive('deleteObjects')->with('users', [1])->once();
 
         $engine->delete(Collection::make([$model]));
     }
@@ -82,8 +80,7 @@ class Algolia3EngineTest extends TestCase
 
         $engine = $this->app->make(EngineManager::class)->engine('algolia');
 
-        $this->client->shouldReceive('initIndex')->with('chirps')->once()->andReturn($index = m::mock(Indexes::class));
-        $index->shouldReceive('deleteObjects')->once()->with(['my-algolia-key.5']);
+        $this->client->shouldReceive('deleteObjects')->once()->with('chirps', ['my-algolia-key.5']);
 
         $engine->delete(Collection::make([$model]));
     }
@@ -100,8 +97,7 @@ class Algolia3EngineTest extends TestCase
 
         $job = unserialize(serialize($job));
 
-        $this->client->shouldReceive('initIndex')->with('chirps')->once()->andReturn($index = m::mock(stdClass::class));
-        $index->shouldReceive('deleteObjects')->once()->with(['my-algolia-key.5']);
+        $this->client->shouldReceive('deleteObjects')->once()->with('chirps', ['my-algolia-key.5']);
 
         $job->handle();
     }
@@ -112,10 +108,11 @@ class Algolia3EngineTest extends TestCase
 
         $engine = $this->app->make(EngineManager::class)->engine('algolia');
 
-        $this->client->shouldReceive('initIndex')->with('users')->once()->andReturn($index = m::mock(stdClass::class));
-        $index->shouldReceive('search')->with('zonda', [
-            'numericFilters' => ['foo=1'],
-        ])->once();
+        $this->client->shouldReceive('searchSingleIndex')->with(
+            'users',
+            ['query' => 'zonda'],
+            ['numericFilters' => ['foo=1']]
+        )->once();
 
         $builder = new Builder(new SearchableUser, 'zonda');
         $builder->where('foo', 1);
@@ -129,10 +126,11 @@ class Algolia3EngineTest extends TestCase
 
         $engine = $this->app->make(EngineManager::class)->engine('algolia');
 
-        $this->client->shouldReceive('initIndex')->with('users')->once()->andReturn($index = m::mock(stdClass::class));
-        $index->shouldReceive('search')->with('zonda', [
-            'numericFilters' => ['foo=1', ['bar=1', 'bar=2']],
-        ]);
+        $this->client->shouldReceive('searchSingleIndex')->with(
+            'users',
+            ['query' => 'zonda'],
+            ['numericFilters' => ['foo=1', ['bar=1', 'bar=2']]],
+        )->once();
 
         $builder = new Builder(new SearchableUser, 'zonda');
         $builder->where('foo', 1)->whereIn('bar', [1, 2]);
@@ -146,10 +144,11 @@ class Algolia3EngineTest extends TestCase
 
         $engine = $this->app->make(EngineManager::class)->engine('algolia');
 
-        $this->client->shouldReceive('initIndex')->with('users')->once()->andReturn($index = m::mock(stdClass::class));
-        $index->shouldReceive('search')->with('zonda', [
-            'numericFilters' => ['foo=1', '0=1'],
-        ]);
+        $this->client->shouldReceive('searchSingleIndex')->with(
+            'users',
+            ['query' => 'zonda'],
+            ['numericFilters' => ['foo=1', '0=1']]
+        )->once();
 
         $builder = new Builder(new SearchableUser, 'zonda');
         $builder->where('foo', 1)->whereIn('bar', []);
@@ -184,8 +183,7 @@ class Algolia3EngineTest extends TestCase
 
         $engine = $this->app->make(EngineManager::class)->engine('algolia');
 
-        $this->client->shouldReceive('initIndex')->with('chirps')->once()->andReturn($index = m::mock(stdClass::class));
-        $index->shouldReceive('saveObjects')->with([[
+        $this->client->shouldReceive('saveObjects')->with('chirps', [[
             'content' => $model->content,
             'objectID' => 'my-algolia-key.1',
         ]])->once();
@@ -201,8 +199,7 @@ class Algolia3EngineTest extends TestCase
 
         $engine = $this->app->make(EngineManager::class)->engine('algolia');
 
-        $this->client->shouldReceive('initIndex')->with('chirps')->once()->andReturn($index = m::mock(stdClass::class));
-        $index->shouldReceive('deleteObjects')->with(['my-algolia-key.1']);
+        $this->client->shouldReceive('deleteObjects')->with('chirps', ['my-algolia-key.1'])->once();
 
         $engine->delete(Collection::make([$model]));
     }
@@ -215,8 +212,7 @@ class Algolia3EngineTest extends TestCase
 
         $engine = $this->app->make(EngineManager::class)->engine('algolia');
 
-        $this->client->shouldReceive('initIndex')->with('chirps')->once()->andReturn($index = m::mock(stdClass::class));
-        $index->shouldReceive('clearObjects');
+        $this->client->shouldReceive('clearObjects')->with('chirps')->once();
 
         $engine->flush(new Chirp);
     }
@@ -227,8 +223,7 @@ class Algolia3EngineTest extends TestCase
 
         $engine = $this->app->make(EngineManager::class)->engine('algolia');
 
-        $this->client->shouldReceive('initIndex')->with('users')->once()->andReturn($index = m::mock(stdClass::class));
-        $index->shouldNotReceive('saveObjects');
+        $this->client->shouldNotReceive('saveObjects')->with('users');
 
         $engine->update(Collection::make([new SearchableUser]));
 
@@ -242,8 +237,7 @@ class Algolia3EngineTest extends TestCase
 
         $engine = $this->app->make(EngineManager::class)->engine('algolia');
 
-        $this->client->shouldReceive('initIndex')->with('chirps')->once()->andReturn($index = m::mock(stdClass::class));
-        $index->shouldNotReceive('saveObjects');
+        $this->client->shouldNotReceive('saveObjects')->with('chirps');
 
         $engine->update(Collection::make([new Chirp]));
 

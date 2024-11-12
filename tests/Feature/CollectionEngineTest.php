@@ -10,7 +10,7 @@ use Orchestra\Testbench\Attributes\WithMigration;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\Factories\UserFactory;
 use Orchestra\Testbench\TestCase;
-use Workbench\App\Models\User as SearchableUser;
+use Workbench\App\Models\SearchableUser;
 
 #[WithConfig('scout.driver', 'collection')]
 #[WithMigration]

@@ -44,6 +44,6 @@ class SearchableScopeTest extends TestCase
             return true;
         }))->once();
 
-        (new SearchableScope())->extend($builder);
+        (new SearchableScope)->extend($builder);
     }
 }

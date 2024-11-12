@@ -47,7 +47,7 @@ class MeilisearchEngineTest extends TestCase
         ]);
 
         $engine = new MeilisearchEngine($client);
-        $engine->update(Collection::make([new SearchableModel()]));
+        $engine->update(Collection::make([new SearchableModel]));
     }
 
     public function test_delete_removes_objects_to_index()
@@ -122,7 +122,7 @@ class MeilisearchEngineTest extends TestCase
         ]);
 
         $engine = new MeilisearchEngine($client);
-        $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
+        $builder = new Builder(new SearchableModel, 'mustang', function ($meilisearch, $query, $options) {
             $options['filter'] = 'foo=1 AND bar=2';
 
             return $meilisearch->search($query, $options);
@@ -140,7 +140,7 @@ class MeilisearchEngineTest extends TestCase
         ]);
 
         $engine = new MeilisearchEngine($client);
-        $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
+        $builder = new Builder(new SearchableModel, 'mustang', function ($meilisearch, $query, $options) {
             $options['filter'] = 'foo=1 AND bar=2';
 
             return $meilisearch->search($query, $options);
@@ -152,7 +152,7 @@ class MeilisearchEngineTest extends TestCase
     public function test_submitting_a_callable_search_with_search_method_returns_array()
     {
         $builder = new Builder(
-            new SearchableModel(),
+            new SearchableModel,
             $query = 'mustang',
             $callable = function ($meilisearch, $query, $options) {
                 $options['filter'] = 'foo=1';
@@ -181,7 +181,7 @@ class MeilisearchEngineTest extends TestCase
     public function test_submitting_a_callable_search_with_raw_search_method_works()
     {
         $builder = new Builder(
-            new SearchableModel(),
+            new SearchableModel,
             $query = 'mustang',
             $callable = function ($meilisearch, $query, $options) {
                 $options['filter'] = 'foo=1';
@@ -418,7 +418,7 @@ class MeilisearchEngineTest extends TestCase
         $index->shouldReceive('deleteAllDocuments');
 
         $engine = new MeilisearchEngine($client);
-        $engine->flush(new MeilisearchCustomKeySearchableModel());
+        $engine->flush(new MeilisearchCustomKeySearchableModel);
     }
 
     public function test_update_empty_searchable_array_does_not_add_documents_to_index()
@@ -428,7 +428,7 @@ class MeilisearchEngineTest extends TestCase
         $index->shouldNotReceive('addDocuments');
 
         $engine = new MeilisearchEngine($client);
-        $engine->update(Collection::make([new EmptySearchableModel()]));
+        $engine->update(Collection::make([new EmptySearchableModel]));
     }
 
     public function test_pagination_correct_parameters()
@@ -445,7 +445,7 @@ class MeilisearchEngineTest extends TestCase
         ]);
 
         $engine = new MeilisearchEngine($client);
-        $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
+        $builder = new Builder(new SearchableModel, 'mustang', function ($meilisearch, $query, $options) {
             $options['filter'] = 'foo=1';
 
             return $meilisearch->search($query, $options);
@@ -468,7 +468,7 @@ class MeilisearchEngineTest extends TestCase
         ]);
 
         $engine = new MeilisearchEngine($client);
-        $builder = new Builder(new SearchableModel(), 'mustang', function ($meilisearch, $query, $options) {
+        $builder = new Builder(new SearchableModel, 'mustang', function ($meilisearch, $query, $options) {
             $options['filter'] = 'foo=1';
 
             return $meilisearch->search($query, $options);
@@ -485,7 +485,7 @@ class MeilisearchEngineTest extends TestCase
         $index->shouldNotReceive('addDocuments');
 
         $engine = new MeilisearchEngine($client, true);
-        $engine->update(Collection::make([new SoftDeletedEmptySearchableModel()]));
+        $engine->update(Collection::make([new SoftDeletedEmptySearchableModel]));
     }
 
     public function test_engine_forwards_calls_to_meilisearch_client()
@@ -501,7 +501,7 @@ class MeilisearchEngineTest extends TestCase
     {
         $client = m::mock(Client::class);
         $engine = new MeilisearchEngine($client);
-        $engine->update(new Collection());
+        $engine->update(new Collection);
         $this->assertTrue(true);
     }
 
@@ -512,13 +512,13 @@ class MeilisearchEngineTest extends TestCase
         $index->shouldReceive('rawSearch')->once()->andReturn([]);
 
         $engine = new MeilisearchEngine($client);
-        $builder = new Builder(new SearchableModel(), '');
+        $builder = new Builder(new SearchableModel, '');
         $engine->search($builder);
     }
 
     public function test_where_conditions_are_applied()
     {
-        $builder = new Builder(new SearchableModel(), '');
+        $builder = new Builder(new SearchableModel, '');
         $builder->where('foo', 'bar');
         $builder->where('key', 'value');
         $client = m::mock(Client::class);
@@ -534,7 +534,7 @@ class MeilisearchEngineTest extends TestCase
 
     public function test_where_in_conditions_are_applied()
     {
-        $builder = new Builder(new SearchableModel(), '');
+        $builder = new Builder(new SearchableModel, '');
         $builder->where('foo', 'bar');
         $builder->where('bar', 'baz');
         $builder->whereIn('qux', [1, 2]);
@@ -552,7 +552,7 @@ class MeilisearchEngineTest extends TestCase
 
     public function test_where_not_in_conditions_are_applied()
     {
-        $builder = new Builder(new SearchableModel(), '');
+        $builder = new Builder(new SearchableModel, '');
         $builder->where('foo', 'bar');
         $builder->where('bar', 'baz');
         $builder->whereIn('qux', [1, 2]);
@@ -571,7 +571,7 @@ class MeilisearchEngineTest extends TestCase
 
     public function test_where_in_conditions_are_applied_without_other_conditions()
     {
-        $builder = new Builder(new SearchableModel(), '');
+        $builder = new Builder(new SearchableModel, '');
         $builder->whereIn('qux', [1, 2]);
         $builder->whereIn('quux', [1, 2]);
         $client = m::mock(Client::class);
@@ -587,7 +587,7 @@ class MeilisearchEngineTest extends TestCase
 
     public function test_where_not_in_conditions_are_applied_without_other_conditions()
     {
-        $builder = new Builder(new SearchableModel(), '');
+        $builder = new Builder(new SearchableModel, '');
         $builder->whereIn('qux', [1, 2]);
         $builder->whereIn('quux', [1, 2]);
         $builder->whereNotIn('eaea', [3]);
@@ -604,7 +604,7 @@ class MeilisearchEngineTest extends TestCase
 
     public function test_empty_where_in_conditions_are_applied_correctly()
     {
-        $builder = new Builder(new SearchableModel(), '');
+        $builder = new Builder(new SearchableModel, '');
         $builder->where('foo', 'bar');
         $builder->where('bar', 'baz');
         $builder->whereIn('qux', []);
@@ -621,9 +621,9 @@ class MeilisearchEngineTest extends TestCase
 
     public function test_engine_returns_hits_entry_from_search_response()
     {
-        $this->assertTrue(3 === (new MeilisearchEngine(m::mock(Client::class)))->getTotalCount([
+        $this->assertTrue((new MeilisearchEngine(m::mock(Client::class)))->getTotalCount([
             'totalHits' => 3,
-        ]));
+        ]) === 3);
     }
 
     public function test_delete_all_indexes_works_with_pagination()

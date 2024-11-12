@@ -13,9 +13,9 @@ use Orchestra\Testbench\Attributes\WithMigration;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use Workbench\App\Models\Chirp;
-use Workbench\App\Models\User;
+use Workbench\App\Models\SearchableUser;
 use Workbench\Database\Factories\ChirpFactory;
-use Workbench\Database\Factories\UserFactory;
+use Workbench\Database\Factories\SearchableUserFactory;
 
 #[WithConfig('scout.driver', 'testing')]
 #[WithConfig('scout.after_commit', false)]
@@ -28,7 +28,7 @@ class RemoveFromSearchTest extends TestCase
 
     public function test_handle_passes_the_collection_to_engine()
     {
-        $model = UserFactory::new()->create();
+        $model = SearchableUserFactory::new()->create();
 
         $job = new RemoveFromSearch($models = RemoveableScoutCollection::make([$model]));
 
@@ -39,7 +39,7 @@ class RemoveFromSearchTest extends TestCase
 
     public function test_models_are_deserialized_without_the_database()
     {
-        $model = UserFactory::new()->create(['id' => 1234]);
+        $model = SearchableUserFactory::new()->create(['id' => 1234]);
 
         $job = new RemoveFromSearch($models = RemoveableScoutCollection::make([$model]));
 
@@ -47,7 +47,7 @@ class RemoveFromSearchTest extends TestCase
 
         $this->assertInstanceOf(RemoveableScoutCollection::class, $job->models);
         $this->assertCount(1, $job->models);
-        $this->assertInstanceOf(User::class, $job->models->first());
+        $this->assertInstanceOf(SearchableUser::class, $job->models->first());
         $this->assertSame(1234, $job->models->first()->getScoutKey());
     }
 

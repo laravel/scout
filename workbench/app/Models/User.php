@@ -3,12 +3,9 @@
 namespace Workbench\App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Laravel\Scout\Searchable;
 
 class User extends Authenticatable
 {
-    use Searchable;
-
     /**
      * The table associated with the model.
      *
@@ -46,18 +43,4 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-
-    /**
-     * Get the indexable data array for the model.
-     *
-     * @return array
-     */
-    public function toSearchableArray()
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'email' => $this->email,
-        ];
-    }
 }

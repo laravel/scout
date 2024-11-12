@@ -23,7 +23,7 @@ class SearchableTest extends TestCase
         $collection->shouldReceive('first->makeSearchableUsing')->with($collection)->once()->andReturn($collection);
         $collection->shouldReceive('first->searchableUsing->update')->with($collection)->once();
 
-        $model = new SearchableModel();
+        $model = new SearchableModel;
         $model->queueMakeSearchable($collection);
     }
 
@@ -172,13 +172,13 @@ class ModelStubForMakeAllSearchable extends SearchableModel
         $mock = m::spy(Builder::class);
 
         $mock->shouldReceive('when')
-                ->with(true, m::type('Closure'))
-                ->once()
-                ->andReturnUsing(function ($condition, $callback) use ($mock) {
-                    $callback($mock);
+            ->with(true, m::type('Closure'))
+            ->once()
+            ->andReturnUsing(function ($condition, $callback) use ($mock) {
+                $callback($mock);
 
-                    return $mock;
-                });
+                return $mock;
+            });
 
         $mock->shouldReceive('orderBy')
             ->with('model_stub_for_make_all_searchables.id')

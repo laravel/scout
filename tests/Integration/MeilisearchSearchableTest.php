@@ -163,7 +163,7 @@ class MeilisearchSearchableTest extends TestCase
         $index->shouldReceive('rawSearch')->once()->andReturn([]);
 
         $engine = new MeilisearchEngine($client);
-        $builder = new Builder(new VersionableModel(), '');
+        $builder = new Builder(new VersionableModel, '');
         $engine->search($builder);
     }
 

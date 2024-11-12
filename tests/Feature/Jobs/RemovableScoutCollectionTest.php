@@ -5,7 +5,7 @@ namespace Laravel\Scout\Tests\Feature\Jobs;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Orchestra\Testbench\TestCase;
 use Workbench\Database\Factories\ChirpFactory;
-use Workbench\Database\Factories\UserFactory;
+use Workbench\Database\Factories\SearchableUserFactory;
 
 class RemovableScoutCollectionTest extends TestCase
 {
@@ -14,8 +14,8 @@ class RemovableScoutCollectionTest extends TestCase
         $collection = RemoveableScoutCollection::make([
             ChirpFactory::new()->make(['scout_id' => '1234']),
             ChirpFactory::new()->make(['scout_id' => '2345']),
-            UserFactory::new()->make(['id' => 3456]),
-            UserFactory::new()->make(['id' => 7891]),
+            SearchableUserFactory::new()->make(['id' => 3456]),
+            SearchableUserFactory::new()->make(['id' => 7891]),
         ]);
 
         $this->assertEquals([

@@ -21,8 +21,6 @@ class SearchableModelWithSensitiveAttributes extends Model
     /**
      * When updating a model, this method determines if we
      * should perform a search engine update or not.
-     *
-     * @return bool
      */
     public function searchIndexShouldBeUpdated(): bool
     {

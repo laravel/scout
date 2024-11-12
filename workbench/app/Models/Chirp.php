@@ -31,4 +31,11 @@ class Chirp extends Model
     {
         return 'scout_id';
     }
+
+    public function toSearchableArray()
+    {
+        return $_ENV['searchable.chirp'] ?? [
+            'content' => $this->content,
+        ];
+    }
 }
