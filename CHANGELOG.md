@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.11.5...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.11.6...10.x)
+
+## [v10.11.6](https://github.com/laravel/scout/compare/v10.11.5...v10.11.6) - 2024-11-12
+
+* feat(typesense): add `whereNotIn` filter to typesense engine by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/878
+* Supports for `algolia/algoliasearch-client-php` v4 by [@3bd-ulrahman](https://github.com/3bd-ulrahman) in https://github.com/laravel/scout/pull/872
+* [10.x] Supports PHP 8.4 by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/879
 
 ## [v10.11.5](https://github.com/laravel/scout/compare/v10.11.4...v10.11.5) - 2024-10-30
 
