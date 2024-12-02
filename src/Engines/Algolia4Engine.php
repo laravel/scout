@@ -155,12 +155,11 @@ class Algolia4Engine extends AlgoliaEngine
             );
         }
 
-        $queryParams = ['query' => $builder->query];
+        $queryParams = array_merge(['query' => $builder->query], $options);
 
         return $this->algolia->searchSingleIndex(
             $builder->index ?: $builder->model->searchableAs(),
-            $queryParams,
-            $options
+            $queryParams
         );
     }
 }
