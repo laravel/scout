@@ -603,7 +603,7 @@ class TypesenseEngine extends Engine
         $collectionName = $model->{$method}();
         $collection = $this->typesense->getCollections()->{$collectionName};
 
-        if (!$indexOperation) {
+        if (! $indexOperation) {
             return $collection;
         }
 
