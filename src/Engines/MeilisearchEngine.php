@@ -182,6 +182,10 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
                 return sprintf('%s=%s', $key, $value ? 'true' : 'false');
             }
 
+            if (is_null($value)) {
+                return sprintf('%s %s', $key, 'IS NULL');
+            }
+
             return is_numeric($value)
                 ? sprintf('%s=%s', $key, $value)
                 : sprintf('%s="%s"', $key, $value);

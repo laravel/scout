@@ -206,12 +206,13 @@ class MeilisearchEngineTest extends TestCase
         $builder = new Builder(new SearchableUser, '');
         $builder->where('foo', 'bar');
         $builder->where('bar', 'baz');
+        $builder->where('baz', null);
         $builder->whereIn('qux', [1, 2]);
         $builder->whereIn('quux', [1, 2]);
 
         $this->client->shouldReceive('index')->once()->with('users')->andReturn($index = m::mock(Indexes::class));
         $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
-            'filter' => 'foo="bar" AND bar="baz" AND qux IN [1, 2] AND quux IN [1, 2]',
+            'filter' => 'foo="bar" AND bar="baz" AND baz IS NULL AND qux IN [1, 2] AND quux IN [1, 2]',
             'hitsPerPage' => $builder->limit,
         ]))->andReturn([]);
 
