@@ -5,7 +5,7 @@ namespace Laravel\Scout\Tests\Fixtures;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Searchable;
 
-class SearchableModelWithCustomKey extends Model
+class VersionableModel extends Model
 {
     use Searchable;
 
@@ -14,15 +14,15 @@ class SearchableModelWithCustomKey extends Model
      *
      * @var array
      */
-    protected $fillable = ['other_id'];
+    protected $fillable = ['id', 'name'];
 
-    public function getScoutKey()
+    public function searchableAs()
     {
-        return $this->other_id;
+        return 'table';
     }
 
-    public function getScoutKeyName()
+    public function indexableAs()
     {
-        return 'other_id';
+        return 'table_v2';
     }
 }

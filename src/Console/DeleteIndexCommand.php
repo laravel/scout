@@ -6,7 +6,9 @@ use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 use Laravel\Scout\EngineManager;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'scout:delete-index')]
 class DeleteIndexCommand extends Command
 {
     /**
@@ -49,7 +51,7 @@ class DeleteIndexCommand extends Command
     protected function indexName($name)
     {
         if (class_exists($name)) {
-            return (new $name)->searchableAs();
+            return (new $name)->indexableAs();
         }
 
         $prefix = config('scout.prefix');

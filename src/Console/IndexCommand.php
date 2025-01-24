@@ -6,8 +6,11 @@ use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Laravel\Scout\Contracts\UpdatesIndexSettings;
 use Laravel\Scout\EngineManager;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'scout:index')]
 class IndexCommand extends Command
 {
     /**
@@ -51,7 +54,7 @@ class IndexCommand extends Command
 
             $engine->createIndex($name, $options);
 
-            if (method_exists($engine, 'updateIndexSettings')) {
+            if ($engine instanceof UpdatesIndexSettings) {
                 $driver = config('scout.driver');
 
                 $class = isset($model) ? get_class($model) : null;
@@ -63,7 +66,7 @@ class IndexCommand extends Command
                 if (isset($model) &&
                     config('scout.soft_delete', false) &&
                     in_array(SoftDeletes::class, class_uses_recursive($model))) {
-                    $settings['filterableAttributes'][] = '__soft_deleted';
+                    $settings = $engine->configureSoftDeleteFilter($settings);
                 }
 
                 if ($settings) {
@@ -86,7 +89,7 @@ class IndexCommand extends Command
     protected function indexName($name)
     {
         if (class_exists($name)) {
-            return (new $name)->searchableAs();
+            return (new $name)->indexableAs();
         }
 
         $prefix = config('scout.prefix');

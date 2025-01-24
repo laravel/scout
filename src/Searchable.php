@@ -114,15 +114,15 @@ trait Searchable
      *
      * @param  string  $query
      * @param  \Closure  $callback
-     * @return \Laravel\Scout\Builder
+     * @return \Laravel\Scout\Builder<static>
      */
     public static function search($query = '', $callback = null)
     {
-        return app(Builder::class, [
+        return app(static::$scoutBuilder ?? Builder::class, [
             'model' => new static,
             'query' => $query,
             'callback' => $callback,
-            'softDelete'=> static::usesSoftDelete() && config('scout.soft_delete', false),
+            'softDelete' => static::usesSoftDelete() && config('scout.soft_delete', false),
         ]);
     }
 
@@ -300,13 +300,23 @@ trait Searchable
     }
 
     /**
-     * Get the index name for the model.
+     * Get the index name for the model when searching.
      *
      * @return string
      */
     public function searchableAs()
     {
         return config('scout.prefix').$this->getTable();
+    }
+
+    /**
+     * Get the index name for the model when indexing.
+     *
+     * @return string
+     */
+    public function indexableAs()
+    {
+        return $this->searchableAs();
     }
 
     /**

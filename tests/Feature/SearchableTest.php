@@ -19,11 +19,11 @@ class SearchableTest extends TestCase
     public function test_searchable_using_update_is_called_on_collection()
     {
         $collection = m::mock();
-        $collection->shouldReceive('isEmpty')->andReturn(false);
-        $collection->shouldReceive('first->makeSearchableUsing')->with($collection)->andReturn($collection);
-        $collection->shouldReceive('first->searchableUsing->update')->with($collection);
+        $collection->shouldReceive('isEmpty')->once()->andReturn(false);
+        $collection->shouldReceive('first->makeSearchableUsing')->with($collection)->once()->andReturn($collection);
+        $collection->shouldReceive('first->searchableUsing->update')->with($collection)->once();
 
-        $model = new SearchableModel();
+        $model = new SearchableModel;
         $model->queueMakeSearchable($collection);
     }
 
@@ -45,7 +45,7 @@ class SearchableTest extends TestCase
         Scout::makeSearchableUsing(OverriddenMakeSearchable::class);
 
         $collection = m::mock();
-        $collection->shouldReceive('isEmpty')->andReturn(false);
+        $collection->shouldReceive('isEmpty')->once()->andReturn(false);
         $collection->shouldReceive('first->syncWithSearchUsingQueue');
         $collection->shouldReceive('first->syncWithSearchUsing');
 
@@ -58,7 +58,7 @@ class SearchableTest extends TestCase
     public function test_searchable_using_delete_is_called_on_collection()
     {
         $collection = m::mock();
-        $collection->shouldReceive('isEmpty')->andReturn(false);
+        $collection->shouldReceive('isEmpty')->once()->andReturn(false);
         $collection->shouldReceive('first->searchableUsing->delete')->with($collection);
 
         $model = new SearchableModel;
@@ -68,7 +68,7 @@ class SearchableTest extends TestCase
     public function test_searchable_using_delete_is_not_called_on_empty_collection()
     {
         $collection = m::mock();
-        $collection->shouldReceive('isEmpty')->andReturn(true);
+        $collection->shouldReceive('isEmpty')->once()->andReturn(true);
         $collection->shouldNotReceive('first->searchableUsing->delete');
 
         $model = new SearchableModel;
@@ -83,7 +83,7 @@ class SearchableTest extends TestCase
         Scout::removeFromSearchUsing(OverriddenRemoveFromSearch::class);
 
         $collection = m::mock();
-        $collection->shouldReceive('isEmpty')->andReturn(false);
+        $collection->shouldReceive('isEmpty')->once()->andReturn(false);
         $collection->shouldReceive('first->syncWithSearchUsingQueue');
         $collection->shouldReceive('first->syncWithSearchUsing');
 
@@ -105,11 +105,11 @@ class SearchableTest extends TestCase
     public function test_it_queries_searchable_models_by_their_ids_with_integer_key_type()
     {
         $model = M::mock(SearchableModel::class)->makePartial();
-        $model->shouldReceive('newQuery')->andReturnSelf();
-        $model->shouldReceive('getScoutKeyType')->andReturn('int');
-        $model->shouldReceive('getScoutKeyName')->andReturn('id');
-        $model->shouldReceive('qualifyColumn')->with('id')->andReturn('qualified_id');
-        $model->shouldReceive('whereIntegerInRaw')->with('qualified_id', [1, 2, 3])->andReturnSelf();
+        $model->shouldReceive('newQuery')->once()->andReturnSelf();
+        $model->shouldReceive('getScoutKeyType')->once()->andReturn('int');
+        $model->shouldReceive('getScoutKeyName')->once()->andReturn('id');
+        $model->shouldReceive('qualifyColumn')->with('id')->once()->andReturn('qualified_id');
+        $model->shouldReceive('whereIntegerInRaw')->with('qualified_id', [1, 2, 3])->once()->andReturnSelf();
 
         $scoutBuilder = M::mock(\Laravel\Scout\Builder::class);
         $scoutBuilder->queryCallback = null;
@@ -120,11 +120,11 @@ class SearchableTest extends TestCase
     public function test_it_queries_searchable_models_by_their_ids_with_string_key_type()
     {
         $model = M::mock(SearchableModel::class)->makePartial();
-        $model->shouldReceive('newQuery')->andReturnSelf();
-        $model->shouldReceive('getScoutKeyType')->andReturn('string');
-        $model->shouldReceive('getScoutKeyName')->andReturn('id');
-        $model->shouldReceive('qualifyColumn')->with('id')->andReturn('qualified_id');
-        $model->shouldReceive('whereIn')->with('qualified_id', [1, 2, 3])->andReturnSelf();
+        $model->shouldReceive('newQuery')->once()->andReturnSelf();
+        $model->shouldReceive('getScoutKeyType')->once()->andReturn('string');
+        $model->shouldReceive('getScoutKeyName')->once()->andReturn('id');
+        $model->shouldReceive('qualifyColumn')->with('id')->once()->andReturn('qualified_id');
+        $model->shouldReceive('whereIn')->with('qualified_id', [1, 2, 3])->once()->andReturnSelf();
 
         $scoutBuilder = M::mock(\Laravel\Scout\Builder::class);
         $scoutBuilder->queryCallback = null;
@@ -169,20 +169,24 @@ class ModelStubForMakeAllSearchable extends SearchableModel
 {
     public function newQuery()
     {
-        $mock = m::mock(Builder::class);
+        $mock = m::spy(Builder::class);
 
         $mock->shouldReceive('when')
-                ->with(true, m::type('Closure'))
-                ->andReturnUsing(function ($condition, $callback) use ($mock) {
-                    $callback($mock);
+            ->with(true, m::type('Closure'))
+            ->once()
+            ->andReturnUsing(function ($condition, $callback) use ($mock) {
+                $callback($mock);
 
-                    return $mock;
-                });
+                return $mock;
+            });
 
         $mock->shouldReceive('orderBy')
             ->with('model_stub_for_make_all_searchables.id')
-            ->andReturnSelf()
-            ->shouldReceive('searchable');
+            ->once()
+            ->andReturnSelf();
+
+        $mock->shouldReceive('searchable')
+            ->once();
 
         $mock->shouldReceive('when')->andReturnSelf();
 

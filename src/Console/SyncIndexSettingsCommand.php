@@ -6,8 +6,11 @@ use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Laravel\Scout\Contracts\UpdatesIndexSettings;
 use Laravel\Scout\EngineManager;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'scout:sync-index-settings')]
 class SyncIndexSettingsCommand extends Command
 {
     /**
@@ -36,7 +39,7 @@ class SyncIndexSettingsCommand extends Command
 
         $driver = config('scout.driver');
 
-        if (! method_exists($engine, 'updateIndexSettings')) {
+        if (! $engine instanceof UpdatesIndexSettings) {
             return $this->error('The "'.$driver.'" engine does not support updating index settings.');
         }
 
@@ -58,7 +61,7 @@ class SyncIndexSettingsCommand extends Command
                     if (isset($model) &&
                         config('scout.soft_delete', false) &&
                         in_array(SoftDeletes::class, class_uses_recursive($model))) {
-                        $settings['filterableAttributes'][] = '__soft_deleted';
+                        $settings = $engine->configureSoftDeleteFilter($settings);
                     }
 
                     $engine->updateIndexSettings($indexName = $this->indexName($name), $settings);
@@ -82,7 +85,7 @@ class SyncIndexSettingsCommand extends Command
     protected function indexName($name)
     {
         if (class_exists($name)) {
-            return (new $name)->searchableAs();
+            return (new $name)->indexableAs();
         }
 
         $prefix = config('scout.prefix');

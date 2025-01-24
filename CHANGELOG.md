@@ -1,6 +1,116 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.6.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.12.1...10.x)
+
+## [v10.12.1](https://github.com/laravel/scout/compare/v10.12.0...v10.12.1) - 2025-01-21
+
+* [10.x] Check for default total count return in meilisearch by [@Boorinio](https://github.com/Boorinio) in https://github.com/laravel/scout/pull/900
+* Fix filtering `null` values in `where()` with Meilisearch by [@tobz-nz](https://github.com/tobz-nz) in https://github.com/laravel/scout/pull/901
+
+## [v10.12.0](https://github.com/laravel/scout/compare/v10.11.9...v10.12.0) - 2025-01-14
+
+* feat: Algolia settings sync by [@joostdebruijn](https://github.com/joostdebruijn) in https://github.com/laravel/scout/pull/889
+* perf(typesense): skip collection check for search operations by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/898
+
+## [v10.11.9](https://github.com/laravel/scout/compare/v10.11.8...v10.11.9) - 2024-12-10
+
+* fix: merge Algolia4 options into query parameters by [@MingJen](https://github.com/MingJen) in https://github.com/laravel/scout/pull/891
+* Adding orderByDesc function to Builder by [@jdavidbakr](https://github.com/jdavidbakr) in https://github.com/laravel/scout/pull/893
+
+## [v10.11.8](https://github.com/laravel/scout/compare/v10.11.7...v10.11.8) - 2024-11-26
+
+* [10.x] Test Improvements by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/880
+* Fix: ambigious queries when adding other tables to the query builder by [@adminfriso](https://github.com/adminfriso) in https://github.com/laravel/scout/pull/887
+
+## [v10.11.7](https://github.com/laravel/scout/compare/v10.11.6...v10.11.7) - 2024-11-13
+
+* [10.x] Fix Algolia 3/4 engines by [@dwightwatson](https://github.com/dwightwatson) in https://github.com/laravel/scout/pull/884
+
+## [v10.11.6](https://github.com/laravel/scout/compare/v10.11.5...v10.11.6) - 2024-11-12
+
+* feat(typesense): add `whereNotIn` filter to typesense engine by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/878
+* Supports for `algolia/algoliasearch-client-php` v4 by [@3bd-ulrahman](https://github.com/3bd-ulrahman) in https://github.com/laravel/scout/pull/872
+* [10.x] Supports PHP 8.4 by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/879
+
+## [v10.11.5](https://github.com/laravel/scout/compare/v10.11.4...v10.11.5) - 2024-10-30
+
+* fix(typesense): properly format boolean filters in Typesense by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/874
+
+## [v10.11.4](https://github.com/laravel/scout/compare/v10.11.3...v10.11.4) - 2024-10-01
+
+* Fix Typesense pagination issue when using query callback by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/867
+* Update logo to support dark/light theme by [@milewski](https://github.com/milewski) in https://github.com/laravel/scout/pull/869
+
+## [v10.11.3](https://github.com/laravel/scout/compare/v10.11.2...v10.11.3) - 2024-09-11
+
+* [Typesense] Fix Paginate Function Returning Limited Records in Laravel Scout with Typesense Engine (#824) by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/858
+
+## [v10.11.2](https://github.com/laravel/scout/compare/v10.11.1...v10.11.2) - 2024-09-03
+
+* [10.x] Add Generic Docblocks To Builder by [@Magnesium38](https://github.com/Magnesium38) in https://github.com/laravel/scout/pull/857
+
+## [v10.11.1](https://github.com/laravel/scout/compare/v10.11.0...v10.11.1) - 2024-08-06
+
+* refactor(typesense): remove unused exists checks by [@saibotk](https://github.com/saibotk) in https://github.com/laravel/scout/pull/847
+
+## [v10.11.0](https://github.com/laravel/scout/compare/v10.10.2...v10.11.0) - 2024-07-30
+
+* [10.x] Allow setting custom scout builder class by [@gdebrauwer](https://github.com/gdebrauwer) in https://github.com/laravel/scout/pull/852
+
+## [v10.10.2](https://github.com/laravel/scout/compare/v10.10.1...v10.10.2) - 2024-07-23
+
+* [Typesense]  Sync server state in getOrCreateCollectionFromModel #845 by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/846
+
+## [v10.10.1](https://github.com/laravel/scout/compare/v10.10.0...v10.10.1) - 2024-07-02
+
+* [10.x] Get the key name through getScoutKeyName() on the Database engine by [@antonioribeiro](https://github.com/antonioribeiro) in https://github.com/laravel/scout/pull/843
+
+## [v10.10.0](https://github.com/laravel/scout/compare/v10.9.0...v10.10.0) - 2024-06-18
+
+* Added possibility to version indexes.  by [@Boorinio](https://github.com/Boorinio) in https://github.com/laravel/scout/pull/836
+
+## [v10.9.0](https://github.com/laravel/scout/compare/v10.8.6...v10.9.0) - 2024-05-07
+
+* Allow Typesense Search Parameter Definition on Models by [@stammbach](https://github.com/stammbach) in https://github.com/laravel/scout/pull/827
+* Fixing issue 825 by [@AbdullahFaqeir](https://github.com/AbdullahFaqeir) in https://github.com/laravel/scout/pull/826
+
+## [v10.8.6](https://github.com/laravel/scout/compare/v10.8.5...v10.8.6) - 2024-04-16
+
+* Prevent unnecessary api calls on Collection (index) by [@AbdullahFaqeir](https://github.com/AbdullahFaqeir) in https://github.com/laravel/scout/pull/820
+
+## [v10.8.5](https://github.com/laravel/scout/compare/v10.8.4...v10.8.5) - 2024-04-02
+
+* [Typesense] Issue when searching with queryCallback by [@karakhanyans](https://github.com/karakhanyans) in https://github.com/laravel/scout/pull/817
+
+## [v10.8.4](https://github.com/laravel/scout/compare/v10.8.3...v10.8.4) - 2024-03-26
+
+* Repaces when and tap functions with Conditionable and Tappable traits by [@ncharalampidis](https://github.com/ncharalampidis) in https://github.com/laravel/scout/pull/811
+* [10.x] Make commands lazy by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/scout/pull/815
+* [10.x] Optional field definitions on model by [@MortenDHansen](https://github.com/MortenDHansen) in https://github.com/laravel/scout/pull/812
+
+## [v10.8.3](https://github.com/laravel/scout/compare/v10.8.2...v10.8.3) - 2024-02-13
+
+* [10.x] Fix zero integer value in options parameter for Typesense by [@alignwebs](https://github.com/alignwebs) in https://github.com/laravel/scout/pull/802
+
+## [v10.8.2](https://github.com/laravel/scout/compare/v10.8.1...v10.8.2) - 2024-01-30
+
+* [10.x] Ordering by model's custom `created_at` column by [@stevebauman](https://github.com/stevebauman) in https://github.com/laravel/scout/pull/801
+
+## [v10.8.1](https://github.com/laravel/scout/compare/v10.8.0...v10.8.1) - 2024-01-23
+
+* [10.x] Fix Typesense search parameters issue  by [@karakhanyans](https://github.com/karakhanyans) in https://github.com/laravel/scout/pull/795
+
+## [v10.8.0](https://github.com/laravel/scout/compare/v10.7.0...v10.8.0) - 2024-01-16
+
+* [10.x] Laravel v11 support by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/scout/pull/789
+
+## [v10.7.0](https://github.com/laravel/scout/compare/v10.6.1...v10.7.0) - 2024-01-09
+
+* [10.x] Add Typesense engine by [@jasonbosco](https://github.com/jasonbosco) in https://github.com/laravel/scout/pull/773
+
+## [v10.6.1](https://github.com/laravel/scout/compare/v10.6.0...v10.6.1) - 2023-12-05
+
+* Fix unsearchable config by [@Casmo](https://github.com/Casmo) in https://github.com/laravel/scout/pull/783
 
 ## [v10.6.0](https://github.com/laravel/scout/compare/v10.5.1...v10.6.0) - 2023-11-28
 

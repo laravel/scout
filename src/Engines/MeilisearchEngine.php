@@ -4,13 +4,14 @@ namespace Laravel\Scout\Engines;
 
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Contracts\UpdatesIndexSettings;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Meilisearch\Client as MeilisearchClient;
 use Meilisearch\Contracts\IndexesQuery;
 use Meilisearch\Meilisearch;
 use Meilisearch\Search\SearchResult;
 
-class MeilisearchEngine extends Engine
+class MeilisearchEngine extends Engine implements UpdatesIndexSettings
 {
     /**
      * The Meilisearch client.
@@ -53,7 +54,7 @@ class MeilisearchEngine extends Engine
             return;
         }
 
-        $index = $this->meilisearch->index($models->first()->searchableAs());
+        $index = $this->meilisearch->index($models->first()->indexableAs());
 
         if ($this->usesSoftDelete($models->first()) && $this->softDelete) {
             $models->each->pushSoftDeleteMetadata();
@@ -88,7 +89,7 @@ class MeilisearchEngine extends Engine
             return;
         }
 
-        $index = $this->meilisearch->index($models->first()->searchableAs());
+        $index = $this->meilisearch->index($models->first()->indexableAs());
 
         $keys = $models instanceof RemoveableScoutCollection
             ? $models->pluck($models->first()->getScoutKeyName())
@@ -181,13 +182,17 @@ class MeilisearchEngine extends Engine
                 return sprintf('%s=%s', $key, $value ? 'true' : 'false');
             }
 
+            if (is_null($value)) {
+                return sprintf('%s %s', $key, 'IS NULL');
+            }
+
             return is_numeric($value)
                 ? sprintf('%s=%s', $key, $value)
                 : sprintf('%s="%s"', $key, $value);
         });
 
         $whereInOperators = [
-            'whereIns'    => 'IN',
+            'whereIns' => 'IN',
             'whereNotIns' => 'NOT IN',
         ];
 
@@ -352,7 +357,7 @@ class MeilisearchEngine extends Engine
      */
     public function getTotalCount($results)
     {
-        return $results['totalHits'];
+        return $results['totalHits'] ?? $results['estimatedTotalHits'];
     }
 
     /**
@@ -363,7 +368,7 @@ class MeilisearchEngine extends Engine
      */
     public function flush($model)
     {
-        $index = $this->meilisearch->index($model->searchableAs());
+        $index = $this->meilisearch->index($model->indexableAs());
 
         $index->deleteAllDocuments();
     }
@@ -383,17 +388,25 @@ class MeilisearchEngine extends Engine
     }
 
     /**
-     * Update an index's settings.
+     * Update the index settings for the given index.
      *
-     * @param  string  $name
-     * @param  array  $options
-     * @return array
-     *
-     * @throws \Meilisearch\Exceptions\ApiException
+     * @return void
      */
-    public function updateIndexSettings($name, array $options = [])
+    public function updateIndexSettings($name, array $settings = [])
     {
-        return $this->meilisearch->index($name)->updateSettings($options);
+        $this->meilisearch->index($name)->updateSettings($settings);
+    }
+
+    /**
+     * Configure the soft delete filter within the given settings.
+     *
+     * @return array
+     */
+    public function configureSoftDeleteFilter(array $settings = [])
+    {
+        $settings['filterableAttributes'][] = '__soft_deleted';
+
+        return $settings;
     }
 
     /**

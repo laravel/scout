@@ -62,7 +62,7 @@ class SearchableScope implements Scope
 
         HasManyThrough::macro('unsearchable', function ($chunk = null) {
             /** @var HasManyThrough $this */
-            $this->chunkById($chunk ?: config('scout.chunk.searchable', 500), function ($models) {
+            $this->chunkById($chunk ?: config('scout.chunk.unsearchable', 500), function ($models) {
                 $models->unsearchable();
 
                 event(new ModelsFlushed($models));

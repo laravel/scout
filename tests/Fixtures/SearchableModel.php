@@ -20,4 +20,9 @@ class SearchableModel extends Model
     {
         return 'table';
     }
+
+    public function indexableAs()
+    {
+        return 'table';
+    }
 }

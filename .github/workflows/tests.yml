@@ -16,19 +16,20 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: ['8.0', 8.1, 8.2, 8.3]
-        laravel: [9, 10, 11]
+        php: [8.1, 8.2, 8.3]
+        laravel: [10, 11]
+        include:
+          - php: 8.4
+            laravel: 11
+          - php: 8.2
+            laravel: 9
+          - php: 8.1
+            laravel: 9
+          - php: '8.0'
+            laravel: 9
         exclude:
-          - php: '8.0'
-            laravel: 9
-          - php: '8.0'
-            laravel: 10
-          - php: '8.0'
+          - php: 8.1
             laravel: 11
-          - php: '8.1'
-            laravel: 11
-          - php: 8.3
-            laravel: 9
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -47,8 +48,54 @@ jobs:
 
       - name: Install dependencies
         run: |
-           composer require "illuminate/contracts=^${{ matrix.laravel }}" --no-update
-           composer update --prefer-dist --no-interaction --no-progress
+           composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts=^${{ matrix.laravel }}"
 
       - name: Execute tests
         run: vendor/bin/phpunit
+
+  tests-using-meilisearch:
+    runs-on: ubuntu-22.04
+
+    services:
+      meilisearch:
+        image: getmeili/meilisearch:latest
+        ports:
+          - 7700:7700
+        env:
+          MEILI_MASTER_KEY: masterKey
+          MEILI_NO_ANALYTICS: true
+
+    strategy:
+      fail-fast: true
+      matrix:
+        php: ['8.0', 8.1, 8.2, 8.3, 8.4]
+
+    name: PHP ${{ matrix.php }} using Meilisearch
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip
+          ini-values: error_reporting=E_ALL
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: |
+           composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Execute tests
+<<<<<<< HEAD
+        run: vendor/bin/phpunit
+=======
+        run: vendor/bin/phpunit --no-configuration --no-coverage --color --bootstrap vendor/autoload.php --group meilisearch tests/Integration
+        env:
+          MEILISEARCH_HOST: "http://localhost:7700"
+          MEILISEARCH_KEY: 'masterKey'
+          DB_CONNECTION: 'testing'
+>>>>>>> 10.x

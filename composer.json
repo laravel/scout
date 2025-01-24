@@ -21,16 +21,24 @@
         "illuminate/http": "^9.0|^10.0|^11.0",
         "illuminate/pagination": "^9.0|^10.0|^11.0",
         "illuminate/queue": "^9.0|^10.0|^11.0",
-        "illuminate/support": "^9.0|^10.0|^11.0"
+        "illuminate/support": "^9.0|^10.0|^11.0",
+        "symfony/console": "^6.0|^7.0"
     },
     "require-dev": {
-        "algolia/algoliasearch-client-php": "^3.2",
+        "algolia/algoliasearch-client-php": "^3.2|^4.0",
+        "typesense/typesense-php": "^4.9.3",
         "meilisearch/meilisearch-php": "^1.0",
         "mockery/mockery": "^1.0",
         "orchestra/testbench": "^7.31|^8.11|^9.0",
         "php-http/guzzle7-adapter": "^1.0",
         "phpstan/phpstan": "^1.10",
         "phpunit/phpunit": "^9.3|^10.4"
+<<<<<<< HEAD
+=======
+    },
+    "conflict": {
+        "algolia/algoliasearch-client-php": "<3.2.0|>=5.0.0"
+>>>>>>> 10.x
     },
     "autoload": {
         "psr-4": {
@@ -39,7 +47,9 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Laravel\\Scout\\Tests\\": "tests/"
+            "Laravel\\Scout\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/"
         }
     },
     "extra": {
@@ -54,7 +64,8 @@
     },
     "suggest": {
         "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^3.2).",
-        "meilisearch/meilisearch-php": "Required to use the Meilisearch engine (^1.0)."
+        "meilisearch/meilisearch-php": "Required to use the Meilisearch engine (^1.0).",
+        "typesense/typesense-php": "Required to use the Typesense engine (^4.9)."
     },
     "config": {
         "sort-packages": true,
