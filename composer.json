@@ -33,12 +33,9 @@
         "php-http/guzzle7-adapter": "^1.0",
         "phpstan/phpstan": "^1.10",
         "phpunit/phpunit": "^9.3|^10.4"
-<<<<<<< HEAD
-=======
     },
     "conflict": {
         "algolia/algoliasearch-client-php": "<3.2.0|>=5.0.0"
->>>>>>> 10.x
     },
     "autoload": {
         "psr-4": {
