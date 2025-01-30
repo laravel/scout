@@ -3,6 +3,7 @@
 namespace Laravel\Scout;
 
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Traits\Conditionable;
@@ -10,7 +11,6 @@ use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Traits\Tappable;
 use Laravel\Scout\Contracts\PaginatesEloquentModels;
 use Laravel\Scout\Contracts\PaginatesEloquentModelsUsingDatabase;
-use Illuminate\Contracts\Support\Arrayable;
 
 /**
  * @template TModel of \Illuminate\Database\Eloquent\Model
