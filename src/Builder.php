@@ -10,6 +10,7 @@ use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Traits\Tappable;
 use Laravel\Scout\Contracts\PaginatesEloquentModels;
 use Laravel\Scout\Contracts\PaginatesEloquentModelsUsingDatabase;
+use Illuminate\Contracts\Support\Arrayable;
 
 /**
  * @template TModel of \Illuminate\Database\Eloquent\Model
@@ -146,11 +147,15 @@ class Builder
      * Add a "where in" constraint to the search query.
      *
      * @param  string  $field
-     * @param  array  $values
+     * @param  \Illuminate\Contracts\Support\Arrayable|array  $values
      * @return $this
      */
-    public function whereIn($field, array $values)
+    public function whereIn($field, $values)
     {
+        if ($values instanceof Arrayable) {
+            $values = $values->toArray();
+        }
+
         $this->whereIns[$field] = $values;
 
         return $this;
@@ -160,11 +165,15 @@ class Builder
      * Add a "where not in" constraint to the search query.
      *
      * @param  string  $field
-     * @param  array  $values
+     * @param  \Illuminate\Contracts\Support\Arrayable|array  $values
      * @return $this
      */
-    public function whereNotIn($field, array $values)
+    public function whereNotIn($field, $values)
     {
+        if ($values instanceof Arrayable) {
+            $values = $values->toArray();
+        }
+
         $this->whereNotIns[$field] = $values;
 
         return $this;
