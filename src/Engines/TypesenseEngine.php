@@ -245,8 +245,8 @@ class TypesenseEngine extends Engine
     {
         $documents = $this->getOrCreateCollectionFromModel(
             $builder->model,
+            $builder->index,
             false,
-            $builder->index
         )->getDocuments();
 
 
@@ -596,14 +596,14 @@ class TypesenseEngine extends Engine
      * Get collection from model or create new one.
      *
      * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @return TypesenseCollection
+     * @return \Typesense\Collection
      *
-     * @throws TypesenseClientError
+     * @throws \Typesense\Exceptions\TypesenseClientError
      * @throws \Http\Client\Exception
      */
-    protected function getOrCreateCollectionFromModel($model, bool $indexOperation = true, string $collectionName = null): TypesenseCollection
+    protected function getOrCreateCollectionFromModel($model, ?string $collectionName = null, bool $indexOperation = true): TypesenseCollection
     {
-        if (!$indexOperation) {
+        if (! $indexOperation) {
             $collectionName = $collectionName ?? $model->searchableAs();
         } else {
             $collectionName = $model->indexableAs();
