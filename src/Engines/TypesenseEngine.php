@@ -11,6 +11,7 @@ use Laravel\Scout\Builder;
 use stdClass;
 use Typesense\Client as Typesense;
 use Typesense\Collection as TypesenseCollection;
+use Typesense\Exceptions\ObjectAlreadyExists;
 use Typesense\Exceptions\TypesenseClientError;
 
 class TypesenseEngine extends Engine
@@ -636,7 +637,12 @@ class TypesenseEngine extends Engine
             $schema['name'] = $model->searchableAs();
         }
 
-        $this->typesense->getCollections()->create($schema);
+        try {
+            // Create the collection in Typesense...
+            $this->typesense->getCollections()->create($schema);
+        } catch (ObjectAlreadyExists $e) {
+            // Collection already exists...
+        }
 
         $collection->setExists(true);
 
