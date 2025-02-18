@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.13.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.13.1...10.x)
+
+## [v10.13.1](https://github.com/laravel/scout/compare/v10.13.0...v10.13.1) - 2025-02-18
+
+* Resolve Race Condition In TypesenseEngine Collection Creation by [@andyleach](https://github.com/andyleach) in https://github.com/laravel/scout/pull/912
 
 ## [v10.13.0](https://github.com/laravel/scout/compare/v10.12.2...v10.13.0) - 2025-02-11
 
