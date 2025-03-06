@@ -8,6 +8,8 @@ use Laravel\Scout\Contracts\UpdatesIndexSettings;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Meilisearch\Client as MeilisearchClient;
 use Meilisearch\Contracts\IndexesQuery;
+use Meilisearch\Endpoints\Indexes;
+use Meilisearch\Exceptions\ApiException;
 use Meilisearch\Meilisearch;
 use Meilisearch\Search\SearchResult;
 
@@ -374,6 +376,21 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
     }
 
     /**
+     * Check whether an index exists or not.
+     *
+     * @param string $name
+     * @return Indexes|null
+     */
+    protected function getIndex($name)
+    {
+        try {
+            return $this->meilisearch->getIndex($name);
+        } catch (ApiException $e) {
+            return null;
+        }
+    }
+
+    /**
      * Create a search index.
      *
      * @param  string  $name
@@ -384,6 +401,11 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
      */
     public function createIndex($name, array $options = [])
     {
+        $index = $this->getIndex($name);
+        if ($index?->getUid() !== null) {
+            return $index;
+        }
+
         return $this->meilisearch->createIndex($name, $options);
     }
 

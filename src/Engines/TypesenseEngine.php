@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Exceptions\NotSupportedException;
 use stdClass;
 use Typesense\Client as Typesense;
 use Typesense\Collection as TypesenseCollection;
@@ -570,11 +571,11 @@ class TypesenseEngine extends Engine
      * @param  array  $options
      * @return void
      *
-     * @throws \Exception
+     * @throws NotSupportedException
      */
     public function createIndex($name, array $options = [])
     {
-        throw new Exception('Typesense indexes are created automatically upon adding objects.');
+        throw new NotSupportedException('Typesense indexes are created automatically upon adding objects.');
     }
 
     /**
