@@ -32,7 +32,6 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
     /**
      * Create a new MeilisearchEngine instance.
      *
-     * @param  \Meilisearch\Client  $meilisearch
      * @param  bool  $softDelete
      * @return void
      */
@@ -136,8 +135,6 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
     /**
      * Perform the given search on the engine.
      *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @param  array  $searchParams
      * @return mixed
      */
     protected function performSearch(Builder $builder, array $searchParams = [])
@@ -174,7 +171,6 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
     /**
      * Get the filter array for the query.
      *
-     * @param  \Laravel\Scout\Builder  $builder
      * @return string
      */
     protected function filters(Builder $builder)
@@ -219,9 +215,6 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
 
     /**
      * Get the sort array for the query.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @return array
      */
     protected function buildSortFromOrderByClauses(Builder $builder): array
     {
@@ -240,7 +233,7 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
      */
     public function mapIds($results)
     {
-        if (0 === count($results['hits'])) {
+        if (count($results['hits']) === 0) {
             return collect();
         }
 
@@ -268,7 +261,6 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
     /**
      * Get the results of the query as a Collection of primary keys.
      *
-     * @param  \Laravel\Scout\Builder  $builder
      * @return \Illuminate\Support\Collection
      */
     public function keys(Builder $builder)
@@ -281,14 +273,13 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
     /**
      * Map the given results to instances of the given model.
      *
-     * @param  \Laravel\Scout\Builder  $builder
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function map(Builder $builder, $results, $model)
     {
-        if (is_null($results) || 0 === count($results['hits'])) {
+        if (is_null($results) || count($results['hits']) === 0) {
             return $model->newCollection();
         }
 
@@ -318,7 +309,6 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
     /**
      * Map the given results to instances of the given model via a lazy collection.
      *
-     * @param  \Laravel\Scout\Builder  $builder
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return \Illuminate\Support\LazyCollection
@@ -376,32 +366,21 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
     }
 
     /**
-     * Check whether an index exists or not.
-     *
-     * @param  string  $name
-     * @return Indexes|null
-     */
-    protected function getIndex($name)
-    {
-        try {
-            return $this->meilisearch->getIndex($name);
-        } catch (ApiException $e) {
-            return null;
-        }
-    }
-
-    /**
      * Create a search index.
      *
      * @param  string  $name
-     * @param  array  $options
      * @return mixed
      *
      * @throws \Meilisearch\Exceptions\ApiException
      */
     public function createIndex($name, array $options = [])
     {
-        $index = $this->getIndex($name);
+        try {
+            $index = $this->meilisearch->getIndex($name);
+        } catch (ApiException $e) {
+            $index = null;
+        }
+
         if ($index?->getUid() !== null) {
             return $index;
         }
@@ -454,7 +433,7 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
         $tasks = [];
         $limit = 1000000;
 
-        $query = new IndexesQuery();
+        $query = new IndexesQuery;
         $query->setLimit($limit);
 
         $indexes = $this->meilisearch->getIndexes($query);

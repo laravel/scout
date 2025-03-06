@@ -83,6 +83,23 @@ class IndexCommand extends Command
     }
 
     /**
+     * Create a search index.
+     *
+     * @param  \Laravel\Scout\Engines\Engine  $engine
+     * @param  string  $name
+     * @param  array  $options
+     * @return void
+     */
+    protected function createIndex(Engine $engine, $name, $options): void
+    {
+        try {
+            $engine->createIndex($name, $options);
+        } catch (NotSupportedException) {
+            return;
+        }
+    }
+
+    /**
      * Get the fully-qualified index name for the given index.
      *
      * @param  string  $name
@@ -97,22 +114,5 @@ class IndexCommand extends Command
         $prefix = config('scout.prefix');
 
         return ! Str::startsWith($name, $prefix) ? $prefix.$name : $name;
-    }
-
-    /**
-     * Create a search index.
-     *
-     * @param  Engine  $engine
-     * @param  string  $name
-     * @param  array  $options
-     * @return void
-     */
-    protected function createIndex(Engine $engine, $name, $options): void
-    {
-        try {
-            $engine->createIndex($name, $options);
-        } catch (NotSupportedException) {
-            return;
-        }
     }
 }
