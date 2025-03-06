@@ -102,9 +102,9 @@ class IndexCommand extends Command
     /**
      * Create a search index.
      *
-     * @param Engine $engine
-     * @param string $name
-     * @param array $options
+     * @param  Engine  $engine
+     * @param  string  $name
+     * @param  array  $options
      * @return void
      */
     protected function createIndex(Engine $engine, $name, $options): void

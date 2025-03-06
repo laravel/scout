@@ -378,7 +378,7 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
     /**
      * Check whether an index exists or not.
      *
-     * @param string $name
+     * @param  string  $name
      * @return Indexes|null
      */
     protected function getIndex($name)

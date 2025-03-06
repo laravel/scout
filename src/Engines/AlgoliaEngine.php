@@ -2,7 +2,6 @@
 
 namespace Laravel\Scout\Engines;
 
-use Exception;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
