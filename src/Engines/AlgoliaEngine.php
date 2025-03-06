@@ -2,11 +2,11 @@
 
 namespace Laravel\Scout\Engines;
 
-use Exception;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Contracts\UpdatesIndexSettings;
+use Laravel\Scout\Exceptions\NotSupportedException;
 
 /**
  * @template TAlgoliaClient of object
@@ -246,11 +246,11 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
      * @param  array  $options
      * @return mixed
      *
-     * @throws \Exception
+     * @throws NotSupportedException
      */
     public function createIndex($name, array $options = [])
     {
-        throw new Exception('Algolia indexes are created automatically upon adding objects.');
+        throw new NotSupportedException('Algolia indexes are created automatically upon adding objects.');
     }
 
     /**
