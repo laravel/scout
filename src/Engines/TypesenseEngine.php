@@ -1,5 +1,6 @@
 <?php
 
+
 namespace Laravel\Scout\Engines;
 
 use Exception;
@@ -13,6 +14,7 @@ use stdClass;
 use Typesense\Client as Typesense;
 use Typesense\Collection as TypesenseCollection;
 use Typesense\Exceptions\ObjectAlreadyExists;
+use Typesense\Exceptions\ObjectNotFound;
 use Typesense\Exceptions\TypesenseClientError;
 
 class TypesenseEngine extends Engine
@@ -255,7 +257,13 @@ class TypesenseEngine extends Engine
             return call_user_func($builder->callback, $documents, $builder->query, $options);
         }
 
-        return $documents->search($options);
+
+        try {
+            return $documents->search($options);
+        } catch (ObjectNotFound) {
+            $this->getOrCreateCollectionFromModel($builder->model, $builder->index, true);
+            return $documents->search($options);
+        }
     }
 
     /**
