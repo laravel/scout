@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Laravel\Scout\Engines;
 
 use Exception;
@@ -257,11 +256,11 @@ class TypesenseEngine extends Engine
             return call_user_func($builder->callback, $documents, $builder->query, $options);
         }
 
-
         try {
             return $documents->search($options);
         } catch (ObjectNotFound) {
             $this->getOrCreateCollectionFromModel($builder->model, $builder->index, true);
+
             return $documents->search($options);
         }
     }
