@@ -46,7 +46,7 @@ class FlushCommand extends Command
     /**
      * Flush the model's records from the index.
      *
-     * @param string<class-string> $class
+     * @param  string<class-string> $class
      * @return void
      */
     protected function flushModel(string $class)
