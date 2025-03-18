@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.13.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.14.0...10.x)
+
+## [v10.14.0](https://github.com/laravel/scout/compare/v10.13.1...v10.14.0) - 2025-03-18
+
+* Update logo.svg by [@iamdavidhill](https://github.com/iamdavidhill) in https://github.com/laravel/scout/pull/915
+* [10.x] Improve scout:index command by [@bytestream](https://github.com/bytestream) in https://github.com/laravel/scout/pull/916
+* fix(typesense): handle missing collection during search (#914) by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/917
 
 ## [v10.13.1](https://github.com/laravel/scout/compare/v10.13.0...v10.13.1) - 2025-02-18
 
