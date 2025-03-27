@@ -19,13 +19,16 @@ class SearchableTest extends TestCase
     public function test_searchable_using_update_is_called_on_collection()
     {
         $collection = m::mock();
-        $collection->shouldReceive('isEmpty')->once()->andReturn(false);
+        $collection->shouldReceive('isEmpty')->times(2)->andReturn(false);
         $collection->shouldReceive('first->makeSearchableUsing')->with($collection)->once()->andReturn($collection);
         $collection->shouldReceive('first->searchableUsing->update')->with($collection)->once();
 
         $model = new SearchableModel;
         $model->queueMakeSearchable($collection);
+    }
 
+    public function test_searchable_using_update_is_called_on_collection_sync()
+    {
         $collection = m::mock();
         $collection->shouldReceive('isEmpty')->once()->andReturn(false);
         $collection->shouldReceive('first->makeSearchableUsing')->with($collection)->once()->andReturn($collection);
@@ -73,12 +76,15 @@ class SearchableTest extends TestCase
     public function test_searchable_using_delete_is_called_on_collection()
     {
         $collection = m::mock();
-        $collection->shouldReceive('isEmpty')->once()->andReturn(false);
+        $collection->shouldReceive('isEmpty')->times(2)->andReturn(false);
         $collection->shouldReceive('first->searchableUsing->delete')->with($collection);
 
         $model = new SearchableModel;
         $model->queueRemoveFromSearch($collection);
+    }
 
+    public function test_searchable_using_delete_is_called_on_collection_sycn()
+    {
         $collection = m::mock();
         $collection->shouldReceive('isEmpty')->once()->andReturn(false);
         $collection->shouldReceive('first->searchableUsing->delete')->with($collection);
