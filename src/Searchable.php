@@ -45,6 +45,14 @@ trait Searchable
         BaseCollection::macro('unsearchable', function () use ($self) {
             $self->queueRemoveFromSearch($this);
         });
+
+        BaseCollection::macro('searchableSync', function () use ($self) {
+            $self->syncMakeSearchable($this);
+        });
+
+        BaseCollection::macro('unsearchableSync', function () use ($self) {
+            $self->syncRemoveFromSearch($this);
+        });
     }
 
     /**
@@ -60,12 +68,27 @@ trait Searchable
         }
 
         if (! config('scout.queue')) {
-            return $models->first()->makeSearchableUsing($models)->first()->searchableUsing()->update($models);
+            return $this->syncMakeSearchable($models);
         }
 
         dispatch((new Scout::$makeSearchableJob($models))
                 ->onQueue($models->first()->syncWithSearchUsingQueue())
                 ->onConnection($models->first()->syncWithSearchUsing()));
+    }
+
+    /**
+     * Synchronously make the given models searchable.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
+     * @return void
+     */
+    public function syncMakeSearchable($models)
+    {
+        if ($models->isEmpty()) {
+            return;
+        }
+
+        return $models->first()->makeSearchableUsing($models)->first()->searchableUsing()->update($models);
     }
 
     /**
@@ -81,12 +104,27 @@ trait Searchable
         }
 
         if (! config('scout.queue')) {
-            return $models->first()->searchableUsing()->delete($models);
+            return $this->syncRemoveFromSearch($models);
         }
 
         dispatch(new Scout::$removeFromSearchJob($models))
             ->onQueue($models->first()->syncWithSearchUsingQueue())
             ->onConnection($models->first()->syncWithSearchUsing());
+    }
+
+    /**
+     * Synchronously make the given models unsearchable.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
+     * @return void
+     */
+    public function syncRemoveFromSearch($models)
+    {
+        if ($models->isEmpty()) {
+            return;
+        }
+
+        return $models->first()->searchableUsing()->delete($models);
     }
 
     /**
@@ -184,6 +222,16 @@ trait Searchable
     }
 
     /**
+     * Synchronously make the given model instance searchable.
+     *
+     * @return void
+     */
+    public function searchableSync()
+    {
+        $this->newCollection([$this])->searchableSync();
+    }
+
+    /**
      * Remove all instances of the model from the search index.
      *
      * @return void
@@ -203,6 +251,16 @@ trait Searchable
     public function unsearchable()
     {
         $this->newCollection([$this])->unsearchable();
+    }
+
+    /**
+     * Synchronously remove the given model instance from the search index.
+     *
+     * @return void
+     */
+    public function unsearchableSync()
+    {
+        $this->newCollection([$this])->unsearchableSync();
     }
 
     /**
