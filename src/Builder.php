@@ -564,7 +564,7 @@ class Builder
     public function applyAfterRawSearchCallback($results)
     {
         if ($this->afterRawSearchCallback) {
-            call_user_func($this->afterRawSearchCallback, $results);
+            $results = call_user_func($this->afterRawSearchCallback, $results) ?: $results;
         }
 
         return $results;
