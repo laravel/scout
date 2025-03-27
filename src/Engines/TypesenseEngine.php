@@ -319,7 +319,7 @@ class TypesenseEngine extends Engine
      * @param  int|null  $perPage
      * @return array
      */
-    public function buildSearchParameters(Builder $builder, int $page, int|null $perPage): array
+    public function buildSearchParameters(Builder $builder, int $page, ?int $perPage): array
     {
         $parameters = [
             'q' => $builder->query,
