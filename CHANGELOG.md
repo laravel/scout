@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.14.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.14.1...10.x)
+
+## [v10.14.1](https://github.com/laravel/scout/compare/v10.14.0...v10.14.1) - 2025-04-01
+
+* fix Builder.php - not actually using returned results from afterRawSearchCallback by [@The-Rabak](https://github.com/The-Rabak) in https://github.com/laravel/scout/pull/919
+* [10.x] searchableSync / unsearchableSync by [@gdebrauwer](https://github.com/gdebrauwer) in https://github.com/laravel/scout/pull/920
 
 ## [v10.14.0](https://github.com/laravel/scout/compare/v10.13.1...v10.14.0) - 2025-03-18
 
