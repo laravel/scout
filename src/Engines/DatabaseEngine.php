@@ -189,7 +189,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     protected function initializeSearchQuery(Builder $builder, array $columns, array $prefixColumns = [], array $fullTextColumns = [])
     {
         $query = method_exists($builder->model, 'newScoutQuery')
-            ? $builder->model->newScoutQuery()
+            ? $builder->model->newScoutQuery($builder)
             : $builder->model->newQuery();
 
         if (blank($builder->query)) {
