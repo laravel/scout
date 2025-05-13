@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.14.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.15.0...10.x)
+
+## [v10.15.0](https://github.com/laravel/scout/compare/v10.14.1...v10.15.0) - 2025-05-13
+
+* Add newScoutQuery() for Database Engine by [@colq2](https://github.com/colq2) in https://github.com/laravel/scout/pull/923
 
 ## [v10.14.1](https://github.com/laravel/scout/compare/v10.14.0...v10.14.1) - 2025-04-01
 
