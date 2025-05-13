@@ -35,4 +35,3 @@ class Bookmark extends Model
         ];
     }
 }
-
