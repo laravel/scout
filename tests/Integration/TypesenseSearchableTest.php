@@ -223,6 +223,21 @@ class TypesenseSearchableTest extends TestCase
         $this->assertArrayHasKey('search_time_ms', $rawResults);
     }
 
+    public function test_it_handles_pagination_with_max_int_overflow()
+    {
+        $maxInt = 4294967295;
+        $perPage = 10;
+        $overflowPage = 4294967296; // max int + 1
+        $expectedPage = floor($maxInt / $perPage);
+
+        $results = SearchableUser::search('lar')
+            ->paginate($perPage, $overflowPage);
+
+        // Verify the page was adjusted correctly
+        $this->assertEquals($expectedPage, $results->currentPage());
+        $this->assertEquals($perPage, $results->perPage());
+    }
+
     protected static function scoutDriver(): string
     {
         return 'typesense';
