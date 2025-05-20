@@ -228,6 +228,15 @@ class TypesenseEngine extends Engine
      */
     public function paginate(Builder $builder, $perPage, $page)
     {
+        $maxInt = 4294967295;
+
+        $page = max(1, (int) $page);
+        $perPage = max(1, (int) $perPage);
+
+        if ($page * $perPage > $maxInt) {
+            $page = floor($maxInt / $perPage);
+        }
+
         return $this->performSearch(
             $builder,
             $this->buildSearchParameters($builder, $page, $perPage)
