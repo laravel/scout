@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.15.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.14.2...10.x)
+
+## [v10.14.2](https://github.com/laravel/scout/compare/v10.15.0...v10.14.2) - 2025-05-27
+
+* fix(pagination): prevent integer overflow in typesense pagination by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/924
 
 ## [v10.15.0](https://github.com/laravel/scout/compare/v10.14.1...v10.15.0) - 2025-05-13
 
