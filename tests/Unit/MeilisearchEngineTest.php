@@ -265,7 +265,7 @@ class MeilisearchEngineTest extends TestCase
         $engine = new MeilisearchEngine($client);
         $engine->updateIndexSettings('test_index', [
             'searchableAttributes' => ['title'],
-            'embedders' => ['default' => ['source' => 'openAi']]
+            'embedders' => ['default' => ['source' => 'openAi']],
         ]);
 
         $this->assertTrue(true);
