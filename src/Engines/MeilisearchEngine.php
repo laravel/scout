@@ -395,7 +395,13 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
      */
     public function updateIndexSettings($name, array $settings = [])
     {
-        $this->meilisearch->index($name)->updateSettings($settings);
+        $index = $this->meilisearch->index($name);
+
+        $index->updateSettings($settings);
+
+        if (! empty($settings['embedders'])) {
+            $index->updateEmbedders($settings['embedders']);
+        }
     }
 
     /**
