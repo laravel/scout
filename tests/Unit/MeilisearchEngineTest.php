@@ -255,7 +255,7 @@ class MeilisearchEngineTest extends TestCase
             ->andReturn($index);
 
         $index->shouldReceive('updateSettings')
-            ->with(['searchableAttributes' => ['title'], 'embedders' => ['default' => ['source' => 'openAi']]])
+            ->with(['searchableAttributes' => ['title']])
             ->once();
 
         $index->shouldReceive('updateEmbedders')
