@@ -10,6 +10,7 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\MeilisearchEngine;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Meilisearch\Client;
+use Meilisearch\Endpoints\Indexes;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -241,6 +242,33 @@ class MeilisearchEngineTest extends TestCase
         $this->assertTrue((new MeilisearchEngine(m::mock(Client::class)))->getTotalCount([
             'totalHits' => 3,
         ]) === 3);
+    }
+
+    public function test_update_index_settings_with_embedders()
+    {
+        $client = m::mock(Client::class);
+        $index = m::mock(Indexes::class);
+
+        $client->shouldReceive('index')
+            ->with('test_index')
+            ->once()
+            ->andReturn($index);
+
+        $index->shouldReceive('updateSettings')
+            ->with(['searchableAttributes' => ['title']])
+            ->once();
+
+        $index->shouldReceive('updateEmbedders')
+            ->with(['default' => ['source' => 'openAi']])
+            ->once();
+
+        $engine = new MeilisearchEngine($client);
+        $engine->updateIndexSettings('test_index', [
+            'searchableAttributes' => ['title'],
+            'embedders' => ['default' => ['source' => 'openAi']],
+        ]);
+
+        $this->assertTrue(true);
     }
 }
 

@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Engines;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Contracts\UpdatesIndexSettings;
@@ -395,7 +396,13 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
      */
     public function updateIndexSettings($name, array $settings = [])
     {
-        $this->meilisearch->index($name)->updateSettings($settings);
+        $index = $this->meilisearch->index($name);
+
+        $index->updateSettings(Arr::except($settings, 'embedders'));
+
+        if (! empty($settings['embedders'])) {
+            $index->updateEmbedders($settings['embedders']);
+        }
     }
 
     /**
