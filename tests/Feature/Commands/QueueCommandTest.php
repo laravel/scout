@@ -247,11 +247,11 @@ class QueueCommandTest extends TestCase
 
         // Should dispatch 2 jobs: one for IDs 1-3, one for IDs 4-5
         Queue::assertPushed(MakeRangeSearchable::class, function ($job) {
-            return $job->start === 1 && $job->end === 3;
+            return $job->start == 1 && $job->end == 3;
         });
 
         Queue::assertPushed(MakeRangeSearchable::class, function ($job) {
-            return $job->start === 4 && $job->end === 5;
+            return $job->start == 4 && $job->end == 5;
         });
     }
 
