@@ -57,7 +57,7 @@ class QueueCommandTest extends TestCase
 
         $parameters = [
             'model' => SearchableUser::class,
-            '--chunk' => 2
+            '--chunk' => 2,
         ];
 
         $this->artisan('scout:queue', $parameters)
@@ -116,7 +116,7 @@ class QueueCommandTest extends TestCase
 
         $parameters = [
             'model' => SearchableUser::class,
-            '--chunk' => 10
+            '--chunk' => 10,
         ];
 
         $this->artisan('scout:queue', $parameters)
@@ -196,7 +196,7 @@ class QueueCommandTest extends TestCase
 
         $parameters = [
             'model' => SearchableUser::class,
-            '--chunk' => 10
+            '--chunk' => 10,
         ];
 
         $this->artisan('scout:queue', $parameters)
@@ -217,7 +217,7 @@ class QueueCommandTest extends TestCase
 
         $parameters = [
             'model' => SearchableUser::class,
-            '--chunk' => 1
+            '--chunk' => 1,
         ];
 
         $this->artisan('scout:queue', $parameters)
@@ -239,7 +239,7 @@ class QueueCommandTest extends TestCase
 
         $this->artisan('scout:queue', [
             'model' => SearchableUser::class,
-            '--chunk' => 3
+            '--chunk' => 3,
         ])
             ->expectsOutputToContain('models up to ID: 3')
             ->expectsOutputToContain('models up to ID: 5')
@@ -272,7 +272,7 @@ class QueueCommandTest extends TestCase
         // Test with chunk size 0 (should fall back to default)
         $this->artisan('scout:queue', [
             'model' => SearchableUser::class,
-            '--chunk' => 0
+            '--chunk' => 0,
         ])
             ->expectsOutputToContain('ID: 3')
             ->assertSuccessful();
