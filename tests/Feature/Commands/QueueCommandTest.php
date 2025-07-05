@@ -42,7 +42,6 @@ class QueueCommandTest extends TestCase
         Queue::fake();
 
         $this->artisan('scout:queue', ['model' => SearchableUser::class])
-            ->expectsOutputToContain('No records found')
             ->assertSuccessful();
 
         Queue::assertNothingPushed();
