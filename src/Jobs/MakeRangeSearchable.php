@@ -58,6 +58,8 @@ class MakeRangeSearchable implements ShouldQueue
             ->whereBetween($this->model->getScoutKeyName(), [$this->start, $this->end])
             ->get();
 
-        dispatch(new Scout::$makeSearchableJob($models));
+        dispatch(new Scout::$makeSearchableJob($models))
+            ->onQueue($this->model->syncWithSearchUsingQueue())
+            ->onConnection($this->model->syncWithSearchUsing());
     }
 }
