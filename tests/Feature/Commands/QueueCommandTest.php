@@ -285,7 +285,7 @@ class QueueCommandTest extends TestCase
 
         $this->artisan('scout:queue', [
             'model' => SearchableUser::class,
-            '--min' => 5
+            '--min' => 5,
         ])
             ->expectsOutputToContain('models up to ID: 10')
             ->expectsOutputToContain('records have been queued')
@@ -305,7 +305,7 @@ class QueueCommandTest extends TestCase
 
         $this->artisan('scout:queue', [
             'model' => SearchableUser::class,
-            '--max' => 5
+            '--max' => 5,
         ])
             ->expectsOutputToContain('models up to ID: 5')
             ->expectsOutputToContain('records have been queued')
@@ -326,7 +326,7 @@ class QueueCommandTest extends TestCase
         $this->artisan('scout:queue', [
             'model' => SearchableUser::class,
             '--min' => 3,
-            '--max' => 7
+            '--max' => 7,
         ])
             ->expectsOutputToContain('models up to ID: 7')
             ->expectsOutputToContain('records have been queued')
@@ -348,7 +348,7 @@ class QueueCommandTest extends TestCase
             'model' => SearchableUser::class,
             '--min' => 2,
             '--max' => 8,
-            '--chunk' => 3
+            '--chunk' => 3,
         ])
             ->expectsOutputToContain('models up to ID: 4')
             ->expectsOutputToContain('models up to ID: 7')
@@ -369,7 +369,7 @@ class QueueCommandTest extends TestCase
         $this->artisan('scout:queue', [
             'model' => SearchableUser::class,
             '--min' => 5,
-            '--max' => 2
+            '--max' => 2,
         ])
             ->expectsOutputToContain('records have been queued')
             ->assertSuccessful();
@@ -387,7 +387,7 @@ class QueueCommandTest extends TestCase
         $this->artisan('scout:queue', [
             'model' => SearchableUser::class,
             '--min' => -5,
-            '--max' => 2
+            '--max' => 2,
         ])
             ->expectsOutputToContain('models up to ID: 2')
             ->expectsOutputToContain('records have been queued')
@@ -409,7 +409,7 @@ class QueueCommandTest extends TestCase
             'model' => SearchableUser::class,
             '--min' => 5,
             '--max' => 15,
-            '--chunk' => 4
+            '--chunk' => 4,
         ])
             ->expectsOutputToContain('models up to ID: 8')
             ->expectsOutputToContain('models up to ID: 12')
