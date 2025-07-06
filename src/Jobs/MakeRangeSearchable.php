@@ -60,6 +60,10 @@ class MakeRangeSearchable implements ShouldQueue
             ->filter
             ->shouldBeSearchable();
 
+        if ($models->isEmpty()) {
+            return;
+        }
+
         dispatch(new Scout::$makeSearchableJob($models))
             ->onQueue($this->model->syncWithSearchUsingQueue())
             ->onConnection($this->model->syncWithSearchUsing());
