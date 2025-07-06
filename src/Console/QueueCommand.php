@@ -16,6 +16,8 @@ class QueueCommand extends Command
      */
     protected $signature = 'scout:queue
             {model : Class name of model to bulk queue}
+            {--min= : The minimum ID to start queuing from}
+            {--max= : The maximum ID to queue up to}
             {--c|chunk= : The number of records to queue in a single job (Defaults to configuration value: `scout.chunk.searchable`)}';
 
     /**
@@ -38,8 +40,10 @@ class QueueCommand extends Command
 
         $query = $model::makeAllSearchableQuery();
 
-        $min = $query->min($model->getScoutKeyName());
-        $max = $query->max($model->getScoutKeyName());
+        $min = $this->option('min') ?? $query->min($model->getScoutKeyName());
+        $max = $this->option('max') ?? $query->max($model->getScoutKeyName());
+
+        $chunk = max(1, (int) ($this->option('chunk') ?? config('scout.chunk.searchable', 500)));
 
         if (! $min || ! $max) {
             $this->info('No records found for ['.$class.']');
@@ -53,12 +57,8 @@ class QueueCommand extends Command
             return;
         }
 
-        $chunkSize = $this->option('chunk') ?? config('scout.chunk.searchable', 500);
-
-        $chunkSize = max(1, (int) $chunkSize);
-
-        for ($start = $min; $start <= $max; $start += $chunkSize) {
-            $end = min($start + $chunkSize - 1, $max);
+        for ($start = $min; $start <= $max; $start += $chunk) {
+            $end = min($start + $chunk - 1, $max);
 
             dispatch(new MakeRangeSearchable($model, $start, $end))
                 ->onQueue($model->syncWithSearchUsingQueue())

@@ -51,7 +51,6 @@ class QueueCommandTest extends TestCase
     {
         Queue::fake();
 
-        // Create test users
         SearchableUserFactory::new()->count(10)->create();
 
         $parameters = [
@@ -190,7 +189,6 @@ class QueueCommandTest extends TestCase
     {
         Queue::fake();
 
-        // Create 3 users but use chunk size of 10
         SearchableUserFactory::new()->count(3)->create();
 
         $parameters = [
@@ -211,7 +209,6 @@ class QueueCommandTest extends TestCase
     {
         Queue::fake();
 
-        // Create 3 users with chunk size of 1
         SearchableUserFactory::new()->count(3)->create();
 
         $parameters = [
@@ -278,5 +275,149 @@ class QueueCommandTest extends TestCase
 
         // Should still dispatch jobs (using default chunk size)
         Queue::assertPushed(MakeRangeSearchable::class);
+    }
+
+    public function test_it_accepts_custom_min_option()
+    {
+        Queue::fake();
+
+        SearchableUserFactory::new()->count(10)->create();
+
+        $this->artisan('scout:queue', [
+            'model' => SearchableUser::class,
+            '--min' => 5
+        ])
+            ->expectsOutputToContain('models up to ID: 10')
+            ->expectsOutputToContain('records have been queued')
+            ->assertSuccessful();
+
+        // Should dispatch one job for range 5-10
+        Queue::assertPushed(MakeRangeSearchable::class, function ($job) {
+            return $job->start === 5 && $job->end === 10;
+        });
+    }
+
+    public function test_it_accepts_custom_max_option()
+    {
+        Queue::fake();
+
+        SearchableUserFactory::new()->count(10)->create();
+
+        $this->artisan('scout:queue', [
+            'model' => SearchableUser::class,
+            '--max' => 5
+        ])
+            ->expectsOutputToContain('models up to ID: 5')
+            ->expectsOutputToContain('records have been queued')
+            ->assertSuccessful();
+
+        // Should dispatch one job for range 1-5
+        Queue::assertPushed(MakeRangeSearchable::class, function ($job) {
+            return $job->start === 1 && $job->end === 5;
+        });
+    }
+
+    public function test_it_accepts_both_min_and_max_options()
+    {
+        Queue::fake();
+
+        SearchableUserFactory::new()->count(10)->create();
+
+        $this->artisan('scout:queue', [
+            'model' => SearchableUser::class,
+            '--min' => 3,
+            '--max' => 7
+        ])
+            ->expectsOutputToContain('models up to ID: 7')
+            ->expectsOutputToContain('records have been queued')
+            ->assertSuccessful();
+
+        // Should dispatch one job for range 3-7
+        Queue::assertPushed(MakeRangeSearchable::class, function ($job) {
+            return $job->start === 3 && $job->end === 7;
+        });
+    }
+
+    public function test_it_chunks_custom_range_correctly()
+    {
+        Queue::fake();
+
+        SearchableUserFactory::new()->count(10)->create();
+
+        $this->artisan('scout:queue', [
+            'model' => SearchableUser::class,
+            '--min' => 2,
+            '--max' => 8,
+            '--chunk' => 3
+        ])
+            ->expectsOutputToContain('models up to ID: 4')
+            ->expectsOutputToContain('models up to ID: 7')
+            ->expectsOutputToContain('models up to ID: 8')
+            ->expectsOutputToContain('records have been queued')
+            ->assertSuccessful();
+
+        // Should dispatch 3 jobs: [2-4], [5-7], [8]
+        Queue::assertPushed(MakeRangeSearchable::class, 3);
+    }
+
+    public function test_it_handles_min_greater_than_max()
+    {
+        Queue::fake();
+
+        SearchableUserFactory::new()->count(5)->create();
+
+        $this->artisan('scout:queue', [
+            'model' => SearchableUser::class,
+            '--min' => 5,
+            '--max' => 2
+        ])
+            ->expectsOutputToContain('records have been queued')
+            ->assertSuccessful();
+
+        // Should not dispatch any jobs since the range is invalid (start > end in loop)
+        Queue::assertNothingPushed();
+    }
+
+    public function test_it_handles_negative_min_option()
+    {
+        Queue::fake();
+
+        SearchableUserFactory::new()->count(3)->create();
+
+        $this->artisan('scout:queue', [
+            'model' => SearchableUser::class,
+            '--min' => -5,
+            '--max' => 2
+        ])
+            ->expectsOutputToContain('models up to ID: 2')
+            ->expectsOutputToContain('records have been queued')
+            ->assertSuccessful();
+
+        // Should dispatch one job for range -5 to 2
+        Queue::assertPushed(MakeRangeSearchable::class, function ($job) {
+            return $job->start === -5 && $job->end === 2;
+        });
+    }
+
+    public function test_it_can_accept_all_options()
+    {
+        Queue::fake();
+
+        SearchableUserFactory::new()->count(20)->create();
+
+        $this->artisan('scout:queue', [
+            'model' => SearchableUser::class,
+            '--min' => 5,
+            '--max' => 15,
+            '--chunk' => 4
+        ])
+            ->expectsOutputToContain('models up to ID: 8')
+            ->expectsOutputToContain('models up to ID: 12')
+            ->expectsOutputToContain('models up to ID: 15')
+            ->expectsOutputToContain('records have been queued')
+            ->assertSuccessful();
+
+        // Should dispatch 3 jobs: [5-8], [9-12], [13-15]
+        Queue::assertPushed(MakeRangeSearchable::class, 3);
     }
 }
