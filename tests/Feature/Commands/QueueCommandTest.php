@@ -293,7 +293,7 @@ class QueueCommandTest extends TestCase
 
         // Should dispatch one job for range 5-10
         Queue::assertPushed(MakeRangeSearchable::class, function ($job) {
-            return $job->start === 5 && $job->end === 10;
+            return $job->start == 5 && $job->end == 10;
         });
     }
 
@@ -313,7 +313,7 @@ class QueueCommandTest extends TestCase
 
         // Should dispatch one job for range 1-5
         Queue::assertPushed(MakeRangeSearchable::class, function ($job) {
-            return $job->start === 1 && $job->end === 5;
+            return $job->start == 1 && $job->end == 5;
         });
     }
 
@@ -334,7 +334,7 @@ class QueueCommandTest extends TestCase
 
         // Should dispatch one job for range 3-7
         Queue::assertPushed(MakeRangeSearchable::class, function ($job) {
-            return $job->start === 3 && $job->end === 7;
+            return $job->start == 3 && $job->end == 7;
         });
     }
 
@@ -395,7 +395,7 @@ class QueueCommandTest extends TestCase
 
         // Should dispatch one job for range -5 to 2
         Queue::assertPushed(MakeRangeSearchable::class, function ($job) {
-            return $job->start === -5 && $job->end === 2;
+            return $job->start == -5 && $job->end == 2;
         });
     }
 
