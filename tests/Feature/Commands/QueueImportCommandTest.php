@@ -17,7 +17,7 @@ use Workbench\Database\Factories\SearchableUserFactory;
 #[WithConfig('scout.after_commit', false)]
 #[WithConfig('scout.soft_delete', false)]
 #[WithMigration]
-class QueueCommandTest extends TestCase
+class QueueImportCommandTest extends TestCase
 {
     use LazilyRefreshDatabase;
     use WithWorkbench;
@@ -28,7 +28,7 @@ class QueueCommandTest extends TestCase
 
         SearchableUserFactory::new()->count(5)->create();
 
-        $this->artisan('scout:queue', ['model' => SearchableUser::class])
+        $this->artisan('scout:queue-import', ['model' => SearchableUser::class])
             ->expectsOutputToContain('models up to ID: 5')
             ->expectsOutputToContain('records have been queued')
             ->assertSuccessful();
@@ -41,7 +41,7 @@ class QueueCommandTest extends TestCase
     {
         Queue::fake();
 
-        $this->artisan('scout:queue', ['model' => SearchableUser::class])
+        $this->artisan('scout:queue-import', ['model' => SearchableUser::class])
             ->assertSuccessful();
 
         Queue::assertNothingPushed();
@@ -58,7 +58,7 @@ class QueueCommandTest extends TestCase
             '--chunk' => 2,
         ];
 
-        $this->artisan('scout:queue', $parameters)
+        $this->artisan('scout:queue-import', $parameters)
             ->expectsOutputToContain('models up to ID: 2')
             ->expectsOutputToContain('models up to ID: 4')
             ->expectsOutputToContain('models up to ID: 6')
@@ -77,7 +77,7 @@ class QueueCommandTest extends TestCase
 
         SearchableUserFactory::new()->count(3)->create();
 
-        $this->artisan('scout:queue', ['model' => SearchableUser::class])
+        $this->artisan('scout:queue-import', ['model' => SearchableUser::class])
             ->expectsOutputToContain('models up to ID: 3')
             ->expectsOutputToContain('records have been queued')
             ->assertSuccessful();
@@ -96,7 +96,7 @@ class QueueCommandTest extends TestCase
         // Create users that will have IDs starting from 3
         SearchableUserFactory::new()->count(3)->create();
 
-        $this->artisan('scout:queue', ['model' => SearchableUser::class])
+        $this->artisan('scout:queue-import', ['model' => SearchableUser::class])
             ->expectsOutputToContain('models up to ID: 5')
             ->expectsOutputToContain('records have been queued')
             ->assertSuccessful();
@@ -117,7 +117,7 @@ class QueueCommandTest extends TestCase
             '--chunk' => 10,
         ];
 
-        $this->artisan('scout:queue', $parameters)
+        $this->artisan('scout:queue-import', $parameters)
             ->expectsOutputToContain('models up to ID: 10')
             ->expectsOutputToContain('models up to ID: 20')
             ->expectsOutputToContain('models up to ID: 25')
@@ -135,7 +135,7 @@ class QueueCommandTest extends TestCase
         // Create just one user
         SearchableUserFactory::new()->create();
 
-        $this->artisan('scout:queue', ['model' => SearchableUser::class])
+        $this->artisan('scout:queue-import', ['model' => SearchableUser::class])
             ->expectsOutputToContain('models up to ID: 1')
             ->expectsOutputToContain('records have been queued')
             ->assertSuccessful();
@@ -154,7 +154,7 @@ class QueueCommandTest extends TestCase
         // Create 7 users to test chunking with config value
         SearchableUserFactory::new()->count(7)->create();
 
-        $this->artisan('scout:queue', ['model' => SearchableUser::class])
+        $this->artisan('scout:queue-import', ['model' => SearchableUser::class])
             ->expectsOutputToContain('models up to ID: 3')
             ->expectsOutputToContain('models up to ID: 6')
             ->expectsOutputToContain('models up to ID: 7')
@@ -176,7 +176,7 @@ class QueueCommandTest extends TestCase
         // Delete the middle users to create gaps
         SearchableUser::whereIn('id', [$users1[1]->id, $users2[0]->id])->delete();
 
-        $this->artisan('scout:queue', ['model' => SearchableUser::class])
+        $this->artisan('scout:queue-import', ['model' => SearchableUser::class])
             ->expectsOutputToContain('models up to ID: 6')
             ->expectsOutputToContain('records have been queued')
             ->assertSuccessful();
@@ -196,7 +196,7 @@ class QueueCommandTest extends TestCase
             '--chunk' => 10,
         ];
 
-        $this->artisan('scout:queue', $parameters)
+        $this->artisan('scout:queue-import', $parameters)
             ->expectsOutputToContain('models up to ID: 3')
             ->expectsOutputToContain('records have been queued')
             ->assertSuccessful();
@@ -216,7 +216,7 @@ class QueueCommandTest extends TestCase
             '--chunk' => 1,
         ];
 
-        $this->artisan('scout:queue', $parameters)
+        $this->artisan('scout:queue-import', $parameters)
             ->expectsOutputToContain('models up to ID: 1')
             ->expectsOutputToContain('models up to ID: 2')
             ->expectsOutputToContain('models up to ID: 3')
@@ -233,7 +233,7 @@ class QueueCommandTest extends TestCase
 
         SearchableUserFactory::new()->count(5)->create();
 
-        $this->artisan('scout:queue', [
+        $this->artisan('scout:queue-import', [
             'model' => SearchableUser::class,
             '--chunk' => 3,
         ])
@@ -256,7 +256,7 @@ class QueueCommandTest extends TestCase
     {
         $this->expectException(Error::class);
 
-        $this->artisan('scout:queue', ['model' => 'NonExistentModel']);
+        $this->artisan('scout:queue-import', ['model' => 'NonExistentModel']);
     }
 
     public function test_it_handles_zero_chunk_size()
@@ -266,7 +266,7 @@ class QueueCommandTest extends TestCase
         SearchableUserFactory::new()->count(3)->create();
 
         // Test with chunk size 0 (should fall back to default)
-        $this->artisan('scout:queue', [
+        $this->artisan('scout:queue-import', [
             'model' => SearchableUser::class,
             '--chunk' => 0,
         ])
@@ -283,7 +283,7 @@ class QueueCommandTest extends TestCase
 
         SearchableUserFactory::new()->count(10)->create();
 
-        $this->artisan('scout:queue', [
+        $this->artisan('scout:queue-import', [
             'model' => SearchableUser::class,
             '--min' => 5,
         ])
@@ -303,7 +303,7 @@ class QueueCommandTest extends TestCase
 
         SearchableUserFactory::new()->count(10)->create();
 
-        $this->artisan('scout:queue', [
+        $this->artisan('scout:queue-import', [
             'model' => SearchableUser::class,
             '--max' => 5,
         ])
@@ -323,7 +323,7 @@ class QueueCommandTest extends TestCase
 
         SearchableUserFactory::new()->count(10)->create();
 
-        $this->artisan('scout:queue', [
+        $this->artisan('scout:queue-import', [
             'model' => SearchableUser::class,
             '--min' => 3,
             '--max' => 7,
@@ -344,7 +344,7 @@ class QueueCommandTest extends TestCase
 
         SearchableUserFactory::new()->count(10)->create();
 
-        $this->artisan('scout:queue', [
+        $this->artisan('scout:queue-import', [
             'model' => SearchableUser::class,
             '--min' => 2,
             '--max' => 8,
@@ -366,7 +366,7 @@ class QueueCommandTest extends TestCase
 
         SearchableUserFactory::new()->count(5)->create();
 
-        $this->artisan('scout:queue', [
+        $this->artisan('scout:queue-import', [
             'model' => SearchableUser::class,
             '--min' => 5,
             '--max' => 2,
@@ -384,7 +384,7 @@ class QueueCommandTest extends TestCase
 
         SearchableUserFactory::new()->count(3)->create();
 
-        $this->artisan('scout:queue', [
+        $this->artisan('scout:queue-import', [
             'model' => SearchableUser::class,
             '--min' => -5,
             '--max' => 2,
@@ -405,7 +405,7 @@ class QueueCommandTest extends TestCase
 
         SearchableUserFactory::new()->count(20)->create();
 
-        $this->artisan('scout:queue', [
+        $this->artisan('scout:queue-import', [
             'model' => SearchableUser::class,
             '--min' => 5,
             '--max' => 15,

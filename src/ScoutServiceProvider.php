@@ -8,7 +8,7 @@ use Laravel\Scout\Console\DeleteIndexCommand;
 use Laravel\Scout\Console\FlushCommand;
 use Laravel\Scout\Console\ImportCommand;
 use Laravel\Scout\Console\IndexCommand;
-use Laravel\Scout\Console\QueueCommand;
+use Laravel\Scout\Console\QueueImportCommand;
 use Laravel\Scout\Console\SyncIndexSettingsCommand;
 use Meilisearch\Client as Meilisearch;
 
@@ -49,7 +49,7 @@ class ScoutServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                QueueCommand::class,
+                QueueImportCommand::class,
                 FlushCommand::class,
                 ImportCommand::class,
                 IndexCommand::class,

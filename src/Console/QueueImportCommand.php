@@ -6,15 +6,15 @@ use Illuminate\Console\Command;
 use Laravel\Scout\Jobs\MakeRangeSearchable;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-#[AsCommand(name: 'scout:queue')]
-class QueueCommand extends Command
+#[AsCommand(name: 'scout:queue-import')]
+class QueueImportCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'scout:queue
+    protected $signature = 'scout:queue-import
             {model : Class name of model to bulk queue}
             {--min= : The minimum ID to start queuing from}
             {--max= : The maximum ID to queue up to}
@@ -25,7 +25,7 @@ class QueueCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Import the given model into the search index';
+    protected $description = 'Import the given model into the search index via chunked, queued jobs';
 
     /**
      * Execute the console command.
@@ -46,7 +46,7 @@ class QueueCommand extends Command
         $chunk = max(1, (int) ($this->option('chunk') ?? config('scout.chunk.searchable', 500)));
 
         if (! $min || ! $max) {
-            $this->info('No records found for ['.$class.']');
+            $this->info('No records found for ['.$class.'].');
 
             return;
         }
@@ -67,6 +67,6 @@ class QueueCommand extends Command
             $this->line('<comment>Queued ['.$class.'] models up to ID:</comment> '.$end);
         }
 
-        $this->info('All ['.$class.'] records have been queued.');
+        $this->info('All ['.$class.'] records have been queued for importing.');
     }
 }
