@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.14.2...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.16.0...10.x)
+
+## [v10.16.0](https://github.com/laravel/scout/compare/v10.14.2...v10.16.0) - 2025-07-08
+
+* Test Improvements by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/925
+* feat: add support for Meilisearch embedder settings by [@mortezarajabi](https://github.com/mortezarajabi) in https://github.com/laravel/scout/pull/928
 
 ## [v10.14.2](https://github.com/laravel/scout/compare/v10.15.0...v10.14.2) - 2025-05-27
 
