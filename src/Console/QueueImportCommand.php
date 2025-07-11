@@ -60,7 +60,7 @@ class QueueImportCommand extends Command
         for ($start = $min; $start <= $max; $start += $chunk) {
             $end = min($start + $chunk - 1, $max);
 
-            dispatch(new MakeRangeSearchable($model, $start, $end))
+            dispatch(new MakeRangeSearchable($class, $start, $end))
                 ->onQueue($model->syncWithSearchUsingQueue())
                 ->onConnection($model->syncWithSearchUsing());
 

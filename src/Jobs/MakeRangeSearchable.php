@@ -4,19 +4,18 @@ namespace Laravel\Scout\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\SerializesModels;
 use Laravel\Scout\Scout;
 
 class MakeRangeSearchable implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+    use Queueable;
 
     /**
      * The model to be made searchable.
      *
-     * @var \Illuminate\Database\Eloquent\Model
+     * @var string
      */
-    public $model;
+    public $class;
 
     /**
      * The start id to be made searchable.
@@ -35,14 +34,14 @@ class MakeRangeSearchable implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  string  $class
      * @param  int  $start
      * @param  int  $end
      * @return void
      */
-    public function __construct($model, $start, $end)
+    public function __construct($class, $start, $end)
     {
-        $this->model = $model;
+        $this->class = $class;
         $this->start = $start;
         $this->end = $end;
     }
@@ -54,8 +53,10 @@ class MakeRangeSearchable implements ShouldQueue
      */
     public function handle()
     {
-        $models = $this->model::makeAllSearchableQuery()
-            ->whereBetween($this->model->getScoutKeyName(), [$this->start, $this->end])
+        $model = new $this->class;
+
+        $models = $model::makeAllSearchableQuery()
+            ->whereBetween($model->getScoutKeyName(), [$this->start, $this->end])
             ->get()
             ->filter
             ->shouldBeSearchable();
@@ -65,7 +66,7 @@ class MakeRangeSearchable implements ShouldQueue
         }
 
         dispatch(new Scout::$makeSearchableJob($models))
-            ->onQueue($this->model->syncWithSearchUsingQueue())
-            ->onConnection($this->model->syncWithSearchUsing());
+            ->onQueue($model->syncWithSearchUsingQueue())
+            ->onConnection($model->syncWithSearchUsing());
     }
 }
