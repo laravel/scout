@@ -399,6 +399,25 @@ class QueueImportCommandTest extends TestCase
         });
     }
 
+    public function test_it_accepts_custom_queue_option()
+    {
+        Queue::fake();
+
+        SearchableUserFactory::new()->count(10)->create();
+
+        $this->artisan('scout:queue-import', [
+            'model' => SearchableUser::class,
+            '--queue' => 'custom-queue',
+        ])
+            ->expectsOutputToContain('models up to ID: 10')
+            ->expectsOutputToContain('records have been queued')
+            ->assertSuccessful();
+
+        Queue::assertPushedOn('custom-queue', MakeRangeSearchable::class, function ($job) {
+            return $job->start == 1 && $job->end == 10;
+        });
+    }
+
     public function test_it_can_accept_all_options()
     {
         Queue::fake();
@@ -410,6 +429,7 @@ class QueueImportCommandTest extends TestCase
             '--min' => 5,
             '--max' => 15,
             '--chunk' => 4,
+            '--queue' => 'custom-queue',
         ])
             ->expectsOutputToContain('models up to ID: 8')
             ->expectsOutputToContain('models up to ID: 12')
@@ -419,5 +439,17 @@ class QueueImportCommandTest extends TestCase
 
         // Should dispatch 3 jobs: [5-8], [9-12], [13-15]
         Queue::assertPushed(MakeRangeSearchable::class, 3);
+
+        Queue::assertPushedOn('custom-queue', MakeRangeSearchable::class, function ($job) {
+            return $job->start == 5 && $job->end == 8;
+        });
+
+        Queue::assertPushedOn('custom-queue', MakeRangeSearchable::class, function ($job) {
+            return $job->start == 9 && $job->end == 12;
+        });
+
+        Queue::assertPushedOn('custom-queue', MakeRangeSearchable::class, function ($job) {
+            return $job->start == 13 && $job->end == 15;
+        });
     }
 }
