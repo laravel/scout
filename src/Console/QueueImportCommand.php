@@ -19,7 +19,7 @@ class QueueImportCommand extends Command
             {--min= : The minimum ID to start queuing from}
             {--max= : The maximum ID to queue up to}
             {--c|chunk= : The number of records to queue in a single job (Defaults to configuration value: `scout.chunk.searchable`)}
-            {--queue= : The queue to use for the jobs (Defaults to configuration value: `scout.queue.queue`)}';
+            {--queue= : The queue that should be used (Defaults to configuration value: `scout.queue.queue`)}';
 
     /**
      * The console command description.
@@ -40,8 +40,6 @@ class QueueImportCommand extends Command
         $model = new $class;
 
         $query = $model::makeAllSearchableQuery();
-
-        $queue = $this->option('queue') ?? $model->syncWithSearchUsingQueue();
 
         $min = $this->option('min') ?? $query->min($model->getScoutKeyName());
         $max = $this->option('max') ?? $query->max($model->getScoutKeyName());
@@ -64,7 +62,7 @@ class QueueImportCommand extends Command
             $end = min($start + $chunk - 1, $max);
 
             dispatch(new MakeRangeSearchable($class, $start, $end))
-                ->onQueue($queue)
+                ->onQueue($this->option('queue') ?? $model->syncWithSearchUsingQueue())
                 ->onConnection($model->syncWithSearchUsing());
 
             $this->line('<comment>Queued ['.$class.'] models up to ID:</comment> '.$end);
