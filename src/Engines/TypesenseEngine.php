@@ -113,7 +113,8 @@ class TypesenseEngine extends Engine
      */
     protected function importDocuments(TypesenseCollection $collectionIndex, array $documents, string $action = 'upsert'): Collection
     {
-        $importedDocuments = $collectionIndex->getDocuments()->import($documents, ['action' => $action]);
+        $remoteEmbeddingIndex = $this->getRemoteEmbeddingSettings();
+        $importedDocuments = $collectionIndex->getDocuments()->import($documents, ['action' => $action, ...$remoteEmbeddingIndex]);
 
         $results = [];
 
@@ -688,5 +689,19 @@ class TypesenseEngine extends Engine
     public function __call($method, $parameters)
     {
         return $this->typesense->$method(...$parameters);
+    }
+
+    /**
+     * Get the remote embedding settings from the configuration.
+     *
+     * @return array
+     */
+    protected function getRemoteEmbeddingSettings(): array
+    {
+        return config('scout.typesense.remote-embedding-settings', [
+            'remote_embedding_batch_size' => env('TYPESENSE_REMOTE_EMBEDDING_BATCH_SIZE', 200),
+            'remote_embedding_timeout_ms' => env('TYPESENSE_REMOTE_EMBEDDING_TIMEOUT_MS', 60000),
+            'remote_embedding_num_tries' => env('TYPESENSE_REMOTE_EMBEDDING_NUM_TRIES', 2),
+        ]);
     }
 }
