@@ -18,6 +18,10 @@ return [
 
     'driver' => env('SCOUT_DRIVER', 'algolia'),
 
+    'models' => [
+        // App\Models\User::class,
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Index Prefix

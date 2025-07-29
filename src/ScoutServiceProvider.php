@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Scout\Console\DeleteAllIndexesCommand;
 use Laravel\Scout\Console\DeleteIndexCommand;
 use Laravel\Scout\Console\FlushCommand;
+use Laravel\Scout\Console\ImportAllModelsCommand;
 use Laravel\Scout\Console\ImportCommand;
 use Laravel\Scout\Console\IndexCommand;
 use Laravel\Scout\Console\QueueImportCommand;
@@ -21,7 +22,7 @@ class ScoutServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/scout.php', 'scout');
+        $this->mergeConfigFrom(__DIR__ . '/../config/scout.php', 'scout');
 
         if (class_exists(Meilisearch::class)) {
             $this->app->singleton(Meilisearch::class, function ($app) {
@@ -56,10 +57,11 @@ class ScoutServiceProvider extends ServiceProvider
                 SyncIndexSettingsCommand::class,
                 DeleteIndexCommand::class,
                 DeleteAllIndexesCommand::class,
+                ImportAllModelsCommand::class,
             ]);
 
             $this->publishes([
-                __DIR__.'/../config/scout.php' => $this->app['path.config'].DIRECTORY_SEPARATOR.'scout.php',
+                __DIR__ . '/../config/scout.php' => $this->app['path.config'] . DIRECTORY_SEPARATOR . 'scout.php',
             ]);
         }
     }
