@@ -18,6 +18,17 @@ return [
 
     'driver' => env('SCOUT_DRIVER', 'algolia'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Models
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the models that will be imported into the search engine
+    | when running the `scout:import-all` command. These models will be flushed
+    | first. If empty then models with the Searchable trait will be imported.
+    |
+    */
+    
     'models' => [
         // App\Models\User::class,
     ],
