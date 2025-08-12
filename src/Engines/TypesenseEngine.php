@@ -111,7 +111,7 @@ class TypesenseEngine extends Engine
      * @throws \Typesense\Exceptions\TypesenseClientError
      * @throws \Http\Client\Exception
      */
-    protected function importDocuments(TypesenseCollection $collectionIndex, array $documents, string $action = 'upsert'): Collection
+    protected function importDocuments(TypesenseCollection $collectionIndex, array $documents, string $action = 'emplace'): Collection
     {
         $importedDocuments = $collectionIndex->getDocuments()->import($documents, ['action' => $action]);
 
