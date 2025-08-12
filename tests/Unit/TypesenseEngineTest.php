@@ -133,7 +133,7 @@ class TypesenseEngineTest extends TestCase
         $documents->expects($this->once())
             ->method('import')
             ->with(
-                [['id' => 1, 'name' => 'Model 1']], ['action' => 'upsert'],
+                [['id' => 1, 'name' => 'Model 1']], ['action' => 'emplace'],
             )
             ->willReturn([[
                 'success' => true,
