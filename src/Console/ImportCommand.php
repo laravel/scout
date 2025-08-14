@@ -17,7 +17,7 @@ class ImportCommand extends Command
      */
     protected $signature = 'scout:import
             {model : Class name of model to bulk import}
-            {--flush : Flush the index before importing}
+            {--fresh : Flush the index before importing}
             {--c|chunk= : The number of records to import at a time (Defaults to configuration value: `scout.chunk.searchable`)}';
 
     /**
@@ -45,7 +45,7 @@ class ImportCommand extends Command
             $this->line('<comment>Imported ['.$class.'] models up to ID:</comment> '.$key);
         });
 
-        if ($this->option('flush')) {
+        if ($this->option('fresh')) {
             $model::removeAllFromSearch();
         }
 
