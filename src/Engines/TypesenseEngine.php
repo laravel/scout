@@ -519,6 +519,19 @@ class TypesenseEngine extends Engine
             ->filter(static function ($model) use ($objectIds) {
                 return in_array($model->getScoutKey(), $objectIds, false);
             })
+            ->map(static function ($model) use ($hits, $objectIdPositions) {
+                $result = $hits[$objectIdPositions[$model->getScoutKey()]] ?? [];
+
+                foreach ($result as $key => $value) {
+                    if ($key === 'document') {
+                        continue;
+                    }
+
+                    $model->withScoutMetadata($key, $value);
+                }
+
+                return $model;
+            })
             ->sortBy(static function ($model) use ($objectIdPositions) {
                 return $objectIdPositions[$model->getScoutKey()];
             })

@@ -254,6 +254,152 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals([1, 2, 3], $mappedIds->toArray());
     }
 
+    public function test_map_correctly_maps_results_to_models()
+    {
+        $engine = new TypesenseEngine($this->createMock(TypesenseClient::class), 10);
+
+        $model = m::mock(stdClass::class);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
+        $model->shouldReceive('getScoutModelsByIds')->andReturn(
+            Collection::make([
+                new SearchableModel(['id' => 1, 'name' => 'test']),
+            ])
+        );
+
+        $builder = m::mock(Builder::class);
+
+        $results = $engine->map($builder, [
+            'found' => 1,
+            'hits' => [
+                [
+                    'document' => ['id' => 1, 'name' => 'test'],
+                    'geo_distance_meters' => ['location' => 5],
+                    'highlights' => [],
+                ],
+            ],
+        ], $model);
+
+        $this->assertCount(1, $results);
+        $this->assertEquals(['id' => 1, 'name' => 'test'], $results->first()->toArray());
+        $this->assertEquals(
+            ['geo_distance_meters' => ['location' => 5], 'highlights' => []],
+            $results->first()->scoutMetadata()
+        );
+    }
+
+    public function test_map_correctly_maps_results_to_models_with_multiple_hits()
+    {
+        $engine = new TypesenseEngine($this->createMock(TypesenseClient::class), 10);
+
+        $model = m::mock(stdClass::class);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
+        $model->shouldReceive('getScoutModelsByIds')->andReturn(
+            Collection::make([
+                new SearchableModel(['id' => 1, 'name' => 'test1']),
+                new SearchableModel(['id' => 4, 'name' => 'test4']),
+                new SearchableModel(['id' => 6, 'name' => 'test6']),
+            ])
+        );
+
+        $builder = m::mock(Builder::class);
+
+        $results = $engine->map($builder, [
+            'found' => 3,
+            'hits' => [
+                [
+                    'document' => ['id' => 1, 'name' => 'test1'],
+                    'geo_distance_meters' => ['location' => 1],
+                    'highlights' => [1],
+                ],
+                [
+                    'document' => ['id' => 6, 'name' => 'test6'],
+                    'geo_distance_meters' => ['location' => 6],
+                    'highlights' => [6],
+                ],
+                [
+                    'document' => ['id' => 4, 'name' => 'test4'],
+                    'geo_distance_meters' => ['location' => 4],
+                    'highlights' => [4],
+                ],
+            ],
+        ], $model);
+
+        $this->assertCount(3, $results);
+        $this->assertEquals(['id' => 6, 'name' => 'test6'], $results[1]->toArray());
+
+        foreach ($results as $result) {
+            $this->assertNotEmpty($result->scoutMetadata());
+
+            $this->assertEquals(
+                ['geo_distance_meters' => ['location' => $result->id], 'highlights' => [$result->id]],
+                $result->scoutMetadata()
+            );
+        }
+    }
+
+    public function test_scoutMetadata_is_empty_for_missing_hits()
+    {
+        $engine = new TypesenseEngine($this->createMock(TypesenseClient::class), 10);
+
+        $model = m::mock(stdClass::class);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
+        $model->shouldReceive('getScoutModelsByIds')->andReturn(
+            Collection::make([
+                new SearchableModel(['id' => 1, 'name' => 'test']),
+            ])
+        );
+
+        $builder = m::mock(Builder::class);
+
+        $results = $engine->map($builder, [
+            'found' => 1,
+            'grouped_hits' => [
+                1 => [
+                    'hits' => [
+                        [
+                            'document' => ['id' => 1, 'name' => 'test'],
+                            'geo_distance_meters' => ['location' => 5],
+                            'highlights' => [],
+                        ],
+                    ],
+                ],
+            ],
+        ], $model);
+
+        $this->assertCount(1, $results);
+        $this->assertEquals(['id' => 1, 'name' => 'test'], $results->first()->toArray());
+        $this->assertEquals([], $results->first()->scoutMetadata());
+    }
+
+    public function test_that_document_result_is_not_added_to_scoutMetadata()
+    {
+        $engine = new TypesenseEngine($this->createMock(TypesenseClient::class), 10);
+
+        $model = m::mock(stdClass::class);
+        $model->shouldReceive(['getScoutKeyName' => 'id']);
+        $model->shouldReceive('getScoutModelsByIds')->andReturn(
+            Collection::make([
+                new SearchableModel(['id' => 1, 'name' => 'test']),
+            ])
+        );
+
+        $builder = m::mock(Builder::class);
+
+        $results = $engine->map($builder, [
+            'found' => 1,
+            'hits' => [
+                [
+                    'document' => ['id' => 1, 'name' => 'test'],
+                    'highlights' => [],
+                ],
+            ],
+        ], $model);
+
+        $this->assertCount(1, $results);
+        $this->assertArrayNotHasKey('document', $results->first()->scoutMetadata());
+        $this->assertArrayHasKey('highlights', $results->first()->scoutMetadata());
+    }
+
     public function test_get_total_count_method(): void
     {
         // Sample search results with 'found' key
