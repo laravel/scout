@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.17.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.18.0...10.x)
+
+## [v10.18.0](https://github.com/laravel/scout/compare/v10.17.0...v10.18.0) - 2025-08-19
+
+* Change Typesense action mode to emplace when import documents by [@SoongMingLiang](https://github.com/SoongMingLiang) in https://github.com/laravel/scout/pull/936
+* Add `--flush` option to ImportCommand by [@tobz-nz](https://github.com/tobz-nz) in https://github.com/laravel/scout/pull/937
 
 ## [v10.17.0](https://github.com/laravel/scout/compare/v10.16.0...v10.17.0) - 2025-07-22
 
