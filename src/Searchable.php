@@ -67,7 +67,7 @@ trait Searchable
             return;
         }
 
-        if (! config('scout.queue')) {
+        if (! config()->boolean('scout.queue.enable')) {
             return $this->syncMakeSearchable($models);
         }
 
@@ -103,7 +103,7 @@ trait Searchable
             return;
         }
 
-        if (! config('scout.queue')) {
+        if (! config()->boolean('scout.queue.enable')) {
             return $this->syncRemoveFromSearch($models);
         }
 

@@ -37,12 +37,17 @@ return [
     |--------------------------------------------------------------------------
     |
     | This option allows you to control if the operations that sync your data
-    | with your search engines are queued. When this is set to "true" then
-    | all automatic data syncing will get queued for better performance.
+    | with your search engines are queued. When enabled, all automatic data
+    | syncing will get queued for better performance. You can also specify
+    | the queue connection and queue name to use.
     |
     */
 
-    'queue' => env('SCOUT_QUEUE', false),
+    'queue' => [
+        'enable' => env('SCOUT_QUEUE', false),
+        'connection' => env('SCOUT_QUEUE_CONNECTION'),
+        'queue' => env('SCOUT_QUEUE_NAME'),
+    ],
 
     /*
     |--------------------------------------------------------------------------
