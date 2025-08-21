@@ -59,7 +59,7 @@ class SearchableTest extends TestCase
     {
         Queue::fake();
 
-        config()->set('scout.queue', true);
+        config()->set('scout.queue.enable', true);
         Scout::makeSearchableUsing(OverriddenMakeSearchable::class);
 
         $collection = m::mock();
@@ -114,7 +114,7 @@ class SearchableTest extends TestCase
     {
         Queue::fake();
 
-        config()->set('scout.queue', true);
+        config()->set('scout.queue.enable', true);
         Scout::removeFromSearchUsing(OverriddenRemoveFromSearch::class);
 
         $collection = m::mock();
