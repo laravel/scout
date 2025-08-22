@@ -44,6 +44,10 @@ return [
 
     'queue' => env('SCOUT_QUEUE', false),
 
+    'queue_connection' => env('SCOUT_QUEUE_CONNECTION'),
+
+    'queue_name' => env('SCOUT_QUEUE_NAME'),
+
     /*
     |--------------------------------------------------------------------------
     | Database Transactions
