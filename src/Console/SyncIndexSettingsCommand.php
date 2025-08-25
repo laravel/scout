@@ -18,7 +18,7 @@ class SyncIndexSettingsCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'scout:sync-index-settings';
+    protected $signature = 'scout:sync-index-settings {--driver= : The name of the search engine driver (Defaults to configuration value: `scout.driver`)}';
 
     /**
      * The console command description.
@@ -35,9 +35,9 @@ class SyncIndexSettingsCommand extends Command
      */
     public function handle(EngineManager $manager)
     {
-        $engine = $manager->engine();
+        $driver = $this->option('driver') ?: config('scout.driver');
 
-        $driver = config('scout.driver');
+        $engine = $manager->engine($driver);
 
         if (! $engine instanceof UpdatesIndexSettings) {
             return $this->error('The "'.$driver.'" engine does not support updating index settings.');
