@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.18.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.19.0...10.x)
+
+## [v10.19.0](https://github.com/laravel/scout/compare/v10.18.0...v10.19.0) - 2025-08-26
+
+* feat: add driver option to sync-index-settings command by [@toyi](https://github.com/toyi) in https://github.com/laravel/scout/pull/940
 
 ## [v10.18.0](https://github.com/laravel/scout/compare/v10.17.0...v10.18.0) - 2025-08-19
 
