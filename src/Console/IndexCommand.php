@@ -62,8 +62,8 @@ class IndexCommand extends Command
                 $class = isset($model) ? get_class($model) : null;
 
                 $settings = config('scout.'.$driver.'.index-settings.'.$name)
-                                ?? config('scout.'.$driver.'.index-settings.'.$class)
-                                ?? [];
+                    ?? config('scout.'.$driver.'.index-settings.'.$class)
+                    ?? [];
 
                 if (isset($model) &&
                     config('scout.soft_delete', false) &&

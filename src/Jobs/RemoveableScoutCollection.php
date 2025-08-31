@@ -19,7 +19,7 @@ class RemoveableScoutCollection extends Collection
         }
 
         return in_array(Searchable::class, class_uses_recursive($this->first()))
-                    ? $this->map->getScoutKey()->all()
-                    : parent::getQueueableIds();
+            ? $this->map->getScoutKey()->all()
+            : parent::getQueueableIds();
     }
 }
