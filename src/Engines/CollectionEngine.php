@@ -178,8 +178,8 @@ class CollectionEngine extends Engine
         $results = array_values($results['results']);
 
         return count($results) > 0
-                    ? collect($results)->pluck($results[0]->getScoutKeyName())
-                    : collect();
+            ? collect($results)->pluck($results[0]->getScoutKeyName())
+            : collect();
     }
 
     /**

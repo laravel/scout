@@ -255,8 +255,8 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
     public function mapIdsFrom($results, $key)
     {
         return count($results['hits']) === 0
-                ? collect()
-                : collect($results['hits'])->pluck($key)->values();
+            ? collect()
+            : collect($results['hits'])->pluck($key)->values();
     }
 
     /**
