@@ -199,19 +199,16 @@ class CollectionEngine extends Engine
         }
 
         $objectIds = collect($results)
-                ->pluck($model->getScoutKeyName())
-                ->values()
-                ->all();
+            ->pluck($model->getScoutKeyName())
+            ->values()
+            ->all();
 
         $objectIdPositions = array_flip($objectIds);
 
-        return $model->getScoutModelsByIds(
-            $builder, $objectIds
-        )->filter(function ($model) use ($objectIds) {
-            return in_array($model->getScoutKey(), $objectIds);
-        })->sortBy(function ($model) use ($objectIdPositions) {
-            return $objectIdPositions[$model->getScoutKey()];
-        })->values();
+        return $model->getScoutModelsByIds($builder, $objectIds)
+            ->filter(fn ($model) => in_array($model->getScoutKey(), $objectIds))
+            ->sortBy(fn ($model) => $objectIdPositions[$model->getScoutKey()])
+            ->values();
     }
 
     /**
@@ -231,18 +228,16 @@ class CollectionEngine extends Engine
         }
 
         $objectIds = collect($results)
-                ->pluck($model->getScoutKeyName())
-                ->values()->all();
+            ->pluck($model->getScoutKeyName())
+            ->values()->all();
 
         $objectIdPositions = array_flip($objectIds);
 
-        return $model->queryScoutModelsByIds(
-            $builder, $objectIds
-        )->cursor()->filter(function ($model) use ($objectIds) {
-            return in_array($model->getScoutKey(), $objectIds);
-        })->sortBy(function ($model) use ($objectIdPositions) {
-            return $objectIdPositions[$model->getScoutKey()];
-        })->values();
+        return $model->queryScoutModelsByIds($builder, $objectIds)
+            ->cursor()
+            ->filter(fn ($model) => in_array($model->getScoutKey(), $objectIds))
+            ->sortBy(fn ($model) => $objectIdPositions[$model->getScoutKey()])
+            ->values();
     }
 
     /**

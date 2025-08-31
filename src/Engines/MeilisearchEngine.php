@@ -72,7 +72,10 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
                 $model->scoutMetadata(),
                 [$model->getScoutKeyName() => $model->getScoutKey()],
             );
-        })->filter()->values()->all();
+        })
+            ->filter()
+            ->values()
+            ->all();
 
         if (! empty($objects)) {
             $index->addDocuments($objects, $models->first()->getScoutKeyName());
@@ -176,19 +179,20 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
      */
     protected function filters(Builder $builder)
     {
-        $filters = collect($builder->wheres)->map(function ($value, $key) {
-            if (is_bool($value)) {
-                return sprintf('%s=%s', $key, $value ? 'true' : 'false');
-            }
+        $filters = collect($builder->wheres)
+            ->map(function ($value, $key) {
+                if (is_bool($value)) {
+                    return sprintf('%s=%s', $key, $value ? 'true' : 'false');
+                }
 
-            if (is_null($value)) {
-                return sprintf('%s %s', $key, 'IS NULL');
-            }
+                if (is_null($value)) {
+                    return sprintf('%s %s', $key, 'IS NULL');
+                }
 
-            return is_numeric($value)
-                ? sprintf('%s=%s', $key, $value)
-                : sprintf('%s="%s"', $key, $value);
-        });
+                return is_numeric($value)
+                    ? sprintf('%s=%s', $key, $value)
+                    : sprintf('%s="%s"', $key, $value);
+            });
 
         $whereInOperators = [
             'whereIns' => 'IN',
@@ -219,9 +223,9 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
      */
     protected function buildSortFromOrderByClauses(Builder $builder): array
     {
-        return collect($builder->orders)->map(function (array $order) {
-            return $order['column'].':'.$order['direction'];
-        })->toArray();
+        return collect($builder->orders)
+            ->map(fn (array $order) => $order['column'].':'.$order['direction'])
+            ->toArray();
     }
 
     /**
@@ -288,23 +292,21 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
 
         $objectIdPositions = array_flip($objectIds);
 
-        return $model->getScoutModelsByIds(
-            $builder, $objectIds
-        )->filter(function ($model) use ($objectIds) {
-            return in_array($model->getScoutKey(), $objectIds);
-        })->map(function ($model) use ($results, $objectIdPositions) {
-            $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
+        return $model->getScoutModelsByIds($builder, $objectIds)
+            ->filter(fn ($model) => in_array($model->getScoutKey(), $objectIds))
+            ->map(function ($model) use ($results, $objectIdPositions) {
+                $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
 
-            foreach ($result as $key => $value) {
-                if (substr($key, 0, 1) === '_') {
-                    $model->withScoutMetadata($key, $value);
+                foreach ($result as $key => $value) {
+                    if (substr($key, 0, 1) === '_') {
+                        $model->withScoutMetadata($key, $value);
+                    }
                 }
-            }
 
-            return $model;
-        })->sortBy(function ($model) use ($objectIdPositions) {
-            return $objectIdPositions[$model->getScoutKey()];
-        })->values();
+                return $model;
+            })
+            ->sortBy(fn ($model) => $objectIdPositions[$model->getScoutKey()])
+            ->values();
     }
 
     /**
@@ -323,23 +325,22 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
         $objectIds = collect($results['hits'])->pluck($model->getScoutKeyName())->values()->all();
         $objectIdPositions = array_flip($objectIds);
 
-        return $model->queryScoutModelsByIds(
-            $builder, $objectIds
-        )->cursor()->filter(function ($model) use ($objectIds) {
-            return in_array($model->getScoutKey(), $objectIds);
-        })->map(function ($model) use ($results, $objectIdPositions) {
-            $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
+        return $model->queryScoutModelsByIds($builder, $objectIds)
+            ->cursor()
+            ->filter(fn ($model) => in_array($model->getScoutKey(), $objectIds))
+            ->map(function ($model) use ($results, $objectIdPositions) {
+                $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
 
-            foreach ($result as $key => $value) {
-                if (substr($key, 0, 1) === '_') {
-                    $model->withScoutMetadata($key, $value);
+                foreach ($result as $key => $value) {
+                    if (substr($key, 0, 1) === '_') {
+                        $model->withScoutMetadata($key, $value);
+                    }
                 }
-            }
 
-            return $model;
-        })->sortBy(function ($model) use ($objectIdPositions) {
-            return $objectIdPositions[$model->getScoutKey()];
-        })->values();
+                return $model;
+            })
+            ->sortBy(fn ($model) => $objectIdPositions[$model->getScoutKey()])
+            ->values();
     }
 
     /**
