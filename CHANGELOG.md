@@ -1,6 +1,13 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.19.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.19.1...10.x)
+
+## [v10.19.1](https://github.com/laravel/scout/compare/v10.19.0...v10.19.1) - 2025-10-07
+
+* [10.x] fix ternary multiline styling by [@browner12](https://github.com/browner12) in https://github.com/laravel/scout/pull/941
+* [10.x] update multiline chaining formatting by [@browner12](https://github.com/browner12) in https://github.com/laravel/scout/pull/942
+* Update gitattributes file by [@olivernybroe](https://github.com/olivernybroe) in https://github.com/laravel/scout/pull/943
+* Change SCOUT_DRIVER default from 'algolia' to 'collection' by [@aimeos](https://github.com/aimeos) in https://github.com/laravel/scout/pull/945
 
 ## [v10.19.0](https://github.com/laravel/scout/compare/v10.18.0...v10.19.0) - 2025-08-26
 
