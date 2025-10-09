@@ -2,7 +2,6 @@
 
 namespace Laravel\Scout;
 
-use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\Engine;
 use Laravel\Scout\Jobs\MakeSearchable;
 use Laravel\Scout\Jobs\RemoveFromSearch;
