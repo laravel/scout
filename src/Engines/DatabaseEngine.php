@@ -252,6 +252,9 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function shouldOrderByRelevance(Builder $builder): bool
     {
+        // MySQL orders by relevance by default, so we will only order by relevance on
+        // Postgres with no developer-defined orders. If there is developer defined
+        // order by clauses we will let those take precedence over the relevance.
         return $builder->modelConnectionType() === 'pgsql' &&
             count($this->getFullTextColumns($builder)) > 0 &&
             empty($builder->orders);
