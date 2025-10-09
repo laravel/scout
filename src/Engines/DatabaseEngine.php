@@ -62,6 +62,34 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     }
 
     /**
+     * Get the Eloquent models for the given builder.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  int|null  $page
+     * @param  int|null  $perPage
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    protected function searchModels(Builder $builder, $page = null, $perPage = null)
+    {
+        return $this->buildSearchQuery($builder)
+            ->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
+                $query->forPage($page, $perPage);
+            })
+            ->when($builder->orders, function ($query) use ($builder) {
+                foreach ($builder->orders as $order) {
+                    $query->orderBy($order['column'], $order['direction']);
+                }
+            })
+            ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
+                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
+            })
+            ->when($this->shouldOrderByRelevance($builder), function ($query) use ($builder) {
+                $this->orderByRelevance($builder, $query);
+            })
+            ->get();
+    }
+
+    /**
      * Paginate the given search on the engine.
      *
      * @param  \Laravel\Scout\Builder  $builder
@@ -93,6 +121,9 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             })
             ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
                 $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
+            })
+            ->when($this->shouldOrderByRelevance($builder), function ($query) use ($builder) {
+                $this->orderByRelevance($builder, $query);
             })
             ->paginate($perPage, ['*'], $pageName, $page);
     }
@@ -129,32 +160,10 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
                 $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
             })
+            ->when($this->shouldOrderByRelevance($builder), function ($query) use ($builder) {
+                $this->orderByRelevance($builder, $query);
+            })
             ->simplePaginate($perPage, ['*'], $pageName, $page);
-    }
-
-    /**
-     * Get the Eloquent models for the given builder.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @param  int|null  $page
-     * @param  int|null  $perPage
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    protected function searchModels(Builder $builder, $page = null, $perPage = null)
-    {
-        return $this->buildSearchQuery($builder)
-            ->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
-                $query->forPage($page, $perPage);
-            })
-            ->when($builder->orders, function ($query) use ($builder) {
-                foreach ($builder->orders as $order) {
-                    $query->orderBy($order['column'], $order['direction']);
-                }
-            })
-            ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
-                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
-            })
-            ->get();
     }
 
     /**
@@ -200,7 +209,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             $builder->model->getConnection()->getDriverName(),
         ];
 
-        $query->where(function ($query) use ($connectionType, $builder, $columns, $prefixColumns, $fullTextColumns) {
+        return $query->where(function ($query) use ($connectionType, $builder, $columns, $prefixColumns, $fullTextColumns) {
             $canSearchPrimaryKey = ctype_digit($builder->query) &&
                                    in_array($builder->model->getKeyType(), ['int', 'integer']) &&
                                    ($connectionType != 'pgsql' || $builder->query <= PHP_INT_MAX) &&
@@ -236,26 +245,29 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 );
             }
         });
+    }
 
-        if ($connectionType === 'pgsql' &&
-            count($fullTextColumns) > 0 &&
-            empty($builder->orders)) {
-            $query = $this->orderByRelevance($query, $builder, $fullTextColumns);
-        }
-
-        return $query;
+    /**
+     * Determine if the query should be ordered by relevance.
+     */
+    protected function shouldOrderByRelevance(Builder $builder): bool
+    {
+        return $builder->modelConnectionType() === 'pgsql' &&
+            count($this->getFullTextColumns($builder)) > 0 &&
+            empty($builder->orders);
     }
 
     /**
      * Add an "order by" clause that orders by relevance (Postgres only).
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @param  \Laravel\Scout\Builder  $builder
-     * @param  array  $fullTextColumns
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function orderByRelevance($query, Builder $builder, array $fullTextColumns)
+    protected function orderByRelevance(Builder $builder, $query)
     {
+        $fullTextColumns = $this->getFullTextColumns($builder);
+
         $language = $this->getFullTextOptions($builder)['language'] ?? 'english';
 
         $vectors = collect($fullTextColumns)->map(function ($column) use ($builder, $language) {
