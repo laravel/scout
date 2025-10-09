@@ -256,11 +256,11 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
 
         $vectors = collect($fullTextColumns)->map(function ($column) use ($builder, $language) {
             return sprintf("to_tsvector('%s', %s)", $language, $builder->model->qualifyColumn($column));
-        });
+        })->implode(' || ');
 
         return $query->orderByRaw(
             sprintf(
-                "ts_rank(".$vectors->implode(' || ').", %s(?)) desc",
+                "ts_rank(".$vectors.", %s(?)) desc",
                 match ($this->getFullTextOptions($builder)['mode'] ?? 'plainto_tsquery') {
                     'phrase' => 'phraseto_tsquery',
                     'websearch' => 'websearch_to_tsquery',
