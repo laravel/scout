@@ -260,7 +260,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
 
         return $query->orderByRaw(
             sprintf(
-                "ts_rank(".$vectors.", %s(?)) desc",
+                'ts_rank('.$vectors.', %s(?)) desc',
                 match ($this->getFullTextOptions($builder)['mode'] ?? 'plainto_tsquery') {
                     'phrase' => 'phraseto_tsquery',
                     'websearch' => 'websearch_to_tsquery',
