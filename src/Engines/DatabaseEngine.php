@@ -238,7 +238,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
         });
 
         if ($connectionType === 'pgsql' && empty($builder->orders)) {
-            $query = $this->addOrderByRelevance($query, $builder, $fullTextColumns);
+            $query = $this->orderByRelevance($query, $builder, $fullTextColumns);
         }
 
         return $query;
@@ -252,7 +252,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      * @param  array  $fullTextColumns
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function addOrderByRelevance($query, Builder $builder, array $fullTextColumns)
+    protected function orderByRelevance($query, Builder $builder, array $fullTextColumns)
     {
         $language = $this->getFullTextOptions($builder)['language'] ?? 'english';
 
