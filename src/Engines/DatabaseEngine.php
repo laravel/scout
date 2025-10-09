@@ -237,7 +237,9 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             }
         });
 
-        if ($connectionType === 'pgsql' && empty($builder->orders)) {
+        if ($connectionType === 'pgsql' &&
+            count($fullTextColumns) > 0 &&
+            empty($builder->orders)) {
             $query = $this->orderByRelevance($query, $builder, $fullTextColumns);
         }
 
