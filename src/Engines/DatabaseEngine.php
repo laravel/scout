@@ -228,11 +228,13 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 }
             }
 
-            $query->orWhereFullText(
-                array_map(fn ($column) => $builder->model->qualifyColumn($column), $fullTextColumns),
-                $builder->query,
-                $this->getFullTextOptions($builder)
-            );
+            if (count($fullTextColumns) > 0) {
+                $query->orWhereFullText(
+                    array_map(fn ($column) => $builder->model->qualifyColumn($column), $fullTextColumns),
+                    $builder->query,
+                    $this->getFullTextOptions($builder)
+                );
+            }
         });
 
         if ($connectionType === 'pgsql' && empty($builder->orders)) {
