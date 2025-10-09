@@ -196,9 +196,11 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             return $query;
         }
 
-        return $query->where(function ($query) use ($builder, $columns, $prefixColumns, $fullTextColumns) {
-            $connectionType = $builder->model->getConnection()->getDriverName();
+        [$connectionType] = [
+            $builder->model->getConnection()->getDriverName(),
+        ];
 
+        $query->where(function ($query) use ($connectionType, $builder, $columns, $prefixColumns, $fullTextColumns) {
             $canSearchPrimaryKey = ctype_digit($builder->query) &&
                                    in_array($builder->model->getKeyType(), ['int', 'integer']) &&
                                    ($connectionType != 'pgsql' || $builder->query <= PHP_INT_MAX) &&
@@ -212,11 +214,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
 
             foreach ($columns as $column) {
                 if (in_array($column, $fullTextColumns)) {
-                    $query->orWhereFullText(
-                        $builder->model->qualifyColumn($column),
-                        $builder->query,
-                        $this->getFullTextOptions($builder)
-                    );
+                    continue;
                 } else {
                     if ($canSearchPrimaryKey && $column === $builder->model->getScoutKeyName()) {
                         continue;
@@ -229,7 +227,48 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                     );
                 }
             }
+
+            $query->orWhereFullText(
+                array_map(fn ($column) => $builder->model->qualifyColumn($column), $fullTextColumns),
+                $builder->query,
+                $this->getFullTextOptions($builder)
+            );
         });
+
+        if ($connectionType === 'pgsql' && empty($builder->orders)) {
+            $query = $this->addOrderByRelevance($query, $builder, $fullTextColumns);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Add an "order by" clause that orders by relevance (Postgres only).
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  array  $fullTextColumns
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function addOrderByRelevance($query, Builder $builder, array $fullTextColumns)
+    {
+        $language = $this->getFullTextOptions($builder)['language'] ?? 'english';
+
+        $vectors = collect($fullTextColumns)->map(function ($column) use ($builder, $language) {
+            return sprintf("to_tsvector('%s', %s)", $language, $builder->model->qualifyColumn($column));
+        });
+
+        return $query->orderByRaw(
+            sprintf(
+                "ts_rank(".$vectors->implode(' || ').", %s(?)) desc",
+                match ($this->getFullTextOptions($builder)['mode'] ?? 'plainto_tsquery') {
+                    'phrase' => 'phraseto_tsquery',
+                    'websearch' => 'websearch_to_tsquery',
+                    default => 'plainto_tsquery',
+                },
+            ),
+            [$builder->query]
+        );
     }
 
     /**
