@@ -206,7 +206,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
         }
 
         [$connectionType] = [
-            $builder->model->getConnection()->getDriverName(),
+            $builder->modelConnectionType(),
         ];
 
         return $query->where(function ($query) use ($connectionType, $builder, $columns, $prefixColumns, $fullTextColumns) {
