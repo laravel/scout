@@ -374,10 +374,6 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     {
         $columns = [];
 
-        if (PHP_MAJOR_VERSION < 8) {
-            return [];
-        }
-
         foreach ((new ReflectionMethod($builder->model, 'toSearchableArray'))->getAttributes() as $attribute) {
             if ($attribute->getName() !== $attributeClass) {
                 continue;
@@ -398,10 +394,6 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     protected function getFullTextOptions(Builder $builder)
     {
         $options = [];
-
-        if (PHP_MAJOR_VERSION < 8) {
-            return [];
-        }
 
         foreach ((new ReflectionMethod($builder->model, 'toSearchableArray'))->getAttributes(SearchUsingFullText::class) as $attribute) {
             $arguments = $attribute->getArguments()[1] ?? [];
