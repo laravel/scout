@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.19.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.20.0...10.x)
+
+## [v10.20.0](https://github.com/laravel/scout/compare/v10.19.1...v10.20.0) - 2025-10-14
+
+* Full-text improvements by [@taylorotwell](https://github.com/taylorotwell) in https://github.com/laravel/scout/pull/947
+* Remove irrelevant PHP version detection by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/948
 
 ## [v10.19.1](https://github.com/laravel/scout/compare/v10.19.0...v10.19.1) - 2025-10-07
 
