@@ -2,9 +2,9 @@
 
 namespace Laravel\Scout\Tests\Feature\Commands;
 
-use Error;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Jobs\MakeRangeSearchable;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
@@ -12,7 +12,6 @@ use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use Workbench\App\Models\SearchableUser;
 use Workbench\Database\Factories\SearchableUserFactory;
-use Laravel\Scout\Exceptions\ScoutException;
 
 #[WithConfig('scout.driver', 'testing')]
 #[WithConfig('scout.after_commit', false)]
