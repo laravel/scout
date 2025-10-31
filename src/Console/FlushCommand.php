@@ -34,7 +34,7 @@ class FlushCommand extends Command
     {
         $class = $this->argument('model');
         class_exists($class) || class_exists($class = app()->getNamespace()."Models\\{$class}")
-        || throw new ScoutException("Model [{$class}] not found.");
+        || throw new ScoutException("Error: Model [{$class}] not found.");
 
         $model = new $class;
 
