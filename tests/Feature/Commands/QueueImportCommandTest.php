@@ -12,6 +12,7 @@ use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use Workbench\App\Models\SearchableUser;
 use Workbench\Database\Factories\SearchableUserFactory;
+use Laravel\Scout\Exceptions\ScoutException;
 
 #[WithConfig('scout.driver', 'testing')]
 #[WithConfig('scout.after_commit', false)]
@@ -254,7 +255,7 @@ class QueueImportCommandTest extends TestCase
 
     public function test_it_handles_invalid_model_class()
     {
-        $this->expectException(Error::class);
+        $this->expectException(ScoutException::class);
 
         $this->artisan('scout:queue-import', ['model' => 'NonExistentModel']);
     }
