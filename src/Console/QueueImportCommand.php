@@ -33,12 +33,13 @@ class QueueImportCommand extends Command
      * Execute the console command.
      *
      * @return void
+     *
      * @throws ScoutException
      */
     public function handle()
     {
         $class = $this->argument('model');
-        class_exists($class) || class_exists($class = app()->getNamespace() . "Models\\{$class}")
+        class_exists($class) || class_exists($class = app()->getNamespace()."Models\\{$class}")
         || throw new ScoutException("Model [{$class}] not found.");
 
         $model = new $class;
