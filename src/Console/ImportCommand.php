@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\Events\Dispatcher;
 use Laravel\Scout\Events\ModelsImported;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Laravel\Scout\Exceptions\ScoutException;
 
 #[AsCommand(name: 'scout:import')]
 class ImportCommand extends Command
@@ -32,10 +33,13 @@ class ImportCommand extends Command
      *
      * @param  \Illuminate\Contracts\Events\Dispatcher  $events
      * @return void
+     * @throws ScoutException
      */
     public function handle(Dispatcher $events)
     {
         $class = $this->argument('model');
+        class_exists($class) || class_exists($class = app()->getNamespace() . "Models\\{$class}")
+        || throw new ScoutException("Model [{$class}] not found.");
 
         $model = new $class;
 
