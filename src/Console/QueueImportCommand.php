@@ -3,6 +3,7 @@
 namespace Laravel\Scout\Console;
 
 use Illuminate\Console\Command;
+use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Jobs\MakeRangeSearchable;
 use Symfony\Component\Console\Attribute\AsCommand;
 
@@ -32,10 +33,16 @@ class QueueImportCommand extends Command
      * Execute the console command.
      *
      * @return void
+     *
+     * @throws ScoutException
      */
     public function handle()
     {
         $class = $this->argument('model');
+
+        if (! class_exists($class) && ! class_exists($class = app()->getNamespace()."Models\\{$class}")) {
+            throw new ScoutException("Model [{$class}] not found.");
+        }
 
         $model = new $class;
 
