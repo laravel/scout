@@ -40,7 +40,7 @@ class ImportCommand extends Command
     {
         $class = $this->argument('model');
 
-        if (!class_exists($class) && !class_exists($class = app()->getNamespace()."Models\\{$class}")) {
+        if (! class_exists($class) && ! class_exists($class = app()->getNamespace()."Models\\{$class}")) {
             throw new ScoutException("Error: Model [{$class}] not found.");
         }
 
