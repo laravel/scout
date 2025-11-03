@@ -39,8 +39,10 @@ class ImportCommand extends Command
     public function handle(Dispatcher $events)
     {
         $class = $this->argument('model');
-        class_exists($class) || class_exists($class = app()->getNamespace()."Models\\{$class}")
-        || throw new ScoutException("Error: Model [{$class}] not found.");
+
+        if (!class_exists($class) && !class_exists($class = app()->getNamespace()."Models\\{$class}")) {
+            throw new ScoutException("Error: Model [{$class}] not found.");
+        }
 
         $model = new $class;
 
