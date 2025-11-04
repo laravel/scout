@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.20.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.21.0...10.x)
+
+## [v10.21.0](https://github.com/laravel/scout/compare/v10.20.0...v10.21.0) - 2025-11-04
+
+* Feat: Laravel-friendly model lookup by [@macaws](https://github.com/macaws) in https://github.com/laravel/scout/pull/950
 
 ## [v10.20.0](https://github.com/laravel/scout/compare/v10.19.1...v10.20.0) - 2025-10-14
 
