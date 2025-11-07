@@ -172,11 +172,11 @@ class ModelObserver
     {
         $this->forceSaving = true;
 
-        $result = $callback();
-
-        $this->forceSaving = false;
-
-        return $result;
+        try {
+            return $callback();
+        } finally {
+            $this->forceSaving = false;
+        }
     }
 
     /**
