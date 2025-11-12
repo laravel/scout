@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.21.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.22.0...10.x)
+
+## [v10.22.0](https://github.com/laravel/scout/compare/v10.21.0...v10.22.0) - 2025-11-12
+
+* [10.x] Use try-finally to ensure forceSaving flag is always reset by [@xurshudyan](https://github.com/xurshudyan) in https://github.com/laravel/scout/pull/951
+* [10.x] Make `$limit` and `$index` properties nullable in `Builder` by [@xurshudyan](https://github.com/xurshudyan) in https://github.com/laravel/scout/pull/953
+* [10.x] Add `class-string` type annotations to `ModelObserver` by [@xurshudyan](https://github.com/xurshudyan) in https://github.com/laravel/scout/pull/952
 
 ## [v10.21.0](https://github.com/laravel/scout/compare/v10.20.0...v10.21.0) - 2025-11-04
 
