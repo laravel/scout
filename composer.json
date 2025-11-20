@@ -29,10 +29,9 @@
         "typesense/typesense-php": "^4.9.3",
         "meilisearch/meilisearch-php": "^1.0",
         "mockery/mockery": "^1.0",
-        "orchestra/testbench": "^7.31|^8.11|^9.0|^10.0",
+        "orchestra/testbench": "^7.31|^8.36|^9.15|^10.8",
         "php-http/guzzle7-adapter": "^1.0",
-        "phpstan/phpstan": "^1.10",
-        "phpunit/phpunit": "^9.3|^10.4|^11.5"
+        "phpstan/phpstan": "^1.10"
     },
     "conflict": {
         "algolia/algoliasearch-client-php": "<3.2.0|>=5.0.0"

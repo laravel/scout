@@ -12,11 +12,14 @@ use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Meilisearch\Client;
 use Meilisearch\Endpoints\Indexes;
 use Mockery as m;
+use Orchestra\Testbench\Concerns\InteractsWithMockery;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
 class MeilisearchEngineTest extends TestCase
 {
+    use InteractsWithMockery;
+
     protected function setUp(): void
     {
         Config::shouldReceive('get')->with('scout.after_commit', m::any())->andReturn(false);
@@ -26,7 +29,8 @@ class MeilisearchEngineTest extends TestCase
     protected function tearDown(): void
     {
         Container::getInstance()->flush();
-        m::close();
+
+        $this->tearDownTheTestEnvironmentUsingMockery();
     }
 
     public function test_map_ids_returns_empty_collection_if_no_hits()
