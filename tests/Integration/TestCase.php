@@ -27,11 +27,19 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
      */
     public static function tearDownAfterClass(): void
     {
+        static::flushIndexesFromScout();
+
+        parent::tearDownAfterClass();
+    }
+
+    /**
+     * Cleanup indexes from scout before starting new test.
+     */
+    protected static function flushIndexesFromScout(): void
+    {
         remote('scout:delete-all-indexes', [
             'SCOUT_DRIVER' => static::scoutDriver(),
         ])->mustRun();
-
-        parent::tearDownAfterClass();
     }
 
     abstract protected static function scoutDriver(): string;
