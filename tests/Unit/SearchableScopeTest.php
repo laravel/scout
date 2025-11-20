@@ -5,13 +5,16 @@ namespace Laravel\Scout\Tests\Unit;
 use Illuminate\Database\Eloquent\Builder;
 use Laravel\Scout\SearchableScope;
 use Mockery as m;
+use Orchestra\Testbench\Concerns\InteractsWithMockery;
 use PHPUnit\Framework\TestCase;
 
 class SearchableScopeTest extends TestCase
 {
+    use InteractsWithMockery;
+
     protected function tearDown(): void
     {
-        m::close();
+        $this->tearDownTheTestEnvironmentUsingMockery();
     }
 
     public function test_chunks_by_id()
