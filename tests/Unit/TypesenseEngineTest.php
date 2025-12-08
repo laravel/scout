@@ -28,7 +28,7 @@ class TypesenseEngineTest extends TestCase
         $typesenseClient = $this->createMock(TypesenseClient::class);
         $this->engine = $this->getMockBuilder(TypesenseEngine::class)
             ->setConstructorArgs([$typesenseClient, 1000])
-            ->onlyMethods(['getOrCreateCollectionFromModel', 'buildSearchParameters'])
+            ->onlyMethods(['getOrCreateCollectionFromModel', 'buildSearchParameters', 'getRemoteEmbeddingSettings'])
             ->getMock();
     }
 
@@ -142,6 +142,11 @@ class TypesenseEngineTest extends TestCase
         $this->engine->expects($this->once())
             ->method('getOrCreateCollectionFromModel')
             ->willReturn($collection);
+
+        // Mock the getRemoteEmbeddingSettings method
+        $this->engine->expects($this->once())
+            ->method('getRemoteEmbeddingSettings')
+            ->willReturn([]);
 
         // Call the update method
         $this->engine->update(collect($models));

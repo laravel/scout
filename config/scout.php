@@ -204,6 +204,11 @@ return [
             //     ],
             // ],
         ],
+        'remote-embedding-settings' => [
+            'remote_embedding_batch_size' => env('TYPESENSE_REMOTE_EMBEDDING_BATCH_SIZE', 200),
+            'remote_embedding_timeout_ms' => env('TYPESENSE_REMOTE_EMBEDDING_TIMEOUT_MS', 60000),
+            'remote_embedding_num_tries' => env('TYPESENSE_REMOTE_EMBEDDING_NUM_TRIES', 2),
+        ],
     ],
 
 ];
