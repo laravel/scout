@@ -46,7 +46,6 @@ class TypesenseEngineTest extends TestCase
         Container::getInstance()->flush();
 
         $this->tearDownTheTestEnvironmentUsingMockery();
-
     }
 
     /**
