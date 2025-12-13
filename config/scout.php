@@ -204,6 +204,7 @@ return [
             //     ],
             // ],
         ],
+        'import_action' => env('TYPESENSE_IMPORT_ACTION', 'upsert'),
     ],
 
 ];

@@ -6,10 +6,13 @@ use Http\Client\Exception;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Facade;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\TypesenseEngine;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Mockery as m;
+use Orchestra\Testbench\Concerns\InteractsWithMockery;
 use PHPUnit\Framework\TestCase;
 use Typesense\Client as TypesenseClient;
 use Typesense\Collection as TypesenseCollection;
@@ -18,11 +21,17 @@ use Typesense\Exceptions\TypesenseClientError;
 
 class TypesenseEngineTest extends TestCase
 {
+    use InteractsWithMockery;
+
     protected TypesenseEngine $engine;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        Facade::clearResolvedInstances();
+        Config::shouldReceive('get')->with('scout.after_commit', m::any())->andReturn(false);
+        Config::shouldReceive('get')->with('scout.soft_delete', m::any())->andReturn(false);
 
         // Mock the Typesense client and pass it to the engine constructor
         $typesenseClient = $this->createMock(TypesenseClient::class);
@@ -35,7 +44,9 @@ class TypesenseEngineTest extends TestCase
     protected function tearDown(): void
     {
         Container::getInstance()->flush();
-        m::close();
+
+        $this->tearDownTheTestEnvironmentUsingMockery();
+
     }
 
     /**
@@ -111,6 +122,49 @@ class TypesenseEngineTest extends TestCase
 
     public function test_update_method(): void
     {
+        Config::shouldReceive('get')->with('scout.typesense.import_action', m::any())->andReturn('upsert');
+
+        // Mock models and their methods
+        $models = [
+            $this->createMock(SearchableModel::class),
+        ];
+
+        $models[0]->expects($this->once())
+            ->method('toSearchableArray')
+            ->willReturn(['id' => 1, 'name' => 'Model 1']);
+
+        $models[0]->expects($this->once())
+            ->method('scoutMetadata')
+            ->willReturn([]);
+
+        // Mock the getOrCreateCollectionFromModel method
+        $collection = $this->createMock(TypesenseCollection::class);
+        $documents = $this->createMock(Documents::class);
+        $collection->expects($this->once())
+            ->method('getDocuments')
+            ->willReturn($documents);
+        $documents->expects($this->once())
+            ->method('import')
+            ->with(
+                [['id' => 1, 'name' => 'Model 1']], ['action' => 'upsert'],
+            )
+            ->willReturn([[
+                'success' => true,
+            ]]);
+
+        $this->engine->expects($this->once())
+            ->method('getOrCreateCollectionFromModel')
+            ->willReturn($collection);
+
+        // Call the update method
+        $this->engine->update(collect($models));
+    }
+
+    public function test_update_method_with_emplace_action(): void
+    {
+        // Override config for this specific test
+        Config::shouldReceive('get')->with('scout.typesense.import_action', m::any())->andReturn('emplace');
+
         // Mock models and their methods
         $models = [
             $this->createMock(SearchableModel::class),
