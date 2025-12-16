@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.22.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.23.0...10.x)
+
+## [v10.23.0](https://github.com/laravel/scout/compare/v10.22.1...v10.23.0) - 2025-12-16
+
+* Typesense Import Action - default to upsert by [@dbpolito](https://github.com/dbpolito) in https://github.com/laravel/scout/pull/955
 
 ## [v10.22.1](https://github.com/laravel/scout/compare/v10.22.0...v10.22.1) - 2025-11-25
 
