@@ -191,7 +191,7 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
 
                 return is_numeric($value)
                     ? sprintf('%s=%s', $key, $value)
-                    : sprintf('%s="%s"', $key, $value);
+                    : sprintf('%s="%s"', $key, addcslashes((string) $value, '"\\'));
             });
 
         $whereInOperators = [
