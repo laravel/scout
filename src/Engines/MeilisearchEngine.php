@@ -327,7 +327,7 @@ class MeilisearchEngine extends Engine implements SupportsSemanticSearch, Update
 
                 return is_numeric($value)
                     ? sprintf('%s%s%s', $field, $operator, $value)
-                    : sprintf('%s%s"%s"', $field, $operator, $value);
+                    : sprintf('%s%s"%s"', $field, $operator, addcslashes((string) $value, '"\\'));
             });
 
         $whereInOperators = [
