@@ -150,6 +150,36 @@ class Algolia3EngineTest extends TestCase
         $engine->search($builder);
     }
 
+    public function test_search_sends_correct_parameters_to_algolia_for_where_not_in_search()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
+        $index->shouldReceive('search')->once()->with('zonda', [
+            'numericFilters' => ['foo=1', ['bar!=1', 'bar!=2']],
+        ]);
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->where('foo', 1)->whereNotIn('bar', [1, 2]);
+
+        $engine->search($builder);
+    }
+
+    public function test_search_sends_correct_parameters_to_algolia_for_empty_where_not_in_search()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
+        $index->shouldReceive('search')->once()->with('zonda', [
+            'numericFilters' => ['foo=1'],
+        ]);
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->where('foo', 1)->whereNotIn('bar', []);
+
+        $engine->search($builder);
+    }
+
     public function test_map_correctly_maps_results_to_models()
     {
         $model = SearchableUserFactory::new()->createQuietly(['name' => 'zonda']);
