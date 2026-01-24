@@ -143,7 +143,7 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
                 ->all();
         })->values();
 
-        $whereNotIns = collect($builder->whereNotIns)->map(function ($values, $key) {
+        $whereNotIns = collect($builder->whereNotIns)->flatMap(function ($values, $key) {
             if (empty($values)) {
                 return [];
             }
@@ -151,7 +151,7 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
             return collect($values)
                 ->map(fn ($value) => $key.'!='.$value)
                 ->all();
-        })->values()->filter();
+        });
 
         return $wheres->merge($whereIns)->merge($whereNotIns)->values()->all();
     }

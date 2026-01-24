@@ -146,36 +146,6 @@ class Algolia4EngineTest extends TestCase
         $engine->search($builder);
     }
 
-    public function test_search_sends_correct_parameters_to_algolia_for_where_not_in_search()
-    {
-        $engine = $this->app->make(EngineManager::class)->engine();
-
-        $this->client->shouldReceive('searchSingleIndex')->once()->with(
-            'users',
-            ['query' => 'zonda', 'numericFilters' => ['foo=1', ['bar!=1', 'bar!=2']]],
-        );
-
-        $builder = new Builder(new SearchableUser, 'zonda');
-        $builder->where('foo', 1)->whereNotIn('bar', [1, 2]);
-
-        $engine->search($builder);
-    }
-
-    public function test_search_sends_correct_parameters_to_algolia_for_empty_where_not_in_search()
-    {
-        $engine = $this->app->make(EngineManager::class)->engine();
-
-        $this->client->shouldReceive('searchSingleIndex')->once()->with(
-            'users',
-            ['query' => 'zonda', 'numericFilters' => ['foo=1']],
-        );
-
-        $builder = new Builder(new SearchableUser, 'zonda');
-        $builder->where('foo', 1)->whereNotIn('bar', []);
-
-        $engine->search($builder);
-    }
-
     public function test_map_correctly_maps_results_to_models()
     {
         $model = SearchableUserFactory::new()->createQuietly(['name' => 'zonda']);
@@ -263,5 +233,66 @@ class Algolia4EngineTest extends TestCase
         $engine->update(Collection::make([new Chirp]));
 
         unset($_ENV['searchable.chirp']);
+    }
+
+    public function test_search_sends_correct_parameters_to_algolia_for_where_not_in_search()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('searchSingleIndex')->once()->with(
+            'users',
+            [
+                'query' => 'zonda',
+                'numericFilters' => [
+                    'foo!=1',
+                    'foo!=2',
+                ],
+            ]
+        );
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->whereNotIn('foo', [1, 2]);
+
+        $engine->search($builder);
+    }
+
+    public function test_search_ignores_empty_where_not_in_search()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('searchSingleIndex')->once()->with(
+            'users',
+            ['query' => 'zonda']
+        );
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->whereNotIn('foo', []);
+
+        $engine->search($builder);
+    }
+
+    public function test_search_sends_correct_parameters_to_algolia_for_mixed_search()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('searchSingleIndex')->once()->with(
+            'users',
+            [
+                'query' => 'zonda',
+                'numericFilters' => [
+                    'foo=1',
+                    ['bar=1', 'bar=2'],
+                    'baz!=1',
+                    'baz!=2',
+                ],
+            ]
+        );
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->where('foo', 1)
+                ->whereIn('bar', [1, 2])
+                ->whereNotIn('baz', [1, 2]);
+
+        $engine->search($builder);
     }
 }
