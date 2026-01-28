@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.23.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.23.1...10.x)
+
+## [v10.23.1](https://github.com/laravel/scout/compare/v10.23.0...v10.23.1) - 2026-01-28
+
+* Escape double quotes in Meilisearch filter strings by [@trnxpace](https://github.com/trnxpace) in https://github.com/laravel/scout/pull/958
+* [10.x][Algolia] Support numeric 'whereNotIn' to prevent silent failures by [@sakshamgorey](https://github.com/sakshamgorey) in https://github.com/laravel/scout/pull/959
 
 ## [v10.23.0](https://github.com/laravel/scout/compare/v10.22.1...v10.23.0) - 2025-12-16
 
