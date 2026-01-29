@@ -194,7 +194,7 @@ trait Searchable
                 $query->withTrashed();
             })
             ->orderBy(
-                $self->qualifyColumn($self->getScoutKeyName())
+                $self->qualifyColumn($self->getScoutKeyColumnName())
             );
     }
 
@@ -326,7 +326,7 @@ trait Searchable
             'whereIn';
 
         return $query->{$whereIn}(
-            $this->qualifyColumn($this->getScoutKeyName()), $ids
+            $this->qualifyColumn($this->getScoutKeyColumnName()), $ids
         );
     }
 
@@ -487,6 +487,16 @@ trait Searchable
      * @return mixed
      */
     public function getScoutKeyName()
+    {
+        return $this->getKeyName();
+    }
+
+    /**
+     * Get the column name used for database queries when indexing the model.
+     *
+     * @return mixed
+     */
+    public function getScoutKeyColumnName()
     {
         return $this->getKeyName();
     }

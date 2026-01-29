@@ -23,7 +23,7 @@ class SearchableScopeTest extends TestCase
 
         $builder->shouldReceive('macro')->with('searchable', m::on(function ($callback) use ($builder) {
             $model = m::mock(Model::class);
-            $model->shouldReceive('getScoutKeyName')->once()->andReturn('id');
+            $model->shouldReceive('getScoutKeyColumnName')->once()->andReturn('id');
 
             $builder->shouldReceive('chunkById')->with(500, m::type(\Closure::class), 'users.id', 'id')->once();
             $builder->shouldReceive('getModel')->once()->andReturn($model);
@@ -36,7 +36,7 @@ class SearchableScopeTest extends TestCase
 
         $builder->shouldReceive('macro')->with('unsearchable', m::on(function ($callback) use ($builder) {
             $model = m::mock(Model::class);
-            $model->shouldReceive('getScoutKeyName')->once()->andReturn('id');
+            $model->shouldReceive('getScoutKeyColumnName')->once()->andReturn('id');
 
             $builder->shouldReceive('chunkById')->with(500, m::type(\Closure::class), 'users.id', 'id')->once();
             $builder->shouldReceive('getModel')->once()->andReturn($model);

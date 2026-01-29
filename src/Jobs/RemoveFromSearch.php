@@ -58,7 +58,7 @@ class RemoveFromSearch implements ShouldQueue
                     $model->setKeyType(
                         is_string($id) ? 'string' : 'int'
                     )->forceFill([
-                        $model->getScoutKeyName() => $id,
+                        $model->getScoutKeyColumnName() => $id,
                     ]);
                 });
             })

@@ -34,6 +34,12 @@ class Chirp extends Model
         return 'scout_id';
     }
 
+    /** {@inheritDoc} */
+    public function getScoutKeyColumnName()
+    {
+        return 'scout_id';
+    }
+
     public function toSearchableArray()
     {
         if (isset($_ENV['chirp.toSearchableArray'])) {

@@ -10,6 +10,7 @@ use Laravel\Scout\Scout;
 use Laravel\Scout\Tests\Fixtures\OverriddenMakeSearchable;
 use Laravel\Scout\Tests\Fixtures\OverriddenRemoveFromSearch;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use Laravel\Scout\Tests\Fixtures\SearchableModelWithDifferentKeyNames;
 use Laravel\Scout\Tests\Fixtures\SearchableModelWithSoftDeletes;
 use Mockery as m;
 use Orchestra\Testbench\TestCase;
@@ -142,7 +143,7 @@ class SearchableTest extends TestCase
         $model = M::mock(SearchableModel::class)->makePartial();
         $model->shouldReceive('newQuery')->once()->andReturnSelf();
         $model->shouldReceive('getScoutKeyType')->once()->andReturn('int');
-        $model->shouldReceive('getScoutKeyName')->once()->andReturn('id');
+        $model->shouldReceive('getScoutKeyColumnName')->once()->andReturn('id');
         $model->shouldReceive('qualifyColumn')->with('id')->once()->andReturn('qualified_id');
         $model->shouldReceive('whereIntegerInRaw')->with('qualified_id', [1, 2, 3])->once()->andReturnSelf();
 
@@ -157,7 +158,7 @@ class SearchableTest extends TestCase
         $model = M::mock(SearchableModel::class)->makePartial();
         $model->shouldReceive('newQuery')->once()->andReturnSelf();
         $model->shouldReceive('getScoutKeyType')->once()->andReturn('string');
-        $model->shouldReceive('getScoutKeyName')->once()->andReturn('id');
+        $model->shouldReceive('getScoutKeyColumnName')->once()->andReturn('id');
         $model->shouldReceive('qualifyColumn')->with('id')->once()->andReturn('qualified_id');
         $model->shouldReceive('whereIn')->with('qualified_id', [1, 2, 3])->once()->andReturnSelf();
 
@@ -165,6 +166,42 @@ class SearchableTest extends TestCase
         $scoutBuilder->queryCallback = null;
 
         $model->queryScoutModelsByIds($scoutBuilder, [1, 2, 3]);
+    }
+
+    public function test_get_scout_key_column_name_defaults_to_key_name()
+    {
+        $model = new SearchableModel;
+
+        $this->assertEquals($model->getKeyName(), $model->getScoutKeyColumnName());
+    }
+
+    public function test_scout_key_column_name_uses_primary_key_not_scout_key_name()
+    {
+        $model = new SearchableModelWithDifferentKeyNames;
+
+        $this->assertEquals('id', $model->getScoutKeyName());
+        $this->assertEquals('uuid', $model->getScoutKeyColumnName());
+        $this->assertEquals($model->getKeyName(), $model->getScoutKeyColumnName());
+    }
+
+    public function test_query_scout_models_by_ids_uses_column_name_not_key_name()
+    {
+        $model = M::mock(SearchableModelWithDifferentKeyNames::class)->makePartial();
+        $model->shouldReceive('newQuery')->once()->andReturnSelf();
+        $model->shouldReceive('getScoutKeyType')->once()->andReturn('string');
+        $model->shouldReceive('getScoutKeyColumnName')->once()->andReturn('uuid');
+        $model->shouldReceive('qualifyColumn')->with('uuid')->once()->andReturn('table.uuid');
+        $model->shouldReceive('whereIn')->with('table.uuid', ['uuid-1', 'uuid-2'])->once()->andReturnSelf();
+
+        $scoutBuilder = M::mock(\Laravel\Scout\Builder::class);
+        $scoutBuilder->queryCallback = null;
+
+        $model->queryScoutModelsByIds($scoutBuilder, ['uuid-1', 'uuid-2']);
+    }
+
+    public function test_make_all_searchable_uses_column_name_for_order_by()
+    {
+        ModelStubWithDifferentKeyNames::makeAllSearchable();
     }
 
     public function test_was_searchable_before_update_works_from_true_to_false()
@@ -217,6 +254,35 @@ class ModelStubForMakeAllSearchable extends SearchableModel
 
         $mock->shouldReceive('orderBy')
             ->with('model_stub_for_make_all_searchables.id')
+            ->once()
+            ->andReturnSelf();
+
+        $mock->shouldReceive('searchable')
+            ->once();
+
+        $mock->shouldReceive('when')->andReturnSelf();
+
+        return $mock;
+    }
+}
+
+class ModelStubWithDifferentKeyNames extends SearchableModelWithDifferentKeyNames
+{
+    public function newQuery()
+    {
+        $mock = m::spy(Builder::class);
+
+        $mock->shouldReceive('when')
+            ->with(true, m::type('Closure'))
+            ->once()
+            ->andReturnUsing(function ($condition, $callback) use ($mock) {
+                $callback($mock);
+
+                return $mock;
+            });
+
+        $mock->shouldReceive('orderBy')
+            ->with('model_stub_with_different_key_names.uuid')
             ->once()
             ->andReturnSelf();
 

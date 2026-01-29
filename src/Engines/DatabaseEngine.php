@@ -81,7 +81,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 }
             })
             ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
-                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
+                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyColumnName(), 'desc');
             })
             ->when($this->shouldOrderByRelevance($builder), function ($query) use ($builder) {
                 $this->orderByRelevance($builder, $query);
@@ -120,7 +120,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 }
             })
             ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
-                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
+                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyColumnName(), 'desc');
             })
             ->when($this->shouldOrderByRelevance($builder), function ($query) use ($builder) {
                 $this->orderByRelevance($builder, $query);
@@ -158,7 +158,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 }
             })
             ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
-                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
+                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyColumnName(), 'desc');
             })
             ->when($this->shouldOrderByRelevance($builder), function ($query) use ($builder) {
                 $this->orderByRelevance($builder, $query);
@@ -213,7 +213,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             $canSearchPrimaryKey = ctype_digit($builder->query) &&
                                    in_array($builder->model->getKeyType(), ['int', 'integer']) &&
                                    ($connectionType != 'pgsql' || $builder->query <= PHP_INT_MAX) &&
-                                   in_array($builder->model->getScoutKeyName(), $columns);
+                                   in_array($builder->model->getScoutKeyColumnName(), $columns);
 
             if ($canSearchPrimaryKey) {
                 $query->orWhere($builder->model->getQualifiedKeyName(), $builder->query);
@@ -225,7 +225,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 if (in_array($column, $fullTextColumns)) {
                     continue;
                 } else {
-                    if ($canSearchPrimaryKey && $column === $builder->model->getScoutKeyName()) {
+                    if ($canSearchPrimaryKey && $column === $builder->model->getScoutKeyColumnName()) {
                         continue;
                     }
 
