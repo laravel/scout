@@ -5,10 +5,11 @@ namespace Laravel\Scout\Jobs;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\SerializesModels;
+use Laravel\Scout\Traits\ConfiguresJob;
 
 class MakeSearchable implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+    use ConfiguresJob, Queueable, SerializesModels;
 
     /**
      * The models to be made searchable.
@@ -26,14 +27,7 @@ class MakeSearchable implements ShouldQueue
     public function __construct($models)
     {
         $this->models = $models;
-
-        if (! isset($this->tries) && ! is_null($tries = config('scout.jobs.tries'))) {
-            $this->tries = $tries;
-        }
-
-        if (! isset($this->backoff) && ! method_exists($this, 'backoff') && ! is_null($backoff = config('scout.jobs.backoff'))) {
-            $this->backoff = $backoff;
-        }
+        $this->configureJob();
     }
 
     /**
