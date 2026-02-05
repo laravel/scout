@@ -5,10 +5,11 @@ namespace Laravel\Scout\Jobs;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\SerializesModels;
+use Laravel\Scout\Traits\ConfiguresJobOptions;
 
 class RemoveFromSearch implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+    use ConfiguresJobOptions, Queueable, SerializesModels;
 
     /**
      * The models to be removed from the search index.
@@ -26,6 +27,8 @@ class RemoveFromSearch implements ShouldQueue
     public function __construct($models)
     {
         $this->models = RemoveableScoutCollection::make($models);
+
+        $this->configureJob();
     }
 
     /**

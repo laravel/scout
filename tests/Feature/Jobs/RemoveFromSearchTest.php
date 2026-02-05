@@ -2,10 +2,12 @@
 
 namespace Laravel\Scout\Tests\Feature\Jobs;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Laravel\Scout\Jobs\RemoveFromSearch;
+use Laravel\Scout\Tests\Fixtures\OverriddenRemoveFromSearch;
 use Mockery as m;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
@@ -63,5 +65,44 @@ class RemoveFromSearchTest extends TestCase
         $this->assertInstanceOf(Chirp::class, $job->models->first());
         $this->assertEquals($uuid, $job->models->first()->getScoutKey());
         $this->assertEquals('scout_id', $job->models->first()->getScoutKeyName());
+    }
+
+    #[WithConfig('scout.jobs.tries', 3)]
+    #[WithConfig('scout.jobs.backoff', [1, 5, 10])]
+    #[WithConfig('scout.jobs.max_exceptions', 2)]
+    public function test_job_properties_are_set_from_config()
+    {
+        $model = SearchableUserFactory::new()->create();
+
+        $job = new RemoveFromSearch(Collection::make([$model]));
+
+        $this->assertSame(3, $job->tries);
+        $this->assertSame([1, 5, 10], $job->backoff);
+        $this->assertSame(2, $job->maxExceptions);
+    }
+
+    public function test_job_properties_are_not_set_without_config()
+    {
+        $model = SearchableUserFactory::new()->create();
+
+        $job = new RemoveFromSearch(Collection::make([$model]));
+
+        $this->assertObjectNotHasProperty('tries', $job);
+        $this->assertObjectNotHasProperty('backoff', $job);
+        $this->assertObjectNotHasProperty('maxExceptions', $job);
+    }
+
+    #[WithConfig('scout.jobs.tries', 1)]
+    #[WithConfig('scout.jobs.backoff', [1, 5, 10])]
+    #[WithConfig('scout.jobs.max_exceptions', 1)]
+    public function test_subclass_job_properties_are_not_overridden_by_config()
+    {
+        $model = SearchableUserFactory::new()->create();
+
+        $job = new OverriddenRemoveFromSearch(Collection::make([$model]));
+
+        $this->assertSame(5, $job->tries);
+        $this->assertSame([2, 4, 8, 16, 32], $job->backoff());
+        $this->assertSame(3, $job->maxExceptions);
     }
 }

@@ -8,6 +8,8 @@ class OverriddenMakeSearchable extends MakeSearchable
 {
     public $tries = 5;
 
+    public $maxExceptions = 3;
+
     public function backoff(): array
     {
         return [2, 4, 8, 16, 32];
