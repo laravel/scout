@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Tests\Feature\Jobs;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
@@ -63,5 +64,29 @@ class RemoveFromSearchTest extends TestCase
         $this->assertInstanceOf(Chirp::class, $job->models->first());
         $this->assertEquals($uuid, $job->models->first()->getScoutKey());
         $this->assertEquals('scout_id', $job->models->first()->getScoutKeyName());
+    }
+
+    public function test_tries_and_backoff_are_set_from_config()
+    {
+        config(['scout.jobs.tries' => 3, 'scout.jobs.backoff' => [1, 5, 10]]);
+
+        $model = SearchableUserFactory::new()->create();
+
+        $job = new RemoveFromSearch(Collection::make([$model]));
+
+        $this->assertSame(3, $job->tries);
+        $this->assertSame([1, 5, 10], $job->backoff);
+    }
+
+    public function test_tries_and_backoff_are_not_set_without_config()
+    {
+        config(['scout.jobs.tries' => null, 'scout.jobs.backoff' => null]);
+
+        $model = SearchableUserFactory::new()->create();
+
+        $job = new RemoveFromSearch(Collection::make([$model]));
+
+        $this->assertNull($job->tries ?? null);
+        $this->assertNull($job->backoff ?? null);
     }
 }

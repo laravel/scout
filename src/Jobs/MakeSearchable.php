@@ -26,6 +26,14 @@ class MakeSearchable implements ShouldQueue
     public function __construct($models)
     {
         $this->models = $models;
+
+        if (! is_null($tries = config('scout.jobs.tries'))) {
+            $this->tries = $tries;
+        }
+
+        if (! is_null($backoff = config('scout.jobs.backoff'))) {
+            $this->backoff = $backoff;
+        }
     }
 
     /**

@@ -46,6 +46,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Job Retry Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the number of times Scout's indexing jobs will be
+    | attempted and the backoff between retries. The backoff may be given as
+    | a single integer or an array of integers representing seconds.
+    |
+    */
+
+    'jobs' => [
+        'tries' => env('SCOUT_JOB_TRIES'),
+        'backoff' => env('SCOUT_JOB_BACKOFF'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Database Transactions
     |--------------------------------------------------------------------------
     |

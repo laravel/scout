@@ -30,4 +30,28 @@ class MakeSearchableTest extends TestCase
 
         $job->handle();
     }
+
+    public function test_tries_and_backoff_are_set_from_config()
+    {
+        config(['scout.jobs.tries' => 3, 'scout.jobs.backoff' => [1, 5, 10]]);
+
+        $model = SearchableUserFactory::new()->create();
+
+        $job = new MakeSearchable(Collection::make([$model]));
+
+        $this->assertSame(3, $job->tries);
+        $this->assertSame([1, 5, 10], $job->backoff);
+    }
+
+    public function test_tries_and_backoff_are_not_set_without_config()
+    {
+        config(['scout.jobs.tries' => null, 'scout.jobs.backoff' => null]);
+
+        $model = SearchableUserFactory::new()->create();
+
+        $job = new MakeSearchable(Collection::make([$model]));
+
+        $this->assertNull($job->tries ?? null);
+        $this->assertNull($job->backoff ?? null);
+    }
 }
