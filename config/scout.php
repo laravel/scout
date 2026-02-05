@@ -47,6 +47,7 @@ return [
     'jobs' => [
         'tries' => env('SCOUT_JOB_TRIES'),
         'backoff' => env('SCOUT_JOB_BACKOFF'),
+        'max_exceptions' => env('SCOUT_JOB_MAX_EXCEPTIONS'),
     ],
 
     /*

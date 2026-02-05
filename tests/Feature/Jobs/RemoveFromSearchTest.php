@@ -67,9 +67,13 @@ class RemoveFromSearchTest extends TestCase
         $this->assertEquals('scout_id', $job->models->first()->getScoutKeyName());
     }
 
-    public function test_tries_and_backoff_are_set_from_config()
+    public function test_job_properties_are_set_from_config()
     {
-        config(['scout.jobs.tries' => 3, 'scout.jobs.backoff' => [1, 5, 10]]);
+        config([
+            'scout.jobs.tries' => 3,
+            'scout.jobs.backoff' => [1, 5, 10],
+            'scout.jobs.max_exceptions' => 2,
+        ]);
 
         $model = SearchableUserFactory::new()->create();
 
@@ -77,11 +81,16 @@ class RemoveFromSearchTest extends TestCase
 
         $this->assertSame(3, $job->tries);
         $this->assertSame([1, 5, 10], $job->backoff);
+        $this->assertSame(2, $job->maxExceptions);
     }
 
-    public function test_tries_and_backoff_are_not_set_without_config()
+    public function test_job_properties_are_not_set_without_config()
     {
-        config(['scout.jobs.tries' => null, 'scout.jobs.backoff' => null]);
+        config([
+            'scout.jobs.tries' => null,
+            'scout.jobs.backoff' => null,
+            'scout.jobs.max_exceptions' => null,
+        ]);
 
         $model = SearchableUserFactory::new()->create();
 
@@ -89,11 +98,16 @@ class RemoveFromSearchTest extends TestCase
 
         $this->assertObjectNotHasProperty('tries', $job);
         $this->assertObjectNotHasProperty('backoff', $job);
+        $this->assertObjectNotHasProperty('maxExceptions', $job);
     }
 
-    public function test_subclass_tries_and_backoff_are_not_overridden_by_config()
+    public function test_subclass_job_properties_are_not_overridden_by_config()
     {
-        config(['scout.jobs.tries' => 3, 'scout.jobs.backoff' => [1, 5, 10]]);
+        config([
+            'scout.jobs.tries' => 1,
+            'scout.jobs.backoff' => [1, 5, 10],
+            'scout.jobs.max_exceptions' => 1,
+        ]);
 
         $model = SearchableUserFactory::new()->create();
 
@@ -101,5 +115,6 @@ class RemoveFromSearchTest extends TestCase
 
         $this->assertSame(5, $job->tries);
         $this->assertSame([2, 4, 8, 16, 32], $job->backoff());
+        $this->assertSame(3, $job->maxExceptions);
     }
 }

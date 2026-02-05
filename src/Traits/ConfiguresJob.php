@@ -18,5 +18,9 @@ trait ConfiguresJob
         if (! isset($this->backoff) && ! method_exists($this, 'backoff') && ! is_null($backoff = config('scout.jobs.backoff'))) {
             $this->backoff = $backoff;
         }
+
+        if (! isset($this->maxExceptions) && ! is_null($maxExceptions = config('scout.jobs.max_exceptions'))) {
+            $this->maxExceptions = $maxExceptions;
+        }
     }
 }
