@@ -2,7 +2,7 @@
 
 namespace Laravel\Scout\Traits;
 
-trait ConfiguresJob
+trait ConfiguresJobOptions
 {
     /**
      * Configure the job.
@@ -15,11 +15,14 @@ trait ConfiguresJob
             $this->tries = $tries;
         }
 
-        if (! isset($this->backoff) && ! method_exists($this, 'backoff') && ! is_null($backoff = config('scout.jobs.backoff'))) {
+        if (! isset($this->backoff) &&
+            ! method_exists($this, 'backoff') &&
+            ! is_null($backoff = config('scout.jobs.backoff'))) {
             $this->backoff = $backoff;
         }
 
-        if (! isset($this->maxExceptions) && ! is_null($maxExceptions = config('scout.jobs.max_exceptions'))) {
+        if (! isset($this->maxExceptions) &&
+            ! is_null($maxExceptions = config('scout.jobs.max_exceptions'))) {
             $this->maxExceptions = $maxExceptions;
         }
     }
