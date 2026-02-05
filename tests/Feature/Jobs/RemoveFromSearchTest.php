@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Laravel\Scout\Jobs\RemoveFromSearch;
+use Laravel\Scout\Tests\Fixtures\OverriddenRemoveFromSearch;
 use Mockery as m;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
@@ -88,5 +89,17 @@ class RemoveFromSearchTest extends TestCase
 
         $this->assertNull($job->tries ?? null);
         $this->assertNull($job->backoff ?? null);
+    }
+
+    public function test_subclass_tries_and_backoff_are_not_overridden_by_config()
+    {
+        config(['scout.jobs.tries' => 3, 'scout.jobs.backoff' => [1, 5, 10]]);
+
+        $model = SearchableUserFactory::new()->create();
+
+        $job = new OverriddenRemoveFromSearch(Collection::make([$model]));
+
+        $this->assertSame(5, $job->tries);
+        $this->assertSame([2, 4, 8, 16, 32], $job->backoff());
     }
 }
