@@ -32,14 +32,11 @@ class MakeSearchableTest extends TestCase
         $job->handle();
     }
 
+    #[WithConfig('scout.jobs.tries', 3)]
+    #[WithConfig('scout.jobs.backoff', [1, 5, 10])]
+    #[WithConfig('scout.jobs.max_exceptions', 2)]
     public function test_job_properties_are_set_from_config()
     {
-        config([
-            'scout.jobs.tries' => 3,
-            'scout.jobs.backoff' => [1, 5, 10],
-            'scout.jobs.max_exceptions' => 2,
-        ]);
-
         $model = SearchableUserFactory::new()->create();
 
         $job = new MakeSearchable(Collection::make([$model]));
@@ -51,12 +48,6 @@ class MakeSearchableTest extends TestCase
 
     public function test_job_properties_are_not_set_without_config()
     {
-        config([
-            'scout.jobs.tries' => null,
-            'scout.jobs.backoff' => null,
-            'scout.jobs.max_exceptions' => null,
-        ]);
-
         $model = SearchableUserFactory::new()->create();
 
         $job = new MakeSearchable(Collection::make([$model]));
@@ -66,14 +57,11 @@ class MakeSearchableTest extends TestCase
         $this->assertObjectNotHasProperty('maxExceptions', $job);
     }
 
+    #[WithConfig('scout.jobs.tries', 1)]
+    #[WithConfig('scout.jobs.backoff', [1, 5, 10])]
+    #[WithConfig('scout.jobs.max_exceptions', 1)]
     public function test_subclass_job_properties_are_not_overridden_by_config()
     {
-        config([
-            'scout.jobs.tries' => 1,
-            'scout.jobs.backoff' => [1, 5, 10],
-            'scout.jobs.max_exceptions' => 1,
-        ]);
-
         $model = SearchableUserFactory::new()->create();
 
         $job = new OverriddenMakeSearchable(Collection::make([$model]));
