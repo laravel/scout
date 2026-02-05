@@ -19,7 +19,7 @@ trait ConfiguresJob
     public $backoff;
 
     /**
-     * Configure the job from Scout's configuration.
+     * Configure the job.
      *
      * @return void
      */
