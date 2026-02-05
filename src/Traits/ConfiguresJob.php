@@ -2,10 +2,6 @@
 
 namespace Laravel\Scout\Traits;
 
-/**
- * @property int|null $tries
- * @property int|array<int>|null $backoff
- */
 trait ConfiguresJob
 {
     /**
