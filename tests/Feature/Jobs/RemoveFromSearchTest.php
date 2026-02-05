@@ -87,8 +87,8 @@ class RemoveFromSearchTest extends TestCase
 
         $job = new RemoveFromSearch(Collection::make([$model]));
 
-        $this->assertNull($job->tries ?? null);
-        $this->assertNull($job->backoff ?? null);
+        $this->assertNull($job->tries);
+        $this->assertNull($job->backoff);
     }
 
     public function test_subclass_tries_and_backoff_are_not_overridden_by_config()
