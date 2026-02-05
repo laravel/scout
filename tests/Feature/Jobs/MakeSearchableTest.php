@@ -52,8 +52,8 @@ class MakeSearchableTest extends TestCase
 
         $job = new MakeSearchable(Collection::make([$model]));
 
-        $this->assertNull($job->tries);
-        $this->assertNull($job->backoff);
+        $this->assertObjectNotHasProperty('tries', $job);
+        $this->assertObjectNotHasProperty('backoff', $job);
     }
 
     public function test_subclass_tries_and_backoff_are_not_overridden_by_config()
