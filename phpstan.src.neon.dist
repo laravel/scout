@@ -8,9 +8,6 @@ parameters:
   ignoreErrors:
     - identifier: new.static
     - "#\\(void\\) is used.#"
-    -
-      identifier: property.notFound
-      path: src/Traits/ConfiguresJob.php
 
   excludePaths:
     - src/Engines/Algolia3Engine.php
