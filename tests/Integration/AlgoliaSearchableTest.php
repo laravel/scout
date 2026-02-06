@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Tests\Integration;
 
+use Orchestra\Sidekick\Env;
 use Orchestra\Testbench\Attributes\RequiresEnv;
 use Workbench\App\Models\SearchableUser;
 
@@ -213,6 +214,17 @@ class AlgoliaSearchableTest extends TestCase
         $this->assertIsArray($rawResults);
         $this->assertArrayHasKey('hits', $rawResults);
         $this->assertArrayHasKey('processingTimeMS', $rawResults);
+    }
+
+    /** {@inheritdoc} */
+    #[\Override]
+    protected static function flushIndexesFromScout(): void
+    {
+        if (! Env::has('ALGOLIA_APP_ID')) {
+            return;
+        }
+
+        parent::flushIndexesFromScout();
     }
 
     protected static function scoutDriver(): string

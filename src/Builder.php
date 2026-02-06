@@ -57,7 +57,7 @@ class Builder
     /**
      * The custom index specified for the search.
      *
-     * @var string
+     * @var string|null
      */
     public $index;
 
@@ -85,7 +85,7 @@ class Builder
     /**
      * The "limit" that should be applied to the search.
      *
-     * @var int
+     * @var int|null
      */
     public $limit;
 

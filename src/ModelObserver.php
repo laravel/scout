@@ -32,7 +32,7 @@ class ModelObserver
     /**
      * The class names that syncing is disabled for.
      *
-     * @var array
+     * @var array<class-string<\Illuminate\Database\Eloquent\Model>, bool>
      */
     protected static $syncingDisabledFor = [];
 
@@ -50,7 +50,7 @@ class ModelObserver
     /**
      * Enable syncing for the given class.
      *
-     * @param  string  $class
+     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $class
      * @return void
      */
     public static function enableSyncingFor($class)
@@ -61,7 +61,7 @@ class ModelObserver
     /**
      * Disable syncing for the given class.
      *
-     * @param  string  $class
+     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $class
      * @return void
      */
     public static function disableSyncingFor($class)
@@ -72,7 +72,7 @@ class ModelObserver
     /**
      * Determine if syncing is disabled for the given class or model.
      *
-     * @param  object|string  $class
+     * @param  object|class-string<\Illuminate\Database\Eloquent\Model>  $class
      * @return bool
      */
     public static function syncingDisabledFor($class)
@@ -172,11 +172,11 @@ class ModelObserver
     {
         $this->forceSaving = true;
 
-        $result = $callback();
-
-        $this->forceSaving = false;
-
-        return $result;
+        try {
+            return $callback();
+        } finally {
+            $this->forceSaving = false;
+        }
     }
 
     /**

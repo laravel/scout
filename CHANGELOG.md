@@ -1,6 +1,34 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.19.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.23.1...10.x)
+
+## [v10.23.1](https://github.com/laravel/scout/compare/v10.23.0...v10.23.1) - 2026-01-28
+
+* Escape double quotes in Meilisearch filter strings by [@trnxpace](https://github.com/trnxpace) in https://github.com/laravel/scout/pull/958
+* [10.x][Algolia] Support numeric 'whereNotIn' to prevent silent failures by [@sakshamgorey](https://github.com/sakshamgorey) in https://github.com/laravel/scout/pull/959
+
+## [v10.23.0](https://github.com/laravel/scout/compare/v10.22.1...v10.23.0) - 2025-12-16
+
+* Typesense Import Action - default to upsert by [@dbpolito](https://github.com/dbpolito) in https://github.com/laravel/scout/pull/955
+
+## [v10.22.1](https://github.com/laravel/scout/compare/v10.22.0...v10.22.1) - 2025-11-25
+
+* [10.x] PHP 8.5 Compatibility by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/954
+
+## [v10.22.0](https://github.com/laravel/scout/compare/v10.21.0...v10.22.0) - 2025-11-12
+
+* [10.x] Use try-finally to ensure forceSaving flag is always reset by [@xurshudyan](https://github.com/xurshudyan) in https://github.com/laravel/scout/pull/951
+* [10.x] Make `$limit` and `$index` properties nullable in `Builder` by [@xurshudyan](https://github.com/xurshudyan) in https://github.com/laravel/scout/pull/953
+* [10.x] Add `class-string` type annotations to `ModelObserver` by [@xurshudyan](https://github.com/xurshudyan) in https://github.com/laravel/scout/pull/952
+
+## [v10.21.0](https://github.com/laravel/scout/compare/v10.20.0...v10.21.0) - 2025-11-04
+
+* Feat: Laravel-friendly model lookup by [@macaws](https://github.com/macaws) in https://github.com/laravel/scout/pull/950
+
+## [v10.20.0](https://github.com/laravel/scout/compare/v10.19.1...v10.20.0) - 2025-10-14
+
+* Full-text improvements by [@taylorotwell](https://github.com/taylorotwell) in https://github.com/laravel/scout/pull/947
+* Remove irrelevant PHP version detection by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/948
 
 ## [v10.19.1](https://github.com/laravel/scout/compare/v10.19.0...v10.19.1) - 2025-10-07
 

@@ -2,9 +2,9 @@
 
 namespace Laravel\Scout\Tests\Feature\Commands;
 
-use Error;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Jobs\MakeRangeSearchable;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
@@ -254,7 +254,7 @@ class QueueImportCommandTest extends TestCase
 
     public function test_it_handles_invalid_model_class()
     {
-        $this->expectException(Error::class);
+        $this->expectException(ScoutException::class);
 
         $this->artisan('scout:queue-import', ['model' => 'NonExistentModel']);
     }
