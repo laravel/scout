@@ -4,7 +4,6 @@ namespace Laravel\Scout\Traits;
 
 trait ConfiguresJobOptions
 {
-
     /**
      * The number of times the job may be attempted.
      *
