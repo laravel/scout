@@ -106,6 +106,10 @@ class ModelObserver
             return;
         }
 
+        if (! $model->wasRecentlyCreated && ! $model->wasChanged(array_keys($model->toSearchableArray()))) {
+            return;
+        }
+
         $model->searchable();
     }
 

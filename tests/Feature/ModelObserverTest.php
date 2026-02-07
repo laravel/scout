@@ -221,4 +221,49 @@ class ModelObserverTest extends TestCase
 
         unset($_ENV['user.searchIndexShouldBeUpdated']);
     }
+
+    public function test_created_model_is_made_searchable()
+    {
+        tap($this->app->make('scout.spied'), function ($scout) {
+            $scout->shouldReceive('update')->once();
+        });
+
+        SearchableUserFactory::new()->create([
+            'name' => 'Taylor Otwell',
+        ]);
+    }
+
+    public function test_update_to_non_searchable_field_doesnt_make_model_searchable()
+    {
+        $model = SearchableUserFactory::new()->createQuietly([
+            'name' => 'Taylor Otwell',
+            'remember_token' => 123,
+            'password' => 'secret',
+        ]);
+
+        // Force a fresh instance to ensure wasRecentlyCreated is false...
+        $model = $model->fresh();
+
+        tap($this->app->make('scout.spied'), function ($scout) {
+            $scout->shouldNotReceive('update');
+        });
+
+        $model->remember_token = 456;
+        $model->save();
+    }
+
+    public function test_update_to_searchable_field_makes_model_searchable()
+    {
+        $model = SearchableUserFactory::new()->createQuietly([
+            'name' => 'Taylor Otwell',
+            'remember_token' => 123,
+        ]);
+
+        tap($this->app->make('scout.spied'), function ($scout) {
+            $scout->shouldReceive('update')->once();
+        });
+
+        $model->name = 'Taylor';
+        $model->save();
+    }
 }
