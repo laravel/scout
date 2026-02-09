@@ -87,9 +87,9 @@ class RemoveFromSearchTest extends TestCase
 
         $job = new RemoveFromSearch(Collection::make([$model]));
 
-        $this->assertObjectNotHasProperty('tries', $job);
-        $this->assertObjectNotHasProperty('backoff', $job);
-        $this->assertObjectNotHasProperty('maxExceptions', $job);
+        $this->assertNull($job->tries);
+        $this->assertNull($job->backoff);
+        $this->assertNull($job->maxExceptions);
     }
 
     #[WithConfig('scout.jobs.tries', 1)]

@@ -5,6 +5,27 @@ namespace Laravel\Scout\Traits;
 trait ConfiguresJobOptions
 {
     /**
+     * The number of times the job may be attempted.
+     *
+     * @var int|null
+     */
+    public $tries;
+
+    /**
+     * The number of seconds to wait before retrying the job when encountering an uncaught exception.
+     *
+     * @var int|null
+     */
+    public $backoff;
+
+    /**
+     * The maximum number of unhandled exceptions to allow before failing.
+     *
+     * @var int|null
+     */
+    public $maxExceptions;
+
+    /**
      * Configure the job.
      *
      * @return void
