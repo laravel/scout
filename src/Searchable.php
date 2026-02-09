@@ -22,13 +22,20 @@ trait Searchable
      */
     public static function bootSearchable()
     {
-        static::addGlobalScope(new SearchableScope);
-
-        static::whenBooted(function () {
+        $whenBootedCallback = function () {
             static::observe(new ModelObserver);
 
             (new static)->registerSearchableMacros();
-        });
+        };
+
+        static::addGlobalScope(new SearchableScope);
+
+
+        if (method_exists(static, 'whenBooted')) {
+            static::whenBooted($whenBootedCallback);
+        } else {
+            $whenBootedCallback();
+        }
     }
 
     /**
