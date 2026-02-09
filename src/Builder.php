@@ -111,7 +111,11 @@ class Builder
         $this->callback = $callback;
 
         if ($softDelete) {
-            $this->wheres['__soft_deleted'] = 0;
+            $this->wheres[] = [
+                'field' => '__soft_deleted',
+                'operator' => '=',
+                'value' => 0,
+            ];
         }
     }
 
@@ -132,12 +136,17 @@ class Builder
      * Add a constraint to the search query.
      *
      * @param  string  $field
-     * @param  mixed  $value
+     * @param  mixed  $operator
+     * @param  mixed|null  $value
      * @return $this
      */
-    public function where($field, $value)
+    public function where($field, $operator, $value = null)
     {
-        $this->wheres[$field] = $value;
+        $this->wheres[] = [
+            'field' => $field,
+            'operator' => $value === null ? '=' : $operator,
+            'value' => $value === null ? $operator : $value,
+        ];
 
         return $this;
     }
@@ -177,7 +186,7 @@ class Builder
      */
     public function withTrashed()
     {
-        unset($this->wheres['__soft_deleted']);
+        $this->wheres = collect($this->wheres)->where('field', '!=', '__soft_deleted')->values()->all();
 
         return $this;
     }
@@ -190,7 +199,11 @@ class Builder
     public function onlyTrashed()
     {
         return tap($this->withTrashed(), function () {
-            $this->wheres['__soft_deleted'] = 1;
+            $this->wheres[] = [
+                'field' => '__soft_deleted',
+                'operator' => '=',
+                'value' => 1,
+            ];
         });
     }
 

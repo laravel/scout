@@ -26,6 +26,7 @@ trait SearchableTests
     protected function defineScoutDatabaseMigrations(): void
     {
         $this->loadLaravelMigrations();
+        $this->loadMigrationsFrom(__DIR__.'/../Fixtures/migrations');
 
         $collect = LazyCollection::make(function () {
             yield ['name' => 'Laravel Framework'];
@@ -103,5 +104,27 @@ trait SearchableTests
             User::search('lar')->take(10)->query($queryCallback)->paginate(5, 'page', 1),
             User::search('lar')->take(10)->query($queryCallback)->paginate(5, 'page', 2),
         ];
+    }
+
+    public function itCanMakeWhereComparisons()
+    {
+        User::all()->each->delete();
+
+        UserFactory::new()->create(['name' => 'Taylor Otwell', 'age' => 35]);
+        UserFactory::new()->create(['name' => 'Abigail Otwell', 'age' => 30]);
+
+        $this->importScoutIndexFrom(User::class);
+
+        $this->assertSame(['Taylor Otwell'], User::search('*')->where('age', '>', 30)->get()->pluck('name')->all());
+        $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], User::search('*')->where('age', '>=', 30)->get()->pluck('name')->all());
+
+        $this->assertSame(['Abigail Otwell'], User::search('*')->where('age', '<', 35)->get()->pluck('name')->all());
+        $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], User::search('*')->where('age', '<=', 35)->get()->pluck('name')->all());
+
+        $this->assertSame(['Abigail Otwell'], User::search('*')->where('age', '!=', 35)->get()->pluck('name')->all());
+        $this->assertSame(['Taylor Otwell'], User::search('*')->where('age', '!=', 30)->get()->pluck('name')->all());
+
+        $this->assertSame(['Taylor Otwell'], User::search('*')->where('age', '>', 30)->where('age', '<', 40)->get()->pluck('name')->all());
+        $this->assertSame(['Abigail Otwell'], User::search('*')->where('age', '>', 25)->where('age', '<', 35)->get()->pluck('name')->all());
     }
 }

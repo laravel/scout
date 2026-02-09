@@ -2,13 +2,14 @@
 
 namespace Laravel\Scout\Tests\Integration;
 
-use Illuminate\Support\Env;
 use Laravel\Scout\Tests\Fixtures\User;
+use Orchestra\Testbench\Attributes\RequiresEnv;
 
 /**
  * @group algolia
  * @group external-network
  */
+#[RequiresEnv('ALGOLIA_APP_ID')]
 class AlgoliaSearchableTest extends TestCase
 {
     use SearchableTests;
@@ -21,10 +22,6 @@ class AlgoliaSearchableTest extends TestCase
      */
     protected function defineEnvironment($app)
     {
-        if (is_null(Env::get('ALGOLIA_APP_ID'))) {
-            $this->markTestSkipped();
-        }
-
         $this->defineScoutEnvironment($app);
     }
 
@@ -162,6 +159,11 @@ class AlgoliaSearchableTest extends TestCase
             40 => 'Otis Larson MD',
             12 => 'Reta Larkin',
         ], $page2->pluck('name', 'id')->all());
+    }
+
+    public function test_it_can_filter_with_where_comparisons()
+    {
+        $this->itCanMakeWhereComparisons();
     }
 
     protected static function scoutDriver(): string

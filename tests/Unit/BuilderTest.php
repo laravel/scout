@@ -130,14 +130,20 @@ class BuilderTest extends TestCase
     public function test_hard_delete_doesnt_set_wheres()
     {
         $builder = new Builder($model = m::mock(), 'zonda', null, false);
+        $builder->where('foo', 'bar');
 
-        $this->assertArrayNotHasKey('__soft_deleted', $builder->wheres);
+        $this->assertSame([['field' => 'foo', 'operator' => '=', 'value' => 'bar']], $builder->wheres);
+
+        $builder = new Builder($model = m::mock(), 'zonda', null, true);
+        $builder->where('foo', 'bar');
+
+        $this->assertSame([['field' => '__soft_deleted', 'operator' => '=', 'value' => 0], ['field' => 'foo', 'operator' => '=', 'value' => 'bar']], $builder->wheres);
     }
 
     public function test_soft_delete_sets_wheres()
     {
         $builder = new Builder($model = m::mock(), 'zonda', null, true);
 
-        $this->assertSame(0, $builder->wheres['__soft_deleted']);
+        $this->assertSame([['field' => '__soft_deleted', 'operator' => '=', 'value' => 0]], $builder->wheres);
     }
 }
