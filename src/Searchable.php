@@ -24,9 +24,17 @@ trait Searchable
     {
         static::addGlobalScope(new SearchableScope);
 
-        static::observe(new ModelObserver);
+        $whenBootedCallback = function () {
+            static::observe(new ModelObserver);
 
-        (new static)->registerSearchableMacros();
+            (new static)->registerSearchableMacros();
+        };
+
+        if (method_exists(static::class, 'whenBooted')) {
+            static::whenBooted($whenBootedCallback);
+        } else {
+            $whenBootedCallback();
+        }
     }
 
     /**

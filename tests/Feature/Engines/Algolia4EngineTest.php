@@ -35,9 +35,9 @@ class Algolia4EngineTest extends TestCase
     protected function defineEnvironment($app)
     {
         after_resolving($app, EngineManager::class, function ($manager) {
-            $this->client = m::spy(SearchClient::class);
+            $this->client = $client = m::spy(SearchClient::class);
 
-            $manager->extend('algolia4-testing', fn () => new Algolia4Engine($this->client, config('scout.soft_delete')));
+            $manager->extend('algolia4-testing', fn () => new Algolia4Engine($client, config('scout.soft_delete')));
         });
 
         $this->beforeApplicationDestroyed(function () {

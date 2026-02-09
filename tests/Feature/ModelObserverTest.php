@@ -2,7 +2,7 @@
 
 namespace Laravel\Scout\Tests\Feature;
 
-use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Scout\ModelObserver;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
@@ -18,7 +18,7 @@ use Workbench\Database\Factories\SearchableUserFactory;
 #[WithMigration]
 class ModelObserverTest extends TestCase
 {
-    use LazilyRefreshDatabase;
+    use RefreshDatabase;
     use WithWorkbench;
 
     public function test_saved_handler_makes_model_searchable()
