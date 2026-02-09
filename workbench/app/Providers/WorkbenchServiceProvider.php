@@ -18,8 +18,8 @@ class WorkbenchServiceProvider extends ServiceProvider
             return m::spy(NullEngine::class);
         });
 
-        $this->callAfterResolving(EngineManager::class, function ($engine) {
-            $engine->extend('testing', function ($app) {
+        $this->callAfterResolving(EngineManager::class, function ($engine, $app) {
+            $engine->extend('testing', function () use ($app) {
                 return $app->make('scout.spied');
             });
         });
