@@ -30,7 +30,6 @@ trait Searchable
 
         static::addGlobalScope(new SearchableScope);
 
-
         if (method_exists(static::class, 'whenBooted')) {
             static::whenBooted($whenBootedCallback);
         } else {
