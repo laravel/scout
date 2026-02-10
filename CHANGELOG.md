@@ -1,6 +1,16 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.23.1...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.24.0...10.x)
+
+## [v10.24.0](https://github.com/laravel/scout/compare/v10.23.1...v10.24.0) - 2026-02-10
+
+* Allow job retries and backoff to be configured by [@ziadoz](https://github.com/ziadoz) in https://github.com/laravel/scout/pull/962
+* [10.x] Sort Stan faliure by [@jackbayliss](https://github.com/jackbayliss) in https://github.com/laravel/scout/pull/963
+* [10.x] Test Improvements by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/964
+* [10.x] Drop ignores by [@jackbayliss](https://github.com/jackbayliss) in https://github.com/laravel/scout/pull/966
+* [10.x] Supports Laravel 13 by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/965
+* [10.x] Make it easy to run Typesense en Meilisearch integration tests locally by [@gdebrauwer](https://github.com/gdebrauwer) in https://github.com/laravel/scout/pull/970
+* [10.x] Run Typesense integration tests in github action by [@gdebrauwer](https://github.com/gdebrauwer) in https://github.com/laravel/scout/pull/968
 
 ## [v10.23.1](https://github.com/laravel/scout/compare/v10.23.0...v10.23.1) - 2026-01-28
 
