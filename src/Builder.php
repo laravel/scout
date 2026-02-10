@@ -144,8 +144,8 @@ class Builder
     {
         $this->wheres[] = [
             'field' => $field,
-            'operator' => $value === null ? '=' : $operator,
-            'value' => $value === null ? $operator : $value,
+            'operator' => func_num_args() === 2 ? '=' : $operator,
+            'value' => func_num_args() === 2 ? $operator : $value,
         ];
 
         return $this;
