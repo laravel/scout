@@ -105,3 +105,47 @@ jobs:
           MEILISEARCH_HOST: "http://localhost:7700"
           MEILISEARCH_KEY: 'masterKey'
           DB_CONNECTION: 'testing'
+
+  tests-using-typesense:
+    runs-on: ubuntu-22.04
+
+    strategy:
+      fail-fast: true
+      matrix:
+          php: ['8.0', 8.1, 8.2, 8.3, 8.4]
+
+    name: PHP ${{ matrix.php }} using Typesense
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Start Typesense
+        uses: jirevwe/typesense-github-action@v1.0.1
+        with:
+          typesense-version: 30.1
+          typesense-api-key: masterKey
+
+      - name: Curl Typesense
+        run: sleep 10 && curl http://localhost:8108/health
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip
+          ini-values: error_reporting=E_ALL
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: |
+          composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Execute tests
+        run: vendor/bin/phpunit --no-configuration --no-coverage --color --bootstrap vendor/autoload.php --group typesense tests/Integration
+        env:
+          TYPESENSE_HOST: 'localhost'
+          TYPESENSE_PORT: 8108
+          TYPESENSE_API_KEY: 'masterKey'
+          DB_CONNECTION: 'testing'
