@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "Ensuring docker is running"
+echo "Ensuring Docker is running"
 
 if ! docker info > /dev/null 2>&1; then
   echo "Please start docker first."
