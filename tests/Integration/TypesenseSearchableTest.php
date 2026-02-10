@@ -247,7 +247,7 @@ class TypesenseSearchableTest extends TestCase
         $expectedPage = floor($maxInt / $perPage);
 
         $results = SearchableUser::search('lar')
-            ->paginate($perPage, $overflowPage);
+            ->paginate($perPage, null, $overflowPage);
 
         // Verify the page was adjusted correctly
         $this->assertEquals($expectedPage, $results->currentPage());
