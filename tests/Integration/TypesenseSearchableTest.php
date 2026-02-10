@@ -246,12 +246,19 @@ class TypesenseSearchableTest extends TestCase
         $overflowPage = 4294967296; // max int + 1
         $expectedPage = floor($maxInt / $perPage);
 
+        $rawSearchResult = null;
+
         $results = SearchableUser::search('lar')
+            ->withRawResults(function ($result) use (&$rawSearchResult) {
+                $rawSearchResult = $result;
+            })
             ->paginate($perPage, null, $overflowPage);
 
         // Verify the page was adjusted correctly
-        $this->assertEquals($expectedPage, $results->currentPage());
+        $this->assertEquals($overflowPage, $results->currentPage());
         $this->assertEquals($perPage, $results->perPage());
+        $this->assertEquals($expectedPage, $rawSearchResult['page']);
+        $this->assertEquals($perPage, $rawSearchResult['request_params']['per_page']);
     }
 
     protected static function scoutDriver(): string
