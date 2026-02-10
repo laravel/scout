@@ -26,7 +26,7 @@ class TypesenseSearchableTest extends TestCase
     {
         $this->defineScoutEnvironment($app);
 
-        $app['config']->set('scout.typesense.model-settings.' . SearchableUser::class, [
+        $app['config']->set('scout.typesense.model-settings.'.SearchableUser::class, [
             'collection-schema' => [
                 'fields' => [
                     [
@@ -40,7 +40,7 @@ class TypesenseSearchableTest extends TestCase
                 ],
             ],
             'search-parameters' => [
-                'query_by' => 'name'
+                'query_by' => 'name',
             ],
         ]);
     }
