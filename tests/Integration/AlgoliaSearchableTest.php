@@ -4,12 +4,11 @@ namespace Laravel\Scout\Tests\Integration;
 
 use Orchestra\Sidekick\Env;
 use Orchestra\Testbench\Attributes\RequiresEnv;
+use PHPUnit\Framework\Attributes\Group;
 use Workbench\App\Models\SearchableUser;
 
-/**
- * @group algolia
- * @group external-network
- */
+#[Group('algolia')]
+#[Group('external-network')]
 #[RequiresEnv('ALGOLIA_APP_ID')]
 class AlgoliaSearchableTest extends TestCase
 {

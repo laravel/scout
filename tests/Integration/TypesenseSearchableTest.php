@@ -3,12 +3,11 @@
 namespace Laravel\Scout\Tests\Integration;
 
 use Orchestra\Testbench\Attributes\RequiresEnv;
+use PHPUnit\Framework\Attributes\Group;
 use Workbench\App\Models\SearchableUser;
 
-/**
- * @group typesense
- * @group external-network
- */
+#[Group('typesense')]
+#[Group('external-network')]
 #[RequiresEnv('TYPESENSE_API_KEY')]
 class TypesenseSearchableTest extends TestCase
 {
