@@ -3,7 +3,6 @@
 namespace Laravel\Scout\Engines;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Arr;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Support\Str;
 use Laravel\Scout\Builder;
