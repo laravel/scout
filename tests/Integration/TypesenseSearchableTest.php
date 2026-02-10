@@ -3,16 +3,17 @@
 namespace Laravel\Scout\Tests\Integration;
 
 use Orchestra\Testbench\Attributes\RequiresEnv;
+use PHPUnit\Framework\Attributes\Group;
 use Workbench\App\Models\SearchableUser;
 
-/**
- * @group typesense
- * @group external-network
- */
+#[Group('typesense')]
+#[Group('external-network')]
 #[RequiresEnv('TYPESENSE_API_KEY')]
 class TypesenseSearchableTest extends TestCase
 {
-    use SearchableTests;
+    use SearchableTests {
+        defineScoutDatabaseMigrations as baseDefineScoutDatabaseMigrations;
+    }
 
     /**
      * Define environment setup.
@@ -23,6 +24,24 @@ class TypesenseSearchableTest extends TestCase
     protected function defineEnvironment($app)
     {
         $this->defineScoutEnvironment($app);
+
+        $app['config']->set('scout.typesense.model-settings.'.SearchableUser::class, [
+            'collection-schema' => [
+                'fields' => [
+                    [
+                        'name' => 'id',
+                        'type' => 'string',
+                    ],
+                    [
+                        'name' => 'name',
+                        'type' => 'string',
+                    ],
+                ],
+            ],
+            'search-parameters' => [
+                'query_by' => 'name',
+            ],
+        ]);
     }
 
     /**
@@ -35,13 +54,10 @@ class TypesenseSearchableTest extends TestCase
         $this->defineScoutDatabaseMigrations();
     }
 
-    /**
-     * Perform any work that should take place once the database has finished refreshing.
-     *
-     * @return void
-     */
-    protected function afterRefreshingDatabase()
+    protected function defineScoutDatabaseMigrations()
     {
+        $this->baseDefineScoutDatabaseMigrations();
+
         $this->importScoutIndexFrom(SearchableUser::class);
     }
 
@@ -50,8 +66,6 @@ class TypesenseSearchableTest extends TestCase
         $results = $this->itCanUseBasicSearch();
 
         $this->assertSame([
-            11 => 'Larry Casper',
-            1 => 'Laravel Framework',
             44 => 'Amos Larson Sr.',
             43 => 'Dana Larson Sr.',
             42 => 'Dax Larkin',
@@ -60,6 +74,8 @@ class TypesenseSearchableTest extends TestCase
             39 => 'Linkwood Larkin',
             20 => 'Prof. Larry Prosacco DVM',
             12 => 'Reta Larkin',
+            11 => 'Larry Casper',
+            1 => 'Laravel Framework',
         ], $results->pluck('name', 'id')->all());
     }
 
@@ -68,13 +84,13 @@ class TypesenseSearchableTest extends TestCase
         $results = $this->itCanUseBasicSearchWithQueryCallback();
 
         $this->assertSame([
-            1 => 'Laravel Framework',
             44 => 'Amos Larson Sr.',
             43 => 'Dana Larson Sr.',
             42 => 'Dax Larkin',
             41 => 'Gudrun Larkin',
             40 => 'Otis Larson MD',
             12 => 'Reta Larkin',
+            1 => 'Laravel Framework',
         ], $results->pluck('name', 'id')->all());
     }
 
@@ -83,8 +99,6 @@ class TypesenseSearchableTest extends TestCase
         $results = $this->itCanUseBasicSearchToFetchKeys();
 
         $this->assertSame([
-            '11',
-            '1',
             '44',
             '43',
             '42',
@@ -93,6 +107,8 @@ class TypesenseSearchableTest extends TestCase
             '39',
             '20',
             '12',
+            '11',
+            '1',
         ], $results->all());
     }
 
@@ -101,8 +117,6 @@ class TypesenseSearchableTest extends TestCase
         $results = $this->itCanUseBasicSearchWithQueryCallbackToFetchKeys();
 
         $this->assertSame([
-            '11',
-            '1',
             '44',
             '43',
             '42',
@@ -111,6 +125,8 @@ class TypesenseSearchableTest extends TestCase
             '39',
             '20',
             '12',
+            '11',
+            '1',
         ], $results->all());
     }
 
@@ -127,19 +143,19 @@ class TypesenseSearchableTest extends TestCase
         [$page1, $page2] = $this->itCanUsePaginatedSearch();
 
         $this->assertSame([
-            11 => 'Larry Casper',
-            1 => 'Laravel Framework',
             44 => 'Amos Larson Sr.',
             43 => 'Dana Larson Sr.',
             42 => 'Dax Larkin',
+            41 => 'Gudrun Larkin',
+            40 => 'Otis Larson MD',
         ], $page1->pluck('name', 'id')->all());
 
         $this->assertSame([
-            41 => 'Gudrun Larkin',
-            40 => 'Otis Larson MD',
             39 => 'Linkwood Larkin',
             20 => 'Prof. Larry Prosacco DVM',
             12 => 'Reta Larkin',
+            11 => 'Larry Casper',
+            1 => 'Laravel Framework',
         ], $page2->pluck('name', 'id')->all());
     }
 
@@ -148,16 +164,16 @@ class TypesenseSearchableTest extends TestCase
         [$page1, $page2] = $this->itCanUsePaginatedSearchWithQueryCallback();
 
         $this->assertSame([
-            1 => 'Laravel Framework',
             44 => 'Amos Larson Sr.',
             43 => 'Dana Larson Sr.',
             42 => 'Dax Larkin',
+            41 => 'Gudrun Larkin',
+            40 => 'Otis Larson MD',
         ], $page1->pluck('name', 'id')->all());
 
         $this->assertSame([
-            41 => 'Gudrun Larkin',
-            40 => 'Otis Larson MD',
             12 => 'Reta Larkin',
+            1 => 'Laravel Framework',
         ], $page2->pluck('name', 'id')->all());
     }
 
@@ -230,12 +246,19 @@ class TypesenseSearchableTest extends TestCase
         $overflowPage = 4294967296; // max int + 1
         $expectedPage = floor($maxInt / $perPage);
 
+        $rawSearchResult = null;
+
         $results = SearchableUser::search('lar')
-            ->paginate($perPage, $overflowPage);
+            ->withRawResults(function ($result) use (&$rawSearchResult) {
+                $rawSearchResult = $result;
+            })
+            ->paginate($perPage, null, $overflowPage);
 
         // Verify the page was adjusted correctly
-        $this->assertEquals($expectedPage, $results->currentPage());
+        $this->assertEquals($overflowPage, $results->currentPage());
         $this->assertEquals($perPage, $results->perPage());
+        $this->assertEquals($expectedPage, $rawSearchResult['page']);
+        $this->assertEquals($perPage, $rawSearchResult['request_params']['per_page']);
     }
 
     protected static function scoutDriver(): string

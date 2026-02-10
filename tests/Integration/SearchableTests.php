@@ -19,7 +19,7 @@ trait SearchableTests
     {
         $_ENV['user.toSearchableArray'] = function ($model) {
             return [
-                'id' => (int) $model->id,
+                'id' => static::scoutDriver() === 'typesense' ? (string) $model->id : (int) $model->id,
                 'name' => $model->name,
             ];
         };

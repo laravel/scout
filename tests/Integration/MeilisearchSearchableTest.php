@@ -10,12 +10,11 @@ use Meilisearch\Client;
 use Meilisearch\Endpoints\Indexes;
 use Mockery as m;
 use Orchestra\Testbench\Attributes\RequiresEnv;
+use PHPUnit\Framework\Attributes\Group;
 use Workbench\App\Models\SearchableUser;
 
-/**
- * @group meilisearch
- * @group external-network
- */
+#[Group('meilisearch')]
+#[Group('external-network')]
 #[RequiresEnv('MEILISEARCH_HOST')]
 class MeilisearchSearchableTest extends TestCase
 {
