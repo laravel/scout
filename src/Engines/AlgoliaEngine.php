@@ -162,9 +162,20 @@ class AlgoliaEngine extends Engine
      */
     protected function filters(Builder $builder)
     {
-        $wheres = collect($builder->wheres)->map(function ($value, $key) {
-            return $key.":'{$value}'";
-        })->values();
+        $wheres = collect($builder->wheres)
+            ->map(function ($where) {
+                $field = $where['field'];
+                $operator = $where['operator'];
+                $value = $where['value'];
+
+                if (is_string($value) || $operator === '=') {
+                    $operator = ':';
+                    $value = "'{$value}'";
+                }
+
+                return $field.$operator.$value;
+            })
+            ->values();
 
         return $wheres->merge(collect($builder->whereIns)->map(function ($values, $key) {
             if (empty($values)) {

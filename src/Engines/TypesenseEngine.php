@@ -242,7 +242,7 @@ class TypesenseEngine extends Engine
      * @param  int|null  $perPage
      * @return array
      */
-    public function buildSearchParameters(Builder $builder, int $page, int|null $perPage): array
+    public function buildSearchParameters(Builder $builder, int $page, ?int $perPage): array
     {
         $parameters = [
             'q' => $builder->query,
@@ -291,7 +291,7 @@ class TypesenseEngine extends Engine
     protected function filters(Builder $builder): string
     {
         $whereFilter = collect($builder->wheres)
-            ->map(fn ($value, $key) => $this->parseWhereFilter($value, $key))
+            ->map(fn ($where) => $this->parseWhereFilter($this->parseFilterValue($where['value']), $where['field'], $where['operator']))
             ->values()
             ->implode(' && ');
 
@@ -310,13 +310,26 @@ class TypesenseEngine extends Engine
      *
      * @param  array|string  $value
      * @param  string  $key
+     * @param  string  $operator
      * @return string
      */
-    protected function parseWhereFilter(array|string $value, string $key): string
+    protected function parseWhereFilter(array|string $value, string $key, string $operator = '='): string
     {
-        return is_array($value)
-            ? sprintf('%s:%s', $key, implode('', $value))
-            : sprintf('%s:=%s', $key, $value);
+        if (is_array($value)) {
+            return sprintf('%s:%s', $key, implode('', $value));
+        }
+
+        $operator = match ($operator) {
+            '=' => ':=',
+            '!=' => ':!=',
+            '<' => ':<',
+            '>' => ':>',
+            '<=' => ':<=',
+            '>=' => ':>=',
+            default => ':=',
+        };
+
+        return sprintf('%s%s%s', $key, $operator, $value);
     }
 
     /**

@@ -178,18 +178,22 @@ class MeilisearchEngine extends Engine
      */
     protected function filters(Builder $builder)
     {
-        $filters = collect($builder->wheres)->map(function ($value, $key) {
+        $filters = collect($builder->wheres)->map(function ($where) {
+            $field = $where['field'];
+            $value = $where['value'];
+            $operator = $where['operator'];
+
             if (is_bool($value)) {
-                return sprintf('%s=%s', $key, $value ? 'true' : 'false');
+                return sprintf('%s%s%s', $field, $operator, $value ? 'true' : 'false');
             }
 
             if ($value instanceof BackedEnum) {
-                return sprintf('%s=%s', $key, $value->value);
+                return sprintf('%s%s%s', $field, $operator, $value->value);
             }
 
             return is_numeric($value)
-                ? sprintf('%s=%s', $key, $value)
-                : sprintf('%s="%s"', $key, $value);
+                ? sprintf('%s%s%s', $field, $operator, $value)
+                : sprintf('%s%s"%s"', $field, $operator, $value);
         });
 
         $whereInOperators = [

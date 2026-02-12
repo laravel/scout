@@ -2,6 +2,29 @@
 
 ## Upgrading To 11.0 From 10.x
 
+### Builder `wheres` Property and Custom Engines
+
+In previous Scout releases, the `wheres` property on the `Builder` instance was a simple key / value associative array. In Scout 11.x, the `wheres` property is now an array of arrays, with each entry containing `field`, `operator`, and `value` keys. This change was made to support comparison operators such as `>`, `<`, `>=`, `<=`, and `!=` via the `where` method:
+
+```php
+User::search('*')->where('age', '>', 30)->get();
+```
+
+If you are directly accessing the `wheres` property within a custom engine, you should update your code to handle the new format:
+
+```diff
+- foreach ($builder->wheres as $field => $value) {
+-     // ...
+- }
++ foreach ($builder->wheres as $where) {
++     $field = $where['field'];
++     $operator = $where['operator'];
++     $value = $where['value'];
++
++     // ...
++ }
+```
+
 ### Algolia Engine `filters`
 
 PR: https://github.com/laravel/scout/pull/839

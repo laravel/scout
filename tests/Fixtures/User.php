@@ -19,6 +19,7 @@ class User extends Authenticatable
         return [
             'id' => (int) $this->id,
             'name' => $this->name,
+            'age' => $this->age,
         ];
     }
 }
