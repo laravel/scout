@@ -69,8 +69,8 @@ class TypesenseEngineTest extends TestCase
     {
         $builder = m::mock(Builder::class);
         $builder->wheres = [
-            'status' => 'active',
-            'age' => 25,
+            ['field' => 'status', 'value' => 'active', 'operator' => '='],
+            ['field' => 'age', 'value' => 25, 'operator' => '='],
         ];
         $builder->whereIns = [
             'category' => ['electronics', 'books'],

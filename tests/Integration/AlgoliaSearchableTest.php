@@ -7,6 +7,10 @@ use Orchestra\Testbench\Attributes\RequiresEnv;
 use PHPUnit\Framework\Attributes\Group;
 use Workbench\App\Models\SearchableUser;
 
+/**
+ * @group algolia
+ * @group external-network
+ */
 #[Group('algolia')]
 #[Group('external-network')]
 #[RequiresEnv('ALGOLIA_APP_ID')]
@@ -224,6 +228,11 @@ class AlgoliaSearchableTest extends TestCase
         }
 
         parent::flushIndexesFromScout();
+    }
+
+    public function test_it_can_filter_with_where_comparisons()
+    {
+        $this->itCanMakeWhereComparisons();
     }
 
     protected static function scoutDriver(): string

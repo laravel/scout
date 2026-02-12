@@ -13,6 +13,10 @@ use Orchestra\Testbench\Attributes\RequiresEnv;
 use PHPUnit\Framework\Attributes\Group;
 use Workbench\App\Models\SearchableUser;
 
+/**
+ * @group meilisearch
+ * @group external-network
+ */
 #[Group('meilisearch')]
 #[Group('external-network')]
 #[RequiresEnv('MEILISEARCH_HOST')]
@@ -31,6 +35,8 @@ class MeilisearchSearchableTest extends TestCase
     protected function defineEnvironment($app)
     {
         $this->defineScoutEnvironment($app);
+
+        $app['config']->set('scout.meilisearch.index-settings.'.User::class.'.filterableAttributes', ['age']);
     }
 
     /**
@@ -236,6 +242,11 @@ class MeilisearchSearchableTest extends TestCase
         $this->assertIsArray($rawResults);
         $this->assertArrayHasKey('hits', $rawResults);
         $this->assertArrayHasKey('processingTimeMs', $rawResults);
+    }
+
+    public function test_it_can_filter_with_where_comparisons()
+    {
+        $this->itCanMakeWhereComparisons();
     }
 
     protected static function scoutDriver(): string

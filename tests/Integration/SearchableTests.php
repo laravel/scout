@@ -7,6 +7,8 @@ use Illuminate\Support\LazyCollection;
 use Workbench\App\Models\SearchableUser;
 use Workbench\Database\Factories\UserFactory;
 
+use function Orchestra\Testbench\workbench_path;
+
 trait SearchableTests
 {
     /**
@@ -33,6 +35,7 @@ trait SearchableTests
     protected function defineScoutDatabaseMigrations(): void
     {
         $this->loadLaravelMigrations();
+        $this->loadMigrationsFrom(workbench_path('database', 'migrations'));
 
         $collect = LazyCollection::make(function () {
             yield ['name' => 'Laravel Framework'];
@@ -197,5 +200,27 @@ trait SearchableTests
             ->cursor();
 
         return $result;
+    }
+
+    public function itCanMakeWhereComparisons()
+    {
+        User::all()->each->delete();
+
+        UserFactory::new()->create(['name' => 'Taylor Otwell', 'age' => 35]);
+        UserFactory::new()->create(['name' => 'Abigail Otwell', 'age' => 30]);
+
+        $this->importScoutIndexFrom(User::class);
+
+        $this->assertSame(['Taylor Otwell'], User::search('*')->where('age', '>', 30)->get()->pluck('name')->all());
+        $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], User::search('*')->where('age', '>=', 30)->get()->pluck('name')->all());
+
+        $this->assertSame(['Abigail Otwell'], User::search('*')->where('age', '<', 35)->get()->pluck('name')->all());
+        $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], User::search('*')->where('age', '<=', 35)->get()->pluck('name')->all());
+
+        $this->assertSame(['Abigail Otwell'], User::search('*')->where('age', '!=', 35)->get()->pluck('name')->all());
+        $this->assertSame(['Taylor Otwell'], User::search('*')->where('age', '!=', 30)->get()->pluck('name')->all());
+
+        $this->assertSame(['Taylor Otwell'], User::search('*')->where('age', '>', 30)->where('age', '<', 40)->get()->pluck('name')->all());
+        $this->assertSame(['Abigail Otwell'], User::search('*')->where('age', '>', 25)->where('age', '<', 35)->get()->pluck('name')->all());
     }
 }

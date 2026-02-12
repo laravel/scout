@@ -10,6 +10,7 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\MeilisearchEngine;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Meilisearch\Client;
+use Meilisearch\Contracts\IndexesResults;
 use Meilisearch\Endpoints\Indexes;
 use Mockery as m;
 use Orchestra\Testbench\Concerns\InteractsWithMockery;

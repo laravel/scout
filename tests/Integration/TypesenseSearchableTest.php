@@ -6,6 +6,10 @@ use Orchestra\Testbench\Attributes\RequiresEnv;
 use PHPUnit\Framework\Attributes\Group;
 use Workbench\App\Models\SearchableUser;
 
+/**
+ * @group typesense
+ * @group external-network
+ */
 #[Group('typesense')]
 #[Group('external-network')]
 #[RequiresEnv('TYPESENSE_API_KEY')]
@@ -259,6 +263,11 @@ class TypesenseSearchableTest extends TestCase
         $this->assertEquals($perPage, $results->perPage());
         $this->assertEquals($expectedPage, $rawSearchResult['page']);
         $this->assertEquals($perPage, $rawSearchResult['request_params']['per_page']);
+    }
+
+    public function test_it_can_filter_with_where_comparisons()
+    {
+        $this->itCanMakeWhereComparisons();
     }
 
     protected static function scoutDriver(): string

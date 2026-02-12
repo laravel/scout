@@ -130,7 +130,18 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
     protected function filters(Builder $builder)
     {
         $wheres = collect($builder->wheres)
-            ->map(fn ($value, $key) => $key.":'{$value}'")
+            ->map(function ($where) {
+                $field = $where['field'];
+                $operator = $where['operator'];
+                $value = $where['value'];
+
+                if (is_string($value) || $operator === '=') {
+                    $operator = ':';
+                    $value = "'{$value}'";
+                }
+
+                return $field.$operator.$value;
+            })
             ->values();
 
         $whereIns = collect($builder->whereIns)

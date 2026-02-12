@@ -302,9 +302,9 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
         return $query->when(! is_null($builder->callback), function ($query) use ($builder) {
             call_user_func($builder->callback, $query, $builder, $builder->query);
         })->when(! $builder->callback && count($builder->wheres) > 0, function ($query) use ($builder) {
-            foreach ($builder->wheres as $key => $value) {
-                if ($key !== '__soft_deleted') {
-                    $query->where($key, '=', $value);
+            foreach ($builder->wheres as $where) {
+                if ($where['field'] !== '__soft_deleted') {
+                    $query->where($where['field'], $where['operator'], $where['value']);
                 }
             }
         })->when(! $builder->callback && count($builder->whereIns) > 0, function ($query) use ($builder) {
@@ -329,9 +329,11 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function constrainForSoftDeletes($builder, $query)
     {
-        if (Arr::get($builder->wheres, '__soft_deleted') === 0) {
+        $softDeleteWhere = collect($builder->wheres)->firstWhere('field', '__soft_deleted');
+
+        if ($softDeleteWhere && $softDeleteWhere['value'] === 0) {
             return $query->withoutTrashed();
-        } elseif (Arr::get($builder->wheres, '__soft_deleted') === 1) {
+        } elseif ($softDeleteWhere && $softDeleteWhere['value'] === 1) {
             return $query->onlyTrashed();
         } elseif (in_array(SoftDeletes::class, class_uses_recursive(get_class($builder->model))) &&
                   config('scout.soft_delete', false)) {
