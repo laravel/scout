@@ -112,7 +112,7 @@ class Algolia3EngineTest extends TestCase
 
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('search')->once()->with('zonda', [
-            'numericFilters' => ['foo=1'],
+            'filters' => 'foo=1',
         ])->once();
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -127,7 +127,7 @@ class Algolia3EngineTest extends TestCase
 
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('search')->once()->with('zonda', [
-            'numericFilters' => ['foo=1', ['bar=1', 'bar=2']],
+            'filters' => 'foo=1 AND (bar=1 OR bar=2)',
         ]);
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -142,7 +142,7 @@ class Algolia3EngineTest extends TestCase
 
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('search')->once()->with('zonda', [
-            'numericFilters' => ['foo=1', '0=1'],
+            'filters' => 'foo=1 AND 0=1',
         ]);
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -250,10 +250,7 @@ class Algolia3EngineTest extends TestCase
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
 
         $index->shouldReceive('search')->once()->with('zonda', [
-            'numericFilters' => [
-                'foo!=1',
-                'foo!=2',
-            ],
+            'filters' => 'foo!=1 AND foo!=2',
         ]);
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -281,18 +278,162 @@ class Algolia3EngineTest extends TestCase
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
 
         $index->shouldReceive('search')->once()->with('zonda', [
-            'numericFilters' => [
-                'foo=1',
-                ['bar=1', 'bar=2'],
-                'baz!=1',
-                'baz!=2',
-            ],
+            'filters' => 'foo=1 AND (bar=1 OR bar=2) AND baz!=1 AND baz!=2',
         ]);
 
         $builder = new Builder(new SearchableUser, 'zonda');
         $builder->where('foo', 1)
                 ->whereIn('bar', [1, 2])
                 ->whereNotIn('baz', [1, 2]);
+
+        $engine->search($builder);
+    }
+
+    public function test_search_sends_correct_parameters_to_algolia_for_string_where_not_in_search()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+        $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
+
+        $index->shouldReceive('search')->once()->with('zonda', [
+            'filters' => 'NOT status:"draft" AND NOT status:"archived"',
+        ]);
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->whereNotIn('status', ['draft', 'archived']);
+
+        $engine->search($builder);
+    }
+
+    public function test_search_sends_correct_parameters_to_algolia_for_mixed_numeric_and_string_filters()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+        $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
+
+        $index->shouldReceive('search')->once()->with('zonda', [
+            'filters' => 'foo=1 AND (bar=1 OR bar=2) AND NOT status:"draft"',
+        ]);
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->where('foo', 1)
+                ->whereIn('bar', [1, 2])
+                ->whereNotIn('status', ['draft']);
+
+        $engine->search($builder);
+    }
+
+    public function test_search_sends_correct_parameters_to_algolia_for_string_where()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+        $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
+
+        $index->shouldReceive('search')->once()->with('zonda', [
+            'filters' => 'status:"active"',
+        ]);
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->where('status', 'active');
+
+        $engine->search($builder);
+    }
+
+    public function test_search_sends_correct_parameters_to_algolia_for_string_where_in()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+        $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
+
+        $index->shouldReceive('search')->once()->with('zonda', [
+            'filters' => '(status:"draft" OR status:"archived")',
+        ]);
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->whereIn('status', ['draft', 'archived']);
+
+        $engine->search($builder);
+    }
+
+    public function test_search_sends_no_filters_when_none_are_set()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+        $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
+
+        $index->shouldReceive('search')->once()->with('zonda', []);
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+
+        $engine->search($builder);
+    }
+
+    public function test_search_sends_correct_parameters_for_single_value_where_in()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+        $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
+
+        $index->shouldReceive('search')->once()->with('zonda', [
+            'filters' => 'foo=1',
+        ]);
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->whereIn('foo', [1]);
+
+        $engine->search($builder);
+    }
+
+    public function test_search_sends_correct_parameters_for_single_string_where_not_in()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+        $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
+
+        $index->shouldReceive('search')->once()->with('zonda', [
+            'filters' => 'NOT status:"deleted"',
+        ]);
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->whereNotIn('status', ['deleted']);
+
+        $engine->search($builder);
+    }
+
+    public function test_search_escapes_double_quotes_in_string_values()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+        $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
+
+        $index->shouldReceive('search')->once()->with('zonda', [
+            'filters' => 'name:"John \\"Doc\\" Smith"',
+        ]);
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->where('name', 'John "Doc" Smith');
+
+        $engine->search($builder);
+    }
+
+    public function test_search_sends_correct_parameters_for_float_values()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+        $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
+
+        $index->shouldReceive('search')->once()->with('zonda', [
+            'filters' => 'price=99.99',
+        ]);
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->where('price', 99.99);
+
+        $engine->search($builder);
+    }
+
+    public function test_search_sends_correct_parameters_for_zero_value()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+        $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
+
+        $index->shouldReceive('search')->once()->with('zonda', [
+            'filters' => '__soft_deleted=0',
+        ]);
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->where('__soft_deleted', 0);
 
         $engine->search($builder);
     }

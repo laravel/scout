@@ -99,7 +99,7 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
     public function search(Builder $builder)
     {
         return $this->performSearch($builder, array_filter([
-            'numericFilters' => $this->filters($builder),
+            'filters' => $this->filters($builder),
             'hitsPerPage' => $builder->limit,
         ]));
     }
@@ -114,11 +114,11 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
      */
     public function paginate(Builder $builder, $perPage, $page)
     {
-        return $this->performSearch($builder, [
-            'numericFilters' => $this->filters($builder),
+        return $this->performSearch($builder, array_filter([
+            'filters' => $this->filters($builder),
             'hitsPerPage' => $perPage,
             'page' => $page - 1,
-        ]);
+        ]));
     }
 
     /**
@@ -129,31 +129,56 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
      */
     protected function filters(Builder $builder)
     {
-        $wheres = collect($builder->wheres)
-            ->map(fn ($value, $key) => $key.'='.$value)
-            ->values();
+        $parts = [];
 
-        $whereIns = collect($builder->whereIns)->map(function ($values, $key) {
+        foreach ($builder->wheres as $key => $value) {
+            $parts[] = $this->formatFilterExpression($key, '=', $value);
+        }
+
+        foreach ($builder->whereIns as $key => $values) {
             if (empty($values)) {
-                return '0=1';
+                $parts[] = '0=1';
+                continue;
             }
 
-            return collect($values)
-                ->map(fn ($value) => $key.'='.$value)
-                ->all();
-        })->values();
+            $orGroup = array_map(
+                fn ($value) => $this->formatFilterExpression($key, '=', $value),
+                $values
+            );
 
-        $whereNotIns = collect($builder->whereNotIns)->flatMap(function ($values, $key) {
-            if (empty($values)) {
-                return [];
+            $parts[] = count($orGroup) === 1 ? $orGroup[0] : '('.implode(' OR ', $orGroup).')';
+        }
+
+        foreach ($builder->whereNotIns as $key => $values) {
+            foreach ($values as $value) {
+                $parts[] = $this->formatFilterExpression($key, '!=', $value);
             }
+        }
 
-            return collect($values)
-                ->map(fn ($value) => $key.'!='.$value)
-                ->all();
-        });
+        return implode(' AND ', $parts) ?: null;
+    }
 
-        return $wheres->merge($whereIns)->merge($whereNotIns)->values()->all();
+    /**
+     * Format a single filter expression for Algolia's filters parameter.
+     *
+     * @param  string  $key
+     * @param  string  $operator
+     * @param  mixed  $value
+     * @return string
+     */
+    protected function formatFilterExpression($key, $operator, $value)
+    {
+        if (is_int($value) || is_float($value)) {
+            return $key.$operator.$value;
+        }
+
+        $escaped = str_replace('"', '\\"', (string) $value);
+
+        if ($operator === '!=') {
+            return 'NOT '.$key.':"'.$escaped.'"';
+        }
+
+        return $key.':"'.$escaped.'"';
     }
 
     /**
