@@ -165,11 +165,17 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function buildSearchQuery(Builder $builder)
     {
+        $prefixColumns = $this->getPrefixColumns($builder);
+        $fullTextColumns = $this->getFullTextColumns($builder);
+
+        $allColumns = array_keys($builder->model->toSearchableArray());
+        $likeColumns = array_diff($allColumns, $prefixColumns, $fullTextColumns);
+
         $query = $this->initializeSearchQuery(
             $builder,
-            array_keys($builder->model->toSearchableArray()),
-            $this->getPrefixColumns($builder),
-            $this->getFullTextColumns($builder)
+            $likeColumns,
+            $prefixColumns,
+            $fullTextColumns
         );
 
         return $this->constrainForSoftDeletes(
@@ -188,42 +194,36 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function initializeSearchQuery(Builder $builder, array $columns, array $prefixColumns = [], array $fullTextColumns = [])
     {
-        if (blank($builder->query)) {
+        if (empty($builder->query)) {
             return $builder->model->newQuery();
         }
 
         return $builder->model->newQuery()->where(function ($query) use ($builder, $columns, $prefixColumns, $fullTextColumns) {
             $connectionType = $builder->model->getConnection()->getDriverName();
-
-            $canSearchPrimaryKey = ctype_digit($builder->query) &&
-                                   in_array($builder->model->getKeyType(), ['int', 'integer']) &&
-                                   ($connectionType != 'pgsql' || $builder->query <= PHP_INT_MAX) &&
-                                   in_array($builder->model->getScoutKeyName(), $columns);
-
-            if ($canSearchPrimaryKey) {
-                $query->orWhere($builder->model->getQualifiedKeyName(), $builder->query);
-            }
-
             $likeOperator = $connectionType == 'pgsql' ? 'ilike' : 'like';
 
             foreach ($columns as $column) {
-                if (in_array($column, $fullTextColumns)) {
-                    $query->orWhereFullText(
-                        $builder->model->qualifyColumn($column),
-                        $builder->query,
-                        $this->getFullTextOptions($builder)
-                    );
-                } else {
-                    if ($canSearchPrimaryKey && $column === $builder->model->getScoutKeyName()) {
-                        continue;
-                    }
+                $query->orWhere(
+                    $builder->model->qualifyColumn($column),
+                    $likeOperator,
+                    '%'.$builder->query.'%'
+                );
+            }
 
-                    $query->orWhere(
-                        $builder->model->qualifyColumn($column),
-                        $likeOperator,
-                        in_array($column, $prefixColumns) ? $builder->query.'%' : '%'.$builder->query.'%',
-                    );
-                }
+            foreach ($prefixColumns as $column) {
+                $query->orWhere(
+                    $builder->model->qualifyColumn($column),
+                    $likeOperator,
+                    $builder->query.'%'
+                );
+            }
+
+            if (! empty($fullTextColumns)) {
+                $query->orWhereFullText(
+                    $fullTextColumns,
+                    $builder->query,
+                    $this->getFullTextOptions($builder)
+                );
             }
         });
     }
