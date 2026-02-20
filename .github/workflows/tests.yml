@@ -16,19 +16,11 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: ['8.0', 8.1, 8.2, 8.3]
-        laravel: [9, 10, 11]
+        php: [8.2, 8.3, 8.4, 8.5]
+        laravel: [11, 12]
         exclude:
-          - php: '8.0'
-            laravel: 9
-          - php: '8.0'
-            laravel: 10
-          - php: '8.0'
+          - php: '8.5'
             laravel: 11
-          - php: '8.1'
-            laravel: 11
-          - php: 8.3
-            laravel: 9
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -68,7 +60,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: ['8.0', 8.1, 8.2, 8.3]
+        php: [8.2, 8.3, 8.4, 8.5]
 
     name: PHP ${{ matrix.php }} using Meilisearch
 
