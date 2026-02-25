@@ -49,7 +49,7 @@ class DatabaseEngineTest extends TestCase
     public function test_it_adds_search_where_clauses_with_non_empty_search()
     {
         SearchableUser::search('Taylor')->query(function ($builder) {
-            $this->assertSame('select * from "users" where ("users"."id" like ? or "users"."name" like ? or "users"."email" like ?)', $builder->toSql());
+            $this->assertSame('select * from "users" where ("users"."id" like ? or "users"."name" like ? or "users"."email" like ? or "users"."age" like ?)', $builder->toSql());
         })->get();
     }
 

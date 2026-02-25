@@ -33,7 +33,6 @@ trait SearchableTests
     protected function defineScoutDatabaseMigrations(): void
     {
         $this->loadLaravelMigrations();
-        $this->loadMigrationsFrom(__DIR__.'/../Fixtures/migrations');
 
         $collect = LazyCollection::make(function () {
             yield ['name' => 'Laravel Framework'];

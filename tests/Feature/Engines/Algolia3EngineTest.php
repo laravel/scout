@@ -56,6 +56,7 @@ class Algolia3EngineTest extends TestCase
             'id' => $model->getKey(),
             'name' => $model->name,
             'email' => $model->email,
+            'age' => $model->age,
             'objectID' => $model->getScoutKey(),
         ]]);
 

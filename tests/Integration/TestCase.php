@@ -27,11 +27,19 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
      */
     public static function tearDownAfterClass(): void
     {
+        static::runDeleteAllIndexesCommand();
+
+        parent::tearDownAfterClass();
+    }
+
+    /**
+     * Run `scout:delete-all-indexes` on the current scout driver.
+     */
+    protected static function runDeleteAllIndexesCommand(): void
+    {
         remote('scout:delete-all-indexes', [
             'SCOUT_DRIVER' => static::scoutDriver(),
         ])->mustRun();
-
-        parent::tearDownAfterClass();
     }
 
     abstract protected static function scoutDriver(): string;

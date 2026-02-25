@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Tests\Integration;
 
+use Orchestra\Sidekick\Env;
 use Orchestra\Testbench\Attributes\RequiresEnv;
 use Workbench\App\Models\SearchableUser;
 
@@ -164,6 +165,14 @@ class AlgoliaSearchableTest extends TestCase
     public function test_it_can_filter_with_where_comparisons()
     {
         $this->itCanMakeWhereComparisons();
+    }
+
+    #[\Override]
+    protected static function runDeleteAllIndexesCommand(): void
+    {
+        if (! empty(Env::get('ALGOLIA_APP_ID'))) {
+            parent::runDeleteAllIndexesCommand();
+        }
     }
 
     protected static function scoutDriver(): string

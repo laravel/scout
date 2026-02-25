@@ -10,6 +10,8 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\TypesenseEngine;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Mockery as m;
+use Orchestra\Testbench\Concerns\InteractsWithMockery;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 use Typesense\Client as TypesenseClient;
 use Typesense\Collection as TypesenseCollection;
@@ -18,6 +20,8 @@ use Typesense\Exceptions\TypesenseClientError;
 
 class TypesenseEngineTest extends TestCase
 {
+    use InteractsWithMockery;
+
     protected TypesenseEngine $engine;
 
     protected function setUp(): void
@@ -35,7 +39,8 @@ class TypesenseEngineTest extends TestCase
     protected function tearDown(): void
     {
         Container::getInstance()->flush();
-        m::close();
+
+        $this->tearDownTheTestEnvironmentUsingMockery();
     }
 
     /**
@@ -55,6 +60,7 @@ class TypesenseEngineTest extends TestCase
         return $method->invokeArgs($object, $parameters);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_filters_method()
     {
         $builder = m::mock(Builder::class);
@@ -75,6 +81,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_parse_filter_value_method()
     {
         $this->assertEquals('true', $this->invokeMethod($this->engine, 'parseFilterValue', [true]));
@@ -90,6 +97,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals($expectedNested, $this->invokeMethod($this->engine, 'parseFilterValue', [$nestedArray]));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_parse_where_filter_method()
     {
         $this->assertEquals('status:=active', $this->invokeMethod($this->engine, 'parseWhereFilter', ['active', 'status']));
@@ -97,18 +105,21 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals('tags:tag1tag2tag3', $this->invokeMethod($this->engine, 'parseWhereFilter', [['tag1', 'tag2', 'tag3'], 'tags']));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_parse_where_in_filter_method()
     {
         $this->assertEquals('category:=[electronics, books]', $this->invokeMethod($this->engine, 'parseWhereInFilter', [['electronics', 'books'], 'category']));
         $this->assertEquals('id:=[1, 2, 3]', $this->invokeMethod($this->engine, 'parseWhereInFilter', [[1, 2, 3], 'id']));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_parse_where_not_in_filter_metheod()
     {
         $this->assertEquals('category:!=[electronics, books]', $this->invokeMethod($this->engine, 'parseWhereNotInFilter', [['electronics', 'books'], 'category']));
         $this->assertEquals('id:!=[1, 2, 3]', $this->invokeMethod($this->engine, 'parseWhereNotInFilter', [[1, 2, 3], 'id']));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_update_method(): void
     {
         // Mock models and their methods
@@ -147,6 +158,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->update(collect($models));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_delete_method(): void
     {
         // Mock models and their methods
@@ -173,6 +185,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->delete(collect($models));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_search_method(): void
     {
         // Mock the Builder
@@ -203,6 +216,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->search($builder);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_paginate_method(): void
     {
         // Mock the Builder
@@ -233,6 +247,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->paginate($builder, 10, 2);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_map_ids_method(): void
     {
         // Sample search results
@@ -254,6 +269,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals([1, 2, 3], $mappedIds->toArray());
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_get_total_count_method(): void
     {
         // Sample search results with 'found' key
@@ -273,6 +289,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals(0, $totalCountWithoutFound);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_flush_method(): void
     {
         // Mock a model instance
@@ -293,6 +310,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->flush($model);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_create_index_method_throws_exception(): void
     {
         // Define the expected exception class and message
@@ -311,6 +329,7 @@ class TypesenseEngineTest extends TestCase
      * @throws Exception
      * @throws TypesenseClientError
      */
+    #[AllowMockObjectsWithoutExpectations]
     public function test_set_search_params_method(): void
     {
         // Mock the Builder
@@ -343,6 +362,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->search($builder);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_soft_deleted_objects_are_returned_with_only_trashed_method()
     {
         // Create a mock of SearchableModel
@@ -363,6 +383,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals(1, $results->first()->id);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_soft_deleted_objects_are_returned_with_with_trashed_method()
     {
         // Create a mock of SearchableModel
