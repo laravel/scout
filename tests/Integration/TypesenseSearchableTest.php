@@ -166,6 +166,14 @@ class TypesenseSearchableTest extends TestCase
         $this->itCanMakeWhereComparisons();
     }
 
+    public function test_it_can_usePaginatedSearchWithEmptyQueryCallback()
+    {
+        $res = $this->itCanUsePaginatedSearchWithEmptyQueryCallback();
+
+        $this->assertSame($res->total(), 44);
+        $this->assertSame($res->lastPage(), 3);
+    }
+
     protected static function scoutDriver(): string
     {
         return 'typesense';

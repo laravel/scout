@@ -153,9 +153,10 @@ class EngineManager extends Manager
      */
     public function createTypesenseDriver()
     {
+        $config = config('scout.typesense');
         $this->ensureTypesenseClientIsInstalled();
 
-        return new TypesenseEngine(new Typesense(config('scout.typesense.client-settings')));
+        return new TypesenseEngine(new Typesense($config['client-settings']), $config['max_total_results'] ?? 1000);
     }
 
     /**

@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.11.2...11.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.11.3...11.x)
+
+## [v10.11.3](https://github.com/laravel/scout/compare/v10.11.2...v10.11.3) - 2024-09-11
+
+* [Typesense] Fix Paginate Function Returning Limited Records in Laravel Scout with Typesense Engine (#824) by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/858
 
 ## [v10.11.2](https://github.com/laravel/scout/compare/v10.11.1...v10.11.2) - 2024-09-03
 

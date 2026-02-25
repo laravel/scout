@@ -30,13 +30,28 @@ class TypesenseEngine extends Engine
     protected array $searchParameters = [];
 
     /**
+     * The maximum number of results that can be fetched per page.
+     *
+     * @var int
+     */
+    private int $maxPerPage = 250;
+
+    /**
+     * The maximum number of results that can be fetched during pagination.
+     *
+     * @var int
+     */
+    protected int $maxTotalResults;
+
+    /**
      * Create new Typesense engine instance.
      *
      * @param  Typesense  $typesense
      */
-    public function __construct(Typesense $typesense)
+    public function __construct(Typesense $typesense, int $maxTotalResults)
     {
         $this->typesense = $typesense;
+        $this->maxTotalResults = $maxTotalResults;
     }
 
     /**
@@ -186,9 +201,14 @@ class TypesenseEngine extends Engine
      */
     public function search(Builder $builder)
     {
+        // If the limit exceeds Typesense's capabilities, perform a paginated search...
+        if ($builder->limit >= $this->maxPerPage) {
+            return $this->performPaginatedSearch($builder);
+        }
+
         return $this->performSearch(
             $builder,
-            $this->buildSearchParameters($builder, 1, $builder->limit)
+            $this->buildSearchParameters($builder, 1, $builder->limit ?? $this->maxPerPage)
         );
     }
 
@@ -230,6 +250,52 @@ class TypesenseEngine extends Engine
         }
 
         return $documents->search($options);
+    }
+
+    /**
+     * Perform a paginated search on the engine.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return mixed
+     *
+     * @throws \Http\Client\Exception
+     * @throws \Typesense\Exceptions\TypesenseClientError
+     */
+    protected function performPaginatedSearch(Builder $builder)
+    {
+        $page = 1;
+        $limit = min($builder->limit ?? $this->maxPerPage, $this->maxPerPage, $this->maxTotalResults);
+        $remainingResults = min($builder->limit ?? $this->maxTotalResults, $this->maxTotalResults);
+
+        $results = new Collection;
+
+        while ($remainingResults > 0) {
+            $searchResults = $this->performSearch(
+                $builder,
+                $this->buildSearchParameters($builder, $page, $limit)
+            );
+
+            $results = $results->concat($searchResults['hits'] ?? []);
+
+            if ($page === 1) {
+                $totalFound = $searchResults['found'] ?? 0;
+            }
+
+            $remainingResults -= $limit;
+            $page++;
+
+            if (count($searchResults['hits'] ?? []) < $limit) {
+                break;
+            }
+        }
+
+        return [
+            'hits' => $results->all(),
+            'found' => $results->count(),
+            'out_of' => $totalFound,
+            'page' => 1,
+            'request_params' => $this->buildSearchParameters($builder, 1, $builder->limit ?? $this->maxPerPage),
+        ];
     }
 
     /**

@@ -27,7 +27,7 @@ class TypesenseEngineTest extends TestCase
         // Mock the Typesense client and pass it to the engine constructor
         $typesenseClient = $this->createMock(TypesenseClient::class);
         $this->engine = $this->getMockBuilder(TypesenseEngine::class)
-            ->setConstructorArgs([$typesenseClient])
+            ->setConstructorArgs([$typesenseClient, 1000])
             ->onlyMethods(['getOrCreateCollectionFromModel', 'buildSearchParameters'])
             ->getMock();
     }
