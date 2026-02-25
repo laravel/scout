@@ -35,7 +35,7 @@ class MeilisearchSearchableTest extends TestCase
     {
         $this->defineScoutEnvironment($app);
 
-        $app['config']->set('scout.meilisearch.index-settings.'.User::class.'.filterableAttributes', ['age']);
+        $app['config']->set('scout.meilisearch.index-settings.'.SearchableUser::class.'.filterableAttributes', ['age']);
     }
 
     /**
