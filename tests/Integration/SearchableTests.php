@@ -5,7 +5,6 @@ namespace Laravel\Scout\Tests\Integration;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Support\LazyCollection;
 use Workbench\App\Models\SearchableUser;
-use Workbench\Database\Factories\SearchableUserFactory;
 use Workbench\Database\Factories\UserFactory;
 
 use function Orchestra\Testbench\workbench_path;
