@@ -19,6 +19,7 @@ class SearchableUser extends User
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            'age' => $this->age,
         ];
     }
 
