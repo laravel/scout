@@ -300,6 +300,31 @@ class MeilisearchEngineTest extends TestCase
         $engine = new MeilisearchEngine($client);
         $engine->deleteAllIndexes();
     }
+
+    public function test_delete_all_indexes_only_deletes_indexes_with_scout_prefix()
+    {
+        Config::shouldReceive('get')->with('scout.prefix')->andReturn('app_');
+
+        $client = m::mock(Client::class);
+        $client->shouldReceive('getIndexes')->andReturn($indexesResults = m::mock(IndexesResults::class));
+
+        $otherIndex = m::mock(Indexes::class);
+        $otherIndex->shouldReceive('getUid')->andReturn('users');
+
+        $prefixedIndex = m::mock(Indexes::class);
+        $prefixedIndex->shouldReceive('getUid')->andReturn('app_users');
+
+        $indexesResults->shouldReceive('getResults')->zeroOrMoreTimes()->andReturn([
+            $otherIndex,
+            $prefixedIndex,
+        ]);
+
+        $otherIndex->shouldNotReceive('delete');
+        $prefixedIndex->shouldReceive('delete')->once()->andReturn([]);
+
+        $engine = new MeilisearchEngine($client);
+        $engine->deleteAllIndexes();
+    }
 }
 
 class MeilisearchCustomKeySearchableModel extends SearchableModel
