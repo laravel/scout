@@ -171,7 +171,7 @@ class CollectionEngineTest extends TestCase
 
     public function test_it_can_filter_with_greater_than()
     {
-        $models = SearchableUserModel::search()->where('name', '>', 'B')->get();
+        $models = SearchableUser::search()->where('name', '>', 'B')->get();
 
         $this->assertCount(1, $models);
         $this->assertEquals('Taylor Otwell', $models[0]->name);
@@ -179,7 +179,7 @@ class CollectionEngineTest extends TestCase
 
     public function test_it_can_filter_with_less_than()
     {
-        $models = SearchableUserModel::search()->where('name', '<', 'B')->get();
+        $models = SearchableUser::search()->where('name', '<', 'B')->get();
 
         $this->assertCount(1, $models);
         $this->assertEquals('Abigail Otwell', $models[0]->name);
@@ -187,36 +187,36 @@ class CollectionEngineTest extends TestCase
 
     public function test_it_can_filter_with_greater_than_or_equal()
     {
-        $models = SearchableUserModel::search()->where('name', '>=', 'T')->get();
+        $models = SearchableUser::search()->where('name', '>=', 'T')->get();
 
         $this->assertCount(1, $models);
         $this->assertEquals('Taylor Otwell', $models[0]->name);
 
-        $models = SearchableUserModel::search()->where('name', '>=', 'A')->get();
+        $models = SearchableUser::search()->where('name', '>=', 'A')->get();
 
         $this->assertCount(2, $models);
     }
 
     public function test_it_can_filter_with_less_than_or_equal()
     {
-        $models = SearchableUserModel::search()->where('name', '<=', 'Abigail Otwell')->get();
+        $models = SearchableUser::search()->where('name', '<=', 'Abigail Otwell')->get();
 
         $this->assertCount(1, $models);
         $this->assertEquals('Abigail Otwell', $models[0]->name);
 
-        $models = SearchableUserModel::search()->where('name', '<=', 'Taylor Otwell')->get();
+        $models = SearchableUser::search()->where('name', '<=', 'Taylor Otwell')->get();
 
         $this->assertCount(2, $models);
     }
 
     public function test_it_can_filter_with_not_equal()
     {
-        $models = SearchableUserModel::search()->where('name', '!=', 'Abigail Otwell')->get();
+        $models = SearchableUser::search()->where('name', '!=', 'Abigail Otwell')->get();
 
         $this->assertCount(1, $models);
         $this->assertEquals('Taylor Otwell', $models[0]->name);
 
-        $models = SearchableUserModel::search()->where('name', '!=', 'Taylor Otwell')->get();
+        $models = SearchableUser::search()->where('name', '!=', 'Taylor Otwell')->get();
 
         $this->assertCount(1, $models);
         $this->assertEquals('Abigail Otwell', $models[0]->name);
@@ -224,12 +224,12 @@ class CollectionEngineTest extends TestCase
 
     public function test_it_can_filter_with_multiple_where_comparisons()
     {
-        $models = SearchableUserModel::search()->where('name', '>', 'S')->where('name', '<', 'Z')->get();
+        $models = SearchableUser::search()->where('name', '>', 'S')->where('name', '<', 'Z')->get();
 
         $this->assertCount(1, $models);
         $this->assertEquals('Taylor Otwell', $models[0]->name);
 
-        $models = SearchableUserModel::search()->where('name', '>', 'A')->where('name', '<', 'S')->get();
+        $models = SearchableUser::search()->where('name', '>', 'A')->where('name', '<', 'S')->get();
 
         $this->assertCount(1, $models);
         $this->assertEquals('Abigail Otwell', $models[0]->name);
