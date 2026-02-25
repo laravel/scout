@@ -111,7 +111,7 @@ class TypesenseEngine extends Engine
      * @throws \Typesense\Exceptions\TypesenseClientError
      * @throws \Http\Client\Exception
      */
-    protected function importDocuments(TypesenseCollection $collectionIndex, array $documents, string $action = 'upsert'): Collection
+    protected function importDocuments(TypesenseCollection $collectionIndex, array $documents, string $action = 'emplace'): Collection
     {
         $importedDocuments = $collectionIndex->getDocuments()->import($documents, ['action' => $action]);
 
@@ -345,6 +345,7 @@ class TypesenseEngine extends Engine
             'prioritize_exact_match' => true,
             'enable_overrides' => true,
             'highlight_affix_num_tokens' => 4,
+            'prefix' => config('scout.typesense.model-settings.'.get_class($builder->model).'.search-parameters.prefix') ?? true,
         ];
 
         if (method_exists($builder->model, 'typesenseSearchParameters')) {

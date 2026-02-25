@@ -172,11 +172,21 @@ trait Searchable
      */
     public static function makeAllSearchable($chunk = null)
     {
+        static::makeAllSearchableQuery()->searchable($chunk);
+    }
+
+    /**
+     * Get a query builder for making all instances of the model searchable.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public static function makeAllSearchableQuery()
+    {
         $self = new static;
 
         $softDelete = static::usesSoftDelete() && config('scout.soft_delete', false);
 
-        $self->newQuery()
+        return $self->newQuery()
             ->when(true, function ($query) use ($self) {
                 $self->makeAllSearchableUsing($query);
             })
@@ -185,8 +195,7 @@ trait Searchable
             })
             ->orderBy(
                 $self->qualifyColumn($self->getScoutKeyName())
-            )
-            ->searchable($chunk);
+            );
     }
 
     /**

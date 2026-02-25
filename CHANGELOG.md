@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.14.2...11.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.17.0...11.x)
+
+## [v10.17.0](https://github.com/laravel/scout/compare/v10.16.0...v10.17.0) - 2025-07-22
+
+* [10.x] Add `scout:queue` command to optimize large imports by [@stevebauman](https://github.com/stevebauman) in https://github.com/laravel/scout/pull/929
+* [10.x] Remove SerializesModels from MakeRangeSearchable by [@DougSisk](https://github.com/DougSisk) in https://github.com/laravel/scout/pull/930
+* feat: can disable typesense prefix by [@Barbapapazes](https://github.com/Barbapapazes) in https://github.com/laravel/scout/pull/931
+* Add support for `--queue` option to `scout:queue-import` by [@mason-rogers](https://github.com/mason-rogers) in https://github.com/laravel/scout/pull/932
+
+## [v10.16.0](https://github.com/laravel/scout/compare/v10.14.2...v10.16.0) - 2025-07-08
+
+* Test Improvements by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/925
+* feat: add support for Meilisearch embedder settings by [@mortezarajabi](https://github.com/mortezarajabi) in https://github.com/laravel/scout/pull/928
 
 ## [v10.14.2](https://github.com/laravel/scout/compare/v10.15.0...v10.14.2) - 2025-05-27
 
