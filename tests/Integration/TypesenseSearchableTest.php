@@ -47,7 +47,7 @@ class TypesenseSearchableTest extends TestCase
                 ],
             ],
             'search-parameters' => [
-                'query_by' => 'name',
+                'query_by' => 'name,age',
             ],
         ]);
     }
@@ -271,8 +271,6 @@ class TypesenseSearchableTest extends TestCase
 
     public function test_it_can_filter_with_where_comparisons()
     {
-        $this->markTestSkipped('Unable to filter using `age`');
-
         $this->itCanMakeWhereComparisons();
     }
 
