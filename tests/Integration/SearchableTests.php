@@ -23,6 +23,7 @@ trait SearchableTests
             return [
                 'id' => static::scoutDriver() === 'typesense' ? (string) $model->id : (int) $model->id,
                 'name' => $model->name,
+                'age' => (int) $model->age,
             ];
         };
 
@@ -212,10 +213,10 @@ trait SearchableTests
         $this->importScoutIndexFrom(SearchableUser::class);
 
         $this->assertSame(['Taylor Otwell'], SearchableUser::search('*')->where('age', '>', 30)->get()->pluck('name')->all());
-        $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], SearchableUser::search('*')->where('age', '>=', 30)->get()->pluck('name')->all());
+        $this->assertEqualsCanonicalizing(['Taylor Otwell', 'Abigail Otwell'], SearchableUser::search('*')->where('age', '>=', 30)->get()->pluck('name')->all());
 
         $this->assertSame(['Abigail Otwell'], SearchableUser::search('*')->where('age', '<', 35)->get()->pluck('name')->all());
-        $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], SearchableUser::search('*')->where('age', '<=', 35)->get()->pluck('name')->all());
+        $this->assertEqualsCanonicalizing(['Taylor Otwell', 'Abigail Otwell'], SearchableUser::search('*')->where('age', '<=', 35)->get()->pluck('name')->all());
 
         $this->assertSame(['Abigail Otwell'], SearchableUser::search('*')->where('age', '!=', 35)->get()->pluck('name')->all());
         $this->assertSame(['Taylor Otwell'], SearchableUser::search('*')->where('age', '!=', 30)->get()->pluck('name')->all());

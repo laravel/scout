@@ -28,7 +28,7 @@ class ChirpFactory extends Factory
     {
         return [
             'scout_id' => fake()->uuid(),
-            'content' => fake()->realText(),
+            'content' => fake()->text(),
         ];
     }
 }
