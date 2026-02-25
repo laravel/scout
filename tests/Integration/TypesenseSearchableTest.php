@@ -40,6 +40,10 @@ class TypesenseSearchableTest extends TestCase
                         'name' => 'name',
                         'type' => 'string',
                     ],
+                    [
+                        'name' => 'age',
+                        'type' => 'integer',
+                    ],
                 ],
             ],
             'search-parameters' => [
