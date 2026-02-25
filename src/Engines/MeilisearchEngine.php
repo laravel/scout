@@ -6,13 +6,14 @@ use BackedEnum;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Contracts\UpdatesIndexSettings;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Meilisearch\Client as MeilisearchClient;
 use Meilisearch\Contracts\IndexesQuery;
 use Meilisearch\Meilisearch;
 use Meilisearch\Search\SearchResult;
 
-class MeilisearchEngine extends Engine
+class MeilisearchEngine extends Engine implements UpdatesIndexSettings
 {
     /**
      * The Meilisearch client.
@@ -191,6 +192,10 @@ class MeilisearchEngine extends Engine
                 return sprintf('%s%s%s', $field, $operator, $value->value);
             }
 
+            if (is_null($value)) {
+                return sprintf('%s %s', $key, 'IS NULL');
+            }
+
             return is_numeric($value)
                 ? sprintf('%s%s%s', $field, $operator, $value)
                 : sprintf('%s%s"%s"', $field, $operator, $value);
@@ -362,7 +367,7 @@ class MeilisearchEngine extends Engine
      */
     public function getTotalCount($results)
     {
-        return $results['totalHits'];
+        return $results['totalHits'] ?? $results['estimatedTotalHits'];
     }
 
     /**
@@ -393,17 +398,25 @@ class MeilisearchEngine extends Engine
     }
 
     /**
-     * Update an index's settings.
+     * Update the index settings for the given index.
      *
-     * @param  string  $name
-     * @param  array  $options
-     * @return array
-     *
-     * @throws \Meilisearch\Exceptions\ApiException
+     * @return void
      */
-    public function updateIndexSettings($name, array $options = [])
+    public function updateIndexSettings($name, array $settings = [])
     {
-        return $this->meilisearch->index($name)->updateSettings($options);
+        $this->meilisearch->index($name)->updateSettings($settings);
+    }
+
+    /**
+     * Configure the soft delete filter within the given settings.
+     *
+     * @return array
+     */
+    public function configureSoftDeleteFilter(array $settings = [])
+    {
+        $settings['filterableAttributes'][] = '__soft_deleted';
+
+        return $settings;
     }
 
     /**

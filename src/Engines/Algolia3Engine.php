@@ -166,4 +166,14 @@ class Algolia3Engine extends AlgoliaEngine
 
         return $algolia->search($builder->query, $options);
     }
+
+    /**
+     * Update the index settings for the given index.
+     *
+     * @return void
+     */
+    public function updateIndexSettings(string $name, array $settings = [])
+    {
+        $this->algolia->initIndex($name)->setSettings($settings);
+    }
 }

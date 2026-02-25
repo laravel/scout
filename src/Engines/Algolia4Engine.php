@@ -162,4 +162,14 @@ class Algolia4Engine extends AlgoliaEngine
             $queryParams
         );
     }
+
+    /**
+     * Update the index settings for the given index.
+     *
+     * @return void
+     */
+    public function updateIndexSettings(string $name, array $settings = [])
+    {
+        $this->algolia->setSettings($name, $settings);
+    }
 }

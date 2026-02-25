@@ -616,6 +616,10 @@ class TypesenseEngine extends Engine
         $collectionName = $model->{$method}();
         $collection = $this->typesense->getCollections()->{$collectionName};
 
+        if (! $indexOperation) {
+            return $collection;
+        }
+
         // Determine if the collection exists in Typesense...
         try {
             $collection->retrieve();

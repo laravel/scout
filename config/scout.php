@@ -115,6 +115,12 @@ return [
     'algolia' => [
         'id' => env('ALGOLIA_APP_ID', ''),
         'secret' => env('ALGOLIA_SECRET', ''),
+        'index-settings' => [
+            // 'users' => [
+            //     'searchableAttributes' => ['id', 'name', 'email'],
+            //     'attributesForFaceting'=> ['filterOnly(email)'],
+            // ],
+        ],
     ],
 
     /*
