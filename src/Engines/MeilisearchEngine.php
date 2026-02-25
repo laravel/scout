@@ -188,7 +188,7 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
                 $operator = $where['operator'];
 
                 if ($value instanceof BackedEnum) {
-                    return sprintf('%s%s%s', $key, $operator, $value->value);
+                    return sprintf('%s%s%s', $field, $operator, $value->value);
                 }
 
                 if (is_bool($value)) {
