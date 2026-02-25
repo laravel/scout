@@ -165,8 +165,8 @@ class AlgoliaSearchableTest extends TestCase
     public function test_it_can_filter_with_where_comparisons()
     {
         $this->itCanMakeWhereComparisons();
-    } 
-    
+    }
+
     public function test_it_can_use_paginated_search_with_after_raw_search_callback()
     {
         $rawResults = $this->itCanAccessRawSearchResultsOfPaginateUsingAfterRawSearchCallback();
@@ -220,7 +220,6 @@ class AlgoliaSearchableTest extends TestCase
         $this->assertArrayHasKey('hits', $rawResults);
         $this->assertArrayHasKey('processingTimeMS', $rawResults);
     }
-
 
     #[\Override]
     protected static function runDeleteAllIndexesCommand(): void

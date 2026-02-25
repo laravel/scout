@@ -255,7 +255,7 @@ class DatabaseEngineTest extends TestCase
         $this->assertCount(1, $models);
         $this->assertEquals('Abigail Otwell', $models[0]->name);
     }
-        
+
     public function test_it_uses_scout_query()
     {
         // create bookmarks with chirp_id
