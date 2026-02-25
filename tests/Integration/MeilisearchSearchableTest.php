@@ -12,6 +12,8 @@ use Mockery as m;
 use PHPUnit\Framework\Attributes\Group;
 use Workbench\App\Models\SearchableUser;
 
+use function Orchestra\Testbench\workbench_path;
+
 /**
  * @group meilisearch
  * @group external-network
