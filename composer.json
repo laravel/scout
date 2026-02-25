@@ -25,7 +25,7 @@
         "symfony/console": "^6.0|^7.0"
     },
     "require-dev": {
-        "algolia/algoliasearch-client-php": "^3.2",
+        "algolia/algoliasearch-client-php": "^3.2|^4.0",
         "typesense/typesense-php": "^4.9.3",
         "meilisearch/meilisearch-php": "^1.0",
         "mockery/mockery": "^1.0",
@@ -34,6 +34,9 @@
         "phpstan/phpstan": "^1.10",
         "phpunit/phpunit": "^9.3|^10.4"
     },
+    "conflict": {
+        "algolia/algoliasearch-client-php": "<3.2.0|>=5.0.0"
+    },
     "autoload": {
         "psr-4": {
             "Laravel\\Scout\\": "src/"
@@ -41,7 +44,9 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Laravel\\Scout\\Tests\\": "tests/"
+            "Laravel\\Scout\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/"
         }
     },
     "extra": {

@@ -8,8 +8,8 @@ use Laravel\Scout\Searchable;
 
 class SearchableModelWithSoftDeletes extends Model
 {
-    use SoftDeletes;
     use Searchable;
+    use SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

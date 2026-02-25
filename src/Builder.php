@@ -238,6 +238,17 @@ class Builder
     }
 
     /**
+     * Add a descending "order by" clause to the search query.
+     *
+     * @param  string  $column
+     * @return $this
+     */
+    public function orderByDesc($column)
+    {
+        return $this->orderBy($column, 'desc');
+    }
+
+    /**
      * Add an "order by" clause for a timestamp to the query.
      *
      * @param  string  $column

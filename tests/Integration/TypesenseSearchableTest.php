@@ -2,8 +2,8 @@
 
 namespace Laravel\Scout\Tests\Integration;
 
-use Laravel\Scout\Tests\Fixtures\User;
 use Orchestra\Testbench\Attributes\RequiresEnv;
+use Workbench\App\Models\SearchableUser;
 
 /**
  * @group typesense
@@ -42,7 +42,7 @@ class TypesenseSearchableTest extends TestCase
      */
     protected function afterRefreshingDatabase()
     {
-        $this->importScoutIndexFrom(User::class);
+        $this->importScoutIndexFrom(SearchableUser::class);
     }
 
     public function test_it_can_use_basic_search()

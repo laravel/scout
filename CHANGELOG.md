@@ -1,6 +1,30 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.11.3...11.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.11.8...11.x)
+
+## [v10.11.8](https://github.com/laravel/scout/compare/v10.11.7...v10.11.8) - 2024-11-26
+
+* [10.x] Test Improvements by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/880
+* Fix: ambigious queries when adding other tables to the query builder by [@adminfriso](https://github.com/adminfriso) in https://github.com/laravel/scout/pull/887
+
+## [v10.11.7](https://github.com/laravel/scout/compare/v10.11.6...v10.11.7) - 2024-11-13
+
+* [10.x] Fix Algolia 3/4 engines by [@dwightwatson](https://github.com/dwightwatson) in https://github.com/laravel/scout/pull/884
+
+## [v10.11.6](https://github.com/laravel/scout/compare/v10.11.5...v10.11.6) - 2024-11-12
+
+* feat(typesense): add `whereNotIn` filter to typesense engine by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/878
+* Supports for `algolia/algoliasearch-client-php` v4 by [@3bd-ulrahman](https://github.com/3bd-ulrahman) in https://github.com/laravel/scout/pull/872
+* [10.x] Supports PHP 8.4 by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/879
+
+## [v10.11.5](https://github.com/laravel/scout/compare/v10.11.4...v10.11.5) - 2024-10-30
+
+* fix(typesense): properly format boolean filters in Typesense by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/874
+
+## [v10.11.4](https://github.com/laravel/scout/compare/v10.11.3...v10.11.4) - 2024-10-01
+
+* Fix Typesense pagination issue when using query callback by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/867
+* Update logo to support dark/light theme by [@milewski](https://github.com/milewski) in https://github.com/laravel/scout/pull/869
 
 ## [v10.11.3](https://github.com/laravel/scout/compare/v10.11.2...v10.11.3) - 2024-09-11
 

@@ -2,12 +2,13 @@
 
 namespace Laravel\Scout;
 
-use Algolia\AlgoliaSearch\Config\SearchConfig;
-use Algolia\AlgoliaSearch\SearchClient as Algolia;
-use Algolia\AlgoliaSearch\Support\UserAgent;
+use Algolia\AlgoliaSearch\Algolia;
+use Algolia\AlgoliaSearch\Support\AlgoliaAgent as Algolia4UserAgent;
+use Algolia\AlgoliaSearch\Support\UserAgent as Algolia3UserAgent;
 use Exception;
 use Illuminate\Support\Manager;
-use Laravel\Scout\Engines\AlgoliaEngine;
+use Laravel\Scout\Engines\Algolia3Engine;
+use Laravel\Scout\Engines\Algolia4Engine;
 use Laravel\Scout\Engines\CollectionEngine;
 use Laravel\Scout\Engines\DatabaseEngine;
 use Laravel\Scout\Engines\MeilisearchEngine;
@@ -39,32 +40,41 @@ class EngineManager extends Manager
     {
         $this->ensureAlgoliaClientIsInstalled();
 
-        UserAgent::addCustomUserAgent('Laravel Scout', Scout::VERSION);
+        return version_compare(Algolia::VERSION, '4.0.0', '>=')
+            ? $this->configureAlgolia4Driver()
+            : $this->configureAlgolia3Driver();
+    }
 
-        $config = SearchConfig::create(
-            config('scout.algolia.id'),
-            config('scout.algolia.secret')
-        )->setDefaultHeaders(
-            $this->defaultAlgoliaHeaders()
+    /**
+     * Create an Algolia v3 engine instance.
+     *
+     * @return \Laravel\Scout\Engines\Algolia3Engine
+     */
+    protected function configureAlgolia3Driver()
+    {
+        Algolia3UserAgent::addCustomUserAgent('Laravel Scout', Scout::VERSION); // @phpstan-ignore class.notFound
+
+        return Algolia3Engine::make(
+            config: config('scout.algolia'),
+            headers: $this->defaultAlgoliaHeaders(),
+            softDelete: config('scout.soft_delete')
         );
+    }
 
-        if (is_int($connectTimeout = config('scout.algolia.connect_timeout'))) {
-            $config->setConnectTimeout($connectTimeout);
-        }
+    /**
+     * Create an Algolia v4 engine instance.
+     *
+     * @return \Laravel\Scout\Engines\Algolia4Engine
+     */
+    protected function configureAlgolia4Driver()
+    {
+        Algolia4UserAgent::addAlgoliaAgent('Laravel Scout', 'Laravel Scout', Scout::VERSION);
 
-        if (is_int($readTimeout = config('scout.algolia.read_timeout'))) {
-            $config->setReadTimeout($readTimeout);
-        }
-
-        if (is_int($writeTimeout = config('scout.algolia.write_timeout'))) {
-            $config->setWriteTimeout($writeTimeout);
-        }
-
-        if (is_int($batchSize = config('scout.algolia.batch_size'))) {
-            $config->setBatchSize($batchSize);
-        }
-
-        return new AlgoliaEngine(Algolia::createWithConfig($config), config('scout.soft_delete'));
+        return Algolia4Engine::make(
+            config: config('scout.algolia'),
+            headers: $this->defaultAlgoliaHeaders(),
+            softDelete: config('scout.soft_delete')
+        );
     }
 
     /**
@@ -78,10 +88,6 @@ class EngineManager extends Manager
     {
         if (class_exists(Algolia::class)) {
             return;
-        }
-
-        if (class_exists('AlgoliaSearch\Client')) {
-            throw new Exception('Please upgrade your Algolia client to version: ^3.2.');
         }
 
         throw new Exception('Please install the suggested Algolia client: algolia/algoliasearch-client-php.');

@@ -24,8 +24,6 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
 
     /**
      * Clean up the testing environment before the next test case.
-     *
-     * @return void
      */
     public static function tearDownAfterClass(): void
     {

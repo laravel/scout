@@ -1,7 +1,9 @@
 providers:
+  - Workbench\App\Providers\WorkbenchServiceProvider
   - Laravel\Scout\ScoutServiceProvider
 
-migrations: true
+migrations:
+  - workbench/database/migrations
 
 workbench:
   install: true

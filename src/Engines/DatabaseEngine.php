@@ -92,7 +92,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 }
             })
             ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
-                $query->orderBy($builder->model->getScoutKeyName(), 'desc');
+                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
             })
             ->paginate($perPage, ['*'], $pageName, $page);
     }
@@ -127,7 +127,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 }
             })
             ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
-                $query->orderBy($builder->model->getScoutKeyName(), 'desc');
+                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
             })
             ->simplePaginate($perPage, ['*'], $pageName, $page);
     }
@@ -152,7 +152,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 }
             })
             ->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
-                $query->orderBy($builder->model->getScoutKeyName(), 'desc');
+                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
             })
             ->get();
     }

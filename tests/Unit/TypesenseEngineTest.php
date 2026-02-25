@@ -38,6 +38,77 @@ class TypesenseEngineTest extends TestCase
         m::close();
     }
 
+    /**
+     * Call protected/private method of a class.
+     *
+     * @param  object  &$object  Instantiated object that we will run method on.
+     * @param  string  $methodName  Method name to call
+     * @param  array  $parameters  Array of parameters to pass into method.
+     * @return mixed Method return.
+     */
+    public function invokeMethod(&$object, $methodName, array $parameters = [])
+    {
+        $reflection = new \ReflectionClass(get_class($object));
+        $method = $reflection->getMethod($methodName);
+        $method->setAccessible(true);
+
+        return $method->invokeArgs($object, $parameters);
+    }
+
+    public function test_filters_method()
+    {
+        $builder = m::mock(Builder::class);
+        $builder->wheres = [
+            'status' => 'active',
+            'age' => 25,
+        ];
+        $builder->whereIns = [
+            'category' => ['electronics', 'books'],
+        ];
+        $builder->whereNotIns = [
+            'category' => ['furniture', 'phones'],
+        ];
+
+        $result = $this->invokeMethod($this->engine, 'filters', [$builder]);
+
+        $expected = 'status:=active && age:=25 && category:=[electronics, books] && category:!=[furniture, phones]';
+        $this->assertEquals($expected, $result);
+    }
+
+    public function test_parse_filter_value_method()
+    {
+        $this->assertEquals('true', $this->invokeMethod($this->engine, 'parseFilterValue', [true]));
+        $this->assertEquals('false', $this->invokeMethod($this->engine, 'parseFilterValue', [false]));
+        $this->assertEquals('25', $this->invokeMethod($this->engine, 'parseFilterValue', [25]));
+        $this->assertEquals('3.14', $this->invokeMethod($this->engine, 'parseFilterValue', [3.14]));
+        $this->assertEquals('test', $this->invokeMethod($this->engine, 'parseFilterValue', ['test']));
+        $this->assertEquals('test "quoted"', $this->invokeMethod($this->engine, 'parseFilterValue', ['test "quoted"']));
+        $this->assertEquals('`special value`', $this->invokeMethod($this->engine, 'parseFilterValue', ['`special value`']));
+
+        $nestedArray = ['a', ['b', 'c'], 'd'];
+        $expectedNested = ['a', ['b', 'c'], 'd'];
+        $this->assertEquals($expectedNested, $this->invokeMethod($this->engine, 'parseFilterValue', [$nestedArray]));
+    }
+
+    public function test_parse_where_filter_method()
+    {
+        $this->assertEquals('status:=active', $this->invokeMethod($this->engine, 'parseWhereFilter', ['active', 'status']));
+        $this->assertEquals('age:=25', $this->invokeMethod($this->engine, 'parseWhereFilter', ['25', 'age']));
+        $this->assertEquals('tags:tag1tag2tag3', $this->invokeMethod($this->engine, 'parseWhereFilter', [['tag1', 'tag2', 'tag3'], 'tags']));
+    }
+
+    public function test_parse_where_in_filter_method()
+    {
+        $this->assertEquals('category:=[electronics, books]', $this->invokeMethod($this->engine, 'parseWhereInFilter', [['electronics', 'books'], 'category']));
+        $this->assertEquals('id:=[1, 2, 3]', $this->invokeMethod($this->engine, 'parseWhereInFilter', [[1, 2, 3], 'id']));
+    }
+
+    public function test_parse_where_not_in_filter_metheod()
+    {
+        $this->assertEquals('category:!=[electronics, books]', $this->invokeMethod($this->engine, 'parseWhereNotInFilter', [['electronics', 'books'], 'category']));
+        $this->assertEquals('id:!=[1, 2, 3]', $this->invokeMethod($this->engine, 'parseWhereNotInFilter', [[1, 2, 3], 'id']));
+    }
+
     public function test_update_method(): void
     {
         // Mock models and their methods
