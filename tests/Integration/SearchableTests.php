@@ -2,7 +2,6 @@
 
 namespace Laravel\Scout\Tests\Integration;
 
-use Algolia\AlgoliaSearch\Model\Composition\Search;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Support\LazyCollection;
 use Workbench\App\Models\SearchableUser;
