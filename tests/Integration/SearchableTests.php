@@ -7,6 +7,8 @@ use Illuminate\Support\LazyCollection;
 use Workbench\App\Models\SearchableUser;
 use Workbench\Database\Factories\UserFactory;
 
+use function Orchestra\Testbench\workbench_path;
+
 trait SearchableTests
 {
     /**
