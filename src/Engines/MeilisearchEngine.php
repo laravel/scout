@@ -195,10 +195,6 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
                     return sprintf('%s%s%s', $field, $operator, $value ? 'true' : 'false');
                 }
 
-                if ($value instanceof BackedEnum) {
-                    return sprintf('%s%s%s', $field, $operator, $value->value);
-                }
-
                 if (is_null($value)) {
                     return sprintf('%s %s', $field, 'IS NULL');
                 }
