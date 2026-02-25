@@ -47,7 +47,8 @@ class TypesenseSearchableTest extends TestCase
                 ],
             ],
             'search-parameters' => [
-                'query_by' => 'name,age',
+                'query_by' => 'name',
+                'filter_by' => 'age',
             ],
         ]);
     }
