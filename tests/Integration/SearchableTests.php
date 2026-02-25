@@ -23,7 +23,7 @@ trait SearchableTests
             return [
                 'id' => static::scoutDriver() === 'typesense' ? (string) $model->id : (int) $model->id,
                 'name' => $model->name,
-                'age' => $model->age,
+                'age' => (int) $model->age,
             ];
         };
 
