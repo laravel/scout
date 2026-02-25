@@ -184,23 +184,21 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
 
         $objectIdPositions = array_flip($objectIds);
 
-        return $model->getScoutModelsByIds(
-            $builder, $objectIds
-        )->filter(function ($model) use ($objectIds) {
-            return in_array($model->getScoutKey(), $objectIds);
-        })->map(function ($model) use ($results, $objectIdPositions) {
-            $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
+        return $model->getScoutModelsByIds($builder, $objectIds)
+            ->filter(fn ($model) => in_array($model->getScoutKey(), $objectIds))
+            ->map(function ($model) use ($results, $objectIdPositions) {
+                $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
 
-            foreach ($result as $key => $value) {
-                if (substr($key, 0, 1) === '_') {
-                    $model->withScoutMetadata($key, $value);
+                foreach ($result as $key => $value) {
+                    if (substr($key, 0, 1) === '_') {
+                        $model->withScoutMetadata($key, $value);
+                    }
                 }
-            }
 
-            return $model;
-        })->sortBy(function ($model) use ($objectIdPositions) {
-            return $objectIdPositions[$model->getScoutKey()];
-        })->values();
+                return $model;
+            })
+            ->sortBy(fn ($model) => $objectIdPositions[$model->getScoutKey()])
+            ->values();
     }
 
     /**
@@ -220,23 +218,22 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
         $objectIds = collect($results['hits'])->pluck('objectID')->values()->all();
         $objectIdPositions = array_flip($objectIds);
 
-        return $model->queryScoutModelsByIds(
-            $builder, $objectIds
-        )->cursor()->filter(function ($model) use ($objectIds) {
-            return in_array($model->getScoutKey(), $objectIds);
-        })->map(function ($model) use ($results, $objectIdPositions) {
-            $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
+        return $model->queryScoutModelsByIds($builder, $objectIds)
+            ->cursor()
+            ->filter(fn ($model) => in_array($model->getScoutKey(), $objectIds))
+            ->map(function ($model) use ($results, $objectIdPositions) {
+                $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
 
-            foreach ($result as $key => $value) {
-                if (substr($key, 0, 1) === '_') {
-                    $model->withScoutMetadata($key, $value);
+                foreach ($result as $key => $value) {
+                    if (substr($key, 0, 1) === '_') {
+                        $model->withScoutMetadata($key, $value);
+                    }
                 }
-            }
 
-            return $model;
-        })->sortBy(function ($model) use ($objectIdPositions) {
-            return $objectIdPositions[$model->getScoutKey()];
-        })->values();
+                return $model;
+            })
+            ->sortBy(fn ($model) => $objectIdPositions[$model->getScoutKey()])
+            ->values();
     }
 
     /**

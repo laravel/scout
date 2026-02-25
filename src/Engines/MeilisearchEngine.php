@@ -74,7 +74,10 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
                 $model->scoutMetadata(),
                 [$model->getScoutKeyName() => $model->getScoutKey()],
             );
-        })->filter()->values()->all();
+        })
+            ->filter()
+            ->values()
+            ->all();
 
         if (! empty($objects)) {
             $index->addDocuments($objects, $models->first()->getScoutKeyName());
@@ -178,27 +181,28 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
      */
     protected function filters(Builder $builder)
     {
-        $filters = collect($builder->wheres)->map(function ($where) {
-            $field = $where['field'];
-            $value = $where['value'];
-            $operator = $where['operator'];
+        $filters = collect($builder->wheres)
+            ->map(function ($where) {
+                $field = $where['field'];
+                $value = $where['value'];
+                $operator = $where['operator'];
 
-            if (is_bool($value)) {
-                return sprintf('%s%s%s', $field, $operator, $value ? 'true' : 'false');
-            }
+                if (is_bool($value)) {
+                    return sprintf('%s%s%s', $field, $operator, $value ? 'true' : 'false');
+                }
 
-            if ($value instanceof BackedEnum) {
-                return sprintf('%s%s%s', $field, $operator, $value->value);
-            }
+                if ($value instanceof BackedEnum) {
+                    return sprintf('%s%s%s', $field, $operator, $value->value);
+                }
 
-            if (is_null($value)) {
-                return sprintf('%s %s', $field, 'IS NULL');
-            }
+                if (is_null($value)) {
+                    return sprintf('%s %s', $field, 'IS NULL');
+                }
 
-            return is_numeric($value)
-                ? sprintf('%s%s%s', $field, $operator, $value)
-                : sprintf('%s%s"%s"', $field, $operator, $value);
-        });
+                return is_numeric($value)
+                    ? sprintf('%s%s%s', $field, $operator, $value)
+                    : sprintf('%s%s"%s"', $field, $operator, $value);
+            });
 
         $whereInOperators = [
             'whereIns' => 'IN',
@@ -229,9 +233,9 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
      */
     protected function buildSortFromOrderByClauses(Builder $builder): array
     {
-        return collect($builder->orders)->map(function (array $order) {
-            return $order['column'].':'.$order['direction'];
-        })->toArray();
+        return collect($builder->orders)
+            ->map(fn (array $order) => $order['column'].':'.$order['direction'])
+            ->toArray();
     }
 
     /**
@@ -265,8 +269,8 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
     public function mapIdsFrom($results, $key)
     {
         return count($results['hits']) === 0
-                ? collect()
-                : collect($results['hits'])->pluck($key)->values();
+            ? collect()
+            : collect($results['hits'])->pluck($key)->values();
     }
 
     /**
@@ -298,23 +302,21 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
 
         $objectIdPositions = array_flip($objectIds);
 
-        return $model->getScoutModelsByIds(
-            $builder, $objectIds
-        )->filter(function ($model) use ($objectIds) {
-            return in_array($model->getScoutKey(), $objectIds);
-        })->map(function ($model) use ($results, $objectIdPositions) {
-            $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
+        return $model->getScoutModelsByIds($builder, $objectIds)
+            ->filter(fn ($model) => in_array($model->getScoutKey(), $objectIds))
+            ->map(function ($model) use ($results, $objectIdPositions) {
+                $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
 
-            foreach ($result as $key => $value) {
-                if (substr($key, 0, 1) === '_') {
-                    $model->withScoutMetadata($key, $value);
+                foreach ($result as $key => $value) {
+                    if (substr($key, 0, 1) === '_') {
+                        $model->withScoutMetadata($key, $value);
+                    }
                 }
-            }
 
-            return $model;
-        })->sortBy(function ($model) use ($objectIdPositions) {
-            return $objectIdPositions[$model->getScoutKey()];
-        })->values();
+                return $model;
+            })
+            ->sortBy(fn ($model) => $objectIdPositions[$model->getScoutKey()])
+            ->values();
     }
 
     /**
@@ -333,23 +335,22 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
         $objectIds = collect($results['hits'])->pluck($model->getScoutKeyName())->values()->all();
         $objectIdPositions = array_flip($objectIds);
 
-        return $model->queryScoutModelsByIds(
-            $builder, $objectIds
-        )->cursor()->filter(function ($model) use ($objectIds) {
-            return in_array($model->getScoutKey(), $objectIds);
-        })->map(function ($model) use ($results, $objectIdPositions) {
-            $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
+        return $model->queryScoutModelsByIds($builder, $objectIds)
+            ->cursor()
+            ->filter(fn ($model) => in_array($model->getScoutKey(), $objectIds))
+            ->map(function ($model) use ($results, $objectIdPositions) {
+                $result = $results['hits'][$objectIdPositions[$model->getScoutKey()]] ?? [];
 
-            foreach ($result as $key => $value) {
-                if (substr($key, 0, 1) === '_') {
-                    $model->withScoutMetadata($key, $value);
+                foreach ($result as $key => $value) {
+                    if (substr($key, 0, 1) === '_') {
+                        $model->withScoutMetadata($key, $value);
+                    }
                 }
-            }
 
-            return $model;
-        })->sortBy(function ($model) use ($objectIdPositions) {
-            return $objectIdPositions[$model->getScoutKey()];
-        })->values();
+                return $model;
+            })
+            ->sortBy(fn ($model) => $objectIdPositions[$model->getScoutKey()])
+            ->values();
     }
 
     /**

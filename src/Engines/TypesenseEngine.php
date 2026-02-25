@@ -89,7 +89,10 @@ class TypesenseEngine extends Engine
                 $searchableData,
                 $model->scoutMetadata(),
             );
-        })->filter()->values()->all();
+        })
+            ->filter()
+            ->values()
+            ->all();
 
         if (! empty($objects)) {
             $this->importDocuments(
@@ -529,12 +532,8 @@ class TypesenseEngine extends Engine
         $objectIdPositions = array_flip($objectIds);
 
         return $model->getScoutModelsByIds($builder, $objectIds)
-            ->filter(static function ($model) use ($objectIds) {
-                return in_array($model->getScoutKey(), $objectIds, false);
-            })
-            ->sortBy(static function ($model) use ($objectIdPositions) {
-                return $objectIdPositions[$model->getScoutKey()];
-            })
+            ->filter(static fn ($model) => in_array($model->getScoutKey(), $objectIds, false))
+            ->sortBy(static fn ($model) => $objectIdPositions[$model->getScoutKey()])
             ->values();
     }
 
@@ -561,12 +560,8 @@ class TypesenseEngine extends Engine
 
         return $model->queryScoutModelsByIds($builder, $objectIds)
             ->cursor()
-            ->filter(static function ($model) use ($objectIds) {
-                return in_array($model->getScoutKey(), $objectIds, false);
-            })
-            ->sortBy(static function ($model) use ($objectIdPositions) {
-                return $objectIdPositions[$model->getScoutKey()];
-            })
+            ->filter(static fn ($model) => in_array($model->getScoutKey(), $objectIds, false))
+            ->sortBy(static fn ($model) => $objectIdPositions[$model->getScoutKey()])
             ->values();
     }
 

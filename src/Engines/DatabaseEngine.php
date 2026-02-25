@@ -367,8 +367,8 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
         $results = $results['results'];
 
         return count($results) > 0
-                    ? collect($results->modelKeys())
-                    : collect();
+            ? collect($results->modelKeys())
+            : collect();
     }
 
     /**

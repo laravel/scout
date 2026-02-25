@@ -88,7 +88,10 @@ class Algolia3Engine extends AlgoliaEngine
                 $model->scoutMetadata(),
                 ['objectID' => $model->getScoutKey()],
             );
-        })->filter()->values()->all();
+        })
+            ->filter()
+            ->values()
+            ->all();
 
         if (! empty($objects)) {
             $index->saveObjects($objects);
