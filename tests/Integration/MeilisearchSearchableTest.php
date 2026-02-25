@@ -12,6 +12,10 @@ use Mockery as m;
 use PHPUnit\Framework\Attributes\Group;
 use Workbench\App\Models\SearchableUser;
 
+/**
+ * @group meilisearch
+ * @group external-network
+ */
 #[Group('meilisearch')]
 #[Group('external-network')]
 #[RequiresEnv('MEILISEARCH_HOST')]
