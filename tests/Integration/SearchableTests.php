@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Tests\Integration;
 
+use Algolia\AlgoliaSearch\Model\Composition\Search;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Support\LazyCollection;
 use Workbench\App\Models\SearchableUser;
@@ -124,23 +125,23 @@ trait SearchableTests
 
     public function itCanMakeWhereComparisons()
     {
-        User::all()->each->delete();
+        SearchableUser::all()->each->delete();
 
         UserFactory::new()->create(['name' => 'Taylor Otwell', 'age' => 35]);
         UserFactory::new()->create(['name' => 'Abigail Otwell', 'age' => 30]);
 
-        $this->importScoutIndexFrom(User::class);
+        $this->importScoutIndexFrom(SearchableUser::class);
 
-        $this->assertSame(['Taylor Otwell'], User::search('*')->where('age', '>', 30)->get()->pluck('name')->all());
-        $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], User::search('*')->where('age', '>=', 30)->get()->pluck('name')->all());
+        $this->assertSame(['Taylor Otwell'], SearchableUser::search('*')->where('age', '>', 30)->get()->pluck('name')->all());
+        $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], SearchableUser::search('*')->where('age', '>=', 30)->get()->pluck('name')->all());
 
         $this->assertSame(['Abigail Otwell'], User::search('*')->where('age', '<', 35)->get()->pluck('name')->all());
-        $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], User::search('*')->where('age', '<=', 35)->get()->pluck('name')->all());
+        $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], SearchableUser::search('*')->where('age', '<=', 35)->get()->pluck('name')->all());
 
-        $this->assertSame(['Abigail Otwell'], User::search('*')->where('age', '!=', 35)->get()->pluck('name')->all());
-        $this->assertSame(['Taylor Otwell'], User::search('*')->where('age', '!=', 30)->get()->pluck('name')->all());
+        $this->assertSame(['Abigail Otwell'], SearchableUser::search('*')->where('age', '!=', 35)->get()->pluck('name')->all());
+        $this->assertSame(['Taylor Otwell'], SearchableUser::search('*')->where('age', '!=', 30)->get()->pluck('name')->all());
 
-        $this->assertSame(['Taylor Otwell'], User::search('*')->where('age', '>', 30)->where('age', '<', 40)->get()->pluck('name')->all());
-        $this->assertSame(['Abigail Otwell'], User::search('*')->where('age', '>', 25)->where('age', '<', 35)->get()->pluck('name')->all());
+        $this->assertSame(['Taylor Otwell'], SearchableUser::search('*')->where('age', '>', 30)->where('age', '<', 40)->get()->pluck('name')->all());
+        $this->assertSame(['Abigail Otwell'], SearchableUser::search('*')->where('age', '>', 25)->where('age', '<', 35)->get()->pluck('name')->all());
     }
 }
