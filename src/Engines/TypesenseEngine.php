@@ -205,8 +205,6 @@ class TypesenseEngine extends Engine
      */
     public function paginate(Builder $builder, $perPage, $page)
     {
-        $builder->take($builder->limit ?? $perPage);
-
         return $this->performSearch(
             $builder,
             $this->buildSearchParameters($builder, $page, $perPage)
