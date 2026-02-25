@@ -11,6 +11,7 @@ use Laravel\Scout\Engines\MeilisearchEngine;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Meilisearch\Client;
 use Meilisearch\Contracts\IndexesResults;
+use Meilisearch\Endpoints\Indexes;
 use Mockery as m;
 use Orchestra\Testbench\Concerns\InteractsWithMockery;
 use PHPUnit\Framework\TestCase;
@@ -271,6 +272,33 @@ class MeilisearchEngineTest extends TestCase
 
         $engine = new MeilisearchEngine($client);
         $engine->deleteAllIndexes();
+    }
+
+    public function test_update_index_settings_with_embedders()
+    {
+        $client = m::mock(Client::class);
+        $index = m::mock(Indexes::class);
+
+        $client->shouldReceive('index')
+            ->with('test_index')
+            ->once()
+            ->andReturn($index);
+
+        $index->shouldReceive('updateSettings')
+            ->with(['searchableAttributes' => ['title']])
+            ->once();
+
+        $index->shouldReceive('updateEmbedders')
+            ->with(['default' => ['source' => 'openAi']])
+            ->once();
+
+        $engine = new MeilisearchEngine($client);
+        $engine->updateIndexSettings('test_index', [
+            'searchableAttributes' => ['title'],
+            'embedders' => ['default' => ['source' => 'openAi']],
+        ]);
+
+        $this->assertTrue(true);
     }
 }
 

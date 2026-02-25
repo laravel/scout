@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Laravel\Scout\Contracts\UpdatesIndexSettings;
 use Laravel\Scout\EngineManager;
+use Laravel\Scout\Engines\Engine;
+use Laravel\Scout\Exceptions\NotSupportedException;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 #[AsCommand(name: 'scout:index')]
@@ -52,7 +54,7 @@ class IndexCommand extends Command
 
             $name = $this->indexName($this->argument('name'));
 
-            $engine->createIndex($name, $options);
+            $this->createIndex($engine, $name, $options);
 
             if ($engine instanceof UpdatesIndexSettings) {
                 $driver = config('scout.driver');
@@ -74,9 +76,26 @@ class IndexCommand extends Command
                 }
             }
 
-            $this->info('Index ["'.$name.'"] created successfully.');
+            $this->info('Synchronised index ["'.$name.'"] successfully.');
         } catch (Exception $exception) {
             $this->error($exception->getMessage());
+        }
+    }
+
+    /**
+     * Create a search index.
+     *
+     * @param  \Laravel\Scout\Engines\Engine  $engine
+     * @param  string  $name
+     * @param  array  $options
+     * @return void
+     */
+    protected function createIndex(Engine $engine, $name, $options): void
+    {
+        try {
+            $engine->createIndex($name, $options);
+        } catch (NotSupportedException) {
+            return;
         }
     }
 

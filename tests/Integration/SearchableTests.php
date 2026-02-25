@@ -142,4 +142,82 @@ trait SearchableTests
         $this->assertSame(['Taylor Otwell'], SearchableUser::search('*')->where('age', '>', 30)->where('age', '<', 40)->get()->pluck('name')->all());
         $this->assertSame(['Abigail Otwell'], SearchableUser::search('*')->where('age', '>', 25)->where('age', '<', 35)->get()->pluck('name')->all());
     }
+
+    protected function itCanAccessRawSearchResultsOfPaginateUsingAfterRawSearchCallback()
+    {
+        $result = null;
+
+        SearchableUser::search('*')
+            ->withRawResults(function ($rawSearchResult) use (&$result) {
+                $result = $rawSearchResult;
+            })
+            ->paginate();
+
+        return $result;
+    }
+
+    protected function itCanAccessRawSearchResultsOfPaginateRawUsingAfterRawSearchCallback()
+    {
+        $result = null;
+
+        SearchableUser::search('*')
+            ->withRawResults(function ($rawSearchResult) use (&$result) {
+                $result = $rawSearchResult;
+            })
+            ->paginateRaw();
+
+        return $result;
+    }
+
+    protected function itCanAccessRawSearchResultsOfSimplePaginateUsingAfterRawSearchCallback()
+    {
+        $result = null;
+
+        SearchableUser::search('*')
+            ->withRawResults(function ($rawSearchResult) use (&$result) {
+                $result = $rawSearchResult;
+            })
+            ->simplePaginate();
+
+        return $result;
+    }
+
+    protected function itCanAccessRawSearchResultsOfSimplePaginateRawUsingAfterRawSearchCallback()
+    {
+        $result = null;
+
+        SearchableUser::search('*')
+            ->withRawResults(function ($rawSearchResult) use (&$result) {
+                $result = $rawSearchResult;
+            })
+            ->simplePaginateRaw();
+
+        return $result;
+    }
+
+    protected function itCanAccessRawSearchResultsOfGetUsingAfterRawSearchCallback()
+    {
+        $result = null;
+
+        SearchableUser::search('*')
+            ->withRawResults(function ($rawSearchResult) use (&$result) {
+                $result = $rawSearchResult;
+            })
+            ->get();
+
+        return $result;
+    }
+
+    protected function itCanAccessRawSearchResultsOfCursorUsingAfterRawSearchCallback()
+    {
+        $result = null;
+
+        SearchableUser::search('*')
+            ->withRawResults(function ($rawSearchResult) use (&$result) {
+                $result = $rawSearchResult;
+            })
+            ->cursor();
+
+        return $result;
+    }
 }

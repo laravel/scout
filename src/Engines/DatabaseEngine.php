@@ -188,11 +188,15 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function initializeSearchQuery(Builder $builder, array $columns, array $prefixColumns = [], array $fullTextColumns = [])
     {
+        $query = method_exists($builder->model, 'newScoutQuery')
+            ? $builder->model->newScoutQuery($builder)
+            : $builder->model->newQuery();
+
         if (blank($builder->query)) {
-            return $builder->model->newQuery();
+            return $query;
         }
 
-        return $builder->model->newQuery()->where(function ($query) use ($builder, $columns, $prefixColumns, $fullTextColumns) {
+        return $query->where(function ($query) use ($builder, $columns, $prefixColumns, $fullTextColumns) {
             $connectionType = $builder->model->getConnection()->getDriverName();
 
             $canSearchPrimaryKey = ctype_digit($builder->query) &&

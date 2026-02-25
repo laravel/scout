@@ -133,7 +133,9 @@ abstract class Engine
     public function get(Builder $builder)
     {
         return $this->map(
-            $builder, $this->search($builder), $builder->model
+            $builder,
+            $builder->applyAfterRawSearchCallback($this->search($builder)),
+            $builder->model
         );
     }
 
@@ -146,7 +148,9 @@ abstract class Engine
     public function cursor(Builder $builder)
     {
         return $this->lazyMap(
-            $builder, $this->search($builder), $builder->model
+            $builder,
+            $builder->applyAfterRawSearchCallback($this->search($builder)),
+            $builder->model
         );
     }
 }

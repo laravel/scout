@@ -3,6 +3,7 @@
 namespace Laravel\Scout;
 
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Traits\Conditionable;
@@ -45,6 +46,13 @@ class Builder
      * @var \Closure|null
      */
     public $queryCallback;
+
+    /**
+     * Optional callback after raw search.
+     *
+     * @var \Closure|null
+     */
+    public $afterRawSearchCallback;
 
     /**
      * The custom index specified for the search.
@@ -155,11 +163,15 @@ class Builder
      * Add a "where in" constraint to the search query.
      *
      * @param  string  $field
-     * @param  array  $values
+     * @param  \Illuminate\Contracts\Support\Arrayable|array  $values
      * @return $this
      */
-    public function whereIn($field, array $values)
+    public function whereIn($field, $values)
     {
+        if ($values instanceof Arrayable) {
+            $values = $values->toArray();
+        }
+
         $this->whereIns[$field] = $values;
 
         return $this;
@@ -169,11 +181,15 @@ class Builder
      * Add a "where not in" constraint to the search query.
      *
      * @param  string  $field
-     * @param  array  $values
+     * @param  \Illuminate\Contracts\Support\Arrayable|array  $values
      * @return $this
      */
-    public function whereNotIn($field, array $values)
+    public function whereNotIn($field, $values)
     {
+        if ($values instanceof Arrayable) {
+            $values = $values->toArray();
+        }
+
         $this->whereNotIns[$field] = $values;
 
         return $this;
@@ -315,6 +331,19 @@ class Builder
     }
 
     /**
+     * Set the callback that should have an opportunity to inspect and modify the raw result returned by the search engine.
+     *
+     * @param  callable  $callback
+     * @return $this
+     */
+    public function withRawResults($callback)
+    {
+        $this->afterRawSearchCallback = $callback;
+
+        return $this;
+    }
+
+    /**
      * Get the keys of search results.
      *
      * @return \Illuminate\Support\Collection
@@ -377,7 +406,9 @@ class Builder
         $perPage = $perPage ?: $this->model->getPerPage();
 
         $results = $this->model->newCollection($engine->map(
-            $this, $rawResults = $engine->paginate($this, $perPage, $page), $this->model
+            $this,
+            $this->applyAfterRawSearchCallback($rawResults = $engine->paginate($this, $perPage, $page)),
+            $this->model
         )->all());
 
         $paginator = Container::getInstance()->makeWith(Paginator::class, [
@@ -415,7 +446,7 @@ class Builder
 
         $perPage = $perPage ?: $this->model->getPerPage();
 
-        $results = $engine->paginate($this, $perPage, $page);
+        $results = $this->applyAfterRawSearchCallback($engine->paginate($this, $perPage, $page));
 
         $paginator = Container::getInstance()->makeWith(Paginator::class, [
             'items' => $results,
@@ -453,7 +484,9 @@ class Builder
         $perPage = $perPage ?: $this->model->getPerPage();
 
         $results = $this->model->newCollection($engine->map(
-            $this, $rawResults = $engine->paginate($this, $perPage, $page), $this->model
+            $this,
+            $this->applyAfterRawSearchCallback($rawResults = $engine->paginate($this, $perPage, $page)),
+            $this->model
         )->all());
 
         return Container::getInstance()->makeWith(LengthAwarePaginator::class, [
@@ -490,7 +523,7 @@ class Builder
 
         $perPage = $perPage ?: $this->model->getPerPage();
 
-        $results = $engine->paginate($this, $perPage, $page);
+        $results = $this->applyAfterRawSearchCallback($engine->paginate($this, $perPage, $page));
 
         return Container::getInstance()->makeWith(LengthAwarePaginator::class, [
             'items' => $results,
@@ -533,6 +566,21 @@ class Builder
         return $this->model->queryScoutModelsByIds(
             $this, $ids
         )->toBase()->getCountForPagination();
+    }
+
+    /**
+     * Invoke the "after raw search" callback.
+     *
+     * @param  mixed  $results
+     * @return mixed
+     */
+    public function applyAfterRawSearchCallback($results)
+    {
+        if ($this->afterRawSearchCallback) {
+            $results = call_user_func($this->afterRawSearchCallback, $results) ?: $results;
+        }
+
+        return $results;
     }
 
     /**

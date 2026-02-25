@@ -1,6 +1,39 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.12.1...11.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.14.2...11.x)
+
+## [v10.14.2](https://github.com/laravel/scout/compare/v10.15.0...v10.14.2) - 2025-05-27
+
+* fix(pagination): prevent integer overflow in typesense pagination by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/924
+
+## [v10.15.0](https://github.com/laravel/scout/compare/v10.14.1...v10.15.0) - 2025-05-13
+
+* Add newScoutQuery() for Database Engine by [@colq2](https://github.com/colq2) in https://github.com/laravel/scout/pull/923
+
+## [v10.14.1](https://github.com/laravel/scout/compare/v10.14.0...v10.14.1) - 2025-04-01
+
+* fix Builder.php - not actually using returned results from afterRawSearchCallback by [@The-Rabak](https://github.com/The-Rabak) in https://github.com/laravel/scout/pull/919
+* [10.x] searchableSync / unsearchableSync by [@gdebrauwer](https://github.com/gdebrauwer) in https://github.com/laravel/scout/pull/920
+
+## [v10.14.0](https://github.com/laravel/scout/compare/v10.13.1...v10.14.0) - 2025-03-18
+
+* Update logo.svg by [@iamdavidhill](https://github.com/iamdavidhill) in https://github.com/laravel/scout/pull/915
+* [10.x] Improve scout:index command by [@bytestream](https://github.com/bytestream) in https://github.com/laravel/scout/pull/916
+* fix(typesense): handle missing collection during search (#914) by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/917
+
+## [v10.13.1](https://github.com/laravel/scout/compare/v10.13.0...v10.13.1) - 2025-02-18
+
+* Resolve Race Condition In TypesenseEngine Collection Creation by [@andyleach](https://github.com/andyleach) in https://github.com/laravel/scout/pull/912
+
+## [v10.13.0](https://github.com/laravel/scout/compare/v10.12.2...v10.13.0) - 2025-02-11
+
+* [10.x] Allow to pass Arrayable to `whereIn` and `whereNotIn` queries by [@Joel-Jensen](https://github.com/Joel-Jensen) in https://github.com/laravel/scout/pull/905
+* [10.x] `afterRawSearch` callback by [@gdebrauwer](https://github.com/gdebrauwer) in https://github.com/laravel/scout/pull/904
+* Fix: [Typesense] Add custom index support by [@fabkho](https://github.com/fabkho) in https://github.com/laravel/scout/pull/908
+
+## [v10.12.2](https://github.com/laravel/scout/compare/v10.12.1...v10.12.2) - 2025-01-28
+
+* Supports Laravel 12 by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/902
 
 ## [v10.12.1](https://github.com/laravel/scout/compare/v10.12.0...v10.12.1) - 2025-01-21
 

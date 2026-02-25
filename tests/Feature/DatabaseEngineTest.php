@@ -7,7 +7,10 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
+use Workbench\App\Models\Bookmark;
 use Workbench\App\Models\SearchableUser;
+use Workbench\Database\Factories\BookmarkFactory;
+use Workbench\Database\Factories\ChirpFactory;
 use Workbench\Database\Factories\SearchableUserFactory;
 
 class DatabaseEngineTest extends TestCase
@@ -251,5 +254,20 @@ class DatabaseEngineTest extends TestCase
 
         $this->assertCount(1, $models);
         $this->assertEquals('Abigail Otwell', $models[0]->name);
+    }
+        
+    public function test_it_uses_scout_query()
+    {
+        // create bookmarks with chirp_id
+        BookmarkFactory::new()
+            ->for(ChirpFactory::new()->create(['content' => 'This chirp is searchable']))
+            ->create([
+                'label' => 'laravel',
+            ]);
+
+        $models = Bookmark::search('chirp')->get();
+        $this->assertCount(1, $models);
+        $this->assertEquals('laravel', $models[0]->label);
+        $this->assertEquals('This chirp is searchable', $models[0]->chirp->content);
     }
 }
