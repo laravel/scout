@@ -5,6 +5,7 @@ namespace Laravel\Scout\Tests\Integration;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Support\LazyCollection;
 use Workbench\App\Models\SearchableUser;
+use Workbench\Database\Factories\SearchableUserFactory;
 use Workbench\Database\Factories\UserFactory;
 
 use function Orchestra\Testbench\workbench_path;
@@ -23,6 +24,7 @@ trait SearchableTests
             return [
                 'id' => static::scoutDriver() === 'typesense' ? (string) $model->id : (int) $model->id,
                 'name' => $model->name,
+                'age' => $model->age,
             ];
         };
 
@@ -212,10 +214,10 @@ trait SearchableTests
         $this->importScoutIndexFrom(SearchableUser::class);
 
         $this->assertSame(['Taylor Otwell'], SearchableUser::search('*')->where('age', '>', 30)->get()->pluck('name')->all());
-        $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], SearchableUser::search('*')->where('age', '>=', 30)->get()->pluck('name')->all());
+        $this->assertEqualsCanonicalizing(['Taylor Otwell', 'Abigail Otwell'], SearchableUser::search('*')->where('age', '>=', 30)->get()->pluck('name')->all());
 
         $this->assertSame(['Abigail Otwell'], SearchableUser::search('*')->where('age', '<', 35)->get()->pluck('name')->all());
-        $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], SearchableUser::search('*')->where('age', '<=', 35)->get()->pluck('name')->all());
+        $this->assertEqualsCanonicalizing(['Taylor Otwell', 'Abigail Otwell'], SearchableUser::search('*')->where('age', '<=', 35)->get()->pluck('name')->all());
 
         $this->assertSame(['Abigail Otwell'], SearchableUser::search('*')->where('age', '!=', 35)->get()->pluck('name')->all());
         $this->assertSame(['Taylor Otwell'], SearchableUser::search('*')->where('age', '!=', 30)->get()->pluck('name')->all());
