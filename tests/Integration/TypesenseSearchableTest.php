@@ -42,7 +42,7 @@ class TypesenseSearchableTest extends TestCase
                     ],
                     [
                         'name' => 'age',
-                        'type' => 'auto',
+                        'type' => 'int64',
                     ],
                 ],
             ],
