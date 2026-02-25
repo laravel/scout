@@ -135,7 +135,7 @@ trait SearchableTests
         $this->assertSame(['Taylor Otwell'], SearchableUser::search('*')->where('age', '>', 30)->get()->pluck('name')->all());
         $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], SearchableUser::search('*')->where('age', '>=', 30)->get()->pluck('name')->all());
 
-        $this->assertSame(['Abigail Otwell'], User::search('*')->where('age', '<', 35)->get()->pluck('name')->all());
+        $this->assertSame(['Abigail Otwell'], SearchableUser::search('*')->where('age', '<', 35)->get()->pluck('name')->all());
         $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], SearchableUser::search('*')->where('age', '<=', 35)->get()->pluck('name')->all());
 
         $this->assertSame(['Abigail Otwell'], SearchableUser::search('*')->where('age', '!=', 35)->get()->pluck('name')->all());
