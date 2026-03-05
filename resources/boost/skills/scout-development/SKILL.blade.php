@@ -20,7 +20,8 @@ search-docs(queries: ["Scout installation"], packages: ["laravel/framework@12.x"
 
 The Scout docs live under the `laravel/framework` package — not `laravel/scout`.
 
-**Effective search patterns:**
+Effective search patterns:
+
 - Installation & setup: `"Scout installation"`, `"Scout queueing"`
 - Engine setup: `"Scout Algolia"`, `"Scout Meilisearch"`, `"Scout Typesense"`
 - Model configuration: `"Scout configuring searchable data"`, `"Scout configuring model indexes"`
@@ -82,7 +83,7 @@ When no engine is configured, present these options and let the user decide — 
 
 | Engine | Type | Best For | Tradeoffs |
 |--------|------|----------|-----------|
-| **Database** | Built-in | Small-medium apps, simple search | No external deps. MySQL/PostgreSQL only. LIKE + full-text indexes. No typo tolerance. |
+| **Database** | Built-in | Typical applications, simple search | No external deps. MySQL/PostgreSQL only. LIKE + full-text indexes. No typo tolerance. |
 | **Collection** | Built-in | Local dev, tiny datasets (<500 records) | Loads all records into memory. Most portable but least efficient. |
 | **Algolia** | Hosted SaaS | Advanced search without managing infra | Typo tolerance, analytics, faceting. Paid service. No self-hosting. |
 | **Meilisearch** | Self-hosted / Cloud | Teams wanting infrastructure control | Fast, open-source. Self-hostable or cloud. Requires filterable attribute config. |
