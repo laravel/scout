@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/scout/compare/v10.24.0...10.x)
+## [Unreleased](https://github.com/laravel/scout/compare/v10.25.0...10.x)
+
+## [v10.25.0](https://github.com/laravel/scout/compare/v10.24.0...v10.25.0) - 2026-03-10
+
+* Add Boost skill for Scout development by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/scout/pull/979
 
 ## [v10.24.0](https://github.com/laravel/scout/compare/v10.23.1...v10.24.0) - 2026-02-10
 
