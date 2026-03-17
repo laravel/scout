@@ -219,6 +219,22 @@ class MeilisearchEngineTest extends TestCase
         $engine->search($builder);
     }
 
+    public function test_null_inequality_conditions_are_applied()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $builder = new Builder(new SearchableUser, '');
+        $builder->where('baz', '!=', null);
+
+        $this->client->shouldReceive('index')->once()->with('users')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter' => 'baz IS NOT NULL',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine->search($builder);
+    }
+
     public function test_a_model_is_indexed_with_a_custom_meilisearch_key()
     {
         $model = ChirpFactory::new()->createQuietly(['scout_id' => 'my-meilisearch-key.5']);
