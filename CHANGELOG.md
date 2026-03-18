@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/sentinel/compare/v11.0.0...11.x)
+## [Unreleased](https://github.com/laravel/sentinel/compare/v11.1.0...11.x)
+
+## [v11.1.0](https://github.com/laravel/sentinel/compare/v11.0.0...v11.1.0) - 2026-03-18
+
+* Fix: meilisearch `not null` condition by [@cappuc](https://github.com/cappuc) in https://github.com/laravel/scout/pull/981
 
 ## [v11.0.0](https://github.com/laravel/sentinel/compare/v10.24.0...v11.0.0) - 2026-03-10
 
