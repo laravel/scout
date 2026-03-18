@@ -196,7 +196,7 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
                 }
 
                 if (is_null($value)) {
-                    return sprintf('%s %s', $field, 'IS NULL');
+                    return sprintf('%s %s', $field, $operator === '!=' ? 'IS NOT NULL' : 'IS NULL');
                 }
 
                 return is_numeric($value)
