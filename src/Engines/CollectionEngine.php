@@ -110,7 +110,7 @@ class CollectionEngine extends Engine
                                 $query->orderBy($order['column'], $order['direction']);
                             }
                         }, function ($query) use ($builder) {
-                            $query->orderBy($builder->model->qualifyColumn($builder->model->getScoutKeyName()), 'desc');
+                            $query->orderBy($builder->model->qualifyColumn($builder->model->getKeyName()), 'desc');
                         });
 
         $models = $this->ensureSoftDeletesAreHandled($builder, $query)
@@ -178,7 +178,7 @@ class CollectionEngine extends Engine
         $results = array_values($results['results']);
 
         return count($results) > 0
-            ? collect($results)->pluck($results[0]->getScoutKeyName())
+            ? collect($results)->pluck($results[0]->getKeyName())
             : collect();
     }
 
@@ -199,7 +199,7 @@ class CollectionEngine extends Engine
         }
 
         $objectIds = collect($results)
-            ->pluck($model->getScoutKeyName())
+            ->pluck($model->getKeyName())
             ->values()
             ->all();
 
@@ -228,7 +228,7 @@ class CollectionEngine extends Engine
         }
 
         $objectIds = collect($results)
-            ->pluck($model->getScoutKeyName())
+            ->pluck($model->getKeyName())
             ->values()->all();
 
         $objectIdPositions = array_flip($objectIds);
