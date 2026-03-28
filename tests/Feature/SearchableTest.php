@@ -142,7 +142,7 @@ class SearchableTest extends TestCase
         $model = M::mock(SearchableModel::class)->makePartial();
         $model->shouldReceive('newQuery')->once()->andReturnSelf();
         $model->shouldReceive('getScoutKeyType')->once()->andReturn('int');
-        $model->shouldReceive('getScoutKeyName')->once()->andReturn('id');
+        $model->shouldReceive('getKeyName')->once()->andReturn('id');
         $model->shouldReceive('qualifyColumn')->with('id')->once()->andReturn('qualified_id');
         $model->shouldReceive('whereIntegerInRaw')->with('qualified_id', [1, 2, 3])->once()->andReturnSelf();
 
@@ -157,7 +157,7 @@ class SearchableTest extends TestCase
         $model = M::mock(SearchableModel::class)->makePartial();
         $model->shouldReceive('newQuery')->once()->andReturnSelf();
         $model->shouldReceive('getScoutKeyType')->once()->andReturn('string');
-        $model->shouldReceive('getScoutKeyName')->once()->andReturn('id');
+        $model->shouldReceive('getKeyName')->once()->andReturn('id');
         $model->shouldReceive('qualifyColumn')->with('id')->once()->andReturn('qualified_id');
         $model->shouldReceive('whereIn')->with('qualified_id', [1, 2, 3])->once()->andReturnSelf();
 
