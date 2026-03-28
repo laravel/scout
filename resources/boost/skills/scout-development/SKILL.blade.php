@@ -31,6 +31,19 @@ Effective search patterns:
 
 The docs are organized into these main sections: Installation, Driver Prerequisites, Configuration, Database/Collection Engines, Indexing, Searching, Custom Engines. Use these section names as search anchors.
 
+## When to Apply
+
+Activate this skill when:
+
+- Installing or configuring Scout
+- Choosing a search engine for a Laravel application
+- Making Eloquent models searchable
+- Customizing indexed data or index names
+- Writing search queries, filters, or pagination
+- Importing or flushing search indexes
+- Troubleshooting search results or indexing issues
+- Choosing between search engines
+
 ## Installation
 
 Before installing, check if Scout is already in the project — look for `laravel/scout` in `composer.json` and `config/scout.php`. If already installed, skip to the relevant section (engine configuration, model setup, or searching).
