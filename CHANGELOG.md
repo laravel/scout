@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/sentinel/compare/v11.1.0...11.x)
+## [Unreleased](https://github.com/laravel/sentinel/compare/v11.2.0...11.x)
+
+## [v11.2.0](https://github.com/laravel/sentinel/compare/v11.1.0...v11.2.0) - 2026-05-13
+
+* Skip deleted handler during force delete on SoftDeletes models by [@jobjen02](https://github.com/jobjen02) in https://github.com/laravel/scout/pull/984
 
 ## [v11.1.0](https://github.com/laravel/sentinel/compare/v11.0.0...v11.1.0) - 2026-03-18
 
