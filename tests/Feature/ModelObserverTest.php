@@ -139,6 +139,17 @@ class ModelObserverTest extends TestCase
         $model->delete();
     }
 
+    public function test_force_delete_on_soft_delete_model_dispatches_unsearchable_once()
+    {
+        $model = ChirpFactory::new()->createQuietly();
+
+        tap($this->app->make('scout.spied'), function ($scout) {
+            $scout->shouldReceive('delete')->once();
+        });
+
+        $model->forceDelete();
+    }
+
     public function test_update_on_sensitive_attributes_triggers_search()
     {
         $_ENV['user.searchIndexShouldBeUpdated'] = function ($model) {

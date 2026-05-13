@@ -125,6 +125,10 @@ class ModelObserver
             return;
         }
 
+        if ($this->usesSoftDelete($model) && $model->isForceDeleting()) {
+            return;
+        }
+
         if ($this->usingSoftDeletes && $this->usesSoftDelete($model)) {
             $this->whileForcingUpdate(function () use ($model) {
                 $this->saved($model);
