@@ -80,7 +80,10 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
             ->all();
 
         if (! empty($objects)) {
-            $index->addDocuments($objects, $models->first()->getScoutKeyName());
+            $response = $index->addDocuments($objects, $models->first()->getScoutKeyName());
+            if (Config::get('scout.meilisearch.wait_for_task', false) && isset($result['taskUid'])) {
+                $index->waitForTask($response['taskUid']);
+            }
         }
     }
 
@@ -102,7 +105,10 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
             ? $models->pluck($models->first()->getScoutKeyName())
             : $models->map->getScoutKey();
 
-        $index->deleteDocuments($keys->values()->all());
+        $response = $index->deleteDocuments($keys->values()->all());
+        if (Config::get('scout.meilisearch.wait_for_task', false) && isset($result['taskUid'])) {
+            $index->waitForTask($response['taskUid']);
+        }
     }
 
     /**

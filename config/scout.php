@@ -144,6 +144,7 @@ return [
             //     'filterableAttributes'=> ['id', 'name', 'email'],
             // ],
         ],
+        'wait_for_task' => false,
     ],
 
     /*
