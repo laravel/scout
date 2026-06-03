@@ -11,7 +11,7 @@ return [
     | using Laravel Scout. This connection is used when syncing all models
     | to the search service. You should adjust this based on your needs.
     |
-    | Supported: "algolia", "meilisearch", "typesense",
+    | Supported: "algolia", "meilisearch", "typesense", "pgsql",
     |            "database", "collection", "null"
     |
     */
@@ -205,6 +205,35 @@ return [
             // ],
         ],
         'import_action' => env('TYPESENSE_IMPORT_ACTION', 'upsert'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | PostgreSQL Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure Scout's native PostgreSQL search driver. The driver
+    | uses PostgreSQL full-text search by default and may optionally blend in
+    | trigram similarity when the pg_trgm extension is available.
+    |
+    */
+
+    'pgsql' => [
+        'language' => env('SCOUT_PGSQL_LANGUAGE', 'english'),
+        'vector_column' => env('SCOUT_PGSQL_VECTOR_COLUMN', 'search_vector'),
+        'rank_function' => env('SCOUT_PGSQL_RANK_FUNCTION', 'ts_rank'),
+        'trigram' => [
+            'enabled' => env('SCOUT_PGSQL_TRIGRAM', false),
+            'threshold' => env('SCOUT_PGSQL_TRIGRAM_THRESHOLD', 0.3),
+            'extension' => [
+                'enabled' => env('SCOUT_PGSQL_TRIGRAM_EXTENSION', false),
+                'create' => env('SCOUT_PGSQL_CREATE_TRIGRAM_EXTENSION', false),
+            ],
+        ],
+        'weights' => [
+            'full_text' => env('SCOUT_PGSQL_FULL_TEXT_WEIGHT', 1.0),
+            'trigram' => env('SCOUT_PGSQL_TRIGRAM_WEIGHT', 0.25),
+        ],
     ],
 
 ];
