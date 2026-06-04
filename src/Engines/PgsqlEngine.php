@@ -69,7 +69,7 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
      * Perform the given search on the engine.
      *
      * @param  \Laravel\Scout\Builder  $builder
-     * @return float|int|string
+     * @return array
      */
     public function search(Builder $builder)
     {
