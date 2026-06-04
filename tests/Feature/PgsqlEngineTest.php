@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\PgsqlEngine;
+use Laravel\Scout\Pgsql\Trigram;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use PDO;
@@ -287,6 +288,61 @@ class PgsqlEngineTest extends TestCase
         $this->assertStringNotContainsString('"users"."age"', $expression);
     }
 
+    public function test_trigram_similarity_can_match_when_full_text_does_not()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+
+        $this->assertStringContainsString('"users"."search_vector" @@ plainto_tsquery(?::regconfig, ?)', $query->toSql());
+        $this->assertStringContainsString('greatest(similarity(coalesce(cast("users"."id" as text), \'\'), ?), similarity(coalesce(cast("users"."name" as text), \'\'), ?), similarity(coalesce(cast("users"."email" as text), \'\'), ?), similarity(coalesce(cast("users"."age" as text), \'\'), ?)) >= ?', $query->toSql());
+    }
+
+    public function test_trigram_behavior_is_skipped_when_disabled()
+    {
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+
+        $this->assertStringNotContainsString('similarity(', $query->toSql());
+        $this->assertStringContainsString('order by ts_rank("users"."search_vector", plainto_tsquery(?::regconfig, ?)) desc', $query->toSql());
+    }
+
+    public function test_missing_trigram_extension_falls_back_to_full_text_search()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), false);
+
+        $this->assertStringContainsString('"users"."search_vector" @@ plainto_tsquery(?::regconfig, ?)', $query->toSql());
+        $this->assertStringNotContainsString('similarity(', $query->toSql());
+        $this->assertSame(['english', 'laravle', 'english', 'laravle'], $query->getBindings());
+    }
+
+    public function test_trigram_ranking_blends_full_text_rank_and_similarity()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.weights.full_text', 1.5);
+        $this->app->make('config')->set('scout.pgsql.weights.trigram', 0.5);
+
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+
+        $this->assertStringContainsString('order by ((ts_rank("users"."search_vector", plainto_tsquery(?::regconfig, ?)) * ?) + (greatest(similarity(coalesce(cast("users"."id" as text), \'\'), ?), similarity(coalesce(cast("users"."name" as text), \'\'), ?), similarity(coalesce(cast("users"."email" as text), \'\'), ?), similarity(coalesce(cast("users"."age" as text), \'\'), ?)) * ?)) desc', $query->toSql());
+        $this->assertSame([
+            'english', 'laravle', 'laravle', 'laravle', 'laravle', 'laravle', 0.3,
+            'english', 'laravle', 1.5, 'laravle', 'laravle', 'laravle', 'laravle', 0.5,
+        ], $query->getBindings());
+    }
+
+    public function test_explicit_ordering_overrides_blended_relevance_ranking()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle')->orderBy('name'), true);
+
+        $this->assertStringContainsString('similarity(', $query->toSql());
+        $this->assertStringContainsString('order by "name" asc', $query->toSql());
+        $this->assertStringNotContainsString('ts_rank', $query->toSql());
+    }
+
     public function test_it_applies_soft_delete_constraints()
     {
         $this->app->make('config')->set('scout.soft_delete', true);
@@ -308,9 +364,9 @@ class PgsqlEngineTest extends TestCase
         return (new InspectablePgsqlEngine($this->app->make('config')->get('scout.pgsql')))->buildSearchQueryForTest($builder);
     }
 
-    protected function buildOrderedPgsqlSearchQuery($builder)
+    protected function buildOrderedPgsqlSearchQuery($builder, $trigramAvailable = null)
     {
-        return (new InspectablePgsqlEngine($this->app->make('config')->get('scout.pgsql')))->buildOrderedSearchQueryForTest($builder);
+        return (new InspectablePgsqlEngine($this->app->make('config')->get('scout.pgsql'), $trigramAvailable))->buildOrderedSearchQueryForTest($builder);
     }
 
     protected function buildPgsqlSearchVectorExpression($builder)
@@ -321,6 +377,11 @@ class PgsqlEngineTest extends TestCase
 
 class InspectablePgsqlEngine extends PgsqlEngine
 {
+    public function __construct(array $config, protected $trigramAvailable = null)
+    {
+        parent::__construct($config);
+    }
+
     public function buildSearchQueryForTest(Builder $builder)
     {
         return $this->buildSearchQuery($builder);
@@ -334,6 +395,26 @@ class InspectablePgsqlEngine extends PgsqlEngine
     public function buildSearchVectorExpressionForTest(Builder $builder)
     {
         return $this->searchVectorExpression($builder);
+    }
+
+    protected function trigram()
+    {
+        if (is_null($this->trigramAvailable)) {
+            return parent::trigram();
+        }
+
+        return $this->trigram ??= new class($this->config, $this->trigramAvailable) extends Trigram
+        {
+            public function __construct(array $config, protected bool $available)
+            {
+                parent::__construct($config);
+            }
+
+            public function available(Builder $builder)
+            {
+                return $this->available;
+            }
+        };
     }
 }
 

@@ -7,6 +7,7 @@ use Illuminate\Support\LazyCollection;
 use InvalidArgumentException;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Contracts\PaginatesEloquentModelsUsingDatabase;
+use Laravel\Scout\Pgsql\Trigram;
 
 class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
 {
@@ -23,6 +24,13 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     ];
 
     protected const COLUMN_WEIGHTS = ['A', 'B', 'C', 'D'];
+
+    /**
+     * The PostgreSQL trigram helper instance.
+     *
+     * @var \Laravel\Scout\Pgsql\Trigram|null
+     */
+    protected $trigram;
 
     /**
      * Create a new engine instance.
@@ -61,7 +69,7 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
      * Perform the given search on the engine.
      *
      * @param  \Laravel\Scout\Builder  $builder
-     * @return mixed
+     * @return float|int|string
      */
     public function search(Builder $builder)
     {
@@ -180,7 +188,9 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
             return $query;
         }
 
-        return $query->where(function ($query) use ($builder, $columns) {
+        $usesTrigram = $this->trigram()->uses($builder);
+
+        return $query->where(function ($query) use ($builder, $columns, $usesTrigram) {
             $canSearchPrimaryKey = ctype_digit($builder->query) &&
                 in_array($builder->model->getKeyType(), ['int', 'integer']) &&
                 $builder->query <= PHP_INT_MAX &&
@@ -194,6 +204,16 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
                 sprintf('%s @@ %s(?::regconfig, ?)', $this->vectorColumn($builder), $this->queryFunction()),
                 [$this->language(), $builder->query]
             );
+
+            if ($usesTrigram) {
+                $query->orWhereRaw(
+                    sprintf('%s >= ?', $this->trigramSimilarityExpression($builder)),
+                    array_merge(
+                        $this->trigram()->similarityBindings($builder, $this->wrappedSearchableColumns($builder)),
+                        [$this->trigram()->threshold()]
+                    )
+                );
+            }
         });
     }
 
@@ -213,16 +233,44 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
         })->when(empty($builder->orders) && blank($builder->query), function ($query) use ($builder) {
             $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
         })->when(empty($builder->orders) && filled($builder->query), function ($query) use ($builder) {
+            if ($this->trigram()->uses($builder)) {
+                $query->orderByRaw(
+                    sprintf(
+                        '((%s * ?) + (%s * ?)) desc',
+                        $this->rankExpression($builder),
+                        $this->trigramSimilarityExpression($builder)
+                    ),
+                    array_merge(
+                        [$this->language(), $builder->query, $this->trigram()->scoreWeight('full_text', 1.0)],
+                        $this->trigram()->similarityBindings($builder, $this->wrappedSearchableColumns($builder)),
+                        [$this->trigram()->scoreWeight('trigram', 0.25)]
+                    )
+                );
+
+                return;
+            }
+
             $query->orderByRaw(
-                sprintf(
-                    '%s(%s, %s(?::regconfig, ?)) desc',
-                    $this->rankFunction(),
-                    $this->vectorColumn($builder),
-                    $this->queryFunction()
-                ),
+                sprintf('%s desc', $this->rankExpression($builder)),
                 [$this->language(), $builder->query]
             );
         });
+    }
+
+    /**
+     * Get the PostgreSQL rank expression for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return string
+     */
+    protected function rankExpression(Builder $builder)
+    {
+        return sprintf(
+            '%s(%s, %s(?::regconfig, ?))',
+            $this->rankFunction(),
+            $this->vectorColumn($builder),
+            $this->queryFunction()
+        );
     }
 
     /**
@@ -258,6 +306,38 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     protected function searchableColumns(Builder $builder)
     {
         return array_keys($builder->model->toSearchableArray());
+    }
+
+    /**
+     * Get the trigram similarity expression for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return string
+     */
+    protected function trigramSimilarityExpression(Builder $builder)
+    {
+        return $this->trigram()->similarityExpression($this->wrappedSearchableColumns($builder));
+    }
+
+    /**
+     * Get the wrapped model searchable columns.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
+     */
+    protected function wrappedSearchableColumns(Builder $builder)
+    {
+        return array_map(fn ($column) => $this->searchableColumn($builder, $column), $this->searchableColumns($builder));
+    }
+
+    /**
+     * Get the PostgreSQL trigram helper instance.
+     *
+     * @return \Laravel\Scout\Pgsql\Trigram
+     */
+    protected function trigram()
+    {
+        return $this->trigram ??= new Trigram($this->config);
     }
 
     /**
