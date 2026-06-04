@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Engines;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\LazyCollection;
 use InvalidArgumentException;
 use Laravel\Scout\Builder;
@@ -50,12 +51,37 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
      */
     public function search(Builder $builder)
     {
-        $this->ensurePostgresqlConnection($builder);
+        $models = $this->searchModels($builder);
 
         return [
-            'results' => $builder->model->newCollection(),
-            'total' => 0,
+            'results' => $models,
+            'total' => $models->count(),
         ];
+    }
+
+    /**
+     * Get the Eloquent models for the given builder.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  int|null  $page
+     * @param  int|null  $perPage
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    protected function searchModels(Builder $builder, $page = null, $perPage = null)
+    {
+        return $this->buildSearchQuery($builder)
+            ->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
+                $query->forPage($page, $perPage);
+            })
+            ->when($builder->orders, function ($query) use ($builder) {
+                foreach ($builder->orders as $order) {
+                    $query->orderBy($order['column'], $order['direction']);
+                }
+            })
+            ->when(empty($builder->orders), function ($query) use ($builder) {
+                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
+            })
+            ->get();
     }
 
     /**
@@ -64,7 +90,7 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
      * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $perPage
      * @param  int  $page
-     * @return mixed
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function paginate(Builder $builder, $perPage, $page)
     {
@@ -82,9 +108,16 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
      */
     public function paginateUsingDatabase(Builder $builder, $perPage, $pageName, $page)
     {
-        $this->ensurePostgresqlConnection($builder);
-
-        return $builder->model->newQuery()->whereRaw('1 = 0')->paginate($perPage, ['*'], $pageName, $page);
+        return $this->buildSearchQuery($builder)
+            ->when($builder->orders, function ($query) use ($builder) {
+                foreach ($builder->orders as $order) {
+                    $query->orderBy($order['column'], $order['direction']);
+                }
+            })
+            ->when(empty($builder->orders), function ($query) use ($builder) {
+                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
+            })
+            ->paginate($perPage, ['*'], $pageName, $page);
     }
 
     /**
@@ -92,15 +125,145 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  int  $perPage
-     * @param  string  $pageName
      * @param  int  $page
+     * @return \Illuminate\Contracts\Pagination\Paginator
+     */
+    public function simplePaginate(Builder $builder, $perPage, $page)
+    {
+        return $this->simplePaginateUsingDatabase($builder, $perPage, 'page', $page);
+    }
+
+    /**
+     * Paginate the given query into a simple paginator.
+     *
+     * @param  int  $perPage
+     * @param  string  $pageName
+     * @param  int|null  $page
      * @return \Illuminate\Contracts\Pagination\Paginator
      */
     public function simplePaginateUsingDatabase(Builder $builder, $perPage, $pageName, $page)
     {
+        return $this->buildSearchQuery($builder)
+            ->when($builder->orders, function ($query) use ($builder) {
+                foreach ($builder->orders as $order) {
+                    $query->orderBy($order['column'], $order['direction']);
+                }
+            })
+            ->when(empty($builder->orders), function ($query) use ($builder) {
+                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
+            })
+            ->simplePaginate($perPage, ['*'], $pageName, $page);
+    }
+
+    /**
+     * Initialize / build the search query for the given Scout builder.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function buildSearchQuery(Builder $builder)
+    {
         $this->ensurePostgresqlConnection($builder);
 
-        return $builder->model->newQuery()->whereRaw('1 = 0')->simplePaginate($perPage, ['*'], $pageName, $page);
+        $query = $this->initializeSearchQuery($builder, array_keys($builder->model->toSearchableArray()));
+
+        return $this->constrainForSoftDeletes(
+            $builder, $this->addAdditionalConstraints($builder, $query->take($builder->limit))
+        );
+    }
+
+    /**
+     * Build the initial text search database query for all searchable columns.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  array  $columns
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function initializeSearchQuery(Builder $builder, array $columns)
+    {
+        $query = method_exists($builder->model, 'newScoutQuery')
+            ? $builder->model->newScoutQuery($builder)
+            : $builder->model->newQuery();
+
+        if (blank($builder->query)) {
+            return $query;
+        }
+
+        return $query->where(function ($query) use ($builder, $columns) {
+            $canSearchPrimaryKey = ctype_digit($builder->query) &&
+                in_array($builder->model->getKeyType(), ['int', 'integer']) &&
+                $builder->query <= PHP_INT_MAX &&
+                in_array($builder->model->getScoutKeyName(), $columns);
+
+            if ($canSearchPrimaryKey) {
+                $query->orWhere($builder->model->getQualifiedKeyName(), $builder->query);
+            }
+
+            foreach ($columns as $column) {
+                if ($canSearchPrimaryKey && $column === $builder->model->getScoutKeyName()) {
+                    continue;
+                }
+
+                $wrappedColumn = $query->getQuery()->getGrammar()->wrap(
+                    $builder->model->qualifyColumn($column)
+                );
+
+                $query->orWhereRaw(
+                    sprintf('lower(cast(%s as text)) like lower(?)', $wrappedColumn),
+                    ['%'.$builder->query.'%']
+                );
+            }
+        });
+    }
+
+    /**
+     * Add additional, developer defined constraints to the search query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function addAdditionalConstraints(Builder $builder, $query)
+    {
+        return $query->when(! is_null($builder->callback), function ($query) use ($builder) {
+            call_user_func($builder->callback, $query, $builder, $builder->query);
+        })->when(! $builder->callback && count($builder->wheres) > 0, function ($query) use ($builder) {
+            foreach ($builder->wheres as $where) {
+                if ($where['field'] !== '__soft_deleted') {
+                    $query->where($where['field'], $where['operator'], $where['value']);
+                }
+            }
+        })->when(! $builder->callback && count($builder->whereIns) > 0, function ($query) use ($builder) {
+            foreach ($builder->whereIns as $key => $values) {
+                $query->whereIn($key, $values);
+            }
+        })->when(! $builder->callback && count($builder->whereNotIns) > 0, function ($query) use ($builder) {
+            foreach ($builder->whereNotIns as $key => $values) {
+                $query->whereNotIn($key, $values);
+            }
+        })->when(! is_null($builder->queryCallback), function ($query) use ($builder) {
+            call_user_func($builder->queryCallback, $query);
+        });
+    }
+
+    /**
+     * Ensure that soft delete constraints are properly applied to the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function constrainForSoftDeletes($builder, $query)
+    {
+        $softDeleteWhere = collect($builder->wheres)->firstWhere('field', '__soft_deleted');
+
+        return match (true) {
+            $softDeleteWhere && $softDeleteWhere['value'] === 0 => $query->withoutTrashed(),
+            $softDeleteWhere && $softDeleteWhere['value'] === 1 => $query->onlyTrashed(),
+            in_array(SoftDeletes::class, class_uses_recursive(get_class($builder->model))) &&
+                config('scout.soft_delete', false) => $query->withTrashed(),
+            default => $query,
+        };
     }
 
     /**
@@ -170,6 +333,8 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
      * @param  string  $name
      * @param  array  $options
      * @return mixed
+     *
+     * @throws \Exception
      */
     public function createIndex($name, array $options = [])
     {
