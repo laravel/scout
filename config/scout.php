@@ -221,6 +221,7 @@ return [
     'pgsql' => [
         'language' => env('SCOUT_PGSQL_LANGUAGE', 'english'),
         'vector_column' => env('SCOUT_PGSQL_VECTOR_COLUMN', 'search_vector'),
+        'query_function' => env('SCOUT_PGSQL_QUERY_FUNCTION', 'plainto_tsquery'),
         'rank_function' => env('SCOUT_PGSQL_RANK_FUNCTION', 'ts_rank'),
         'trigram' => [
             'enabled' => env('SCOUT_PGSQL_TRIGRAM', false),

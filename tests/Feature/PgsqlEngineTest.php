@@ -4,6 +4,9 @@ namespace Laravel\Scout\Tests\Feature;
 
 use Illuminate\Database\SQLiteConnection;
 use Illuminate\Support\Facades\Schema;
+use InvalidArgumentException;
+use Laravel\Scout\Builder;
+use Laravel\Scout\Engines\PgsqlEngine;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use PDO;
@@ -97,23 +100,23 @@ class PgsqlEngineTest extends TestCase
 
     public function test_it_can_retrieve_keys_and_paginated_results()
     {
-        $models = SearchableUser::search('laravel')->get();
+        $models = SearchableUser::search()->get();
 
-        $this->assertCount(2, $models);
-        $this->assertEqualsCanonicalizing([1, 2], $models->modelKeys());
-        $this->assertEqualsCanonicalizing([1, 2], SearchableUser::search('laravel')->keys()->all());
-        $this->assertSame(2, SearchableUser::search('laravel')->paginate(1)->total());
-        $this->assertCount(1, SearchableUser::search('laravel')->simplePaginate(1));
+        $this->assertCount(3, $models);
+        $this->assertEqualsCanonicalizing([1, 2, 3], $models->modelKeys());
+        $this->assertEqualsCanonicalizing([1, 2, 3], SearchableUser::search()->keys()->all());
+        $this->assertSame(3, SearchableUser::search()->paginate(1)->total());
+        $this->assertCount(1, SearchableUser::search()->simplePaginate(1));
     }
 
     public function test_it_applies_constraints_callbacks_and_limits()
     {
-        $models = SearchableUser::search('laravel')->where('email', 'taylor@laravel.com')->get();
+        $models = SearchableUser::search()->where('email', 'taylor@laravel.com')->get();
 
         $this->assertCount(1, $models);
         $this->assertSame('Taylor Otwell', $models[0]->name);
 
-        $models = SearchableUser::search('laravel')
+        $models = SearchableUser::search()
             ->whereIn('email', ['taylor@laravel.com', 'nuno@example.com'])
             ->whereNotIn('name', ['Nuno Maduro'])
             ->get();
@@ -121,25 +124,111 @@ class PgsqlEngineTest extends TestCase
         $this->assertCount(1, $models);
         $this->assertSame('Taylor Otwell', $models[0]->name);
 
-        $models = SearchableUser::search('laravel')->query(function ($query) {
+        $models = SearchableUser::search()->query(function ($query) {
             $query->where('age', '>', 30);
         })->get();
 
         $this->assertCount(1, $models);
         $this->assertSame('Taylor Otwell', $models[0]->name);
 
-        $this->assertCount(1, SearchableUser::search('laravel')->take(1)->get());
+        $this->assertCount(1, SearchableUser::search()->take(1)->get());
     }
 
     public function test_explicit_ordering_takes_precedence()
     {
-        $models = SearchableUser::search('laravel')->orderBy('name', 'asc')->get();
+        $models = SearchableUser::search()->orderBy('name', 'asc')->get();
 
-        $this->assertSame(['Abigail Otwell', 'Taylor Otwell'], $models->pluck('name')->all());
+        $this->assertSame(['Abigail Otwell', 'Nuno Maduro', 'Taylor Otwell'], $models->pluck('name')->all());
 
-        $models = SearchableUser::search('laravel')->orderBy('name', 'desc')->get();
+        $models = SearchableUser::search()->orderBy('name', 'desc')->get();
 
-        $this->assertSame(['Taylor Otwell', 'Abigail Otwell'], $models->pluck('name')->all());
+        $this->assertSame(['Taylor Otwell', 'Nuno Maduro', 'Abigail Otwell'], $models->pluck('name')->all());
+    }
+
+    public function test_non_empty_searches_use_the_configured_vector_column_and_default_tsquery_function()
+    {
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravel'));
+
+        $this->assertStringContainsString('"users"."search_vector" @@ plainto_tsquery(?::regconfig, ?)', $query->toSql());
+        $this->assertStringContainsString('order by ts_rank("users"."search_vector", plainto_tsquery(?::regconfig, ?)) desc', $query->toSql());
+        $this->assertSame(['english', 'laravel', 'english', 'laravel'], $query->getBindings());
+    }
+
+    public function test_non_empty_searches_use_the_configured_language()
+    {
+        $this->app->make('config')->set('scout.pgsql.language', 'simple');
+
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravel'));
+
+        $this->assertStringContainsString('plainto_tsquery(?::regconfig, ?)', $query->toSql());
+        $this->assertSame(['simple', 'laravel', 'simple', 'laravel'], $query->getBindings());
+    }
+
+    public function test_non_empty_searches_can_use_websearch_queries()
+    {
+        $this->app->make('config')->set('scout.pgsql.query_function', 'websearch_to_tsquery');
+
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravel'));
+
+        $this->assertStringContainsString('"users"."search_vector" @@ websearch_to_tsquery(?::regconfig, ?)', $query->toSql());
+        $this->assertStringContainsString('order by ts_rank("users"."search_vector", websearch_to_tsquery(?::regconfig, ?)) desc', $query->toSql());
+    }
+
+    public function test_non_empty_searches_can_use_cover_density_ranking()
+    {
+        $this->app->make('config')->set('scout.pgsql.rank_function', 'ts_rank_cd');
+
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravel'));
+
+        $this->assertStringContainsString('order by ts_rank_cd("users"."search_vector", plainto_tsquery(?::regconfig, ?)) desc', $query->toSql());
+    }
+
+    public function test_explicit_ordering_skips_relevance_ranking()
+    {
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravel')->orderBy('name'));
+
+        $this->assertStringContainsString('order by "name" asc', $query->toSql());
+        $this->assertStringNotContainsString('ts_rank', $query->toSql());
+    }
+
+    public function test_invalid_pgsql_search_config_fails_clearly()
+    {
+        $this->app->make('config')->set('scout.pgsql.rank_function', 'rank(search_vector) desc; --');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout driver rank function must be one of: ts_rank, ts_rank_cd.');
+
+        $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravel'));
+    }
+
+    public function test_invalid_pgsql_language_fails_clearly()
+    {
+        $this->app->make('config')->set('scout.pgsql.language', 'english; --');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout driver language must be a valid PostgreSQL text search configuration name.');
+
+        $this->buildPgsqlSearchQuery(SearchableUser::search('laravel'));
+    }
+
+    public function test_invalid_pgsql_query_function_fails_clearly()
+    {
+        $this->app->make('config')->set('scout.pgsql.query_function', 'custom_tsquery');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout driver query function must be one of: plainto_tsquery, phraseto_tsquery, websearch_to_tsquery, to_tsquery.');
+
+        $this->buildPgsqlSearchQuery(SearchableUser::search('laravel'));
+    }
+
+    public function test_invalid_pgsql_vector_column_fails_clearly()
+    {
+        $this->app->make('config')->set('scout.pgsql.vector_column', 'search_vector) desc; --');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout driver vector column must be a valid column name.');
+
+        $this->buildPgsqlSearchQuery(SearchableUser::search('laravel'));
     }
 
     public function test_it_applies_soft_delete_constraints()
@@ -151,11 +240,34 @@ class PgsqlEngineTest extends TestCase
 
         $deleted->delete();
 
-        $this->assertCount(1, Chirp::search('laravel')->get());
-        $this->assertSame($active->getKey(), Chirp::search('laravel')->first()->getKey());
-        $this->assertCount(2, Chirp::search('laravel')->withTrashed()->get());
-        $this->assertCount(1, Chirp::search('laravel')->onlyTrashed()->get());
-        $this->assertSame($deleted->getKey(), Chirp::search('laravel')->onlyTrashed()->first()->getKey());
+        $this->assertCount(1, Chirp::search()->get());
+        $this->assertSame($active->getKey(), Chirp::search()->first()->getKey());
+        $this->assertCount(2, Chirp::search()->withTrashed()->get());
+        $this->assertCount(1, Chirp::search()->onlyTrashed()->get());
+        $this->assertSame($deleted->getKey(), Chirp::search()->onlyTrashed()->first()->getKey());
+    }
+
+    protected function buildPgsqlSearchQuery($builder)
+    {
+        return (new InspectablePgsqlEngine($this->app->make('config')->get('scout.pgsql')))->buildSearchQueryForTest($builder);
+    }
+
+    protected function buildOrderedPgsqlSearchQuery($builder)
+    {
+        return (new InspectablePgsqlEngine($this->app->make('config')->get('scout.pgsql')))->buildOrderedSearchQueryForTest($builder);
+    }
+}
+
+class InspectablePgsqlEngine extends PgsqlEngine
+{
+    public function buildSearchQueryForTest(Builder $builder)
+    {
+        return $this->buildSearchQuery($builder);
+    }
+
+    public function buildOrderedSearchQueryForTest(Builder $builder)
+    {
+        return $this->orderSearchQuery($builder, $this->buildSearchQuery($builder));
     }
 }
 

@@ -10,6 +10,18 @@ use Laravel\Scout\Contracts\PaginatesEloquentModelsUsingDatabase;
 
 class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
 {
+    protected const QUERY_FUNCTIONS = [
+        'plainto_tsquery',
+        'phraseto_tsquery',
+        'websearch_to_tsquery',
+        'to_tsquery',
+    ];
+
+    protected const RANK_FUNCTIONS = [
+        'ts_rank',
+        'ts_rank_cd',
+    ];
+
     /**
      * Create a new engine instance.
      *
@@ -69,19 +81,12 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
      */
     protected function searchModels(Builder $builder, $page = null, $perPage = null)
     {
-        return $this->buildSearchQuery($builder)
+        $query = $this->buildSearchQuery($builder)
             ->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
                 $query->forPage($page, $perPage);
-            })
-            ->when($builder->orders, function ($query) use ($builder) {
-                foreach ($builder->orders as $order) {
-                    $query->orderBy($order['column'], $order['direction']);
-                }
-            })
-            ->when(empty($builder->orders), function ($query) use ($builder) {
-                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
-            })
-            ->get();
+            });
+
+        return $this->orderSearchQuery($builder, $query)->get();
     }
 
     /**
@@ -108,15 +113,7 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
      */
     public function paginateUsingDatabase(Builder $builder, $perPage, $pageName, $page)
     {
-        return $this->buildSearchQuery($builder)
-            ->when($builder->orders, function ($query) use ($builder) {
-                foreach ($builder->orders as $order) {
-                    $query->orderBy($order['column'], $order['direction']);
-                }
-            })
-            ->when(empty($builder->orders), function ($query) use ($builder) {
-                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
-            })
+        return $this->orderSearchQuery($builder, $this->buildSearchQuery($builder))
             ->paginate($perPage, ['*'], $pageName, $page);
     }
 
@@ -143,15 +140,7 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
      */
     public function simplePaginateUsingDatabase(Builder $builder, $perPage, $pageName, $page)
     {
-        return $this->buildSearchQuery($builder)
-            ->when($builder->orders, function ($query) use ($builder) {
-                foreach ($builder->orders as $order) {
-                    $query->orderBy($order['column'], $order['direction']);
-                }
-            })
-            ->when(empty($builder->orders), function ($query) use ($builder) {
-                $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
-            })
+        return $this->orderSearchQuery($builder, $this->buildSearchQuery($builder))
             ->simplePaginate($perPage, ['*'], $pageName, $page);
     }
 
@@ -199,20 +188,38 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
                 $query->orWhere($builder->model->getQualifiedKeyName(), $builder->query);
             }
 
-            foreach ($columns as $column) {
-                if ($canSearchPrimaryKey && $column === $builder->model->getScoutKeyName()) {
-                    continue;
-                }
+            $query->orWhereRaw(
+                sprintf('%s @@ %s(?::regconfig, ?)', $this->vectorColumn($builder), $this->queryFunction()),
+                [$this->language(), $builder->query]
+            );
+        });
+    }
 
-                $wrappedColumn = $query->getQuery()->getGrammar()->wrap(
-                    $builder->model->qualifyColumn($column)
-                );
-
-                $query->orWhereRaw(
-                    sprintf('lower(cast(%s as text)) like lower(?)', $wrappedColumn),
-                    ['%'.$builder->query.'%']
-                );
+    /**
+     * Add ordering to the search query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function orderSearchQuery(Builder $builder, $query)
+    {
+        return $query->when($builder->orders, function ($query) use ($builder) {
+            foreach ($builder->orders as $order) {
+                $query->orderBy($order['column'], $order['direction']);
             }
+        })->when(empty($builder->orders) && blank($builder->query), function ($query) use ($builder) {
+            $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
+        })->when(empty($builder->orders) && filled($builder->query), function ($query) use ($builder) {
+            $query->orderByRaw(
+                sprintf(
+                    '%s(%s, %s(?::regconfig, ?)) desc',
+                    $this->rankFunction(),
+                    $this->vectorColumn($builder),
+                    $this->queryFunction()
+                ),
+                [$this->language(), $builder->query]
+            );
         });
     }
 
@@ -264,6 +271,79 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
                 config('scout.soft_delete', false) => $query->withTrashed(),
             default => $query,
         };
+    }
+
+    /**
+     * Get the configured PostgreSQL text search language.
+     *
+     * @return string
+     */
+    protected function language()
+    {
+        $language = $this->config['language'] ?? 'english';
+
+        if (! is_string($language) || ! preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $language)) {
+            throw new InvalidArgumentException('The [pgsql] Scout driver language must be a valid PostgreSQL text search configuration name.');
+        }
+
+        return $language;
+    }
+
+    /**
+     * Get the configured PostgreSQL search vector column.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return string
+     */
+    protected function vectorColumn(Builder $builder)
+    {
+        $column = $this->config['vector_column'] ?? 'search_vector';
+
+        if (! is_string($column) || ! preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $column)) {
+            throw new InvalidArgumentException('The [pgsql] Scout driver vector column must be a valid column name.');
+        }
+
+        return $builder->model->getConnection()->getQueryGrammar()->wrap(
+            $builder->model->qualifyColumn($column)
+        );
+    }
+
+    /**
+     * Get the configured PostgreSQL tsquery function.
+     *
+     * @return string
+     */
+    protected function queryFunction()
+    {
+        $function = $this->config['query_function'] ?? self::QUERY_FUNCTIONS[0];
+
+        if (! in_array($function, self::QUERY_FUNCTIONS)) {
+            throw new InvalidArgumentException(sprintf(
+                'The [pgsql] Scout driver query function must be one of: %s.',
+                implode(', ', self::QUERY_FUNCTIONS)
+            ));
+        }
+
+        return $function;
+    }
+
+    /**
+     * Get the configured PostgreSQL rank function.
+     *
+     * @return string
+     */
+    protected function rankFunction()
+    {
+        $function = $this->config['rank_function'] ?? self::RANK_FUNCTIONS[0];
+
+        if (! in_array($function, self::RANK_FUNCTIONS)) {
+            throw new InvalidArgumentException(sprintf(
+                'The [pgsql] Scout driver rank function must be one of: %s.',
+                implode(', ', self::RANK_FUNCTIONS)
+            ));
+        }
+
+        return $function;
     }
 
     /**
