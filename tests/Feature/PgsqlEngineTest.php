@@ -231,6 +231,62 @@ class PgsqlEngineTest extends TestCase
         $this->buildPgsqlSearchQuery(SearchableUser::search('laravel'));
     }
 
+    public function test_search_vector_expression_uses_default_column_weights()
+    {
+        $expression = $this->buildPgsqlSearchVectorExpression(SearchableUser::search('laravel'));
+
+        $this->assertStringContainsString('setweight(to_tsvector(\'english\', coalesce(cast("users"."id" as text), \'\')), \'D\')', $expression);
+        $this->assertStringContainsString('setweight(to_tsvector(\'english\', coalesce(cast("users"."name" as text), \'\')), \'D\')', $expression);
+        $this->assertStringContainsString('setweight(to_tsvector(\'english\', coalesce(cast("users"."email" as text), \'\')), \'D\')', $expression);
+        $this->assertStringContainsString('setweight(to_tsvector(\'english\', coalesce(cast("users"."age" as text), \'\')), \'D\')', $expression);
+    }
+
+    public function test_search_vector_expression_uses_configured_column_weights()
+    {
+        $this->app->make('config')->set('scout.pgsql.column_weights', [
+            'name' => 'A',
+            'email' => 'B',
+            'age' => 'C',
+        ]);
+
+        $expression = $this->buildPgsqlSearchVectorExpression(SearchableUser::search('laravel'));
+
+        $this->assertStringContainsString('setweight(to_tsvector(\'english\', coalesce(cast("users"."name" as text), \'\')), \'A\')', $expression);
+        $this->assertStringContainsString('setweight(to_tsvector(\'english\', coalesce(cast("users"."email" as text), \'\')), \'B\')', $expression);
+        $this->assertStringContainsString('setweight(to_tsvector(\'english\', coalesce(cast("users"."age" as text), \'\')), \'C\')', $expression);
+        $this->assertStringContainsString('setweight(to_tsvector(\'english\', coalesce(cast("users"."id" as text), \'\')), \'D\')', $expression);
+    }
+
+    public function test_invalid_pgsql_column_weight_fails_clearly()
+    {
+        $this->app->make('config')->set('scout.pgsql.column_weights', [
+            'name' => 'Z',
+        ]);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout driver column weight for [name] must be one of: A, B, C, D.');
+
+        $this->buildPgsqlSearchVectorExpression(SearchableUser::search('laravel'));
+    }
+
+    public function test_search_vector_expression_uses_only_searchable_array_fields()
+    {
+        $_ENV['user.toSearchableArray'] = fn () => [
+            'name' => 'Taylor Otwell',
+        ];
+
+        try {
+            $expression = $this->buildPgsqlSearchVectorExpression(SearchableUser::search('laravel'));
+        } finally {
+            unset($_ENV['user.toSearchableArray']);
+        }
+
+        $this->assertStringContainsString('"users"."name"', $expression);
+        $this->assertStringNotContainsString('"users"."id"', $expression);
+        $this->assertStringNotContainsString('"users"."email"', $expression);
+        $this->assertStringNotContainsString('"users"."age"', $expression);
+    }
+
     public function test_it_applies_soft_delete_constraints()
     {
         $this->app->make('config')->set('scout.soft_delete', true);
@@ -256,6 +312,11 @@ class PgsqlEngineTest extends TestCase
     {
         return (new InspectablePgsqlEngine($this->app->make('config')->get('scout.pgsql')))->buildOrderedSearchQueryForTest($builder);
     }
+
+    protected function buildPgsqlSearchVectorExpression($builder)
+    {
+        return (new InspectablePgsqlEngine($this->app->make('config')->get('scout.pgsql')))->buildSearchVectorExpressionForTest($builder);
+    }
 }
 
 class InspectablePgsqlEngine extends PgsqlEngine
@@ -268,6 +329,11 @@ class InspectablePgsqlEngine extends PgsqlEngine
     public function buildOrderedSearchQueryForTest(Builder $builder)
     {
         return $this->orderSearchQuery($builder, $this->buildSearchQuery($builder));
+    }
+
+    public function buildSearchVectorExpressionForTest(Builder $builder)
+    {
+        return $this->searchVectorExpression($builder);
     }
 }
 

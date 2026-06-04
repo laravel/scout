@@ -22,6 +22,8 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
         'ts_rank_cd',
     ];
 
+    protected const COLUMN_WEIGHTS = ['A', 'B', 'C', 'D'];
+
     /**
      * Create a new engine instance.
      *
@@ -154,7 +156,7 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     {
         $this->ensurePostgresqlConnection($builder);
 
-        $query = $this->initializeSearchQuery($builder, array_keys($builder->model->toSearchableArray()));
+        $query = $this->initializeSearchQuery($builder, $this->searchableColumns($builder));
 
         return $this->constrainForSoftDeletes(
             $builder, $this->addAdditionalConstraints($builder, $query->take($builder->limit))
@@ -224,6 +226,41 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     }
 
     /**
+     * Get the weighted PostgreSQL search vector expression for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return string
+     */
+    protected function searchVectorExpression(Builder $builder)
+    {
+        $columns = $this->searchableColumns($builder);
+
+        if (empty($columns)) {
+            return "''::tsvector";
+        }
+
+        return collect($columns)->map(function ($column) use ($builder) {
+            return sprintf(
+                "setweight(to_tsvector('%s', coalesce(cast(%s as text), '')), '%s')",
+                $this->language(),
+                $this->searchableColumn($builder, $column),
+                $this->columnWeight($builder, $column)
+            );
+        })->implode(' || ');
+    }
+
+    /**
+     * Get the model's searchable columns.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
+     */
+    protected function searchableColumns(Builder $builder)
+    {
+        return array_keys($builder->model->toSearchableArray());
+    }
+
+    /**
      * Add additional, developer defined constraints to the search query.
      *
      * @param  \Laravel\Scout\Builder  $builder
@@ -282,7 +319,7 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     {
         $language = $this->config['language'] ?? 'english';
 
-        if (! is_string($language) || ! preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $language)) {
+        if (! $this->isValidIdentifier($language)) {
             throw new InvalidArgumentException('The [pgsql] Scout driver language must be a valid PostgreSQL text search configuration name.');
         }
 
@@ -299,13 +336,80 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     {
         $column = $this->config['vector_column'] ?? 'search_vector';
 
-        if (! is_string($column) || ! preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $column)) {
+        if (! $this->isValidIdentifier($column)) {
             throw new InvalidArgumentException('The [pgsql] Scout driver vector column must be a valid column name.');
         }
 
         return $builder->model->getConnection()->getQueryGrammar()->wrap(
             $builder->model->qualifyColumn($column)
         );
+    }
+
+    /**
+     * Get the wrapped searchable column name.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  string  $column
+     * @return string
+     */
+    protected function searchableColumn(Builder $builder, $column)
+    {
+        if (! $this->isValidIdentifier($column)) {
+            throw new InvalidArgumentException(sprintf('The [pgsql] Scout driver searchable column [%s] must be a valid column name.', $column));
+        }
+
+        return $builder->model->getConnection()->getQueryGrammar()->wrap(
+            $builder->model->qualifyColumn($column)
+        );
+    }
+
+    /**
+     * Get the configured PostgreSQL column weight.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  string  $column
+     * @return string
+     */
+    protected function columnWeight(Builder $builder, $column)
+    {
+        $weight = $this->columnWeights()[$column] ?? self::COLUMN_WEIGHTS[3];
+
+        if (! in_array($weight, self::COLUMN_WEIGHTS, true)) {
+            throw new InvalidArgumentException(sprintf(
+                'The [pgsql] Scout driver column weight for [%s] must be one of: %s.',
+                $column,
+                implode(', ', self::COLUMN_WEIGHTS)
+            ));
+        }
+
+        return $weight;
+    }
+
+    /**
+     * Get the configured PostgreSQL column weights.
+     *
+     * @return array
+     */
+    protected function columnWeights()
+    {
+        $weights = $this->config['column_weights'] ?? [];
+
+        if (! is_array($weights)) {
+            throw new InvalidArgumentException('The [pgsql] Scout driver column weights must be an array.');
+        }
+
+        return $weights;
+    }
+
+    /**
+     * Determine if the given value is a safe PostgreSQL identifier or configuration name.
+     *
+     * @param  mixed  $value
+     * @return bool
+     */
+    protected function isValidIdentifier($value)
+    {
+        return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $value) === 1;
     }
 
     /**
@@ -317,7 +421,7 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     {
         $function = $this->config['query_function'] ?? self::QUERY_FUNCTIONS[0];
 
-        if (! in_array($function, self::QUERY_FUNCTIONS)) {
+        if (! in_array($function, self::QUERY_FUNCTIONS, true)) {
             throw new InvalidArgumentException(sprintf(
                 'The [pgsql] Scout driver query function must be one of: %s.',
                 implode(', ', self::QUERY_FUNCTIONS)
@@ -336,7 +440,7 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     {
         $function = $this->config['rank_function'] ?? self::RANK_FUNCTIONS[0];
 
-        if (! in_array($function, self::RANK_FUNCTIONS)) {
+        if (! in_array($function, self::RANK_FUNCTIONS, true)) {
             throw new InvalidArgumentException(sprintf(
                 'The [pgsql] Scout driver rank function must be one of: %s.',
                 implode(', ', self::RANK_FUNCTIONS)
