@@ -39,44 +39,37 @@ class SearchableSchema
             Blueprint::macro('searchable', function ($columns, array $options = []) {
                 $helper = new SearchableSchema(config('scout.pgsql', []));
 
-                $helper->ensurePostgresqlConnection($this->connection);
+                /** @phpstan-ignore property.protected */
+                $connection = $this->connection;
+
+                $helper->ensurePostgresqlConnection($connection);
 
                 $columns = Arr::wrap($columns);
                 $vectorColumn = $helper->vectorColumn($options);
 
                 if ($helper->shouldCreateTrigramExtension($options)) {
+                    /** @phpstan-ignore method.protected */
                     $this->addCommand('scoutPgsqlExtension', ['extension' => 'pg_trgm']);
                 }
 
                 $this->tsvector($vectorColumn)->storedAs(new Expression(
-                    $helper->searchVectorExpression($this->connection, $columns, $options)
+                    $helper->searchVectorExpression($connection, $columns, $options)
                 ));
 
                 $this->index($vectorColumn, $options['index'] ?? null, 'gin');
 
                 foreach ($helper->trigramColumns($options) as $column) {
-                    $this->addCommand('scoutPgsqlTrigramIndex', [
-                        'column' => $column,
-                        'index' => $this->createIndexName('trigram_index', [$column]),
-                    ]);
+                    $this->rawIndex(
+                        sprintf('%s gin_trgm_ops', $connection->getSchemaGrammar()->wrap($column)),
+                        $helper->indexName($this->getTable(), [$column], 'trigram_index')
+                    )->algorithm('gin');
                 }
             });
         }
 
         if (! PostgresGrammar::hasMacro('compileScoutPgsqlExtension')) {
             PostgresGrammar::macro('compileScoutPgsqlExtension', function (Blueprint $blueprint, Fluent $command) {
-                return sprintf('create extension if not exists %s', $this->wrapValue($command->extension));
-            });
-        }
-
-        if (! PostgresGrammar::hasMacro('compileScoutPgsqlTrigramIndex')) {
-            PostgresGrammar::macro('compileScoutPgsqlTrigramIndex', function (Blueprint $blueprint, Fluent $command) {
-                return sprintf(
-                    'create index %s on %s using gin (%s gin_trgm_ops)',
-                    $this->wrap($command->index),
-                    $this->wrapTable($blueprint),
-                    $this->wrap($command->column)
-                );
+                return sprintf('create extension if not exists %s', $this->wrap($command->extension));
             });
         }
     }
@@ -159,6 +152,21 @@ class SearchableSchema
     public function trigramColumns(array $options = [])
     {
         return Arr::wrap(data_get($options, 'trigram.columns', []));
+    }
+
+    /**
+     * Create a conventional index name for the table.
+     *
+     * @param  string  $table
+     * @param  array  $columns
+     * @param  string  $type
+     * @return string
+     */
+    public function indexName($table, array $columns, $type)
+    {
+        $index = strtolower($table.'_'.implode('_', $columns).'_'.$type);
+
+        return str_replace(['-', '.'], '_', $index);
     }
 
     /**
