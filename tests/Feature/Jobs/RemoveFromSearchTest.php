@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Laravel\Scout\Jobs\RemoveFromSearch;
+use Laravel\Scout\Jobs\RemoveFromSearchUnique;
 use Laravel\Scout\Tests\Fixtures\OverriddenRemoveFromSearch;
 use Mockery as m;
 use Orchestra\Testbench\Attributes\WithConfig;
@@ -104,5 +105,38 @@ class RemoveFromSearchTest extends TestCase
         $this->assertSame(5, $job->tries);
         $this->assertSame([2, 4, 8, 16, 32], $job->backoff());
         $this->assertSame(3, $job->maxExceptions);
+    }
+
+    public function test_unique_id_is_based_on_the_class_and_scout_keys()
+    {
+        $models = SearchableUserFactory::new()->count(2)->create();
+
+        $expected = md5(json_encode([
+            SearchableUser::class,
+            $models->map->getScoutKey()->sort()->values()->all(),
+        ]));
+
+        $this->assertSame($expected, (new RemoveFromSearchUnique($models))->uniqueId());
+    }
+
+    public function test_unique_id_is_not_affected_by_model_order()
+    {
+        $models = SearchableUserFactory::new()->count(3)->create();
+
+        $this->assertSame(
+            (new RemoveFromSearchUnique($models))->uniqueId(),
+            (new RemoveFromSearchUnique($models->reverse()->values()))->uniqueId()
+        );
+    }
+
+    public function test_unique_id_differs_for_different_models()
+    {
+        $first = SearchableUserFactory::new()->count(2)->create();
+        $second = SearchableUserFactory::new()->count(2)->create();
+
+        $this->assertNotSame(
+            (new RemoveFromSearchUnique($first))->uniqueId(),
+            (new RemoveFromSearchUnique($second))->uniqueId()
+        );
     }
 }

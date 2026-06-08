@@ -5,11 +5,13 @@ namespace Laravel\Scout\Tests\Feature\Jobs;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Laravel\Scout\Jobs\MakeSearchable;
+use Laravel\Scout\Jobs\MakeSearchableUnique;
 use Laravel\Scout\Tests\Fixtures\OverriddenMakeSearchable;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
+use Workbench\App\Models\SearchableUser;
 use Workbench\Database\Factories\SearchableUserFactory;
 
 #[WithConfig('scout.driver', 'testing')]
@@ -69,5 +71,38 @@ class MakeSearchableTest extends TestCase
         $this->assertSame(5, $job->tries);
         $this->assertSame([2, 4, 8, 16, 32], $job->backoff());
         $this->assertSame(3, $job->maxExceptions);
+    }
+
+    public function test_unique_id_is_based_on_the_class_and_scout_keys()
+    {
+        $models = SearchableUserFactory::new()->count(2)->create();
+
+        $expected = md5(json_encode([
+            SearchableUser::class,
+            $models->map->getScoutKey()->sort()->values()->all(),
+        ]));
+
+        $this->assertSame($expected, (new MakeSearchableUnique($models))->uniqueId());
+    }
+
+    public function test_unique_id_is_not_affected_by_model_order()
+    {
+        $models = SearchableUserFactory::new()->count(3)->create();
+
+        $this->assertSame(
+            (new MakeSearchableUnique($models))->uniqueId(),
+            (new MakeSearchableUnique($models->reverse()->values()))->uniqueId()
+        );
+    }
+
+    public function test_unique_id_differs_for_different_models()
+    {
+        $first = SearchableUserFactory::new()->count(2)->create();
+        $second = SearchableUserFactory::new()->count(2)->create();
+
+        $this->assertNotSame(
+            (new MakeSearchableUnique($first))->uniqueId(),
+            (new MakeSearchableUnique($second))->uniqueId()
+        );
     }
 }
