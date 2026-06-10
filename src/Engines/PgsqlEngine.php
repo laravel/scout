@@ -189,8 +189,10 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
         }
 
         $usesTrigram = $this->trigram()->uses($builder);
+        $trigramColumns = $usesTrigram ? $this->wrappedTrigramColumns($builder) : [];
+        $usesTrigram = $usesTrigram && ! empty($trigramColumns);
 
-        return $query->where(function ($query) use ($builder, $columns, $usesTrigram) {
+        return $query->where(function ($query) use ($builder, $columns, $trigramColumns, $usesTrigram) {
             $canSearchPrimaryKey = ctype_digit($builder->query) &&
                 in_array($builder->model->getKeyType(), ['int', 'integer']) &&
                 $builder->query <= PHP_INT_MAX &&
@@ -207,11 +209,8 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
 
             if ($usesTrigram) {
                 $query->orWhereRaw(
-                    sprintf('%s >= ?', $this->trigramSimilarityExpression($builder)),
-                    array_merge(
-                        $this->trigram()->similarityBindings($builder, $this->wrappedSearchableColumns($builder)),
-                        [$this->trigram()->threshold()]
-                    )
+                    $this->trigram()->predicateExpression($trigramColumns),
+                    $this->trigram()->predicateBindings($builder, $trigramColumns)
                 );
             }
         });
@@ -233,16 +232,19 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
         })->when(empty($builder->orders) && blank($builder->query), function ($query) use ($builder) {
             $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
         })->when(empty($builder->orders) && filled($builder->query), function ($query) use ($builder) {
-            if ($this->trigram()->uses($builder)) {
+            $usesTrigram = $this->trigram()->uses($builder);
+            $trigramColumns = $usesTrigram ? $this->wrappedTrigramColumns($builder) : [];
+
+            if ($usesTrigram && ! empty($trigramColumns)) {
                 $query->orderByRaw(
                     sprintf(
                         '((%s * ?) + (%s * ?)) desc',
                         $this->rankExpression($builder),
-                        $this->trigramSimilarityExpression($builder)
+                        $this->trigramSimilarityExpression($trigramColumns)
                     ),
                     array_merge(
                         [$this->language(), $builder->query, $this->trigram()->scoreWeight('full_text', 1.0)],
-                        $this->trigram()->similarityBindings($builder, $this->wrappedSearchableColumns($builder)),
+                        $this->trigram()->similarityBindings($builder, $trigramColumns),
                         [$this->trigram()->scoreWeight('trigram', 0.25)]
                     )
                 );
@@ -311,12 +313,12 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     /**
      * Get the trigram similarity expression for the query.
      *
-     * @param  \Laravel\Scout\Builder  $builder
+     * @param  array  $columns
      * @return string
      */
-    protected function trigramSimilarityExpression(Builder $builder)
+    protected function trigramSimilarityExpression(array $columns)
     {
-        return $this->trigram()->similarityExpression($this->wrappedSearchableColumns($builder));
+        return $this->trigram()->similarityExpression($columns);
     }
 
     /**
@@ -328,6 +330,42 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     protected function wrappedSearchableColumns(Builder $builder)
     {
         return array_map(fn ($column) => $this->searchableColumn($builder, $column), $this->searchableColumns($builder));
+    }
+
+    /**
+     * Get the wrapped configured trigram columns present in the model's searchable columns.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
+     */
+    protected function wrappedTrigramColumns(Builder $builder)
+    {
+        return array_map(fn ($column) => $this->searchableColumn($builder, $column), $this->trigramColumns($builder));
+    }
+
+    /**
+     * Get the configured trigram columns present in the model's searchable columns.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
+     */
+    protected function trigramColumns(Builder $builder)
+    {
+        $columns = $this->config['trigram']['columns'] ?? [];
+
+        if (! is_array($columns)) {
+            throw new InvalidArgumentException('The [pgsql] Scout driver trigram columns must be an array.');
+        }
+
+        $searchableColumns = array_flip($this->searchableColumns($builder));
+
+        return array_values(array_filter($columns, function ($column) use ($searchableColumns) {
+            if (! $this->isValidIdentifier($column)) {
+                throw new InvalidArgumentException(sprintf('The [pgsql] Scout driver trigram column [%s] must be a valid column name.', $column));
+            }
+
+            return array_key_exists($column, $searchableColumns);
+        }));
     }
 
     /**

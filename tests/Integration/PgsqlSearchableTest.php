@@ -90,6 +90,7 @@ class PgsqlSearchableTest extends TestCase
 
         $this->app['config']->set('scout.pgsql.trigram.enabled', true);
         $this->app['config']->set('scout.pgsql.trigram.threshold', 0.15);
+        $this->app['config']->set('scout.pgsql.trigram.columns', ['title']);
 
         $this->createPostsTable(true);
 
@@ -99,7 +100,7 @@ class PgsqlSearchableTest extends TestCase
         ]);
         PgsqlSearchPost::query()->create([
             'title' => 'Queues',
-            'body' => 'Background jobs and workers',
+            'body' => 'Laravel Scout',
         ]);
 
         $this->assertTrue($this->pgTrgmExtensionExists());

@@ -83,6 +83,34 @@ class Trigram
     }
 
     /**
+     * Get the indexable trigram predicate for the query.
+     *
+     * @param  array  $columns
+     * @return string
+     */
+    public function predicateExpression(array $columns)
+    {
+        return empty($columns) ? 'false' : sprintf(
+            '(set_config(\'pg_trgm.similarity_threshold\', ?::text, true) is not null and (%s))',
+            collect($columns)->map(fn ($column) => sprintf('%s %% ?', $column))->implode(' or ')
+        );
+    }
+
+    /**
+     * Get the indexable trigram predicate bindings for the query.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  array  $columns
+     * @return array
+     */
+    public function predicateBindings(Builder $builder, array $columns)
+    {
+        return empty($columns)
+            ? []
+            : array_merge([$this->threshold()], array_fill(0, count($columns), $builder->query));
+    }
+
+    /**
      * Get the trigram similarity bindings for the query.
      *
      * @param  \Laravel\Scout\Builder  $builder

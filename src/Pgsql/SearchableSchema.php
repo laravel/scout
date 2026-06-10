@@ -78,7 +78,11 @@ class SearchableSchema
 
                 $vectorColumn = $helper->vectorColumn($options);
 
-                $this->dropIndex($options['index'] ?? $helper->indexName($this->getTable(), [$vectorColumn], 'index'));
+                if (array_key_exists('index', $options)) {
+                    $this->dropIndex($options['index']);
+                } else {
+                    $this->dropIndex([$vectorColumn]);
+                }
 
                 foreach ($helper->trigramColumns($options) as $column) {
                     $this->dropIndex($helper->indexName($this->getTable(), [$column], 'trigram_index'));
@@ -121,17 +125,10 @@ class SearchableSchema
         $grammar = $connection->getSchemaGrammar();
         $language = $this->language($options);
         $weights = $this->columnWeights($options);
+        $columns = $this->searchableColumns($columns);
 
         return collect($columns)->map(function ($column) use ($grammar, $language, $weights) {
             $weight = $weights[$column] ?? self::COLUMN_WEIGHTS[3];
-
-            if (! in_array($weight, self::COLUMN_WEIGHTS, true)) {
-                throw new InvalidArgumentException(sprintf(
-                    'The [pgsql] Scout schema helper column weight for [%s] must be one of: %s.',
-                    $column,
-                    implode(', ', self::COLUMN_WEIGHTS)
-                ));
-            }
 
             return sprintf(
                 "setweight(to_tsvector(%s, coalesce(cast(%s as text), '')), '%s')",
@@ -150,7 +147,13 @@ class SearchableSchema
      */
     public function vectorColumn(array $options = [])
     {
-        return $options['vector_column'] ?? $this->config['vector_column'] ?? 'search_vector';
+        $column = $options['vector_column'] ?? $this->config['vector_column'] ?? 'search_vector';
+
+        if (! $this->isValidIdentifier($column)) {
+            throw new InvalidArgumentException('The [pgsql] Scout schema helper vector column must be a valid column name.');
+        }
+
+        return $column;
     }
 
     /**
@@ -172,7 +175,10 @@ class SearchableSchema
      */
     public function trigramColumns(array $options = [])
     {
-        return Arr::wrap(data_get($options, 'trigram.columns', []));
+        return array_map(
+            fn ($column) => $this->column($column, 'trigram'),
+            Arr::wrap(data_get($options, 'trigram.columns', []))
+        );
     }
 
     /**
@@ -198,7 +204,24 @@ class SearchableSchema
      */
     protected function language(array $options = [])
     {
-        return $options['language'] ?? $this->config['language'] ?? 'english';
+        $language = $options['language'] ?? $this->config['language'] ?? 'english';
+
+        if (! $this->isValidIdentifier($language)) {
+            throw new InvalidArgumentException('The [pgsql] Scout schema helper language must be a valid PostgreSQL text search configuration name.');
+        }
+
+        return $language;
+    }
+
+    /**
+     * Get the validated searchable columns.
+     *
+     * @param  array  $columns
+     * @return array
+     */
+    protected function searchableColumns(array $columns)
+    {
+        return array_map(fn ($column) => $this->column($column, 'searchable'), $columns);
     }
 
     /**
@@ -209,6 +232,51 @@ class SearchableSchema
      */
     protected function columnWeights(array $options = [])
     {
-        return $options['weights'] ?? $options['column_weights'] ?? $this->config['column_weights'] ?? [];
+        $weights = $options['weights'] ?? $options['column_weights'] ?? $this->config['column_weights'] ?? [];
+
+        if (! is_array($weights)) {
+            throw new InvalidArgumentException('The [pgsql] Scout schema helper column weights must be an array.');
+        }
+
+        foreach ($weights as $column => $weight) {
+            $this->column($column, 'column weight');
+
+            if (! in_array($weight, self::COLUMN_WEIGHTS, true)) {
+                throw new InvalidArgumentException(sprintf(
+                    'The [pgsql] Scout schema helper column weight for [%s] must be one of: %s.',
+                    $column,
+                    implode(', ', self::COLUMN_WEIGHTS)
+                ));
+            }
+        }
+
+        return $weights;
+    }
+
+    /**
+     * Get a validated column name.
+     *
+     * @param  mixed  $column
+     * @param  string  $type
+     * @return string
+     */
+    protected function column($column, $type)
+    {
+        if (! $this->isValidIdentifier($column)) {
+            throw new InvalidArgumentException(sprintf('The [pgsql] Scout schema helper %s column [%s] must be a valid column name.', $type, $column));
+        }
+
+        return $column;
+    }
+
+    /**
+     * Determine if the given value is a safe PostgreSQL identifier or configuration name.
+     *
+     * @param  mixed  $value
+     * @return bool
+     */
+    protected function isValidIdentifier($value)
+    {
+        return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $value) === 1;
     }
 }

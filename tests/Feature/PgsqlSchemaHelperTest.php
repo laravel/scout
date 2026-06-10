@@ -52,6 +52,91 @@ class PgsqlSchemaHelperTest extends TestCase
         $this->assertContains('create index "posts_search_vector_index" on "posts" using gin ("search_vector")', $sql);
     }
 
+    public function test_searchable_helper_accepts_schema_qualified_languages()
+    {
+        $sql = $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title'], [
+                'language' => 'pg_catalog.english',
+            ]);
+        });
+
+        $this->assertContains('alter table "posts" add column "search_vector" tsvector not null generated always as (setweight(to_tsvector(\'pg_catalog.english\', coalesce(cast("title" as text), \'\')), \'D\')) stored', $sql);
+    }
+
+    public function test_searchable_helper_rejects_invalid_languages()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper language must be a valid PostgreSQL text search configuration name.');
+
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title'], [
+                'language' => 'english; --',
+            ]);
+        });
+    }
+
+    public function test_searchable_helper_rejects_invalid_vector_columns()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper vector column must be a valid column name.');
+
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title'], [
+                'vector_column' => 'search_vector) desc; --',
+            ]);
+        });
+    }
+
+    public function test_searchable_helper_rejects_invalid_searchable_columns()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper searchable column [title; --] must be a valid column name.');
+
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title; --']);
+        });
+    }
+
+    public function test_searchable_helper_rejects_invalid_trigram_columns()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper trigram column [title; --] must be a valid column name.');
+
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title'], [
+                'trigram' => [
+                    'columns' => ['title; --'],
+                ],
+            ]);
+        });
+    }
+
+    public function test_searchable_helper_rejects_non_array_column_weights()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper column weights must be an array.');
+
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title'], [
+                'weights' => 'invalid',
+            ]);
+        });
+    }
+
+    public function test_searchable_helper_rejects_invalid_column_weights()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper column weight for [title] must be one of: A, B, C, D.');
+
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title'], [
+                'weights' => [
+                    'title' => 'Z',
+                ],
+            ]);
+        });
+    }
+
     public function test_searchable_helper_can_create_trigram_extension()
     {
         $sql = $this->compilePgsqlBlueprint(function ($table) {
@@ -97,6 +182,24 @@ class PgsqlSchemaHelperTest extends TestCase
         $this->assertContains('alter table "posts" drop column "search_vector"', $sql);
     }
 
+    public function test_drop_searchable_helper_drops_prefixed_default_vector_index()
+    {
+        $connection = $this->makePgsqlConnection([
+            'prefix_indexes' => true,
+        ], 'prefix_');
+
+        $createSql = $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title']);
+        }, $connection);
+
+        $dropSql = $this->compilePgsqlBlueprint(function ($table) {
+            $table->dropSearchable();
+        }, $connection);
+
+        $this->assertContains('create index "prefix_posts_search_vector_index" on "prefix_posts" using gin ("search_vector")', $createSql);
+        $this->assertContains('drop index "prefix_posts_search_vector_index"', $dropSql);
+    }
+
     public function test_drop_searchable_helper_uses_configured_vector_column_and_index()
     {
         $sql = $this->compilePgsqlBlueprint(function ($table) {
@@ -108,6 +211,20 @@ class PgsqlSchemaHelperTest extends TestCase
 
         $this->assertContains('drop index "posts_document_vector_index"', $sql);
         $this->assertContains('alter table "posts" drop column "document_vector"', $sql);
+    }
+
+    public function test_drop_searchable_helper_drops_custom_index_name_unchanged_with_prefixed_indexes()
+    {
+        $sql = $this->compilePgsqlBlueprint(function ($table) {
+            $table->dropSearchable([
+                'index' => 'custom_search_vector_index',
+            ]);
+        }, $this->makePgsqlConnection([
+            'prefix_indexes' => true,
+        ], 'prefix_'));
+
+        $this->assertContains('drop index "custom_search_vector_index"', $sql);
+        $this->assertNotContains('drop index "prefix_custom_search_vector_index"', $sql);
     }
 
     public function test_drop_searchable_helper_drops_trigram_indexes()
@@ -153,12 +270,21 @@ class PgsqlSchemaHelperTest extends TestCase
         }))->toSql();
     }
 
-    protected function compilePgsqlBlueprint($callback)
+    protected function compilePgsqlBlueprint($callback, $connection = null)
     {
-        $connection = new PostgresConnection(new PDO('sqlite::memory:'), 'database', '', ['driver' => 'pgsql']);
+        $connection ??= $this->makePgsqlConnection();
+
+        return (new Blueprint($connection, 'posts', $callback))->toSql();
+    }
+
+    protected function makePgsqlConnection(array $config = [], $prefix = '')
+    {
+        $connection = new PostgresConnection(new PDO('sqlite::memory:'), 'database', $prefix, array_merge([
+            'driver' => 'pgsql',
+        ], $config));
 
         $connection->useDefaultSchemaGrammar();
 
-        return (new Blueprint($connection, 'posts', $callback))->toSql();
+        return $connection;
     }
 }

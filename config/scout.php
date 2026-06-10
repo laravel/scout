@@ -227,6 +227,7 @@ return [
         'trigram' => [
             'enabled' => env('SCOUT_PGSQL_TRIGRAM', false),
             'threshold' => env('SCOUT_PGSQL_TRIGRAM_THRESHOLD', 0.3),
+            'columns' => [],
             'create_extension' => env('SCOUT_PGSQL_CREATE_TRIGRAM_EXTENSION', false),
         ],
         'weights' => [

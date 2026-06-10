@@ -11,8 +11,10 @@ use Laravel\Scout\Pgsql\Trigram;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use PDO;
+use Workbench\App\Models\Bookmark;
 use Workbench\App\Models\Chirp;
 use Workbench\App\Models\SearchableUser;
+use Workbench\Database\Factories\BookmarkFactory;
 use Workbench\Database\Factories\ChirpFactory;
 use Workbench\Database\Factories\SearchableUserFactory;
 
@@ -63,6 +65,13 @@ class PgsqlEngineTest extends TestCase
             $table->timestamps();
             $table->softDeletes();
         });
+
+        Schema::create('bookmarks', function ($table) {
+            $table->id();
+            $table->foreignId('chirp_id');
+            $table->string('label');
+            $table->timestamps();
+        });
     }
 
     protected function seedSearchableUsers()
@@ -110,6 +119,20 @@ class PgsqlEngineTest extends TestCase
         $this->assertCount(1, SearchableUser::search()->simplePaginate(1));
     }
 
+    public function test_it_uses_custom_page_names_for_database_pagination()
+    {
+        $models = SearchableUser::search()->paginate(1, 'users_page', 2);
+
+        $this->assertSame(3, $models->total());
+        $this->assertSame(2, $models->currentPage());
+        $this->assertStringContainsString('users_page=1', $models->url(1));
+
+        $models = SearchableUser::search()->simplePaginate(1, 'simple_users_page', 2);
+
+        $this->assertSame(2, $models->currentPage());
+        $this->assertStringContainsString('simple_users_page=1', $models->url(1));
+    }
+
     public function test_it_applies_constraints_callbacks_and_limits()
     {
         $models = SearchableUser::search()->where('email', 'taylor@laravel.com')->get();
@@ -132,6 +155,12 @@ class PgsqlEngineTest extends TestCase
         $this->assertCount(1, $models);
         $this->assertSame('Taylor Otwell', $models[0]->name);
 
+        $models = SearchableUser::search()->tap(function ($builder) {
+            $builder->take(1);
+        })->get();
+
+        $this->assertCount(1, $models);
+
         $this->assertCount(1, SearchableUser::search()->take(1)->get());
     }
 
@@ -144,6 +173,24 @@ class PgsqlEngineTest extends TestCase
         $models = SearchableUser::search()->orderBy('name', 'desc')->get();
 
         $this->assertSame(['Taylor Otwell', 'Nuno Maduro', 'Abigail Otwell'], $models->pluck('name')->all());
+
+        $models = SearchableUser::search()->orderByDesc('name')->get();
+
+        $this->assertSame(['Taylor Otwell', 'Nuno Maduro', 'Abigail Otwell'], $models->pluck('name')->all());
+    }
+
+    public function test_it_starts_from_custom_scout_queries()
+    {
+        BookmarkFactory::new()
+            ->for(ChirpFactory::new()->create(['content' => 'This chirp is searchable']))
+            ->create([
+                'label' => 'laravel',
+            ]);
+
+        $query = $this->buildPgsqlSearchQuery(Bookmark::search('chirp'));
+
+        $this->assertStringContainsString('inner join "chirps" on "chirps"."id" = "bookmarks"."chirp_id"', $query->toSql());
+        $this->assertStringContainsString('"bookmarks"."search_vector" @@ plainto_tsquery(?::regconfig, ?)', $query->toSql());
     }
 
     public function test_non_empty_searches_use_the_configured_vector_column_and_default_tsquery_function()
@@ -291,19 +338,59 @@ class PgsqlEngineTest extends TestCase
     public function test_trigram_similarity_can_match_when_full_text_does_not()
     {
         $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name', 'email']);
 
         $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
 
         $this->assertStringContainsString('"users"."search_vector" @@ plainto_tsquery(?::regconfig, ?)', $query->toSql());
-        $this->assertStringContainsString('greatest(similarity(coalesce(cast("users"."id" as text), \'\'), ?), similarity(coalesce(cast("users"."name" as text), \'\'), ?), similarity(coalesce(cast("users"."email" as text), \'\'), ?), similarity(coalesce(cast("users"."age" as text), \'\'), ?)) >= ?', $query->toSql());
+        $this->assertStringContainsString('(set_config(\'pg_trgm.similarity_threshold\', ?::text, true) is not null and ("users"."name" % ? or "users"."email" % ?))', $query->toSql());
+        $this->assertStringContainsString('similarity(coalesce(cast("users"."name" as text), \'\'), ?)', $query->toSql());
+        $this->assertStringContainsString('similarity(coalesce(cast("users"."email" as text), \'\'), ?)', $query->toSql());
+        $this->assertSame([
+            'english', 'laravle', 0.3, 'laravle', 'laravle',
+            'english', 'laravle', 1.0, 'laravle', 'laravle', 0.25,
+        ], $query->getBindings());
+    }
+
+    public function test_trigram_search_uses_configured_columns_only()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
+
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+
+        $this->assertStringContainsString('"users"."name" % ?', $query->toSql());
+        $this->assertStringContainsString('similarity(coalesce(cast("users"."name" as text), \'\'), ?)', $query->toSql());
+        $this->assertStringNotContainsString('"users"."id" % ?', $query->toSql());
+        $this->assertStringNotContainsString('"users"."email" % ?', $query->toSql());
+        $this->assertStringNotContainsString('"users"."age" % ?', $query->toSql());
+        $this->assertStringNotContainsString('similarity(coalesce(cast("users"."id" as text)', $query->toSql());
+        $this->assertStringNotContainsString('similarity(coalesce(cast("users"."email" as text)', $query->toSql());
+        $this->assertStringNotContainsString('similarity(coalesce(cast("users"."age" as text)', $query->toSql());
     }
 
     public function test_trigram_behavior_is_skipped_when_disabled()
     {
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['invalid column']);
+
         $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
 
         $this->assertStringNotContainsString('similarity(', $query->toSql());
+        $this->assertStringNotContainsString(' % ?', $query->toSql());
         $this->assertStringContainsString('order by ts_rank("users"."search_vector", plainto_tsquery(?::regconfig, ?)) desc', $query->toSql());
+    }
+
+    public function test_trigram_behavior_is_skipped_without_configured_columns()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+
+        $this->assertStringContainsString('"users"."search_vector" @@ plainto_tsquery(?::regconfig, ?)', $query->toSql());
+        $this->assertStringNotContainsString('similarity(', $query->toSql());
+        $this->assertStringNotContainsString(' % ?', $query->toSql());
+        $this->assertStringContainsString('order by ts_rank("users"."search_vector", plainto_tsquery(?::regconfig, ?)) desc', $query->toSql());
+        $this->assertSame(['english', 'laravle', 'english', 'laravle'], $query->getBindings());
     }
 
     public function test_missing_trigram_extension_falls_back_to_full_text_search()
@@ -314,33 +401,37 @@ class PgsqlEngineTest extends TestCase
 
         $this->assertStringContainsString('"users"."search_vector" @@ plainto_tsquery(?::regconfig, ?)', $query->toSql());
         $this->assertStringNotContainsString('similarity(', $query->toSql());
+        $this->assertStringNotContainsString(' % ?', $query->toSql());
         $this->assertSame(['english', 'laravle', 'english', 'laravle'], $query->getBindings());
     }
 
     public function test_trigram_ranking_blends_full_text_rank_and_similarity()
     {
         $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name', 'email']);
         $this->app->make('config')->set('scout.pgsql.weights.full_text', 1.5);
         $this->app->make('config')->set('scout.pgsql.weights.trigram', 0.5);
 
         $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
 
-        $this->assertStringContainsString('order by ((ts_rank("users"."search_vector", plainto_tsquery(?::regconfig, ?)) * ?) + (greatest(similarity(coalesce(cast("users"."id" as text), \'\'), ?), similarity(coalesce(cast("users"."name" as text), \'\'), ?), similarity(coalesce(cast("users"."email" as text), \'\'), ?), similarity(coalesce(cast("users"."age" as text), \'\'), ?)) * ?)) desc', $query->toSql());
+        $this->assertStringContainsString('order by ((ts_rank("users"."search_vector", plainto_tsquery(?::regconfig, ?)) * ?) + (greatest(similarity(coalesce(cast("users"."name" as text), \'\'), ?), similarity(coalesce(cast("users"."email" as text), \'\'), ?)) * ?)) desc', $query->toSql());
         $this->assertSame([
-            'english', 'laravle', 'laravle', 'laravle', 'laravle', 'laravle', 0.3,
-            'english', 'laravle', 1.5, 'laravle', 'laravle', 'laravle', 'laravle', 0.5,
+            'english', 'laravle', 0.3, 'laravle', 'laravle',
+            'english', 'laravle', 1.5, 'laravle', 'laravle', 0.5,
         ], $query->getBindings());
     }
 
     public function test_explicit_ordering_overrides_blended_relevance_ranking()
     {
         $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
 
         $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle')->orderBy('name'), true);
 
-        $this->assertStringContainsString('similarity(', $query->toSql());
+        $this->assertStringContainsString('"users"."name" % ?', $query->toSql());
         $this->assertStringContainsString('order by "name" asc', $query->toSql());
         $this->assertStringNotContainsString('ts_rank', $query->toSql());
+        $this->assertStringNotContainsString('similarity(', $query->toSql());
     }
 
     public function test_it_applies_soft_delete_constraints()
