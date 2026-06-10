@@ -124,9 +124,7 @@ class PgsqlSearchableTest extends TestCase
                     'body' => 'D',
                 ],
                 'trigram' => $withTrigram ? [
-                    'extension' => [
-                        'create' => true,
-                    ],
+                    'create_extension' => true,
                     'columns' => ['title'],
                 ] : [],
             ]);

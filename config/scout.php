@@ -227,10 +227,7 @@ return [
         'trigram' => [
             'enabled' => env('SCOUT_PGSQL_TRIGRAM', false),
             'threshold' => env('SCOUT_PGSQL_TRIGRAM_THRESHOLD', 0.3),
-            'extension' => [
-                'enabled' => env('SCOUT_PGSQL_TRIGRAM_EXTENSION', false),
-                'create' => env('SCOUT_PGSQL_CREATE_TRIGRAM_EXTENSION', false),
-            ],
+            'create_extension' => env('SCOUT_PGSQL_CREATE_TRIGRAM_EXTENSION', false),
         ],
         'weights' => [
             'full_text' => env('SCOUT_PGSQL_FULL_TEXT_WEIGHT', 1.0),

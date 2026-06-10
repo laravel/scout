@@ -67,6 +67,27 @@ class SearchableSchema
             });
         }
 
+        if (! Blueprint::hasMacro('dropSearchable')) {
+            Blueprint::macro('dropSearchable', function (array $options = []) {
+                $helper = new SearchableSchema(config('scout.pgsql', []));
+
+                /** @phpstan-ignore property.protected */
+                $connection = $this->connection;
+
+                $helper->ensurePostgresqlConnection($connection);
+
+                $vectorColumn = $helper->vectorColumn($options);
+
+                $this->dropIndex($options['index'] ?? $helper->indexName($this->getTable(), [$vectorColumn], 'index'));
+
+                foreach ($helper->trigramColumns($options) as $column) {
+                    $this->dropIndex($helper->indexName($this->getTable(), [$column], 'trigram_index'));
+                }
+
+                $this->dropColumn($vectorColumn);
+            });
+        }
+
         if (! PostgresGrammar::hasMacro('compileScoutPgsqlExtension')) {
             PostgresGrammar::macro('compileScoutPgsqlExtension', function (Blueprint $blueprint, Fluent $command) {
                 return sprintf('create extension if not exists %s', $this->wrap($command->extension));
@@ -140,7 +161,7 @@ class SearchableSchema
      */
     public function shouldCreateTrigramExtension(array $options = [])
     {
-        return (bool) data_get($options, 'trigram.extension.create', data_get($this->config, 'trigram.extension.create', false));
+        return (bool) data_get($options, 'trigram.create_extension', data_get($this->config, 'trigram.create_extension', false));
     }
 
     /**
