@@ -10,6 +10,7 @@ use Laravel\Scout\ScoutServiceProvider;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use PDO;
+use ReflectionClass;
 
 class PgsqlSchemaHelperTest extends TestCase
 {
@@ -438,9 +439,9 @@ class PgsqlSchemaHelperTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The [pgsql] Scout schema helper may only be used with PostgreSQL connections.');
 
-        (new Blueprint($connection, 'posts', function ($table) {
+        $this->toSql($connection, function ($table) {
             $table->searchable(['title']);
-        }))->toSql();
+        });
     }
 
     public function test_drop_searchable_helper_rejects_non_postgresql_connections()
@@ -452,16 +453,32 @@ class PgsqlSchemaHelperTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The [pgsql] Scout schema helper may only be used with PostgreSQL connections.');
 
-        (new Blueprint($connection, 'posts', function ($table) {
+        $this->toSql($connection, function ($table) {
             $table->dropSearchable();
-        }))->toSql();
+        });
     }
 
     protected function compilePgsqlBlueprint($callback, $connection = null)
     {
         $connection ??= $this->makePgsqlConnection();
 
-        return (new Blueprint($connection, 'posts', $callback))->toSql();
+        return $this->toSql($connection, $callback);
+    }
+
+    protected function toSql($connection, $callback)
+    {
+        $ref = new ReflectionClass(Blueprint::class);
+        $params = $ref->getConstructor()->getParameters();
+
+        if ($params[0]->getName() === 'connection') {
+            $blueprint = new Blueprint($connection, 'posts', $callback);
+
+            return $blueprint->toSql();
+        }
+
+        $blueprint = new Blueprint('posts', $callback, $connection->getTablePrefix());
+
+        return $blueprint->toSql($connection, $connection->getSchemaGrammar());
     }
 
     protected function makePgsqlConnection(array $config = [], $prefix = '')
