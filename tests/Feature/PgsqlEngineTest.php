@@ -514,7 +514,6 @@ class PgsqlEngineTest extends TestCase
     {
         return (new InspectablePgsqlEngine($this->app->make('config')->get('scout.pgsql'), $trigramAvailable))->buildOrderedSearchQueryForTest($builder);
     }
-
 }
 
 class InspectablePgsqlEngine extends PgsqlEngine
