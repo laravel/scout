@@ -35,6 +35,16 @@ class SearchableSchema
      */
     public static function register()
     {
+        if (! method_exists(Blueprint::class, 'tsvector') && ! Blueprint::hasMacro('tsvector')) {
+            Blueprint::macro('tsvector', function ($column) {
+                return $this->addColumn('tsvector', $column);
+            });
+        }
+
+        if (! method_exists(PostgresGrammar::class, 'typeTsvector') && ! PostgresGrammar::hasMacro('typeTsvector')) {
+            PostgresGrammar::macro('typeTsvector', fn (Fluent $column) => 'tsvector');
+        }
+
         if (! Blueprint::hasMacro('searchable')) {
             Blueprint::macro('searchable', function ($columns, array $options = []) {
                 $helper = new SearchableSchema(config('scout.pgsql', []));

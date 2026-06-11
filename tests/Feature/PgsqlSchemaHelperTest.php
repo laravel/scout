@@ -45,9 +45,9 @@ class PgsqlSchemaHelperTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The [pgsql] Scout schema helper may only be used with PostgreSQL connections.');
 
-        (new Blueprint($connection, 'posts', function ($table) {
+        $this->toSql($connection, function ($table) {
             $table->searchable(['title']);
-        }))->toSql();
+        });
     }
 
     public function test_searchable_helper_creates_generated_vector_column_and_gin_index()
