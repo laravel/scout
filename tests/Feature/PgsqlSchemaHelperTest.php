@@ -476,7 +476,9 @@ class PgsqlSchemaHelperTest extends TestCase
             return $blueprint->toSql();
         }
 
-        $blueprint = new Blueprint('posts', $callback, $connection->getTablePrefix());
+        $blueprint = new Blueprint('posts', null, $connection->getTablePrefix());
+        $blueprint->connection = $connection;
+        $callback($blueprint);
 
         return $blueprint->toSql($connection, $connection->getSchemaGrammar());
     }

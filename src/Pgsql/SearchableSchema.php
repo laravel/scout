@@ -39,8 +39,14 @@ class SearchableSchema
             Blueprint::macro('searchable', function ($columns, array $options = []) {
                 $helper = new SearchableSchema(config('scout.pgsql', []));
 
-                /** @phpstan-ignore property.protected */
-                $connection = $this->connection;
+                $connection = null;
+
+                if (property_exists($this, 'connection')) {
+                    /** @phpstan-ignore property.protected */
+                    $connection = $this->connection;
+                }
+
+                $connection = $connection instanceof Connection ? $connection : app('db')->connection();
 
                 $helper->ensurePostgresqlConnection($connection);
 
@@ -71,8 +77,14 @@ class SearchableSchema
             Blueprint::macro('dropSearchable', function (array $options = []) {
                 $helper = new SearchableSchema(config('scout.pgsql', []));
 
-                /** @phpstan-ignore property.protected */
-                $connection = $this->connection;
+                $connection = null;
+
+                if (property_exists($this, 'connection')) {
+                    /** @phpstan-ignore property.protected */
+                    $connection = $this->connection;
+                }
+
+                $connection = $connection instanceof Connection ? $connection : app('db')->connection();
 
                 $helper->ensurePostgresqlConnection($connection);
 
