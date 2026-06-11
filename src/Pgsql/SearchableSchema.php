@@ -61,7 +61,7 @@ class SearchableSchema
                 foreach ($helper->trigramColumns($options) as $column) {
                     $this->rawIndex(
                         sprintf('%s gin_trgm_ops', $connection->getSchemaGrammar()->wrap($column)),
-                        $helper->indexName($this->getTable(), [$column], 'trigram_index')
+                        $helper->indexName($connection, $this->getTable(), [$column], 'trigram_index')
                     )->algorithm('gin');
                 }
             });
@@ -85,7 +85,7 @@ class SearchableSchema
                 }
 
                 foreach ($helper->trigramColumns($options) as $column) {
-                    $this->dropIndex($helper->indexName($this->getTable(), [$column], 'trigram_index'));
+                    $this->dropIndex($helper->indexName($connection, $this->getTable(), [$column], 'trigram_index'));
                 }
 
                 $this->dropColumn($vectorColumn);
@@ -184,13 +184,20 @@ class SearchableSchema
     /**
      * Create a conventional index name for the table.
      *
+     * @param  \Illuminate\Database\Connection  $connection
      * @param  string  $table
      * @param  array  $columns
      * @param  string  $type
      * @return string
      */
-    public function indexName($table, array $columns, $type)
+    public function indexName(Connection $connection, $table, array $columns, $type)
     {
+        if ($connection->getConfig('prefix_indexes')) {
+            $table = str_contains($table, '.')
+                ? substr_replace($table, '.'.$connection->getTablePrefix(), strrpos($table, '.'), 1)
+                : $connection->getTablePrefix().$table;
+        }
+
         $index = strtolower($table.'_'.implode('_', $columns).'_'.$type);
 
         return str_replace(['-', '.'], '_', $index);
@@ -221,7 +228,13 @@ class SearchableSchema
      */
     protected function searchableColumns(array $columns)
     {
-        return array_map(fn ($column) => $this->column($column, 'searchable'), $columns);
+        $columns = array_map(fn ($column) => $this->column($column, 'searchable'), $columns);
+
+        if (empty($columns)) {
+            throw new InvalidArgumentException('The [pgsql] Scout schema helper searchable columns must not be empty.');
+        }
+
+        return $columns;
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout\Pgsql;
 
+use InvalidArgumentException;
 use Laravel\Scout\Builder;
 use Throwable;
 
@@ -129,7 +130,13 @@ class Trigram
      */
     public function threshold()
     {
-        return $this->config['trigram']['threshold'] ?? 0.3;
+        $threshold = $this->config['trigram']['threshold'] ?? 0.3;
+
+        if (! is_numeric($threshold)) {
+            throw new InvalidArgumentException('The [pgsql] Scout driver trigram threshold must be numeric.');
+        }
+
+        return $threshold;
     }
 
     /**
@@ -141,6 +148,12 @@ class Trigram
      */
     public function scoreWeight($key, $default)
     {
-        return $this->config['weights'][$key] ?? $default;
+        $weight = $this->config['weights'][$key] ?? $default;
+
+        if (! is_numeric($weight)) {
+            throw new InvalidArgumentException(sprintf('The [pgsql] Scout driver score weight [%s] must be numeric.', $key));
+        }
+
+        return $weight;
     }
 }

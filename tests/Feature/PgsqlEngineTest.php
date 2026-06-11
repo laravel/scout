@@ -421,6 +421,42 @@ class PgsqlEngineTest extends TestCase
         ], $query->getBindings());
     }
 
+    public function test_invalid_trigram_threshold_fails_clearly()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
+        $this->app->make('config')->set('scout.pgsql.trigram.threshold', 'invalid');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout driver trigram threshold must be numeric.');
+
+        $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+    }
+
+    public function test_invalid_full_text_score_weight_fails_clearly()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
+        $this->app->make('config')->set('scout.pgsql.weights.full_text', 'invalid');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout driver score weight [full_text] must be numeric.');
+
+        $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+    }
+
+    public function test_invalid_trigram_score_weight_fails_clearly()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
+        $this->app->make('config')->set('scout.pgsql.weights.trigram', 'invalid');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout driver score weight [trigram] must be numeric.');
+
+        $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+    }
+
     public function test_explicit_ordering_overrides_blended_relevance_ranking()
     {
         $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);

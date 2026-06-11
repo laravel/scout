@@ -97,6 +97,16 @@ class PgsqlSchemaHelperTest extends TestCase
         });
     }
 
+    public function test_searchable_helper_rejects_empty_searchable_columns()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper searchable columns must not be empty.');
+
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable([]);
+        });
+    }
+
     public function test_searchable_helper_rejects_invalid_trigram_columns()
     {
         $this->expectException(InvalidArgumentException::class);
@@ -172,6 +182,21 @@ class PgsqlSchemaHelperTest extends TestCase
         $this->assertContains('create index "posts_title_trigram_index" on "posts" using gin ("title" gin_trgm_ops)', $sql);
     }
 
+    public function test_searchable_helper_creates_prefixed_trigram_indexes()
+    {
+        $sql = $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title', 'body'], [
+                'trigram' => [
+                    'columns' => ['title'],
+                ],
+            ]);
+        }, $this->makePgsqlConnection([
+            'prefix_indexes' => true,
+        ], 'prefix_'));
+
+        $this->assertContains('create index "prefix_posts_title_trigram_index" on "prefix_posts" using gin ("title" gin_trgm_ops)', $sql);
+    }
+
     public function test_drop_searchable_helper_drops_generated_vector_index_and_column()
     {
         $sql = $this->compilePgsqlBlueprint(function ($table) {
@@ -240,6 +265,23 @@ class PgsqlSchemaHelperTest extends TestCase
         $this->assertContains('drop index "posts_search_vector_index"', $sql);
         $this->assertContains('drop index "posts_title_trigram_index"', $sql);
         $this->assertContains('alter table "posts" drop column "search_vector"', $sql);
+    }
+
+    public function test_drop_searchable_helper_drops_prefixed_trigram_indexes()
+    {
+        $sql = $this->compilePgsqlBlueprint(function ($table) {
+            $table->dropSearchable([
+                'trigram' => [
+                    'columns' => ['title'],
+                ],
+            ]);
+        }, $this->makePgsqlConnection([
+            'prefix_indexes' => true,
+        ], 'prefix_'));
+
+        $this->assertContains('drop index "prefix_posts_search_vector_index"', $sql);
+        $this->assertContains('drop index "prefix_posts_title_trigram_index"', $sql);
+        $this->assertContains('alter table "prefix_posts" drop column "search_vector"', $sql);
     }
 
     public function test_searchable_helper_rejects_non_postgresql_connections()
