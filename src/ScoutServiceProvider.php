@@ -48,9 +48,7 @@ class ScoutServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        if ($this->app['config']->get('scout.driver') === 'pgsql') {
-            SearchableSchema::register();
-        }
+        SearchableSchema::register();
 
         if ($this->app->runningInConsole()) {
             $this->commands([

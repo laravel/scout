@@ -26,7 +26,7 @@ class PgsqlSchemaHelperTest extends TestCase
         $this->assertTrue(Blueprint::hasMacro('dropSearchable'));
     }
 
-    public function test_searchable_blueprint_macro_is_not_registered_for_other_scout_drivers()
+    public function test_searchable_blueprint_macro_is_registered_for_other_scout_drivers()
     {
         Blueprint::flushMacros();
 
@@ -34,8 +34,19 @@ class PgsqlSchemaHelperTest extends TestCase
 
         $this->app->getProvider(ScoutServiceProvider::class)->boot();
 
-        $this->assertFalse(Blueprint::hasMacro('searchable'));
-        $this->assertFalse(Blueprint::hasMacro('dropSearchable'));
+        $this->assertTrue(Blueprint::hasMacro('searchable'));
+        $this->assertTrue(Blueprint::hasMacro('dropSearchable'));
+
+        $connection = new SQLiteConnection(new PDO('sqlite::memory:'), ':memory:', '', []);
+
+        $connection->useDefaultSchemaGrammar();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper may only be used with PostgreSQL connections.');
+
+        (new Blueprint($connection, 'posts', function ($table) {
+            $table->searchable(['title']);
+        }))->toSql();
     }
 
     public function test_searchable_helper_creates_generated_vector_column_and_gin_index()
@@ -87,6 +98,18 @@ class PgsqlSchemaHelperTest extends TestCase
         });
     }
 
+    public function test_searchable_helper_rejects_schema_qualified_vector_columns()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper vector column must be a valid column name.');
+
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title'], [
+                'vector_column' => 'foo.bar',
+            ]);
+        });
+    }
+
     public function test_searchable_helper_rejects_invalid_searchable_columns()
     {
         $this->expectException(InvalidArgumentException::class);
@@ -94,6 +117,16 @@ class PgsqlSchemaHelperTest extends TestCase
 
         $this->compilePgsqlBlueprint(function ($table) {
             $table->searchable(['title; --']);
+        });
+    }
+
+    public function test_searchable_helper_rejects_schema_qualified_searchable_columns()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper searchable column [posts.title] must be a valid column name.');
+
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['posts.title']);
         });
     }
 
@@ -121,6 +154,20 @@ class PgsqlSchemaHelperTest extends TestCase
         });
     }
 
+    public function test_searchable_helper_rejects_schema_qualified_trigram_columns()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper trigram column [posts.title] must be a valid column name.');
+
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title'], [
+                'trigram' => [
+                    'columns' => ['posts.title'],
+                ],
+            ]);
+        });
+    }
+
     public function test_searchable_helper_rejects_non_array_column_weights()
     {
         $this->expectException(InvalidArgumentException::class);
@@ -142,6 +189,20 @@ class PgsqlSchemaHelperTest extends TestCase
             $table->searchable(['title'], [
                 'weights' => [
                     'title' => 'Z',
+                ],
+            ]);
+        });
+    }
+
+    public function test_searchable_helper_rejects_schema_qualified_column_weights()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper column weight column [posts.title] must be a valid column name.');
+
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title'], [
+                'weights' => [
+                    'posts.title' => 'A',
                 ],
             ]);
         });
@@ -180,6 +241,33 @@ class PgsqlSchemaHelperTest extends TestCase
         });
 
         $this->assertContains('create index "posts_title_trigram_index" on "posts" using gin ("title" gin_trgm_ops)', $sql);
+    }
+
+    public function test_searchable_helper_creates_configured_trigram_indexes()
+    {
+        $this->app['config']->set('scout.pgsql.trigram.columns', ['title']);
+
+        $sql = $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title', 'body']);
+        });
+
+        $this->assertContains('create index "posts_title_trigram_index" on "posts" using gin ("title" gin_trgm_ops)', $sql);
+    }
+
+    public function test_searchable_helper_trigram_options_override_configured_trigram_indexes()
+    {
+        $this->app['config']->set('scout.pgsql.trigram.columns', ['body']);
+
+        $sql = $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title', 'body'], [
+                'trigram' => [
+                    'columns' => ['title'],
+                ],
+            ]);
+        });
+
+        $this->assertContains('create index "posts_title_trigram_index" on "posts" using gin ("title" gin_trgm_ops)', $sql);
+        $this->assertNotContains('create index "posts_body_trigram_index" on "posts" using gin ("body" gin_trgm_ops)', $sql);
     }
 
     public function test_searchable_helper_creates_prefixed_trigram_indexes()
@@ -265,6 +353,35 @@ class PgsqlSchemaHelperTest extends TestCase
         $this->assertContains('drop index "posts_search_vector_index"', $sql);
         $this->assertContains('drop index "posts_title_trigram_index"', $sql);
         $this->assertContains('alter table "posts" drop column "search_vector"', $sql);
+    }
+
+    public function test_drop_searchable_helper_drops_configured_trigram_indexes()
+    {
+        $this->app['config']->set('scout.pgsql.trigram.columns', ['title']);
+
+        $sql = $this->compilePgsqlBlueprint(function ($table) {
+            $table->dropSearchable();
+        });
+
+        $this->assertContains('drop index "posts_search_vector_index"', $sql);
+        $this->assertContains('drop index "posts_title_trigram_index"', $sql);
+        $this->assertContains('alter table "posts" drop column "search_vector"', $sql);
+    }
+
+    public function test_drop_searchable_helper_trigram_options_override_configured_trigram_indexes()
+    {
+        $this->app['config']->set('scout.pgsql.trigram.columns', ['body']);
+
+        $sql = $this->compilePgsqlBlueprint(function ($table) {
+            $table->dropSearchable([
+                'trigram' => [
+                    'columns' => ['title'],
+                ],
+            ]);
+        });
+
+        $this->assertContains('drop index "posts_title_trigram_index"', $sql);
+        $this->assertNotContains('drop index "posts_body_trigram_index"', $sql);
     }
 
     public function test_drop_searchable_helper_drops_prefixed_trigram_indexes()

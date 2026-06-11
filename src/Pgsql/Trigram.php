@@ -132,8 +132,8 @@ class Trigram
     {
         $threshold = $this->config['trigram']['threshold'] ?? 0.3;
 
-        if (! is_numeric($threshold)) {
-            throw new InvalidArgumentException('The [pgsql] Scout driver trigram threshold must be numeric.');
+        if (! is_numeric($threshold) || $threshold < 0 || $threshold > 1) {
+            throw new InvalidArgumentException('The [pgsql] Scout driver trigram threshold must be numeric and between 0 and 1.');
         }
 
         return $threshold;

@@ -428,7 +428,53 @@ class PgsqlEngineTest extends TestCase
         $this->app->make('config')->set('scout.pgsql.trigram.threshold', 'invalid');
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('The [pgsql] Scout driver trigram threshold must be numeric.');
+        $this->expectExceptionMessage('The [pgsql] Scout driver trigram threshold must be numeric and between 0 and 1.');
+
+        $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+    }
+
+    public function test_trigram_threshold_accepts_zero()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
+        $this->app->make('config')->set('scout.pgsql.trigram.threshold', 0);
+
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+
+        $this->assertSame(0, $query->getBindings()[2]);
+    }
+
+    public function test_trigram_threshold_accepts_one()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
+        $this->app->make('config')->set('scout.pgsql.trigram.threshold', 1);
+
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+
+        $this->assertSame(1, $query->getBindings()[2]);
+    }
+
+    public function test_trigram_threshold_rejects_values_below_zero()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
+        $this->app->make('config')->set('scout.pgsql.trigram.threshold', -0.1);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout driver trigram threshold must be numeric and between 0 and 1.');
+
+        $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+    }
+
+    public function test_trigram_threshold_rejects_values_above_one()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
+        $this->app->make('config')->set('scout.pgsql.trigram.threshold', 1.1);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout driver trigram threshold must be numeric and between 0 and 1.');
 
         $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
     }

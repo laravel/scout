@@ -111,6 +111,35 @@ class PgsqlSearchableTest extends TestCase
         $this->assertSame(['Laravel Scout'], $results->pluck('title')->all());
     }
 
+    public function test_drop_searchable_removes_generated_vector_column_and_indexes()
+    {
+        $withTrigram = (bool) env('SCOUT_PGSQL_TEST_TRIGRAM', false);
+
+        $this->createPostsTable($withTrigram);
+
+        $this->assertHasPgsqlColumn('search_vector');
+        $this->assertHasPgsqlIndex('scout_pgsql_posts_search_vector_index', 'USING gin (search_vector)');
+
+        if ($withTrigram) {
+            $this->assertHasPgsqlIndex('scout_pgsql_posts_title_trigram_index', 'gin_trgm_ops');
+        }
+
+        Schema::table('scout_pgsql_posts', function (Blueprint $table) use ($withTrigram) {
+            $table->dropSearchable([
+                'trigram' => $withTrigram ? [
+                    'columns' => ['title'],
+                ] : [],
+            ]);
+        });
+
+        $this->assertMissingPgsqlColumn('search_vector');
+        $this->assertMissingPgsqlIndex('scout_pgsql_posts_search_vector_index');
+
+        if ($withTrigram) {
+            $this->assertMissingPgsqlIndex('scout_pgsql_posts_title_trigram_index');
+        }
+    }
+
     protected function createPostsTable($withTrigram = false)
     {
         Schema::dropIfExists('scout_pgsql_posts');
@@ -142,6 +171,33 @@ class PgsqlSearchableTest extends TestCase
 
         $this->assertNotNull($index);
         $this->assertStringContainsString($definition, $index);
+    }
+
+    protected function assertMissingPgsqlIndex($name)
+    {
+        $this->assertFalse(DB::table('pg_indexes')
+            ->where('schemaname', 'public')
+            ->where('tablename', 'scout_pgsql_posts')
+            ->where('indexname', $name)
+            ->exists());
+    }
+
+    protected function assertHasPgsqlColumn($name)
+    {
+        $this->assertTrue(DB::table('information_schema.columns')
+            ->where('table_schema', 'public')
+            ->where('table_name', 'scout_pgsql_posts')
+            ->where('column_name', $name)
+            ->exists());
+    }
+
+    protected function assertMissingPgsqlColumn($name)
+    {
+        $this->assertFalse(DB::table('information_schema.columns')
+            ->where('table_schema', 'public')
+            ->where('table_name', 'scout_pgsql_posts')
+            ->where('column_name', $name)
+            ->exists());
     }
 
     protected function pgTrgmExtensionExists()

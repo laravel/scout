@@ -149,7 +149,7 @@ class SearchableSchema
     {
         $column = $options['vector_column'] ?? $this->config['vector_column'] ?? 'search_vector';
 
-        if (! $this->isValidIdentifier($column)) {
+        if (! $this->isValidColumnName($column)) {
             throw new InvalidArgumentException('The [pgsql] Scout schema helper vector column must be a valid column name.');
         }
 
@@ -177,7 +177,7 @@ class SearchableSchema
     {
         return array_map(
             fn ($column) => $this->column($column, 'trigram'),
-            Arr::wrap(data_get($options, 'trigram.columns', []))
+            Arr::wrap(data_get($options, 'trigram.columns', data_get($this->config, 'trigram.columns', [])))
         );
     }
 
@@ -213,7 +213,7 @@ class SearchableSchema
     {
         $language = $options['language'] ?? $this->config['language'] ?? 'english';
 
-        if (! $this->isValidIdentifier($language)) {
+        if (! $this->isValidConfigurationName($language)) {
             throw new InvalidArgumentException('The [pgsql] Scout schema helper language must be a valid PostgreSQL text search configuration name.');
         }
 
@@ -275,7 +275,7 @@ class SearchableSchema
      */
     protected function column($column, $type)
     {
-        if (! $this->isValidIdentifier($column)) {
+        if (! $this->isValidColumnName($column)) {
             throw new InvalidArgumentException(sprintf('The [pgsql] Scout schema helper %s column [%s] must be a valid column name.', $type, $column));
         }
 
@@ -283,12 +283,23 @@ class SearchableSchema
     }
 
     /**
-     * Determine if the given value is a safe PostgreSQL identifier or configuration name.
+     * Determine if the given value is a safe PostgreSQL column name.
      *
      * @param  mixed  $value
      * @return bool
      */
-    protected function isValidIdentifier($value)
+    protected function isValidColumnName($value)
+    {
+        return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $value) === 1;
+    }
+
+    /**
+     * Determine if the given value is a safe PostgreSQL configuration name.
+     *
+     * @param  mixed  $value
+     * @return bool
+     */
+    protected function isValidConfigurationName($value)
     {
         return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $value) === 1;
     }
