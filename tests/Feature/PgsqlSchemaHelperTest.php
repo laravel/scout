@@ -63,6 +63,34 @@ class PgsqlSchemaHelperTest extends TestCase
         $this->assertContains('create index "posts_search_vector_index" on "posts" using gin ("search_vector")', $sql);
     }
 
+    public function test_searchable_helper_uses_configured_column_weights()
+    {
+        $this->app['config']->set('scout.pgsql.column_weights', [
+            'title' => 'A',
+            'body' => 'B',
+        ]);
+
+        $sql = $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title', 'body']);
+        });
+
+        $this->assertContains('alter table "posts" add column "search_vector" tsvector not null generated always as (setweight(to_tsvector(\'english\', coalesce(cast("title" as text), \'\')), \'A\') || setweight(to_tsvector(\'english\', coalesce(cast("body" as text), \'\')), \'B\')) stored', $sql);
+    }
+
+    public function test_searchable_helper_rejects_invalid_configured_column_weights()
+    {
+        $this->app['config']->set('scout.pgsql.column_weights', [
+            'title' => 'Z',
+        ]);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper column weight for [title] must be one of: A, B, C, D.');
+
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title']);
+        });
+    }
+
     public function test_searchable_helper_accepts_schema_qualified_languages()
     {
         $sql = $this->compilePgsqlBlueprint(function ($table) {

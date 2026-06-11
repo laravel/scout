@@ -276,30 +276,6 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     }
 
     /**
-     * Get the weighted PostgreSQL search vector expression for the query.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @return string
-     */
-    protected function searchVectorExpression(Builder $builder)
-    {
-        $columns = $this->searchableColumns($builder);
-
-        if (empty($columns)) {
-            return "''::tsvector";
-        }
-
-        return collect($columns)->map(function ($column) use ($builder) {
-            return sprintf(
-                "setweight(to_tsvector('%s', coalesce(cast(%s as text), '')), '%s')",
-                $this->language(),
-                $this->searchableColumn($builder, $column),
-                $this->columnWeight($builder, $column)
-            );
-        })->implode(' || ');
-    }
-
-    /**
      * Get the model's searchable columns.
      *
      * @param  \Laravel\Scout\Builder  $builder
@@ -319,17 +295,6 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     protected function trigramSimilarityExpression(array $columns)
     {
         return $this->trigram()->similarityExpression($columns);
-    }
-
-    /**
-     * Get the wrapped model searchable columns.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @return array
-     */
-    protected function wrappedSearchableColumns(Builder $builder)
-    {
-        return array_map(fn ($column) => $this->searchableColumn($builder, $column), $this->searchableColumns($builder));
     }
 
     /**
@@ -360,7 +325,7 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
         $searchableColumns = array_flip($this->searchableColumns($builder));
 
         return array_values(array_filter($columns, function ($column) use ($searchableColumns) {
-            if (! $this->isValidIdentifier($column)) {
+            if (! $this->isValidColumnName($column)) {
                 throw new InvalidArgumentException(sprintf('The [pgsql] Scout driver trigram column [%s] must be a valid column name.', $column));
             }
 
@@ -437,7 +402,7 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     {
         $language = $this->config['language'] ?? 'english';
 
-        if (! $this->isValidIdentifier($language)) {
+        if (! $this->isValidConfigurationName($language)) {
             throw new InvalidArgumentException('The [pgsql] Scout driver language must be a valid PostgreSQL text search configuration name.');
         }
 
@@ -454,7 +419,7 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     {
         $column = $this->config['vector_column'] ?? 'search_vector';
 
-        if (! $this->isValidIdentifier($column)) {
+        if (! $this->isValidColumnName($column)) {
             throw new InvalidArgumentException('The [pgsql] Scout driver vector column must be a valid column name.');
         }
 
@@ -472,7 +437,7 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
      */
     protected function searchableColumn(Builder $builder, $column)
     {
-        if (! $this->isValidIdentifier($column)) {
+        if (! $this->isValidColumnName($column)) {
             throw new InvalidArgumentException(sprintf('The [pgsql] Scout driver searchable column [%s] must be a valid column name.', $column));
         }
 
@@ -482,50 +447,23 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
     }
 
     /**
-     * Get the configured PostgreSQL column weight.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @param  string  $column
-     * @return string
-     */
-    protected function columnWeight(Builder $builder, $column)
-    {
-        $weight = $this->columnWeights()[$column] ?? self::COLUMN_WEIGHTS[3];
-
-        if (! in_array($weight, self::COLUMN_WEIGHTS, true)) {
-            throw new InvalidArgumentException(sprintf(
-                'The [pgsql] Scout driver column weight for [%s] must be one of: %s.',
-                $column,
-                implode(', ', self::COLUMN_WEIGHTS)
-            ));
-        }
-
-        return $weight;
-    }
-
-    /**
-     * Get the configured PostgreSQL column weights.
-     *
-     * @return array
-     */
-    protected function columnWeights()
-    {
-        $weights = $this->config['column_weights'] ?? [];
-
-        if (! is_array($weights)) {
-            throw new InvalidArgumentException('The [pgsql] Scout driver column weights must be an array.');
-        }
-
-        return $weights;
-    }
-
-    /**
-     * Determine if the given value is a safe PostgreSQL identifier or configuration name.
+     * Determine if the given value is a safe PostgreSQL column name.
      *
      * @param  mixed  $value
      * @return bool
      */
-    protected function isValidIdentifier($value)
+    protected function isValidColumnName($value)
+    {
+        return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $value) === 1;
+    }
+
+    /**
+     * Determine if the given value is a safe PostgreSQL configuration name.
+     *
+     * @param  mixed  $value
+     * @return bool
+     */
+    protected function isValidConfigurationName($value)
     {
         return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $value) === 1;
     }
