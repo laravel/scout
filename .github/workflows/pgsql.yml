@@ -2,12 +2,18 @@ name: PostgreSQL
 
 on:
   push:
+    branches:
+      - master
+      - '*.x'
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   pgsql:
     name: PostgreSQL Scout Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     services:
       postgres:
@@ -25,26 +31,25 @@ jobs:
           --health-retries 5
 
     env:
-      SCOUT_PGSQL_TEST_DATABASE: scout_testing
-      SCOUT_PGSQL_TEST_HOST: 127.0.0.1
-      SCOUT_PGSQL_TEST_PORT: 5432
-      SCOUT_PGSQL_TEST_USERNAME: postgres
-      SCOUT_PGSQL_TEST_PASSWORD: postgres
-      SCOUT_PGSQL_TEST_TRIGRAM: true
+      PGSQL_TEST_DATABASE: scout_testing
+      PGSQL_TEST_PASSWORD: postgres
+      PGSQL_TEST_TRIGRAM: true
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
         with:
-          php-version: '8.3'
+          php-version: 8.4
           extensions: pdo_pgsql
           coverage: none
 
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer update --prefer-dist --no-interaction --no-progress
 
       - name: Run PostgreSQL tests
         run: vendor/bin/phpunit --group pgsql

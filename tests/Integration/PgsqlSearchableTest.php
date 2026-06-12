@@ -13,7 +13,7 @@ use Orchestra\Testbench\TestCase;
 use PHPUnit\Framework\Attributes\Group;
 
 #[Group('pgsql')]
-#[RequiresEnv('SCOUT_PGSQL_TEST_DATABASE')]
+#[RequiresEnv('PGSQL_TEST_DATABASE')]
 class PgsqlSearchableTest extends TestCase
 {
     use WithWorkbench;
@@ -28,15 +28,15 @@ class PgsqlSearchableTest extends TestCase
         $app['config']->set('database.default', 'pgsql_testing');
         $app['config']->set('database.connections.pgsql_testing', [
             'driver' => 'pgsql',
-            'host' => env('SCOUT_PGSQL_TEST_HOST', '127.0.0.1'),
-            'port' => env('SCOUT_PGSQL_TEST_PORT', 5432),
-            'database' => env('SCOUT_PGSQL_TEST_DATABASE'),
-            'username' => env('SCOUT_PGSQL_TEST_USERNAME', 'postgres'),
-            'password' => env('SCOUT_PGSQL_TEST_PASSWORD', ''),
+            'host' => env('PGSQL_TEST_HOST', '127.0.0.1'),
+            'port' => env('PGSQL_TEST_PORT', 5432),
+            'database' => env('PGSQL_TEST_DATABASE'),
+            'username' => env('PGSQL_TEST_USERNAME', 'postgres'),
+            'password' => env('PGSQL_TEST_PASSWORD', ''),
             'charset' => 'utf8',
             'prefix' => '',
             'schema' => 'public',
-            'sslmode' => env('SCOUT_PGSQL_TEST_SSLMODE', 'prefer'),
+            'sslmode' => env('PGSQL_TEST_SSLMODE', 'prefer'),
         ]);
     }
 
@@ -84,8 +84,8 @@ class PgsqlSearchableTest extends TestCase
 
     public function test_trigram_extension_setup_and_similarity_search()
     {
-        if (! env('SCOUT_PGSQL_TEST_TRIGRAM', false)) {
-            $this->markTestSkipped('Set SCOUT_PGSQL_TEST_TRIGRAM=true to run pg_trgm integration coverage.');
+        if (! env('PGSQL_TEST_TRIGRAM', false)) {
+            $this->markTestSkipped('Set PGSQL_TEST_TRIGRAM=true to run pg_trgm integration coverage.');
         }
 
         $this->app['config']->set('scout.pgsql.trigram.enabled', true);
@@ -113,8 +113,8 @@ class PgsqlSearchableTest extends TestCase
 
     public function test_trigram_search_honors_non_default_threshold()
     {
-        if (! env('SCOUT_PGSQL_TEST_TRIGRAM', false)) {
-            $this->markTestSkipped('Set SCOUT_PGSQL_TEST_TRIGRAM=true to run pg_trgm integration coverage.');
+        if (! env('PGSQL_TEST_TRIGRAM', false)) {
+            $this->markTestSkipped('Set PGSQL_TEST_TRIGRAM=true to run pg_trgm integration coverage.');
         }
 
         $this->app['config']->set('scout.pgsql.trigram.enabled', true);
@@ -134,7 +134,7 @@ class PgsqlSearchableTest extends TestCase
 
     public function test_drop_searchable_removes_generated_vector_column_and_indexes()
     {
-        $withTrigram = (bool) env('SCOUT_PGSQL_TEST_TRIGRAM', false);
+        $withTrigram = (bool) env('PGSQL_TEST_TRIGRAM', false);
 
         $this->createPostsTable($withTrigram);
 
