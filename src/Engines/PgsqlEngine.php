@@ -192,6 +192,10 @@ class PgsqlEngine extends Engine implements PaginatesEloquentModelsUsingDatabase
         $trigramColumns = $usesTrigram ? $this->wrappedTrigramColumns($builder) : [];
         $usesTrigram = $usesTrigram && ! empty($trigramColumns);
 
+        if ($usesTrigram) {
+            $this->trigram()->applyThreshold($builder);
+        }
+
         return $query->where(function ($query) use ($builder, $columns, $trigramColumns, $usesTrigram) {
             $canSearchPrimaryKey = ctype_digit($builder->query) &&
                 in_array($builder->model->getKeyType(), ['int', 'integer']) &&

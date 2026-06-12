@@ -1,0 +1,50 @@
+name: PostgreSQL
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pgsql:
+    name: PostgreSQL Scout Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: scout_testing
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      SCOUT_PGSQL_TEST_DATABASE: scout_testing
+      SCOUT_PGSQL_TEST_HOST: 127.0.0.1
+      SCOUT_PGSQL_TEST_PORT: 5432
+      SCOUT_PGSQL_TEST_USERNAME: postgres
+      SCOUT_PGSQL_TEST_PASSWORD: postgres
+      SCOUT_PGSQL_TEST_TRIGRAM: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_pgsql
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run PostgreSQL tests
+        run: vendor/bin/phpunit --group pgsql

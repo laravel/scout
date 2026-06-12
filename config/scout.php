@@ -214,25 +214,25 @@ return [
     |
     | Here you may configure Scout's native PostgreSQL search driver. The driver
     | uses PostgreSQL full-text search by default and may optionally blend in
-    | trigram similarity when the pg_trgm extension is available.
+    | trigram similarity scoring when the pg_trgm extension is available.
     |
     */
 
     'pgsql' => [
-        'language' => env('SCOUT_PGSQL_LANGUAGE', 'english'),
-        'vector_column' => env('SCOUT_PGSQL_VECTOR_COLUMN', 'search_vector'),
+        'language' => 'english',
+        'vector_column' => 'search_vector',
         'column_weights' => [],
-        'query_function' => env('SCOUT_PGSQL_QUERY_FUNCTION', 'plainto_tsquery'),
-        'rank_function' => env('SCOUT_PGSQL_RANK_FUNCTION', 'ts_rank'),
+        'query_function' => 'plainto_tsquery',
+        'rank_function' => 'ts_rank',
         'trigram' => [
-            'enabled' => env('SCOUT_PGSQL_TRIGRAM', false),
-            'threshold' => env('SCOUT_PGSQL_TRIGRAM_THRESHOLD', 0.3),
+            'enabled' => env('PGSQL_TRIGRAM', false),
+            'threshold' => env('PGSQL_TRIGRAM_THRESHOLD', 0.3),
             'columns' => [],
-            'create_extension' => env('SCOUT_PGSQL_CREATE_TRIGRAM_EXTENSION', false),
+            'create_extension' => false,
         ],
         'weights' => [
-            'full_text' => env('SCOUT_PGSQL_FULL_TEXT_WEIGHT', 1.0),
-            'trigram' => env('SCOUT_PGSQL_TRIGRAM_WEIGHT', 0.25),
+            'full_text' => 1.0,
+            'trigram' => 0.25,
         ],
     ],
 

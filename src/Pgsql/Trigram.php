@@ -2,9 +2,9 @@
 
 namespace Laravel\Scout\Pgsql;
 
+use Illuminate\Database\QueryException;
 use InvalidArgumentException;
 use Laravel\Scout\Builder;
-use Throwable;
 
 class Trigram
 {
@@ -59,11 +59,25 @@ class Trigram
             $result = $connection->selectOne(
                 "select exists (select 1 from pg_extension where extname = 'pg_trgm') as available"
             );
-        } catch (Throwable) {
+        } catch (QueryException) {
             return $this->availability[$key] = false;
         }
 
         return $this->availability[$key] = (bool) ($result->available ?? false);
+    }
+
+    /**
+     * Apply the configured trigram threshold for the connection.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return void
+     */
+    public function applyThreshold(Builder $builder)
+    {
+        $builder->model->getConnection()->select(
+            "select set_config('pg_trgm.similarity_threshold', ?::text, false)",
+            [$this->threshold()]
+        );
     }
 
     /**
@@ -92,7 +106,7 @@ class Trigram
     public function predicateExpression(array $columns)
     {
         return empty($columns) ? 'false' : sprintf(
-            '(set_config(\'pg_trgm.similarity_threshold\', ?::text, true) is not null and (%s))',
+            '(%s)',
             collect($columns)->map(fn ($column) => sprintf('%s %% ?', $column))->implode(' or ')
         );
     }
@@ -106,9 +120,7 @@ class Trigram
      */
     public function predicateBindings(Builder $builder, array $columns)
     {
-        return empty($columns)
-            ? []
-            : array_merge([$this->threshold()], array_fill(0, count($columns), $builder->query));
+        return array_fill(0, count($columns), $builder->query);
     }
 
     /**

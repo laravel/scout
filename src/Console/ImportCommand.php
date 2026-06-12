@@ -46,6 +46,11 @@ class ImportCommand extends Command
 
         $model = new $class;
 
+        if (config('scout.driver') === 'pgsql') {
+            $this->warn('Setting SCOUT_DRIVER or the Scout driver to [pgsql] does not create PostgreSQL search columns or indexes.');
+            $this->warn('Add the PostgreSQL search vector and any trigram indexes through a migration before importing.');
+        }
+
         $events->listen(ModelsImported::class, function ($event) use ($class) {
             $key = $event->models->last()->getScoutKey();
 

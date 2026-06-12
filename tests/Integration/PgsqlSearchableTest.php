@@ -111,6 +111,27 @@ class PgsqlSearchableTest extends TestCase
         $this->assertSame(['Laravel Scout'], $results->pluck('title')->all());
     }
 
+    public function test_trigram_search_honors_non_default_threshold()
+    {
+        if (! env('SCOUT_PGSQL_TEST_TRIGRAM', false)) {
+            $this->markTestSkipped('Set SCOUT_PGSQL_TEST_TRIGRAM=true to run pg_trgm integration coverage.');
+        }
+
+        $this->app['config']->set('scout.pgsql.trigram.enabled', true);
+        $this->app['config']->set('scout.pgsql.trigram.threshold', 0.7);
+        $this->app['config']->set('scout.pgsql.trigram.columns', ['title']);
+
+        $this->createPostsTable(true);
+
+        PgsqlSearchPost::query()->create([
+            'title' => 'Laravel Scout',
+            'body' => 'Native PostgreSQL search driver',
+        ]);
+
+        $this->assertSame(['Laravel Scout'], PgsqlSearchPost::search('laravel scout')->get()->pluck('title')->all());
+        $this->assertSame([], PgsqlSearchPost::search('laravle')->get()->pluck('title')->all());
+    }
+
     public function test_drop_searchable_removes_generated_vector_column_and_indexes()
     {
         $withTrigram = (bool) env('SCOUT_PGSQL_TEST_TRIGRAM', false);
