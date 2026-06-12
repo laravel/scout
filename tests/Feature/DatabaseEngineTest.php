@@ -8,6 +8,7 @@ use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use Workbench\App\Models\Bookmark;
+use Workbench\App\Models\Chirp;
 use Workbench\App\Models\SearchableUser;
 use Workbench\Database\Factories\BookmarkFactory;
 use Workbench\Database\Factories\ChirpFactory;
@@ -269,5 +270,32 @@ class DatabaseEngineTest extends TestCase
 
         $this->assertCount(1, $models);
         $this->assertEquals('Abigail Otwell', $models[0]->name);
+    }
+
+    public function test_it_can_filter_with_where_in_and_where_not_in()
+    {
+        $models = SearchableUser::search()
+            ->whereIn('email', ['taylor@laravel.com', 'abigail@laravel.com'])
+            ->whereNotIn('name', ['Abigail Otwell'])
+            ->get();
+
+        $this->assertCount(1, $models);
+        $this->assertEquals('Taylor Otwell', $models[0]->name);
+    }
+
+    public function test_it_applies_soft_delete_constraints()
+    {
+        $this->app->make('config')->set('scout.soft_delete', true);
+
+        $active = ChirpFactory::new()->create(['content' => 'laravel scout search']);
+        $deleted = ChirpFactory::new()->create(['content' => 'laravel scout search']);
+
+        $deleted->delete();
+
+        $this->assertCount(1, Chirp::search()->get());
+        $this->assertSame($active->getKey(), Chirp::search()->first()->getKey());
+        $this->assertCount(2, Chirp::search()->withTrashed()->get());
+        $this->assertCount(1, Chirp::search()->onlyTrashed()->get());
+        $this->assertSame($deleted->getKey(), Chirp::search()->onlyTrashed()->first()->getKey());
     }
 }
