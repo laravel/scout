@@ -13,7 +13,7 @@ permissions:
 jobs:
   pgsql:
     name: PostgreSQL Scout Tests
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
