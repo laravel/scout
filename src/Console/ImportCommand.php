@@ -4,8 +4,11 @@ namespace Laravel\Scout\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Support\Facades\Schema;
+use Laravel\Scout\Engines\PgsqlEngine;
 use Laravel\Scout\Events\ModelsImported;
 use Laravel\Scout\Exceptions\ScoutException;
+use Laravel\Scout\Pgsql\SearchableSchema;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 #[AsCommand(name: 'scout:import')]
@@ -19,6 +22,7 @@ class ImportCommand extends Command
     protected $signature = 'scout:import
             {model : Class name of model to bulk import}
             {--fresh : Flush the index before importing}
+            {--prepare-pgsql : Create PostgreSQL search columns and indexes before importing}
             {--c|chunk= : The number of records to import at a time (Defaults to configuration value: `scout.chunk.searchable`)}';
 
     /**
@@ -45,10 +49,15 @@ class ImportCommand extends Command
         }
 
         $model = new $class;
+        $usesPgsqlEngine = $model->searchableUsing() instanceof PgsqlEngine;
 
-        if (config('scout.driver') === 'pgsql') {
-            $this->warn('Setting SCOUT_DRIVER or the Scout driver to [pgsql] does not create PostgreSQL search columns or indexes.');
+        if ($usesPgsqlEngine && $this->option('prepare-pgsql')) {
+            $this->preparePgsqlSearch($model, $class);
+        } elseif ($usesPgsqlEngine) {
+            $this->warn('Using the [pgsql] Scout engine does not create PostgreSQL search columns or indexes.');
             $this->warn('Add the PostgreSQL search vector and any trigram indexes through a migration before importing.');
+        } elseif ($this->option('prepare-pgsql')) {
+            $this->warn('The [--prepare-pgsql] option only applies to models using the [pgsql] Scout engine.');
         }
 
         $events->listen(ModelsImported::class, function ($event) use ($class) {
@@ -66,5 +75,30 @@ class ImportCommand extends Command
         $events->forget(ModelsImported::class);
 
         $this->info('All ['.$class.'] records have been imported.');
+    }
+
+    /**
+     * Prepare PostgreSQL search columns and indexes for the model.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  class-string  $class
+     * @return void
+     */
+    protected function preparePgsqlSearch($model, $class)
+    {
+        $schema = Schema::connection($model->getConnectionName());
+        $vectorColumn = (new SearchableSchema(config('scout.pgsql', [])))->vectorColumn();
+
+        if ($schema->hasColumn($model->getTable(), $vectorColumn)) {
+            $this->warn('PostgreSQL search column ['.$vectorColumn.'] already exists for ['.$class.']; skipping preparation.');
+
+            return;
+        }
+
+        $schema->table($model->getTable(), function ($table) use ($model) {
+            $table->searchable(array_keys($model->toSearchableArray()));
+        });
+
+        $this->info('Prepared PostgreSQL search columns and indexes for ['.$class.'].');
     }
 }
