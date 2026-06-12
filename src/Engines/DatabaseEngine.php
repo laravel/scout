@@ -222,5 +222,4 @@ class DatabaseEngine extends DatabaseModelEngine
 
         return $options;
     }
-
 }
