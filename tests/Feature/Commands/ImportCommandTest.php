@@ -106,8 +106,12 @@ class ImportCommandTest extends TestCase
         $schema = Mockery::mock(Builder::class);
         $schema->shouldReceive('getColumnListing')->once()->with('users')->andReturn(['id', 'name', 'email', 'age', 'search_vector']);
         $schema->shouldReceive('hasColumn')->once()->with('users', 'search_vector')->andReturn(true);
-        $schema->shouldReceive('hasIndex')->once()->with('users', ['search_vector'], 'gin')->andReturn(false);
-        $schema->shouldReceive('hasIndex')->once()->with('users', 'users_name_trigram_index', 'gin')->andReturn(false);
+
+        if (method_exists(Builder::class, 'hasIndex')) {
+            $schema->shouldReceive('hasIndex')->once()->with('users', ['search_vector'], 'gin')->andReturn(false);
+            $schema->shouldReceive('hasIndex')->once()->with('users', 'users_name_trigram_index', 'gin')->andReturn(false);
+        }
+
         $schema->shouldReceive('table')->once()->with('users', Mockery::on(function ($callback) {
             $table = Mockery::mock();
             $index = Mockery::mock();
