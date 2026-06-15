@@ -4,7 +4,6 @@ namespace Laravel\Scout\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Support\Facades\Schema;
 use Laravel\Scout\Engines\PgsqlEngine;
 use Laravel\Scout\Events\ModelsImported;
 use Laravel\Scout\Exceptions\ScoutException;
@@ -44,7 +43,9 @@ class ImportCommand extends Command
     {
         $class = $this->argument('model');
 
-        if (! class_exists($class) && ! class_exists($class = app()->getNamespace()."Models\\{$class}")) {
+        $namespace = app()->getNamespace();
+
+        if (! class_exists($class) && ! class_exists($class = "{$namespace}Models\\{$class}")) {
             throw new ScoutException("Model [{$class}] not found.");
         }
 
@@ -63,7 +64,7 @@ class ImportCommand extends Command
         $events->listen(ModelsImported::class, function ($event) use ($class) {
             $key = $event->models->last()->getScoutKey();
 
-            $this->line('<comment>Imported ['.$class.'] models up to ID:</comment> '.$key);
+            $this->line("<comment>Imported [{$class}] models up to ID:</comment> {$key}");
         });
 
         if ($this->option('fresh')) {
@@ -74,7 +75,7 @@ class ImportCommand extends Command
 
         $events->forget(ModelsImported::class);
 
-        $this->info('All ['.$class.'] records have been imported.');
+        $this->info("All [{$class}] records have been imported.");
     }
 
     /**
@@ -86,19 +87,135 @@ class ImportCommand extends Command
      */
     protected function preparePgsqlSearch($model, $class)
     {
-        $schema = Schema::connection($model->getConnectionName());
-        $vectorColumn = (new SearchableSchema(config('scout.pgsql', [])))->vectorColumn();
+        $connection = $model->getConnection();
+        $schema = $connection->getSchemaBuilder();
+        $helper = new SearchableSchema(config('scout.pgsql', []));
+        $table = $model->getTable();
+        $vectorColumn = $helper->vectorColumn();
+        $columns = $this->searchableDatabaseColumns($model, $schema, $vectorColumn, $class);
+        $trigramColumns = $this->trigramDatabaseColumns($helper, $columns);
 
-        if ($schema->hasColumn($model->getTable(), $vectorColumn)) {
-            $this->warn('PostgreSQL search column ['.$vectorColumn.'] already exists for ['.$class.']; skipping preparation.');
+        if (! $schema->hasColumn($table, $vectorColumn)) {
+            $schema->table($table, function ($table) use ($columns, $trigramColumns) {
+                $table->searchable($columns, [
+                    'trigram' => [
+                        'columns' => $trigramColumns,
+                    ],
+                ]);
+            });
+
+            $this->info("Prepared PostgreSQL search columns and indexes for [{$class}].");
 
             return;
         }
 
-        $schema->table($model->getTable(), function ($table) use ($model) {
-            $table->searchable(array_keys($model->toSearchableArray()));
+        $createdExtension = false;
+
+        if ($helper->shouldCreateTrigramExtension() && ! empty($trigramColumns)) {
+            $connection->statement('create extension if not exists "pg_trgm"');
+            $createdExtension = true;
+        }
+
+        if ($this->preparePgsqlIndexes($connection, $schema, $helper, $table, $vectorColumn, $trigramColumns) || $createdExtension) {
+            $this->info("Prepared PostgreSQL search indexes for [{$class}].");
+
+            return;
+        }
+
+        $this->warn("PostgreSQL search schema already exists for [{$class}].");
+    }
+
+    /**
+     * Get searchable payload keys that are backed by real database columns.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  \Illuminate\Database\Schema\Builder  $schema
+     * @param  string  $vectorColumn
+     * @param  class-string  $class
+     * @return array
+     */
+    protected function searchableDatabaseColumns($model, $schema, $vectorColumn, $class)
+    {
+        $databaseColumns = array_flip($schema->getColumnListing($model->getTable()));
+
+        $columns = array_values(array_filter(array_keys($model->toSearchableArray()), function ($column) use ($databaseColumns, $vectorColumn) {
+            return $column !== $vectorColumn && array_key_exists($column, $databaseColumns);
+        }));
+
+        if (empty($columns)) {
+            $table = $model->getTable();
+
+            throw new ScoutException("No database columns from [{$class}::toSearchableArray()] exist on [{$table}].");
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Get configured trigram columns that can be indexed by the database.
+     *
+     * @param  \Laravel\Scout\Pgsql\SearchableSchema  $helper
+     * @param  array  $columns
+     * @return array
+     */
+    protected function trigramDatabaseColumns(SearchableSchema $helper, array $columns)
+    {
+        $searchableColumns = array_flip($columns);
+
+        return array_values(array_filter($helper->trigramColumns(), fn ($column) => array_key_exists($column, $searchableColumns)));
+    }
+
+    /**
+     * Prepare missing PostgreSQL indexes for an existing vector column.
+     *
+     * @param  \Illuminate\Database\Connection  $connection
+     * @param  \Illuminate\Database\Schema\Builder  $schema
+     * @param  \Laravel\Scout\Pgsql\SearchableSchema  $helper
+     * @param  string  $table
+     * @param  string  $vectorColumn
+     * @param  array  $trigramColumns
+     * @return bool
+     */
+    protected function preparePgsqlIndexes($connection, $schema, SearchableSchema $helper, $table, $vectorColumn, array $trigramColumns)
+    {
+        $missingVectorIndex = ! $this->schemaHasIndex($schema, $table, [$vectorColumn], 'gin');
+        $missingTrigramColumns = array_values(array_filter($trigramColumns, function ($column) use ($connection, $schema, $helper, $table) {
+            return ! $this->schemaHasIndex($schema, $table, $helper->indexName($connection, $table, [$column], 'trigram_index'), 'gin');
+        }));
+
+        if (! $missingVectorIndex && empty($missingTrigramColumns)) {
+            return false;
+        }
+
+        $tableName = $table;
+
+        $schema->table($table, function ($table) use ($connection, $helper, $tableName, $vectorColumn, $missingVectorIndex, $missingTrigramColumns) {
+            if ($missingVectorIndex) {
+                $table->index($vectorColumn, null, 'gin');
+            }
+
+            foreach ($missingTrigramColumns as $column) {
+                $table->rawIndex(
+                    sprintf('%s gin_trgm_ops', $connection->getSchemaGrammar()->wrap($column)),
+                    $helper->indexName($connection, $tableName, [$column], 'trigram_index')
+                )->algorithm('gin');
+            }
         });
 
-        $this->info('Prepared PostgreSQL search columns and indexes for ['.$class.'].');
+        return true;
+    }
+
+    /**
+     * Determine if the schema builder can find the given index.
+     *
+     * @param  \Illuminate\Database\Schema\Builder  $schema
+     * @param  string  $table
+     * @param  string|array  $index
+     * @param  string|null  $type
+     * @return bool
+     */
+    protected function schemaHasIndex($schema, $table, $index, $type = null)
+    {
+        return method_exists($schema, 'hasIndex') && $schema->hasIndex($table, $index, $type);
     }
 }

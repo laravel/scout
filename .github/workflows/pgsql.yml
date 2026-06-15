@@ -12,8 +12,23 @@ permissions:
 
 jobs:
   pgsql:
-    name: PostgreSQL Scout Tests
-    runs-on: ubuntu-24.04
+    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }} PostgreSQL
+    runs-on: ubuntu-22.04
+
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - php: 8.0
+            laravel: 9
+          - php: 8.1
+            laravel: 10
+          - php: 8.2
+            laravel: 11
+          - php: 8.2
+            laravel: 12
+          - php: 8.3
+            laravel: 13
 
     services:
       postgres:
@@ -37,19 +52,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           persist-credentials: false
 
       - name: Setup PHP
         uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
         with:
-          php-version: 8.4
-          extensions: pdo_pgsql
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pdo_pgsql
+          tools: composer:v2
           coverage: none
 
       - name: Install Composer dependencies
-        run: composer update --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts:^${{ matrix.laravel }}"
 
       - name: Run PostgreSQL tests
         run: vendor/bin/phpunit --group pgsql

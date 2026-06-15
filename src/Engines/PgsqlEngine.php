@@ -4,6 +4,7 @@ namespace Laravel\Scout\Engines;
 
 use InvalidArgumentException;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Pgsql\Identifiers;
 use Laravel\Scout\Pgsql\Trigram;
 
 class PgsqlEngine extends DatabaseModelEngine
@@ -28,6 +29,13 @@ class PgsqlEngine extends DatabaseModelEngine
     protected $trigram;
 
     /**
+     * The PostgreSQL identifier helper instance.
+     *
+     * @var \Laravel\Scout\Pgsql\Identifiers|null
+     */
+    protected $identifiers;
+
+    /**
      * Create a new engine instance.
      *
      * @param  array  $config
@@ -36,6 +44,80 @@ class PgsqlEngine extends DatabaseModelEngine
     public function __construct(protected array $config)
     {
         //
+    }
+
+    /**
+     * Perform the given search on the engine.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return mixed
+     */
+    public function search(Builder $builder)
+    {
+        return $this->withTrigramThreshold($builder, fn () => parent::search($builder));
+    }
+
+    /**
+     * Paginate the given search on the engine.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  int  $perPage
+     * @param  string  $pageName
+     * @param  int  $page
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function paginateUsingDatabase(Builder $builder, $perPage, $pageName, $page)
+    {
+        return $this->withTrigramThreshold($builder, fn () => parent::paginateUsingDatabase($builder, $perPage, $pageName, $page));
+    }
+
+    /**
+     * Paginate the given query into a simple paginator.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  int  $perPage
+     * @param  string  $pageName
+     * @param  int|null  $page
+     * @return \Illuminate\Contracts\Pagination\Paginator
+     */
+    public function simplePaginateUsingDatabase(Builder $builder, $perPage, $pageName, $page)
+    {
+        return $this->withTrigramThreshold($builder, fn () => parent::simplePaginateUsingDatabase($builder, $perPage, $pageName, $page));
+    }
+
+    /**
+     * Run the callback with the configured trigram threshold, then restore it.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  callable  $callback
+     * @return mixed
+     */
+    protected function withTrigramThreshold(Builder $builder, callable $callback)
+    {
+        if (! $this->shouldApplyTrigramThreshold($builder)) {
+            return $callback();
+        }
+
+        $previousThreshold = $this->trigram()->currentThreshold($builder);
+
+        $this->trigram()->applyThreshold($builder);
+
+        try {
+            return $callback();
+        } finally {
+            $this->trigram()->restoreThreshold($builder, $previousThreshold);
+        }
+    }
+
+    /**
+     * Determine if the search needs a trigram threshold during execution.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return bool
+     */
+    protected function shouldApplyTrigramThreshold(Builder $builder)
+    {
+        return $this->trigram()->uses($builder) && ! empty($this->trigramColumns($builder));
     }
 
     /**
@@ -73,17 +155,17 @@ class PgsqlEngine extends DatabaseModelEngine
         $usesTrigram = $usesTrigram && ! empty($trigramColumns);
 
         if ($usesTrigram) {
-            $this->trigram()->applyThreshold($builder);
+            $this->trigram()->threshold();
         }
 
         return $query->where(function ($query) use ($builder, $columns, $trigramColumns, $usesTrigram) {
             $canSearchPrimaryKey = ctype_digit($builder->query) &&
-                in_array($builder->model->getKeyType(), ['int', 'integer']) &&
+                in_array($builder->model->getScoutKeyType(), ['int', 'integer']) &&
                 $builder->query <= PHP_INT_MAX &&
                 in_array($builder->model->getScoutKeyName(), $columns);
 
             if ($canSearchPrimaryKey) {
-                $query->orWhere($builder->model->getQualifiedKeyName(), $builder->query);
+                $query->orWhere($builder->model->qualifyColumn($builder->model->getScoutKeyName()), $builder->query);
             }
 
             $query->orWhereRaw(
@@ -209,7 +291,7 @@ class PgsqlEngine extends DatabaseModelEngine
         $searchableColumns = array_flip($this->searchableColumns($builder));
 
         return array_values(array_filter($columns, function ($column) use ($searchableColumns) {
-            if (! $this->isValidColumnName($column)) {
+            if (! $this->identifiers()->isColumnName($column)) {
                 throw new InvalidArgumentException(sprintf('The [pgsql] Scout driver trigram column [%s] must be a valid column name.', $column));
             }
 
@@ -228,6 +310,16 @@ class PgsqlEngine extends DatabaseModelEngine
     }
 
     /**
+     * Get the PostgreSQL identifier helper instance.
+     *
+     * @return \Laravel\Scout\Pgsql\Identifiers
+     */
+    protected function identifiers()
+    {
+        return $this->identifiers ??= new Identifiers;
+    }
+
+    /**
      * Get the configured PostgreSQL text search language.
      *
      * @return string
@@ -236,7 +328,7 @@ class PgsqlEngine extends DatabaseModelEngine
     {
         $language = $this->config['language'] ?? 'english';
 
-        if (! $this->isValidConfigurationName($language)) {
+        if (! $this->identifiers()->isConfigurationName($language)) {
             throw new InvalidArgumentException('The [pgsql] Scout driver language must be a valid PostgreSQL text search configuration name.');
         }
 
@@ -253,7 +345,7 @@ class PgsqlEngine extends DatabaseModelEngine
     {
         $column = $this->config['vector_column'] ?? 'search_vector';
 
-        if (! $this->isValidColumnName($column)) {
+        if (! $this->identifiers()->isColumnName($column)) {
             throw new InvalidArgumentException('The [pgsql] Scout driver vector column must be a valid column name.');
         }
 
@@ -271,35 +363,13 @@ class PgsqlEngine extends DatabaseModelEngine
      */
     protected function searchableColumn(Builder $builder, $column)
     {
-        if (! $this->isValidColumnName($column)) {
+        if (! $this->identifiers()->isColumnName($column)) {
             throw new InvalidArgumentException(sprintf('The [pgsql] Scout driver searchable column [%s] must be a valid column name.', $column));
         }
 
         return $builder->model->getConnection()->getQueryGrammar()->wrap(
             $builder->model->qualifyColumn($column)
         );
-    }
-
-    /**
-     * Determine if the given value is a safe PostgreSQL column name.
-     *
-     * @param  mixed  $value
-     * @return bool
-     */
-    protected function isValidColumnName($value)
-    {
-        return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $value) === 1;
-    }
-
-    /**
-     * Determine if the given value is a safe PostgreSQL configuration name.
-     *
-     * @param  mixed  $value
-     * @return bool
-     */
-    protected function isValidConfigurationName($value)
-    {
-        return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $value) === 1;
     }
 
     /**

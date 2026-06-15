@@ -3,11 +3,17 @@
 namespace Laravel\Scout\Pgsql;
 
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Laravel\Scout\Builder;
 
 class Trigram
 {
+    /**
+     * The warning emitted when pg_trgm is unavailable.
+     */
+    protected const MISSING_EXTENSION_WARNING = 'Scout [pgsql] trigram search is enabled, but the [pg_trgm] extension is not available. Falling back to PostgreSQL full-text search.';
+
     /**
      * The cached pg_trgm availability results.
      *
@@ -60,10 +66,33 @@ class Trigram
                 "select exists (select 1 from pg_extension where extname = 'pg_trgm') as available"
             );
         } catch (QueryException) {
+            Log::warning(self::MISSING_EXTENSION_WARNING);
+
             return $this->availability[$key] = false;
         }
 
-        return $this->availability[$key] = (bool) ($result->available ?? false);
+        $available = (bool) ($result->available ?? false);
+
+        if (! $available) {
+            Log::warning(self::MISSING_EXTENSION_WARNING);
+        }
+
+        return $this->availability[$key] = $available;
+    }
+
+    /**
+     * Get the current trigram threshold for the connection.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return string|null
+     */
+    public function currentThreshold(Builder $builder)
+    {
+        $result = $builder->model->getConnection()->selectOne(
+            "select current_setting('pg_trgm.similarity_threshold', true) as threshold"
+        );
+
+        return $result->threshold ?? null;
     }
 
     /**
@@ -77,6 +106,25 @@ class Trigram
         $builder->model->getConnection()->select(
             "select set_config('pg_trgm.similarity_threshold', ?::text, false)",
             [$this->threshold()]
+        );
+    }
+
+    /**
+     * Restore the previous trigram threshold for the connection.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  string|null  $threshold
+     * @return void
+     */
+    public function restoreThreshold(Builder $builder, $threshold)
+    {
+        if (is_null($threshold)) {
+            return;
+        }
+
+        $builder->model->getConnection()->select(
+            "select set_config('pg_trgm.similarity_threshold', ?::text, false)",
+            [$threshold]
         );
     }
 

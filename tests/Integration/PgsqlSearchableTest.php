@@ -44,6 +44,9 @@ class PgsqlSearchableTest extends TestCase
     {
         if ($this->app?->bound('db.schema')) {
             Schema::dropIfExists('scout_pgsql_posts');
+            Schema::connection('pgsql_testing')->dropIfExists('scout_pgsql_custom_vector_posts');
+            Schema::connection('pgsql_testing')->dropIfExists('scout_pgsql_language_posts');
+            Schema::connection('pgsql_testing')->dropIfExists('scout_pgsql_named_connection_posts');
         }
 
         parent::tearDown();
@@ -111,6 +114,65 @@ class PgsqlSearchableTest extends TestCase
         $this->assertSame(['Laravel Scout'], $results->pluck('title')->all());
     }
 
+    public function test_custom_vector_column_from_global_config()
+    {
+        $this->app['config']->set('scout.pgsql.vector_column', 'document_vector');
+
+        Schema::dropIfExists('scout_pgsql_custom_vector_posts');
+        Schema::create('scout_pgsql_custom_vector_posts', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->text('body');
+            $table->searchable(['title', 'body']);
+        });
+
+        PgsqlCustomVectorPost::query()->create([
+            'title' => 'Laravel Scout',
+            'body' => 'Native PostgreSQL search driver',
+        ]);
+
+        $this->assertHasPgsqlColumn('document_vector', 'scout_pgsql_custom_vector_posts');
+        $this->assertHasPgsqlIndex('scout_pgsql_custom_vector_posts_document_vector_index', 'USING gin (document_vector)', 'scout_pgsql_custom_vector_posts');
+        $this->assertSame(['Laravel Scout'], PgsqlCustomVectorPost::search('laravel')->get()->pluck('title')->all());
+    }
+
+    public function test_custom_language_from_global_config()
+    {
+        $this->app['config']->set('scout.pgsql.language', 'simple');
+
+        Schema::dropIfExists('scout_pgsql_language_posts');
+        Schema::create('scout_pgsql_language_posts', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->searchable(['title']);
+        });
+
+        PgsqlLanguagePost::query()->create([
+            'title' => 'running',
+        ]);
+
+        $this->assertSame(['running'], PgsqlLanguagePost::search('running')->get()->pluck('title')->all());
+        $this->assertSame([], PgsqlLanguagePost::search('run')->get()->pluck('title')->all());
+    }
+
+    public function test_named_postgresql_schema_connection_when_default_connection_is_not_postgresql()
+    {
+        $this->app['config']->set('database.default', 'testing');
+
+        Schema::connection('pgsql_testing')->dropIfExists('scout_pgsql_named_connection_posts');
+        Schema::connection('pgsql_testing')->create('scout_pgsql_named_connection_posts', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->searchable(['title']);
+        });
+
+        PgsqlNamedConnectionPost::query()->create([
+            'title' => 'Laravel Scout',
+        ]);
+
+        $this->assertSame(['Laravel Scout'], PgsqlNamedConnectionPost::search('laravel')->get()->pluck('title')->all());
+    }
+
     public function test_trigram_search_honors_non_default_threshold()
     {
         if (! env('PGSQL_TEST_TRIGRAM', false)) {
@@ -130,6 +192,29 @@ class PgsqlSearchableTest extends TestCase
 
         $this->assertSame(['Laravel Scout'], PgsqlSearchPost::search('laravel scout')->get()->pluck('title')->all());
         $this->assertSame([], PgsqlSearchPost::search('laravle')->get()->pluck('title')->all());
+    }
+
+    public function test_trigram_threshold_does_not_leak_between_searches()
+    {
+        if (! env('PGSQL_TEST_TRIGRAM', false)) {
+            $this->markTestSkipped('Set PGSQL_TEST_TRIGRAM=true to run pg_trgm integration coverage.');
+        }
+
+        $this->app['config']->set('scout.pgsql.trigram.enabled', true);
+        $this->app['config']->set('scout.pgsql.trigram.threshold', 0.7);
+        $this->app['config']->set('scout.pgsql.trigram.columns', ['title']);
+
+        $this->createPostsTable(true);
+
+        PgsqlSearchPost::query()->create([
+            'title' => 'Laravel Scout',
+            'body' => 'Native PostgreSQL search driver',
+        ]);
+
+        DB::select("select set_config('pg_trgm.similarity_threshold', ?::text, false)", ['0.11']);
+
+        $this->assertSame([], PgsqlSearchPost::search('laravle')->get()->pluck('title')->all());
+        $this->assertSame('0.11', $this->currentTrigramThreshold());
     }
 
     public function test_drop_searchable_removes_generated_vector_column_and_indexes()
@@ -182,11 +267,11 @@ class PgsqlSearchableTest extends TestCase
         });
     }
 
-    protected function assertHasPgsqlIndex($name, $definition)
+    protected function assertHasPgsqlIndex($name, $definition, $table = 'scout_pgsql_posts')
     {
         $index = DB::table('pg_indexes')
             ->where('schemaname', 'public')
-            ->where('tablename', 'scout_pgsql_posts')
+            ->where('tablename', $table)
             ->where('indexname', $name)
             ->value('indexdef');
 
@@ -203,11 +288,11 @@ class PgsqlSearchableTest extends TestCase
             ->exists());
     }
 
-    protected function assertHasPgsqlColumn($name)
+    protected function assertHasPgsqlColumn($name, $table = 'scout_pgsql_posts')
     {
         $this->assertTrue(DB::table('information_schema.columns')
             ->where('table_schema', 'public')
-            ->where('table_name', 'scout_pgsql_posts')
+            ->where('table_name', $table)
             ->where('column_name', $name)
             ->exists());
     }
@@ -224,6 +309,11 @@ class PgsqlSearchableTest extends TestCase
     protected function pgTrgmExtensionExists()
     {
         return DB::table('pg_extension')->where('extname', 'pg_trgm')->exists();
+    }
+
+    protected function currentTrigramThreshold()
+    {
+        return DB::selectOne("select current_setting('pg_trgm.similarity_threshold') as threshold")->threshold;
     }
 }
 
@@ -244,4 +334,34 @@ class PgsqlSearchPost extends Model
             'body' => $this->body,
         ];
     }
+}
+
+class PgsqlCustomVectorPost extends PgsqlSearchPost
+{
+    protected $table = 'scout_pgsql_custom_vector_posts';
+}
+
+class PgsqlLanguagePost extends Model
+{
+    use Searchable;
+
+    public $timestamps = false;
+
+    protected $guarded = [];
+
+    protected $table = 'scout_pgsql_language_posts';
+
+    public function toSearchableArray()
+    {
+        return [
+            'title' => $this->title,
+        ];
+    }
+}
+
+class PgsqlNamedConnectionPost extends PgsqlLanguagePost
+{
+    protected $connection = 'pgsql_testing';
+
+    protected $table = 'scout_pgsql_named_connection_posts';
 }

@@ -2,12 +2,15 @@
 
 namespace Laravel\Scout\Tests\Feature;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\SQLiteConnection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\PgsqlEngine;
 use Laravel\Scout\Pgsql\Trigram;
+use Laravel\Scout\Searchable;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use PDO;
@@ -72,6 +75,20 @@ class PgsqlEngineTest extends TestCase
             $table->string('label');
             $table->timestamps();
         });
+
+        Schema::create('external_documents', function ($table) {
+            $table->id();
+            $table->integer('external_id');
+            $table->string('title');
+            $table->timestamps();
+        });
+
+        Schema::create('string_documents', function ($table) {
+            $table->id();
+            $table->string('code');
+            $table->string('title');
+            $table->timestamps();
+        });
     }
 
     protected function seedSearchableUsers()
@@ -117,6 +134,36 @@ class PgsqlEngineTest extends TestCase
         $this->assertEqualsCanonicalizing([1, 2, 3], SearchableUser::search()->keys()->all());
         $this->assertSame(3, SearchableUser::search()->paginate(1)->total());
         $this->assertCount(1, SearchableUser::search()->simplePaginate(1));
+    }
+
+    public function test_keys_returns_scout_keys_for_database_backed_engines()
+    {
+        PgsqlIntegerScoutKeyDocument::query()->create([
+            'external_id' => 1001,
+            'title' => 'First document',
+        ]);
+        PgsqlIntegerScoutKeyDocument::query()->create([
+            'external_id' => 1002,
+            'title' => 'Second document',
+        ]);
+
+        $this->assertSame([1002, 1001], PgsqlIntegerScoutKeyDocument::search()->keys()->all());
+    }
+
+    public function test_numeric_search_checks_integer_scout_key_column()
+    {
+        $query = $this->buildPgsqlSearchQuery(PgsqlIntegerScoutKeyDocument::search('1001'));
+
+        $this->assertStringContainsString('"external_documents"."external_id" = ?', $query->toSql());
+        $this->assertStringNotContainsString('"external_documents"."id" = ?', $query->toSql());
+    }
+
+    public function test_numeric_search_does_not_use_exact_key_optimization_for_non_integer_scout_keys()
+    {
+        $query = $this->buildPgsqlSearchQuery(PgsqlStringScoutKeyDocument::search('123'));
+
+        $this->assertStringNotContainsString('"string_documents"."code" = ?', $query->toSql());
+        $this->assertStringNotContainsString('"string_documents"."id" = ?', $query->toSql());
     }
 
     public function test_it_uses_custom_page_names_for_database_pagination()
@@ -199,6 +246,17 @@ class PgsqlEngineTest extends TestCase
 
         $this->assertStringContainsString('"users"."search_vector" @@ plainto_tsquery(?::regconfig, ?)', $query->toSql());
         $this->assertStringContainsString('order by ts_rank("users"."search_vector", plainto_tsquery(?::regconfig, ?)) desc', $query->toSql());
+        $this->assertSame(['english', 'laravel', 'english', 'laravel'], $query->getBindings());
+    }
+
+    public function test_non_empty_searches_use_the_configured_vector_column()
+    {
+        $this->app->make('config')->set('scout.pgsql.vector_column', 'document_vector');
+
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravel'));
+
+        $this->assertStringContainsString('"users"."document_vector" @@ plainto_tsquery(?::regconfig, ?)', $query->toSql());
+        $this->assertStringContainsString('order by ts_rank("users"."document_vector", plainto_tsquery(?::regconfig, ?)) desc', $query->toSql());
         $this->assertSame(['english', 'laravel', 'english', 'laravel'], $query->getBindings());
     }
 
@@ -306,10 +364,10 @@ class PgsqlEngineTest extends TestCase
             'english', 'laravle', 'laravle', 'laravle',
             'english', 'laravle', 1.0, 'laravle', 'laravle', 0.25,
         ], $query->getBindings());
-        $this->assertSame([0.3], $engine->appliedThresholds());
+        $this->assertSame([], $engine->appliedThresholds());
     }
 
-    public function test_trigram_threshold_is_applied_before_trigram_predicate_execution()
+    public function test_trigram_threshold_is_not_applied_while_building_the_query()
     {
         $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
         $this->app->make('config')->set('scout.pgsql.trigram.threshold', 0.15);
@@ -319,7 +377,7 @@ class PgsqlEngineTest extends TestCase
         $query = $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'));
 
         $this->assertStringContainsString('("users"."name" % ?)', $query->toSql());
-        $this->assertSame([0.15], $engine->appliedThresholds());
+        $this->assertSame([], $engine->appliedThresholds());
         $this->assertSame([
             'english', 'laravle', 'laravle',
             'english', 'laravle', 1.0, 'laravle', 0.25,
@@ -389,13 +447,29 @@ class PgsqlEngineTest extends TestCase
     public function test_missing_trigram_extension_falls_back_to_full_text_search()
     {
         $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
 
-        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), false);
+        Log::shouldReceive('warning')->once()->with('Scout [pgsql] trigram search is enabled, but the [pg_trgm] extension is not available. Falling back to PostgreSQL full-text search.');
+
+        $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'));
 
         $this->assertStringContainsString('"users"."search_vector" @@ plainto_tsquery(?::regconfig, ?)', $query->toSql());
         $this->assertStringNotContainsString('similarity(', $query->toSql());
         $this->assertStringNotContainsString(' % ?', $query->toSql());
         $this->assertSame(['english', 'laravle', 'english', 'laravle'], $query->getBindings());
+    }
+
+    public function test_missing_trigram_extension_warning_is_emitted_once_per_connection()
+    {
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
+
+        Log::shouldReceive('warning')->once()->with('Scout [pgsql] trigram search is enabled, but the [pg_trgm] extension is not available. Falling back to PostgreSQL full-text search.');
+
+        $engine = $this->pgsqlEngine();
+
+        $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'));
+        $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'));
     }
 
     public function test_trigram_ranking_blends_full_text_rank_and_similarity()
@@ -436,7 +510,7 @@ class PgsqlEngineTest extends TestCase
 
         $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'));
 
-        $this->assertSame([0], $engine->appliedThresholds());
+        $this->assertSame([], $engine->appliedThresholds());
     }
 
     public function test_trigram_threshold_accepts_one()
@@ -449,7 +523,7 @@ class PgsqlEngineTest extends TestCase
 
         $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'));
 
-        $this->assertSame([1], $engine->appliedThresholds());
+        $this->assertSame([], $engine->appliedThresholds());
     }
 
     public function test_trigram_threshold_rejects_values_below_zero()
@@ -597,6 +671,70 @@ class InspectablePgsqlEngine extends PgsqlEngine
                 $this->engine->recordAppliedThreshold($this->threshold());
             }
         };
+    }
+}
+
+class PgsqlIntegerScoutKeyDocument extends Model
+{
+    use Searchable;
+
+    protected $guarded = [];
+
+    protected $table = 'external_documents';
+
+    public function getScoutKey()
+    {
+        return $this->external_id;
+    }
+
+    public function getScoutKeyName()
+    {
+        return 'external_id';
+    }
+
+    public function getScoutKeyType()
+    {
+        return 'int';
+    }
+
+    public function toSearchableArray()
+    {
+        return [
+            'external_id' => $this->external_id,
+            'title' => $this->title,
+        ];
+    }
+}
+
+class PgsqlStringScoutKeyDocument extends Model
+{
+    use Searchable;
+
+    protected $guarded = [];
+
+    protected $table = 'string_documents';
+
+    public function getScoutKey()
+    {
+        return $this->code;
+    }
+
+    public function getScoutKeyName()
+    {
+        return 'code';
+    }
+
+    public function getScoutKeyType()
+    {
+        return 'string';
+    }
+
+    public function toSearchableArray()
+    {
+        return [
+            'code' => $this->code,
+            'title' => $this->title,
+        ];
     }
 }
 

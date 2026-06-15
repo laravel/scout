@@ -5,6 +5,7 @@ namespace Laravel\Scout\Pgsql;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Schema\Builder as SchemaBuilder;
 use Illuminate\Database\Schema\Grammars\PostgresGrammar;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Fluent;
@@ -16,6 +17,13 @@ class SearchableSchema
      * The supported PostgreSQL text search weights.
      */
     protected const COLUMN_WEIGHTS = ['A', 'B', 'C', 'D'];
+
+    /**
+     * The PostgreSQL identifier helper instance.
+     *
+     * @var \Laravel\Scout\Pgsql\Identifiers|null
+     */
+    protected $identifiers;
 
     /**
      * Create a new searchable schema helper instance.
@@ -49,19 +57,11 @@ class SearchableSchema
             Blueprint::macro('searchable', function ($columns, array $options = []) {
                 $helper = new SearchableSchema(config('scout.pgsql', []));
 
-                $connection = null;
-
-                if (property_exists($this, 'connection')) {
-                    /** @phpstan-ignore property.protected */
-                    $connection = $this->connection;
-                }
-
-                $connection = $connection instanceof Connection ? $connection : app('db')->connection();
-
+                $connection = $helper->connection($this);
                 $helper->ensurePostgresqlConnection($connection);
 
                 $columns = Arr::wrap($columns);
-                $vectorColumn = $helper->vectorColumn($options);
+                $vectorColumn = $helper->vectorColumn();
 
                 if ($helper->shouldCreateTrigramExtension($options)) {
                     /** @phpstan-ignore method.protected */
@@ -87,18 +87,10 @@ class SearchableSchema
             Blueprint::macro('dropSearchable', function (array $options = []) {
                 $helper = new SearchableSchema(config('scout.pgsql', []));
 
-                $connection = null;
-
-                if (property_exists($this, 'connection')) {
-                    /** @phpstan-ignore property.protected */
-                    $connection = $this->connection;
-                }
-
-                $connection = $connection instanceof Connection ? $connection : app('db')->connection();
-
+                $connection = $helper->connection($this);
                 $helper->ensurePostgresqlConnection($connection);
 
-                $vectorColumn = $helper->vectorColumn($options);
+                $vectorColumn = $helper->vectorColumn();
 
                 if (array_key_exists('index', $options)) {
                     $this->dropIndex($options['index']);
@@ -135,6 +127,68 @@ class SearchableSchema
     }
 
     /**
+     * Resolve the connection that owns the given schema blueprint.
+     *
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @return \Illuminate\Database\Connection
+     */
+    public function connection(Blueprint $blueprint)
+    {
+        $connection = $this->connectionFromBlueprint($blueprint) ?? $this->connectionFromSchemaBuilder();
+
+        if ($connection instanceof Connection) {
+            return $connection;
+        }
+
+        throw new InvalidArgumentException('The [pgsql] Scout schema helper may only be used with PostgreSQL connections.');
+    }
+
+    /**
+     * Resolve a connection exposed directly by the blueprint.
+     *
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @return \Illuminate\Database\Connection|null
+     */
+    protected function connectionFromBlueprint(Blueprint $blueprint)
+    {
+        if (method_exists($blueprint, 'getConnection')) {
+            $connection = $blueprint->getConnection();
+
+            if ($connection instanceof Connection) {
+                return $connection;
+            }
+        }
+
+        if (! property_exists($blueprint, 'connection')) {
+            return null;
+        }
+
+        $connection = (function () {
+            return $this->connection ?? null;
+        })->call($blueprint);
+
+        return $connection instanceof Connection ? $connection : null;
+    }
+
+    /**
+     * Resolve the schema builder connection while older blueprints are constructed.
+     *
+     * @return \Illuminate\Database\Connection|null
+     */
+    protected function connectionFromSchemaBuilder()
+    {
+        foreach (debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
+            $object = $frame['object'] ?? null;
+
+            if ($object instanceof SchemaBuilder) {
+                return $object->getConnection();
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Build the generated search vector expression.
      *
      * @param  \Illuminate\Database\Connection  $connection
@@ -145,7 +199,7 @@ class SearchableSchema
     public function searchVectorExpression(Connection $connection, array $columns, array $options = [])
     {
         $grammar = $connection->getSchemaGrammar();
-        $language = $this->language($options);
+        $language = $this->language();
         $weights = $this->columnWeights($options);
         $columns = $this->searchableColumns($columns);
 
@@ -164,14 +218,13 @@ class SearchableSchema
     /**
      * Get the configured search vector column.
      *
-     * @param  array  $options
      * @return string
      */
-    public function vectorColumn(array $options = [])
+    public function vectorColumn()
     {
-        $column = $options['vector_column'] ?? $this->config['vector_column'] ?? 'search_vector';
+        $column = $this->config['vector_column'] ?? 'search_vector';
 
-        if (! $this->isValidColumnName($column)) {
+        if (! $this->identifiers()->isColumnName($column)) {
             throw new InvalidArgumentException('The [pgsql] Scout schema helper vector column must be a valid column name.');
         }
 
@@ -228,14 +281,13 @@ class SearchableSchema
     /**
      * Get the configured text search language.
      *
-     * @param  array  $options
      * @return string
      */
-    protected function language(array $options = [])
+    protected function language()
     {
-        $language = $options['language'] ?? $this->config['language'] ?? 'english';
+        $language = $this->config['language'] ?? 'english';
 
-        if (! $this->isValidConfigurationName($language)) {
+        if (! $this->identifiers()->isConfigurationName($language)) {
             throw new InvalidArgumentException('The [pgsql] Scout schema helper language must be a valid PostgreSQL text search configuration name.');
         }
 
@@ -297,7 +349,7 @@ class SearchableSchema
      */
     protected function column($column, $type)
     {
-        if (! $this->isValidColumnName($column)) {
+        if (! $this->identifiers()->isColumnName($column)) {
             throw new InvalidArgumentException(sprintf('The [pgsql] Scout schema helper %s column [%s] must be a valid column name.', $type, $column));
         }
 
@@ -305,24 +357,12 @@ class SearchableSchema
     }
 
     /**
-     * Determine if the given value is a safe PostgreSQL column name.
+     * Get the PostgreSQL identifier helper instance.
      *
-     * @param  mixed  $value
-     * @return bool
+     * @return \Laravel\Scout\Pgsql\Identifiers
      */
-    protected function isValidColumnName($value)
+    protected function identifiers()
     {
-        return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $value) === 1;
-    }
-
-    /**
-     * Determine if the given value is a safe PostgreSQL configuration name.
-     *
-     * @param  mixed  $value
-     * @return bool
-     */
-    protected function isValidConfigurationName($value)
-    {
-        return is_string($value) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $value) === 1;
+        return $this->identifiers ??= new Identifiers;
     }
 }

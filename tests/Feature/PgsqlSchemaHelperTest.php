@@ -5,6 +5,7 @@ namespace Laravel\Scout\Tests\Feature;
 use Illuminate\Database\PostgresConnection;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\SQLiteConnection;
+use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 use Laravel\Scout\ScoutServiceProvider;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -19,6 +20,16 @@ class PgsqlSchemaHelperTest extends TestCase
     protected function defineEnvironment($app)
     {
         $app['config']->set('scout.driver', 'pgsql');
+        $app['config']->set('database.default', 'testing');
+        $app['config']->set('database.connections.pgsql_schema', [
+            'driver' => 'testing-pgsql-schema',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]);
+
+        $app['db']->extend('testing-pgsql-schema', function ($config) {
+            return new PgsqlSchemaHelperTestingConnection(new PDO('sqlite::memory:'), $config['database'], $config['prefix'], $config);
+        });
     }
 
     public function test_searchable_blueprint_macro_is_registered()
@@ -64,6 +75,33 @@ class PgsqlSchemaHelperTest extends TestCase
         $this->assertContains('create index "posts_search_vector_index" on "posts" using gin ("search_vector")', $sql);
     }
 
+    public function test_searchable_helper_uses_configured_vector_column()
+    {
+        $this->app['config']->set('scout.pgsql.vector_column', 'document_vector');
+
+        $sql = $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title']);
+        });
+
+        $this->assertContains('alter table "posts" add column "document_vector" tsvector not null generated always as (setweight(to_tsvector(\'english\', coalesce(cast("title" as text), \'\')), \'D\')) stored', $sql);
+        $this->assertContains('create index "posts_document_vector_index" on "posts" using gin ("document_vector")', $sql);
+    }
+
+    public function test_searchable_helper_ignores_per_call_vector_column_and_language_options()
+    {
+        $sql = $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title'], [
+                'language' => 'simple',
+                'vector_column' => 'document_vector',
+            ]);
+        });
+
+        $this->assertContains('alter table "posts" add column "search_vector" tsvector not null generated always as (setweight(to_tsvector(\'english\', coalesce(cast("title" as text), \'\')), \'D\')) stored', $sql);
+        $this->assertContains('create index "posts_search_vector_index" on "posts" using gin ("search_vector")', $sql);
+        $this->assertStringNotContainsString('document_vector', implode('\n', $sql));
+        $this->assertStringNotContainsString('simple', implode('\n', $sql));
+    }
+
     public function test_searchable_helper_uses_configured_column_weights()
     {
         $this->app['config']->set('scout.pgsql.column_weights', [
@@ -94,10 +132,10 @@ class PgsqlSchemaHelperTest extends TestCase
 
     public function test_searchable_helper_accepts_schema_qualified_languages()
     {
+        $this->app['config']->set('scout.pgsql.language', 'pg_catalog.english');
+
         $sql = $this->compilePgsqlBlueprint(function ($table) {
-            $table->searchable(['title'], [
-                'language' => 'pg_catalog.english',
-            ]);
+            $table->searchable(['title']);
         });
 
         $this->assertContains('alter table "posts" add column "search_vector" tsvector not null generated always as (setweight(to_tsvector(\'pg_catalog.english\', coalesce(cast("title" as text), \'\')), \'D\')) stored', $sql);
@@ -105,37 +143,37 @@ class PgsqlSchemaHelperTest extends TestCase
 
     public function test_searchable_helper_rejects_invalid_languages()
     {
+        $this->app['config']->set('scout.pgsql.language', 'english; --');
+
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The [pgsql] Scout schema helper language must be a valid PostgreSQL text search configuration name.');
 
         $this->compilePgsqlBlueprint(function ($table) {
-            $table->searchable(['title'], [
-                'language' => 'english; --',
-            ]);
+            $table->searchable(['title']);
         });
     }
 
     public function test_searchable_helper_rejects_invalid_vector_columns()
     {
+        $this->app['config']->set('scout.pgsql.vector_column', 'search_vector) desc; --');
+
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The [pgsql] Scout schema helper vector column must be a valid column name.');
 
         $this->compilePgsqlBlueprint(function ($table) {
-            $table->searchable(['title'], [
-                'vector_column' => 'search_vector) desc; --',
-            ]);
+            $table->searchable(['title']);
         });
     }
 
     public function test_searchable_helper_rejects_schema_qualified_vector_columns()
     {
+        $this->app['config']->set('scout.pgsql.vector_column', 'foo.bar');
+
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The [pgsql] Scout schema helper vector column must be a valid column name.');
 
         $this->compilePgsqlBlueprint(function ($table) {
-            $table->searchable(['title'], [
-                'vector_column' => 'foo.bar',
-            ]);
+            $table->searchable(['title']);
         });
     }
 
@@ -344,9 +382,10 @@ class PgsqlSchemaHelperTest extends TestCase
 
     public function test_drop_searchable_helper_uses_configured_vector_column_and_index()
     {
+        $this->app['config']->set('scout.pgsql.vector_column', 'document_vector');
+
         $sql = $this->compilePgsqlBlueprint(function ($table) {
             $table->dropSearchable([
-                'vector_column' => 'document_vector',
                 'index' => 'posts_document_vector_index',
             ]);
         });
@@ -430,6 +469,40 @@ class PgsqlSchemaHelperTest extends TestCase
         $this->assertContains('alter table "prefix_posts" drop column "search_vector"', $sql);
     }
 
+    public function test_searchable_helper_uses_named_schema_connection_when_default_connection_is_not_postgresql()
+    {
+        Schema::connection('pgsql_schema')->table('posts', function (Blueprint $table) {
+            $table->searchable(['title']);
+        });
+
+        $statements = $this->app['db']->connection('pgsql_schema')->statements;
+
+        $this->assertContains('alter table "posts" add column "search_vector" tsvector not null generated always as (setweight(to_tsvector(\'english\', coalesce(cast("title" as text), \'\')), \'D\')) stored', $statements);
+        $this->assertContains('create index "posts_search_vector_index" on "posts" using gin ("search_vector")', $statements);
+    }
+
+    public function test_drop_searchable_helper_uses_named_schema_connection_when_default_connection_is_not_postgresql()
+    {
+        Schema::connection('pgsql_schema')->table('posts', function (Blueprint $table) {
+            $table->dropSearchable();
+        });
+
+        $statements = $this->app['db']->connection('pgsql_schema')->statements;
+
+        $this->assertContains('drop index "posts_search_vector_index"', $statements);
+        $this->assertContains('alter table "posts" drop column "search_vector"', $statements);
+    }
+
+    public function test_searchable_helper_rejects_real_non_postgresql_schema_connections()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper may only be used with PostgreSQL connections.');
+
+        Schema::connection('testing')->table('posts', function (Blueprint $table) {
+            $table->searchable(['title']);
+        });
+    }
+
     public function test_searchable_helper_rejects_non_postgresql_connections()
     {
         $connection = new SQLiteConnection(new PDO('sqlite::memory:'), ':memory:', '', []);
@@ -492,5 +565,22 @@ class PgsqlSchemaHelperTest extends TestCase
         $connection->useDefaultSchemaGrammar();
 
         return $connection;
+    }
+}
+
+class PgsqlSchemaHelperTestingConnection extends PostgresConnection
+{
+    public array $statements = [];
+
+    public function getDriverName()
+    {
+        return 'pgsql';
+    }
+
+    public function statement($query, $bindings = [])
+    {
+        $this->statements[] = $query;
+
+        return true;
     }
 }
