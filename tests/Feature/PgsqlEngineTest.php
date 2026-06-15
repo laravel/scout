@@ -680,6 +680,10 @@ class PgsqlIntegerScoutKeyDocument extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'external_id' => 'integer',
+    ];
+
     protected $table = 'external_documents';
 
     public function getScoutKey()
