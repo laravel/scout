@@ -20,8 +20,6 @@ class PgsqlEngine extends DatabaseModelEngine
         'ts_rank_cd',
     ];
 
-    protected const COLUMN_WEIGHTS = ['A', 'B', 'C', 'D'];
-
     /**
      * The PostgreSQL trigram helper instance.
      *
