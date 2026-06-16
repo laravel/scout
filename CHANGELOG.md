@@ -1,6 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/sentinel/compare/v11.2.0...11.x)
+## [Unreleased](https://github.com/laravel/sentinel/compare/v11.3.0...11.x)
+
+## [v11.3.0](https://github.com/laravel/sentinel/compare/v11.2.0...v11.3.0) - 2026-06-16
+
+* Pin GitHub Actions to commit SHAs and add Dependabot config by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/scout/pull/985
+* Bump shivammathur/setup-php from 2.37.0 to 2.37.1 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/scout/pull/989
+* Add Dependabot cooldown of 5 days by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/scout/pull/991
+* Enable Dependabot auto-merge by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/scout/pull/995
+* Add opt-in unique indexing jobs to prevent Scout reindexing already queued models by [@stevebauman](https://github.com/stevebauman) in https://github.com/laravel/scout/pull/996
+* Bump actions/checkout from 6.0.2 to 6.0.3 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/scout/pull/997
 
 ## [v11.2.0](https://github.com/laravel/sentinel/compare/v11.1.0...v11.2.0) - 2026-05-13
 
