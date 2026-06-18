@@ -48,8 +48,8 @@ class QueueImportCommand extends Command
 
         $query = $model::makeAllSearchableQuery();
 
-        $min = $this->option('min') ?? $query->min($model->getScoutKeyName());
-        $max = $this->option('max') ?? $query->max($model->getScoutKeyName());
+        $min = $this->option('min') ?? $query->min($model->getKeyName());
+        $max = $this->option('max') ?? $query->max($model->getKeyName());
 
         $chunk = max(1, (int) ($this->option('chunk') ?? config('scout.chunk.searchable', 500)));
 
