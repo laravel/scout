@@ -37,6 +37,8 @@ class MakeSearchableTest extends TestCase
     #[WithConfig('scout.jobs.tries', 3)]
     #[WithConfig('scout.jobs.backoff', [1, 5, 10])]
     #[WithConfig('scout.jobs.max_exceptions', 2)]
+    #[WithConfig('scout.jobs.timeout', 30)]
+    #[WithConfig('scout.jobs.fail_on_timeout', true)]
     public function test_job_properties_are_set_from_config()
     {
         $model = SearchableUserFactory::new()->create();
@@ -46,6 +48,8 @@ class MakeSearchableTest extends TestCase
         $this->assertSame(3, $job->tries);
         $this->assertSame([1, 5, 10], $job->backoff);
         $this->assertSame(2, $job->maxExceptions);
+        $this->assertSame(30, $job->timeout);
+        $this->assertTrue($job->failOnTimeout);
     }
 
     public function test_job_properties_are_not_set_without_config()
@@ -57,11 +61,15 @@ class MakeSearchableTest extends TestCase
         $this->assertNull($job->tries);
         $this->assertNull($job->backoff);
         $this->assertNull($job->maxExceptions);
+        $this->assertNull($job->timeout);
+        $this->assertNull($job->failOnTimeout);
     }
 
     #[WithConfig('scout.jobs.tries', 1)]
     #[WithConfig('scout.jobs.backoff', [1, 5, 10])]
     #[WithConfig('scout.jobs.max_exceptions', 1)]
+    #[WithConfig('scout.jobs.timeout', 30)]
+    #[WithConfig('scout.jobs.fail_on_timeout', true)]
     public function test_subclass_job_properties_are_not_overridden_by_config()
     {
         $model = SearchableUserFactory::new()->create();
@@ -71,6 +79,8 @@ class MakeSearchableTest extends TestCase
         $this->assertSame(5, $job->tries);
         $this->assertSame([2, 4, 8, 16, 32], $job->backoff());
         $this->assertSame(3, $job->maxExceptions);
+        $this->assertSame(90, $job->timeout);
+        $this->assertFalse($job->failOnTimeout);
     }
 
     public function test_unique_id_is_based_on_the_class_and_scout_keys()

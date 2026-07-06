@@ -26,6 +26,20 @@ trait ConfiguresJobOptions
     public $maxExceptions;
 
     /**
+     * The number of seconds the job can run before timing out.
+     *
+     * @var int|null
+     */
+    public $timeout;
+
+    /**
+     * Indicates if the job should be marked as failed on timeout.
+     *
+     * @var bool|null
+     */
+    public $failOnTimeout;
+
+    /**
      * Configure the job.
      *
      * @return void
@@ -45,6 +59,16 @@ trait ConfiguresJobOptions
         if (! isset($this->maxExceptions) &&
             ! is_null($maxExceptions = config('scout.jobs.max_exceptions'))) {
             $this->maxExceptions = $maxExceptions;
+        }
+
+        if (! isset($this->timeout) &&
+            ! is_null($timeout = config('scout.jobs.timeout'))) {
+            $this->timeout = $timeout;
+        }
+
+        if (! isset($this->failOnTimeout) &&
+            ! is_null($failOnTimeout = config('scout.jobs.fail_on_timeout'))) {
+            $this->failOnTimeout = $failOnTimeout;
         }
     }
 }
