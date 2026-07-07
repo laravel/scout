@@ -32,6 +32,13 @@ class MakeRangeSearchable implements ShouldQueue
     public $end;
 
     /**
+     * Indicates if the job should be marked as failed on timeout.
+     *
+     * @var bool
+     */
+    public $failOnTimeout = true;
+
+    /**
      * Create a new job instance.
      *
      * @param  string  $class
