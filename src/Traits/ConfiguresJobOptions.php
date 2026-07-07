@@ -26,6 +26,13 @@ trait ConfiguresJobOptions
     public $maxExceptions;
 
     /**
+     * Indicates if the job should be marked as failed on timeout.
+     *
+     * @var bool
+     */
+    public $failOnTimeout = true;
+
+    /**
      * Configure the job.
      *
      * @return void
