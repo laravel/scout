@@ -73,6 +73,24 @@ class MakeSearchableTest extends TestCase
         $this->assertSame(3, $job->maxExceptions);
     }
 
+    public function test_job_fails_on_timeout_by_default()
+    {
+        $model = SearchableUserFactory::new()->create();
+
+        $job = new MakeSearchable(Collection::make([$model]));
+
+        $this->assertTrue($job->failOnTimeout);
+    }
+
+    public function test_subclass_can_opt_out_of_failing_on_timeout()
+    {
+        $model = SearchableUserFactory::new()->create();
+
+        $job = new OverriddenMakeSearchable(Collection::make([$model]));
+
+        $this->assertFalse($job->failOnTimeout);
+    }
+
     public function test_unique_id_is_based_on_the_class_and_scout_keys()
     {
         $models = SearchableUserFactory::new()->count(2)->create();
