@@ -84,7 +84,7 @@ class QueueImportCommand extends Command
         $from = $order === 'asc' ? $min : $max;
         $to = $order === 'asc' ? $max : $min;
 
-        $ranges = LazyCollection::make(function () use ($from, $to, $chunk) {
+        LazyCollection::make(function () use ($from, $to, $chunk) {
             if ($from <= $to) {
                 for (; $from <= $to; $from += $chunk) {
                     yield $from;
@@ -98,9 +98,9 @@ class QueueImportCommand extends Command
             return $order === 'asc'
                 ? [$boundary, min($boundary + $chunk - 1, $max)]
                 : [max($boundary - $chunk + 1, $min), $boundary];
-        });
+        })->each(function ($range) use ($class, $model, $order) {
+            [$start, $end] = $range;
 
-        foreach ($ranges as [$start, $end]) {
             dispatch(new MakeRangeSearchable($class, $start, $end))
                 ->onQueue($this->option('queue') ?? $model->syncWithSearchUsingQueue())
                 ->onConnection($model->syncWithSearchUsing());
@@ -108,7 +108,7 @@ class QueueImportCommand extends Command
             $this->line($order === 'asc'
                 ? '<comment>Queued ['.$class.'] models up to ID:</comment> '.$end
                 : '<comment>Queued ['.$class.'] models down to ID:</comment> '.$start);
-        }
+        });
 
         $this->info('All ['.$class.'] records have been queued for importing.');
     }
