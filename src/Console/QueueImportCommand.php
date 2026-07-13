@@ -3,6 +3,7 @@
 namespace Laravel\Scout\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Jobs\MakeRangeSearchable;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -20,6 +21,7 @@ class QueueImportCommand extends Command
             {--min= : The minimum ID to start queuing from}
             {--max= : The maximum ID to queue up to}
             {--c|chunk= : The number of records to queue in a single job (Defaults to configuration value: `scout.chunk.searchable`)}
+            {--order=asc : The order in which ranges should be queued (asc or desc)}
             {--queue= : The queue that should be used (Defaults to configuration value: `scout.queue.queue`)}';
 
     /**
@@ -48,10 +50,18 @@ class QueueImportCommand extends Command
 
         $query = $model::makeAllSearchableQuery();
 
+        $order = $this->option('order') ?: 'asc';
+
         $min = $this->option('min') ?? $query->min($model->getScoutKeyName());
         $max = $this->option('max') ?? $query->max($model->getScoutKeyName());
 
         $chunk = max(1, (int) ($this->option('chunk') ?? config('scout.chunk.searchable', 500)));
+
+        if (! in_array($order, ['asc', 'desc'])) {
+            $this->error('The order option must be either "asc" or "desc".');
+
+            return self::FAILURE;
+        }
 
         if (! $min || ! $max) {
             $this->info('No records found for ['.$class.'].');
@@ -65,14 +75,26 @@ class QueueImportCommand extends Command
             return;
         }
 
-        for ($start = $min; $start <= $max; $start += $chunk) {
-            $end = min($start + $chunk - 1, $max);
+        if ($min > $max) {
+            $this->info('No records found for ['.$class.'] within the given ID range.');
 
+            return;
+        }
+
+        $ranges = $order === 'asc'
+            ? LazyCollection::range($min, $max, $chunk)
+                ->map(fn ($start) => [$start, min($start + $chunk - 1, $max)])
+            : LazyCollection::range($max, $min, $chunk)
+                ->map(fn ($end) => [max($end - $chunk + 1, $min), $end]);
+
+        foreach ($ranges as [$start, $end]) {
             dispatch(new MakeRangeSearchable($class, $start, $end))
                 ->onQueue($this->option('queue') ?? $model->syncWithSearchUsingQueue())
                 ->onConnection($model->syncWithSearchUsing());
 
-            $this->line('<comment>Queued ['.$class.'] models up to ID:</comment> '.$end);
+            $this->line($order === 'asc'
+                ? '<comment>Queued ['.$class.'] models up to ID:</comment> '.$end
+                : '<comment>Queued ['.$class.'] models down to ID:</comment> '.$start);
         }
 
         $this->info('All ['.$class.'] records have been queued for importing.');
