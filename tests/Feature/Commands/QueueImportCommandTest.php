@@ -71,6 +71,47 @@ class QueueImportCommandTest extends TestCase
         Queue::assertPushed(MakeRangeSearchable::class, 5);
     }
 
+    public function test_it_queues_ranges_in_descending_order()
+    {
+        Queue::fake();
+
+        SearchableUserFactory::new()->count(8)->create();
+
+        $this->artisan('scout:queue-import', [
+            'model' => SearchableUser::class,
+            '--chunk' => 3,
+            '--order' => 'desc',
+        ])
+            ->expectsOutputToContain('models down to ID: 6')
+            ->expectsOutputToContain('models down to ID: 3')
+            ->expectsOutputToContain('models down to ID: 1')
+            ->assertSuccessful();
+
+        $this->assertSame([
+            [6, 8],
+            [3, 5],
+            [1, 2],
+        ], Queue::pushed(MakeRangeSearchable::class)
+            ->map(fn ($job) => [$job->start, $job->end])
+            ->all());
+    }
+
+    public function test_it_rejects_an_invalid_order()
+    {
+        Queue::fake();
+
+        SearchableUserFactory::new()->count(3)->create();
+
+        $this->artisan('scout:queue-import', [
+            'model' => SearchableUser::class,
+            '--order' => 'newest',
+        ])
+            ->expectsOutput('The order option must be either "asc" or "desc".')
+            ->assertFailed();
+
+        Queue::assertNothingPushed();
+    }
+
     public function test_it_uses_default_chunk_size_when_not_specified()
     {
         Queue::fake();
@@ -360,7 +401,7 @@ class QueueImportCommandTest extends TestCase
         Queue::assertPushed(MakeRangeSearchable::class, 3);
     }
 
-    public function test_it_handles_min_greater_than_max()
+    public function test_it_handles_an_empty_id_range()
     {
         Queue::fake();
 
@@ -371,10 +412,10 @@ class QueueImportCommandTest extends TestCase
             '--min' => 5,
             '--max' => 2,
         ])
-            ->expectsOutputToContain('records have been queued')
+            ->expectsOutputToContain('No records found')
             ->assertSuccessful();
 
-        // Should not dispatch any jobs since the range is invalid (start > end in loop)
+        // Should not dispatch any jobs since no records exist within the range.
         Queue::assertNothingPushed();
     }
 
