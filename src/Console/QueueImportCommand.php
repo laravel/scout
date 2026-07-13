@@ -81,11 +81,24 @@ class QueueImportCommand extends Command
             return;
         }
 
-        $ranges = $order === 'asc'
-            ? LazyCollection::range($min, $max, $chunk)
-                ->map(fn ($start) => [$start, min($start + $chunk - 1, $max)])
-            : LazyCollection::range($max, $min, $chunk)
-                ->map(fn ($end) => [max($end - $chunk + 1, $min), $end]);
+        $from = $order === 'asc' ? $min : $max;
+        $to = $order === 'asc' ? $max : $min;
+
+        $ranges = LazyCollection::make(function () use ($from, $to, $chunk) {
+            if ($from <= $to) {
+                for (; $from <= $to; $from += $chunk) {
+                    yield $from;
+                }
+            } else {
+                for (; $from >= $to; $from -= $chunk) {
+                    yield $from;
+                }
+            }
+        })->map(function ($boundary) use ($chunk, $min, $max, $order) {
+            return $order === 'asc'
+                ? [$boundary, min($boundary + $chunk - 1, $max)]
+                : [max($boundary - $chunk + 1, $min), $boundary];
+        });
 
         foreach ($ranges as [$start, $end]) {
             dispatch(new MakeRangeSearchable($class, $start, $end))
