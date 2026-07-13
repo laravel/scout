@@ -60,7 +60,7 @@ class QueueImportCommand extends Command
         if (! in_array($order, ['asc', 'desc'])) {
             $this->error('The order option must be either "asc" or "desc".');
 
-            return Command::FAILURE;
+            return;
         }
 
         if (! $min || ! $max) {

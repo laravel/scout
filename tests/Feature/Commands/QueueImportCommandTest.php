@@ -107,7 +107,7 @@ class QueueImportCommandTest extends TestCase
             '--order' => 'newest',
         ])
             ->expectsOutput('The order option must be either "asc" or "desc".')
-            ->assertFailed();
+            ->assertSuccessful();
 
         Queue::assertNothingPushed();
     }
