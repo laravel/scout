@@ -81,8 +81,8 @@ class QueueImportCommand extends Command
             return;
         }
 
-        $from = $order === 'asc' ? $min : $max;
-        $to = $order === 'asc' ? $max : $min;
+        $from = (int) ($order === 'asc' ? $min : $max);
+        $to = (int) ($order === 'asc' ? $max : $min);
 
         LazyCollection::make(function () use ($from, $to, $chunk) {
             if ($from <= $to) {
