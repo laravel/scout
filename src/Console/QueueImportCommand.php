@@ -3,7 +3,6 @@
 namespace Laravel\Scout\Console;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Jobs\MakeRangeSearchable;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -84,25 +83,14 @@ class QueueImportCommand extends Command
         $min = (int) $min;
         $max = (int) $max;
 
-        $from = $order === 'asc' ? $min : $max;
-        $to = $order === 'asc' ? $max : $min;
-
-        LazyCollection::make(function () use ($from, $to, $chunk) {
-            if ($from <= $to) {
-                for (; $from <= $to; $from += $chunk) {
-                    yield $from;
-                }
+        for ($offset = 0; $offset <= $max - $min; $offset += $chunk) {
+            if ($order === 'asc') {
+                $start = $min + $offset;
+                $end = min($start + $chunk - 1, $max);
             } else {
-                for (; $from >= $to; $from -= $chunk) {
-                    yield $from;
-                }
+                $end = $max - $offset;
+                $start = max($end - $chunk + 1, $min);
             }
-        })->map(function ($boundary) use ($chunk, $min, $max, $order) {
-            return $order === 'asc'
-                ? [$boundary, min($boundary + $chunk - 1, $max)]
-                : [max($boundary - $chunk + 1, $min), $boundary];
-        })->each(function ($range) use ($class, $model, $order) {
-            [$start, $end] = $range;
 
             dispatch(new MakeRangeSearchable($class, $start, $end))
                 ->onQueue($this->option('queue') ?? $model->syncWithSearchUsingQueue())
@@ -111,7 +99,7 @@ class QueueImportCommand extends Command
             $this->line($order === 'asc'
                 ? '<comment>Queued ['.$class.'] models up to ID:</comment> '.$end
                 : '<comment>Queued ['.$class.'] models down to ID:</comment> '.$start);
-        });
+        }
 
         $this->info('All ['.$class.'] records have been queued for importing.');
     }
