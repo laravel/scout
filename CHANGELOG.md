@@ -1,6 +1,13 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/sentinel/compare/v11.3.0...11.x)
+## [Unreleased](https://github.com/laravel/sentinel/compare/v11.4.0...11.x)
+
+## [v11.4.0](https://github.com/laravel/sentinel/compare/v11.3.0...v11.4.0) - 2026-07-21
+
+* Bump shivammathur/setup-php from 2.37.1 to 2.37.2 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/scout/pull/999
+* Bump actions/checkout from 6.0.3 to 7.0.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/scout/pull/1000
+* Mark Scout jobs as failed on timeout by default by [@Bramvzw](https://github.com/Bramvzw) in https://github.com/laravel/scout/pull/1002
+* [11.x] Add ability to adjust `scout:queue-import` order via `--order=desc` option by [@stevebauman](https://github.com/stevebauman) in https://github.com/laravel/scout/pull/1003
 
 ## [v11.3.0](https://github.com/laravel/sentinel/compare/v11.2.0...v11.3.0) - 2026-06-16
 
