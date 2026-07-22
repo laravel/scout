@@ -118,6 +118,29 @@ class Algolia4EngineTest extends TestCase
         $engine->search($builder);
     }
 
+    public function test_search_sends_boolean_and_string_inequality_filters_to_algolia()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('searchSingleIndex')->once()->with(
+            'users',
+            [
+                'query' => 'zonda',
+                'filters' => "is_live:true AND is_archived:false AND NOT status:'draft' AND NOT is_deleted:true AND (is_featured:true OR is_featured:false) AND (NOT is_hidden:true OR NOT is_hidden:false)",
+            ]
+        );
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->where('is_live', true)
+                ->where('is_archived', '=', false)
+                ->where('status', '!=', 'draft')
+                ->where('is_deleted', '!=', true)
+                ->whereIn('is_featured', [true, false])
+                ->whereNotIn('is_hidden', [true, false]);
+
+        $engine->search($builder);
+    }
+
     public function test_search_sends_correct_parameters_to_algolia_for_where_in_search()
     {
         $engine = $this->app->make(EngineManager::class)->engine();
