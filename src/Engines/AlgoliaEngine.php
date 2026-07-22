@@ -185,7 +185,11 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
      */
     protected function formatFilterValue($value)
     {
-        return is_bool($value) ? ($value ? 'true' : 'false') : "'{$value}'";
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        return "'".str_replace(['\\', "'"], ['\\\\', "\\'"], $value)."'";
     }
 
     /**

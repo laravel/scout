@@ -126,7 +126,7 @@ class Algolia4EngineTest extends TestCase
             'users',
             [
                 'query' => 'zonda',
-                'filters' => "is_live:true AND is_archived:false AND NOT status:'draft' AND NOT is_deleted:true AND (is_featured:true OR is_featured:false) AND (NOT is_hidden:true OR NOT is_hidden:false)",
+                'filters' => "is_live:true AND is_archived:false AND NOT status:'draft' AND NOT label:'manager\\'s draft\\\\review' AND NOT is_deleted:true AND (is_featured:true OR is_featured:false) AND (NOT is_hidden:true OR NOT is_hidden:false)",
             ]
         );
 
@@ -134,6 +134,7 @@ class Algolia4EngineTest extends TestCase
         $builder->where('is_live', true)
                 ->where('is_archived', '=', false)
                 ->where('status', '!=', 'draft')
+                ->where('label', '!=', "manager's draft\\review")
                 ->where('is_deleted', '!=', true)
                 ->whereIn('is_featured', [true, false])
                 ->whereNotIn('is_hidden', [true, false]);
