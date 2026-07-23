@@ -169,9 +169,9 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
                     return '';
                 }
 
-                return '('.collect($values)->map(function ($value) use ($key) {
+                return collect($values)->map(function ($value) use ($key) {
                     return 'NOT '.$key.':'.$this->formatFilterValue($value);
-                })->implode(' OR ').')';
+                })->implode(' AND ');
             })->values();
 
         return $wheres->merge($whereIns)->merge($whereNotIns)->filter()->implode(' AND ');

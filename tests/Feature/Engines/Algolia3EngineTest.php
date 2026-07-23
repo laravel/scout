@@ -128,7 +128,7 @@ class Algolia3EngineTest extends TestCase
 
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
         $index->shouldReceive('search')->once()->with('zonda', [
-            'filters' => "is_live:true AND is_archived:false AND NOT status:'draft' AND NOT label:'manager\\'s draft\\\\review' AND NOT is_deleted:true AND (is_featured:true OR is_featured:false) AND (NOT is_hidden:true OR NOT is_hidden:false)",
+            'filters' => "is_live:true AND is_archived:false AND NOT status:'draft' AND NOT label:'manager\\'s draft\\\\review' AND NOT is_deleted:true AND (is_featured:true OR is_featured:false) AND NOT is_hidden:true AND NOT is_hidden:false",
         ]);
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -272,7 +272,7 @@ class Algolia3EngineTest extends TestCase
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
 
         $index->shouldReceive('search')->once()->with('zonda', [
-            'filters' => "(NOT foo:'1' OR NOT foo:'2')",
+            'filters' => "NOT foo:'1' AND NOT foo:'2'",
         ]);
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -300,7 +300,7 @@ class Algolia3EngineTest extends TestCase
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
 
         $index->shouldReceive('search')->once()->with('zonda', [
-            'filters' => "foo:'1' AND (bar:'1' OR bar:'2') AND (NOT baz:'1' OR NOT baz:'2')",
+            'filters' => "foo:'1' AND (bar:'1' OR bar:'2') AND NOT baz:'1' AND NOT baz:'2'",
         ]);
 
         $builder = new Builder(new SearchableUser, 'zonda');

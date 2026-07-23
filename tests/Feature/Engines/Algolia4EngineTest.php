@@ -126,7 +126,7 @@ class Algolia4EngineTest extends TestCase
             'users',
             [
                 'query' => 'zonda',
-                'filters' => "is_live:true AND is_archived:false AND NOT status:'draft' AND NOT label:'manager\\'s draft\\\\review' AND NOT is_deleted:true AND (is_featured:true OR is_featured:false) AND (NOT is_hidden:true OR NOT is_hidden:false)",
+                'filters' => "is_live:true AND is_archived:false AND NOT status:'draft' AND NOT label:'manager\\'s draft\\\\review' AND NOT is_deleted:true AND (is_featured:true OR is_featured:false) AND NOT is_hidden:true AND NOT is_hidden:false",
             ]
         );
 
@@ -268,7 +268,7 @@ class Algolia4EngineTest extends TestCase
             'users',
             [
                 'query' => 'zonda',
-                'filters' => "(NOT foo:'1' OR NOT foo:'2')",
+                'filters' => "NOT foo:'1' AND NOT foo:'2'",
             ]
         );
 
@@ -301,7 +301,7 @@ class Algolia4EngineTest extends TestCase
             'users',
             [
                 'query' => 'zonda',
-                'filters' => "foo:'1' AND (bar:'1' OR bar:'2') AND (NOT baz:'1' OR NOT baz:'2')",
+                'filters' => "foo:'1' AND (bar:'1' OR bar:'2') AND NOT baz:'1' AND NOT baz:'2'",
             ]
         );
 
