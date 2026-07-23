@@ -122,6 +122,27 @@ class Algolia3EngineTest extends TestCase
         $engine->search($builder);
     }
 
+    public function test_search_sends_boolean_and_string_inequality_filters_to_algolia()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
+        $index->shouldReceive('search')->once()->with('zonda', [
+            'filters' => "is_live:true AND is_archived:false AND NOT status:'draft' AND NOT label:'manager\\'s draft\\\\review' AND NOT is_deleted:true AND (is_featured:true OR is_featured:false) AND NOT is_hidden:true AND NOT is_hidden:false",
+        ]);
+
+        $builder = new Builder(new SearchableUser, 'zonda');
+        $builder->where('is_live', true)
+                ->where('is_archived', '=', false)
+                ->where('status', '!=', 'draft')
+                ->where('label', '!=', "manager's draft\\review")
+                ->where('is_deleted', '!=', true)
+                ->whereIn('is_featured', [true, false])
+                ->whereNotIn('is_hidden', [true, false]);
+
+        $engine->search($builder);
+    }
+
     public function test_search_sends_correct_parameters_to_algolia_for_where_in_search()
     {
         $engine = $this->app->make(EngineManager::class)->engine();
@@ -251,7 +272,7 @@ class Algolia3EngineTest extends TestCase
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
 
         $index->shouldReceive('search')->once()->with('zonda', [
-            'filters' => "(NOT foo:'1' OR NOT foo:'2')",
+            'filters' => "NOT foo:'1' AND NOT foo:'2'",
         ]);
 
         $builder = new Builder(new SearchableUser, 'zonda');
@@ -279,7 +300,7 @@ class Algolia3EngineTest extends TestCase
         $this->client->shouldReceive('initIndex')->once()->with('users')->andReturn($index = m::mock(stdClass::class));
 
         $index->shouldReceive('search')->once()->with('zonda', [
-            'filters' => "foo:'1' AND (bar:'1' OR bar:'2') AND (NOT baz:'1' OR NOT baz:'2')",
+            'filters' => "foo:'1' AND (bar:'1' OR bar:'2') AND NOT baz:'1' AND NOT baz:'2'",
         ]);
 
         $builder = new Builder(new SearchableUser, 'zonda');
