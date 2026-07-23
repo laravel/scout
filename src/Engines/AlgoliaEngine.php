@@ -135,7 +135,15 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
                 $operator = $where['operator'];
                 $value = $where['value'];
 
-                if (is_string($value) || $operator === '=') {
+                if (is_string($value) || (is_bool($value) && in_array($operator, ['=', '!='], true))) {
+                    $value = $this->formatFilterValue($value);
+
+                    if ($operator === '!=') {
+                        return 'NOT '.$field.':'.$value;
+                    }
+
+                    $operator = ':';
+                } elseif ($operator === '=') {
                     $operator = ':';
                     $value = "'{$value}'";
                 }
@@ -151,7 +159,7 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
                 }
 
                 return '('.collect($values)->map(function ($value) use ($key) {
-                    return $key.":'{$value}'";
+                    return $key.':'.$this->formatFilterValue($value);
                 })->implode(' OR ').')';
             })->values();
 
@@ -161,12 +169,27 @@ abstract class AlgoliaEngine extends Engine implements UpdatesIndexSettings
                     return '';
                 }
 
-                return '('.collect($values)->map(function ($value) use ($key) {
-                    return 'NOT '.$key.":'{$value}'";
-                })->implode(' OR ').')';
+                return collect($values)->map(function ($value) use ($key) {
+                    return 'NOT '.$key.':'.$this->formatFilterValue($value);
+                })->implode(' AND ');
             })->values();
 
         return $wheres->merge($whereIns)->merge($whereNotIns)->filter()->implode(' AND ');
+    }
+
+    /**
+     * Format the given value for use in an Algolia filter.
+     *
+     * @param  mixed  $value
+     * @return string
+     */
+    protected function formatFilterValue($value)
+    {
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        return "'".str_replace(['\\', "'"], ['\\\\', "\\'"], $value)."'";
     }
 
     /**
