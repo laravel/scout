@@ -13,6 +13,7 @@ use Laravel\Scout\Engines\CollectionEngine;
 use Laravel\Scout\Engines\DatabaseEngine;
 use Laravel\Scout\Engines\MeilisearchEngine;
 use Laravel\Scout\Engines\NullEngine;
+use Laravel\Scout\Engines\PgsqlEngine;
 use Laravel\Scout\Engines\TypesenseEngine;
 use Meilisearch\Client as MeilisearchClient;
 use Meilisearch\Meilisearch;
@@ -187,6 +188,16 @@ class EngineManager extends Manager
     public function createDatabaseDriver()
     {
         return new DatabaseEngine;
+    }
+
+    /**
+     * Create a PostgreSQL engine instance.
+     *
+     * @return \Laravel\Scout\Engines\PgsqlEngine
+     */
+    public function createPgsqlDriver()
+    {
+        return new PgsqlEngine(config('scout.pgsql'));
     }
 
     /**

@@ -11,7 +11,7 @@ return [
     | using Laravel Scout. This connection is used when syncing all models
     | to the search service. You should adjust this based on your needs.
     |
-    | Supported: "algolia", "meilisearch", "typesense",
+    | Supported: "algolia", "meilisearch", "typesense", "pgsql",
     |            "database", "collection", "null"
     |
     */
@@ -205,6 +205,35 @@ return [
             // ],
         ],
         'import_action' => env('TYPESENSE_IMPORT_ACTION', 'upsert'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | PostgreSQL Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure Scout's native PostgreSQL search driver. The driver
+    | uses PostgreSQL full-text search by default and may optionally blend in
+    | trigram similarity scoring when the pg_trgm extension is available.
+    |
+    */
+
+    'pgsql' => [
+        'language' => 'english',
+        'vector_column' => 'search_vector',
+        'column_weights' => [],
+        'query_function' => 'plainto_tsquery',
+        'rank_function' => 'ts_rank',
+        'trigram' => [
+            'enabled' => env('PGSQL_TRIGRAM', false),
+            'threshold' => env('PGSQL_TRIGRAM_THRESHOLD', 0.3),
+            'columns' => [],
+            'create_extension' => false,
+        ],
+        'weights' => [
+            'full_text' => 1.0,
+            'trigram' => 0.25,
+        ],
     ],
 
 ];
