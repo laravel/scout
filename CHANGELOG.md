@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/sentinel/compare/v11.4.0...11.x)
+## [Unreleased](https://github.com/laravel/sentinel/compare/v11.5.0...11.x)
+
+## [v11.5.0](https://github.com/laravel/sentinel/compare/v11.4.0...v11.5.0) - 2026-08-04
+
+* Fix boolean and inequality Algolia filters by [@edwei06](https://github.com/edwei06) in https://github.com/laravel/scout/pull/1005
+* Bump actions/checkout from 7.0.0 to 7.0.1 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/scout/pull/1006
 
 ## [v11.4.0](https://github.com/laravel/sentinel/compare/v11.3.0...v11.4.0) - 2026-07-21
 
