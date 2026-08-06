@@ -2,6 +2,7 @@
 
 namespace Laravel\Scout;
 
+use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Scout\Console\DeleteAllIndexesCommand;
 use Laravel\Scout\Console\DeleteIndexCommand;
@@ -10,6 +11,7 @@ use Laravel\Scout\Console\ImportCommand;
 use Laravel\Scout\Console\IndexCommand;
 use Laravel\Scout\Console\QueueImportCommand;
 use Laravel\Scout\Console\SyncIndexSettingsCommand;
+use Laravel\Scout\Services\Turbopuffer\TurbopufferClient;
 use Meilisearch\Client as Meilisearch;
 
 class ScoutServiceProvider extends ServiceProvider
@@ -34,6 +36,13 @@ class ScoutServiceProvider extends ServiceProvider
                 );
             });
         }
+
+        $this->app->singleton(TurbopufferClient::class, function ($app) {
+            return new TurbopufferClient(
+                $app->make(HttpFactory::class),
+                $app['config']->get('scout.turbopuffer', []),
+            );
+        });
 
         $this->app->singleton(EngineManager::class, function ($app) {
             return new EngineManager($app);

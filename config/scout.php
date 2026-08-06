@@ -11,7 +11,7 @@ return [
     | using Laravel Scout. This connection is used when syncing all models
     | to the search service. You should adjust this based on your needs.
     |
-    | Supported: "algolia", "meilisearch", "typesense",
+    | Supported: "algolia", "meilisearch", "typesense", "turbopuffer",
     |            "database", "collection", "null"
     |
     */
@@ -205,6 +205,37 @@ return [
             // ],
         ],
         'import_action' => env('TYPESENSE_IMPORT_ACTION', 'upsert'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Turbopuffer Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure your Turbopuffer connection and the schema and
+    | searchable attributes used by each of your application's models.
+    |
+    */
+
+    'turbopuffer' => [
+        'api_key' => env('TURBOPUFFER_API_KEY'),
+        'region' => env('TURBOPUFFER_REGION', 'gcp-us-central1'),
+        'base_url' => env('TURBOPUFFER_BASE_URL'),
+        'timeout' => env('TURBOPUFFER_TIMEOUT', 60),
+        'connect_timeout' => env('TURBOPUFFER_CONNECT_TIMEOUT', 5),
+        'retries' => env('TURBOPUFFER_RETRIES', 3),
+        'model-settings' => [
+            // User::class => [
+            //     'searchable-attributes' => [
+            //         'name' => 2,
+            //         'email' => 1,
+            //     ],
+            //     'schema' => [
+            //         'name' => ['type' => 'string', 'full_text_search' => true],
+            //         'email' => ['type' => 'string', 'full_text_search' => true],
+            //     ],
+            // ],
+        ],
     ],
 
 ];
