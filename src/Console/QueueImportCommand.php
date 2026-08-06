@@ -20,7 +20,7 @@ class QueueImportCommand extends Command
             {--min= : The minimum ID to start queuing from}
             {--max= : The maximum ID to queue up to}
             {--c|chunk= : The number of records to queue in a single job (Defaults to configuration value: `scout.chunk.searchable`)}
-            {--queue= : The queue that should be used (Defaults to configuration value: `scout.queue.queue`)}';
+            {--queue= : The queue that should be used (Defaults to configuration value: `scout.queue_name`)}';
 
     /**
      * The console command description.

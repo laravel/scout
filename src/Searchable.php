@@ -422,7 +422,7 @@ trait Searchable
      */
     public function syncWithSearchUsing()
     {
-        return config('scout.queue.connection') ?: config('queue.default');
+        return config('scout.queue_connection') ?: config('queue.default');
     }
 
     /**
@@ -432,7 +432,7 @@ trait Searchable
      */
     public function syncWithSearchUsingQueue()
     {
-        return config('scout.queue.queue');
+        return config('scout.queue_name');
     }
 
     /**
