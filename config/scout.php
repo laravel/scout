@@ -213,7 +213,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may configure your Turbopuffer connection and the schema and
-    | searchable attributes used by each of your application's models.
+    | searchable attributes defined by each of your application's models.
+    | Turbopuffer is a scalable engine with full-text + vector search.
     |
     */
 
