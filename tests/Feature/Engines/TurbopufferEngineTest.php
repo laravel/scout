@@ -147,8 +147,7 @@ class TurbopufferEngineTest extends TestCase
 
         $this->engine()->search($builder);
 
-        Http::assertSent(fn (Request $request) =>
-            $request['rank_by'] === ['embedding', 'ANN', [0.1, 0.2]] &&
+        Http::assertSent(fn (Request $request) => $request['rank_by'] === ['embedding', 'ANN', [0.1, 0.2]] &&
             $request['include_attributes'] === ['name', 'id'] &&
             $request['consistency'] === ['level' => 'eventual']
         );
@@ -186,8 +185,7 @@ class TurbopufferEngineTest extends TestCase
         $this->assertSame([3, 4], array_column($results['rows'], 'id'));
         $this->assertSame(10000, $results['total']);
 
-        Http::assertSent(fn (Request $request) =>
-            isset($request['aggregate_by']) &&
+        Http::assertSent(fn (Request $request) => isset($request['aggregate_by']) &&
             $request['filters'] === ['status', 'Eq', 'published']
         );
     }
@@ -208,8 +206,7 @@ class TurbopufferEngineTest extends TestCase
 
         $this->engine()->flush(new SearchableModel);
 
-        Http::assertSent(fn (Request $request) =>
-            $request->method() === 'DELETE' &&
+        Http::assertSent(fn (Request $request) => $request->method() === 'DELETE' &&
             $request->url() === 'https://turbopuffer.test/v2/namespaces/table'
         );
     }
