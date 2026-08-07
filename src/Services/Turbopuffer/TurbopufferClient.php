@@ -7,6 +7,7 @@ use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Laravel\Scout\Exceptions\ScoutException;
+use Laravel\Scout\Scout;
 
 class TurbopufferClient
 {
@@ -48,6 +49,7 @@ class TurbopufferClient
         $request = $this->http
             ->baseUrl(rtrim($baseUrl, '/'))
             ->withToken($this->config['api_key'] ?? '')
+            ->withHeader('X-Laravel-Scout', Scout::VERSION)
             ->acceptJson()
             ->asJson()
             ->timeout($this->config['timeout'] ?? 60)

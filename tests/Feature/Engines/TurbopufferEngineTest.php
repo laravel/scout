@@ -63,6 +63,7 @@ class TurbopufferEngineTest extends TestCase
             return $request->method() === 'POST' &&
                 $request->url() === 'https://turbopuffer.test/v2/namespaces/table' &&
                 $request->hasHeader('Authorization', 'Bearer tpuf-test-key') &&
+                $request->hasHeader('X-Laravel-Scout', '11.5.0') &&
                 $request['upsert_rows'] === [['id' => 10, 'name' => 'Taylor']] &&
                 $request['schema'] === [
                     'name' => ['type' => 'string', 'full_text_search' => true],
