@@ -11,6 +11,7 @@ use Laravel\Scout\Exceptions\NotSupportedException;
 use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Tests\Fixtures\FakeEmbeddings;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use Laravel\Scout\Tests\Fixtures\SearchableModelWithPrecomputedEmbedding;
 use Laravel\Scout\Tests\Fixtures\SearchableModelWithSoftDeletes;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
@@ -134,6 +135,27 @@ class TurbopufferEngineTest extends TestCase
                 $request['schema']['embedding'] === ['type' => '[2]f32', 'ann' => true] &&
                 $request['distance_metric'] === 'cosine_distance';
         });
+    }
+
+    public function test_update_accepts_precomputed_embeddings_and_only_generates_missing_vectors()
+    {
+        $this->configureEmbeddings([], SearchableModelWithPrecomputedEmbedding::class);
+        $this->fakeEmbeddings([[[0.3, 0.4]]]);
+        Http::fake(['*' => Http::response(['rows_affected' => 2])]);
+
+        $precomputed = new SearchableModelWithPrecomputedEmbedding(['id' => 10, 'name' => 'Precomputed']);
+        $precomputed->setAttribute('embedding', [0.1, 0.2]);
+
+        $generated = new SearchableModelWithPrecomputedEmbedding(['id' => 20, 'name' => 'Generate this']);
+
+        $this->engine()->update($precomputed->newCollection([$precomputed, $generated]));
+
+        $this->assertSame(['Generate this'], FakeEmbeddings::$requests[0]['inputs']);
+
+        Http::assertSent(fn (Request $request) => $request['upsert_rows'] === [
+            ['id' => 10, 'name' => 'Precomputed', 'embedding' => [0.1, 0.2]],
+            ['id' => 20, 'name' => 'Generate this', 'embedding' => [0.3, 0.4]],
+        ]);
     }
 
     public function test_delete_sends_one_batched_request()
@@ -396,7 +418,7 @@ class TurbopufferEngineTest extends TestCase
         return $this->app->make(EngineManager::class)->engine('turbopuffer');
     }
 
-    protected function configureEmbeddings(array $overrides = []): void
+    protected function configureEmbeddings(array $overrides = [], string $model = SearchableModel::class): void
     {
         $config = $this->app['config']->get('scout.turbopuffer');
         $settings = $config['model-settings'][SearchableModel::class];
@@ -407,7 +429,7 @@ class TurbopufferEngineTest extends TestCase
         ], $overrides);
         $settings['schema']['embedding'] = ['type' => '[2]f32', 'ann' => true];
 
-        $config['model-settings'][SearchableModel::class] = $settings;
+        $config['model-settings'][$model] = $settings;
 
         $this->app['config']->set('scout.turbopuffer', $config);
     }

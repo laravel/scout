@@ -90,21 +90,36 @@ class TurbopufferEngine extends Engine implements SupportsSemanticSearch
         $rows = [];
 
         foreach (array_chunk($records, 100) as $batch) {
-            $inputs = array_map(function ($record) {
+            $inputs = [];
+            $vectors = [];
+
+            foreach ($batch as $index => $record) {
                 if (! method_exists($record['model'], 'toSearchableEmbedding')) {
                     throw new ScoutException('Searchable models using generated embeddings must define a [toSearchableEmbedding] method.');
                 }
 
                 $input = $record['model']->toSearchableEmbedding();
 
-                if (! is_string($input) || trim($input) === '') {
-                    throw new ScoutException('The [toSearchableEmbedding] method must return a non-empty string.');
+                if (is_array($input)) {
+                    $vectors[$index] = $input;
+
+                    continue;
                 }
 
-                return $input;
-            }, $batch);
+                if (! is_string($input) || trim($input) === '') {
+                    throw new ScoutException('The [toSearchableEmbedding] method must return a non-empty string or an embedding array.');
+                }
 
-            $vectors = $this->generateEmbeddings($inputs, $settings);
+                $inputs[$index] = $input;
+            }
+
+            if (! empty($inputs)) {
+                $generatedVectors = $this->generateEmbeddings(array_values($inputs), $settings);
+
+                foreach (array_keys($inputs) as $position => $index) {
+                    $vectors[$index] = $generatedVectors[$position];
+                }
+            }
 
             foreach ($batch as $index => $record) {
                 $record['row'][$settings['attribute']] = $vectors[$index];
