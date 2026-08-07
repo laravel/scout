@@ -619,6 +619,7 @@ class TurbopufferEngine extends Engine implements SupportsSemanticSearch
 
         $response = $embeddingsClass::for(array_values($inputs))
             ->dimensions($settings['dimensions'])
+            ->cache()
             ->generate($settings['provider'] ?? null, $settings['model'] ?? null);
 
         $embeddings = $response->embeddings;

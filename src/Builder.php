@@ -107,6 +107,13 @@ class Builder
     public $semanticSearch = false;
 
     /**
+     * The minimum similarity for semantic search results.
+     *
+     * @var int|float|null
+     */
+    public $minimumSimilarity;
+
+    /**
      * The hybrid search ranking weights.
      *
      * @var array|null
@@ -314,15 +321,17 @@ class Builder
     /**
      * Perform a semantic search for the query expression.
      *
+     * @param  int|float|null  $minSimilarity
      * @return $this
      */
-    public function semantic()
+    public function semantic($minSimilarity = null)
     {
         if (trim($this->query) === '') {
             throw new ScoutException('Semantic searches require a non-empty query.');
         }
 
         $this->semanticSearch = true;
+        $this->minimumSimilarity = $minSimilarity;
         $this->hybridSearch = null;
 
         return $this;
@@ -333,9 +342,10 @@ class Builder
      *
      * @param  int|float  $textWeight
      * @param  int|float  $semanticWeight
+     * @param  int|float|null  $minSimilarity
      * @return $this
      */
-    public function hybrid($textWeight = 1, $semanticWeight = 1)
+    public function hybrid($textWeight = 1, $semanticWeight = 1, $minSimilarity = null)
     {
         if (trim($this->query) === '') {
             throw new ScoutException('Hybrid searches require a non-empty query.');
@@ -346,6 +356,7 @@ class Builder
         }
 
         $this->semanticSearch = false;
+        $this->minimumSimilarity = $minSimilarity;
 
         $this->hybridSearch = [
             'text_weight' => $textWeight,

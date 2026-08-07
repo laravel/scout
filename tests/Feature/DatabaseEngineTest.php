@@ -4,6 +4,7 @@ namespace Laravel\Scout\Tests\Feature;
 
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Laravel\Scout\Exceptions\NotSupportedException;
 use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
@@ -40,6 +41,22 @@ class DatabaseEngineTest extends TestCase
         $models = SearchableUser::search()->get();
 
         $this->assertCount(2, $models);
+    }
+
+    public function test_semantic_search_requires_postgres_and_laravel_13()
+    {
+        $this->expectException(NotSupportedException::class);
+        $this->expectExceptionMessage('requires Laravel 13 and PostgreSQL with pgvector');
+
+        SearchableUser::search('Taylor')->semantic()->get();
+    }
+
+    public function test_hybrid_search_falls_back_to_normal_text_search_when_vectors_are_not_supported()
+    {
+        $models = SearchableUser::search('Taylor')->hybrid()->get();
+
+        $this->assertCount(1, $models);
+        $this->assertSame('Taylor Otwell', $models->first()->name);
     }
 
     public function test_it_does_not_add_search_where_clauses_with_empty_search()

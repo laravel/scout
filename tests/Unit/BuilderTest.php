@@ -151,21 +151,23 @@ class BuilderTest extends TestCase
 
     public function test_semantic_search_can_be_enabled()
     {
-        $builder = (new Builder(m::mock(), 'conceptual query'))->semantic();
+        $builder = (new Builder(m::mock(), 'conceptual query'))->semantic(minSimilarity: 0.7);
 
         $this->assertTrue($builder->semanticSearch);
         $this->assertNull($builder->hybridSearch);
+        $this->assertSame(0.7, $builder->minimumSimilarity);
     }
 
     public function test_hybrid_search_can_be_enabled_with_weights()
     {
-        $builder = (new Builder(m::mock(), 'combined query'))->hybrid(2, 3);
+        $builder = (new Builder(m::mock(), 'combined query'))->hybrid(2, 3, minSimilarity: 0.8);
 
         $this->assertFalse($builder->semanticSearch);
         $this->assertSame([
             'text_weight' => 2,
             'semantic_weight' => 3,
         ], $builder->hybridSearch);
+        $this->assertSame(0.8, $builder->minimumSimilarity);
     }
 
     public function test_semantic_and_hybrid_search_require_a_query()

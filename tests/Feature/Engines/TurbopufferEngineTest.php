@@ -233,7 +233,7 @@ class TurbopufferEngineTest extends TestCase
         Http::fake(['*' => Http::response(['rows' => [['id' => 10, '$dist' => 0.1]]])]);
 
         $builder = (new Builder(new SearchableModel, 'conceptual query'))
-            ->semantic()
+            ->semantic(minSimilarity: 0.9)
             ->where('status', 'published')
             ->take(10);
 
@@ -242,6 +242,7 @@ class TurbopufferEngineTest extends TestCase
         $this->assertSame(10, $results['rows'][0]['id']);
         $this->assertSame([[
             'inputs' => ['conceptual query'],
+            'cache' => null,
             'dimensions' => 2,
             'provider' => null,
             'model' => null,

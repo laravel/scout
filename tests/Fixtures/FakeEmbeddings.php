@@ -22,6 +22,8 @@ class FakeEmbeddings
 
 class FakePendingEmbeddings
 {
+    protected $cacheSeconds = false;
+
     protected $dimensions;
 
     public function __construct(protected array $inputs)
@@ -36,10 +38,18 @@ class FakePendingEmbeddings
         return $this;
     }
 
+    public function cache($seconds = null)
+    {
+        $this->cacheSeconds = $seconds;
+
+        return $this;
+    }
+
     public function generate($provider = null, $model = null)
     {
         FakeEmbeddings::$requests[] = [
             'inputs' => $this->inputs,
+            'cache' => $this->cacheSeconds,
             'dimensions' => $this->dimensions,
             'provider' => $provider,
             'model' => $model,
