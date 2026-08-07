@@ -49,7 +49,7 @@ class TurbopufferClient
         $request = $this->http
             ->baseUrl(rtrim($baseUrl, '/'))
             ->withToken($this->config['api_key'] ?? '')
-            ->withHeader('X-Laravel-Scout', Scout::VERSION)
+            ->withHeaders(['X-Laravel-Scout' => Scout::VERSION])
             ->acceptJson()
             ->asJson()
             ->timeout($this->config['timeout'] ?? 60)
