@@ -199,4 +199,16 @@ class BuilderTest extends TestCase
 
         (new Builder($model, 'query'))->semantic()->raw();
     }
+
+    public function test_unsupported_engines_treat_hybrid_search_as_normal_text_search()
+    {
+        $model = m::mock();
+        $engine = m::mock();
+        $model->shouldReceive('searchableUsing')->andReturn($engine);
+        $engine->shouldReceive('search')->once()->andReturn(['results']);
+
+        $results = (new Builder($model, 'query'))->hybrid()->raw();
+
+        $this->assertSame(['results'], $results);
+    }
 }

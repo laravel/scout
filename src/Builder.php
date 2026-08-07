@@ -11,7 +11,6 @@ use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Traits\Tappable;
 use Laravel\Scout\Contracts\PaginatesEloquentModels;
 use Laravel\Scout\Contracts\PaginatesEloquentModelsUsingDatabase;
-use Laravel\Scout\Contracts\SupportsHybridSearch;
 use Laravel\Scout\Contracts\SupportsSemanticSearch;
 use Laravel\Scout\Exceptions\NotSupportedException;
 use Laravel\Scout\Exceptions\ScoutException;
@@ -656,10 +655,6 @@ class Builder
 
         if ($this->semanticSearch && ! $engine instanceof SupportsSemanticSearch) {
             throw new NotSupportedException('The configured Scout engine does not support semantic search.');
-        }
-
-        if (! is_null($this->hybridSearch) && ! $engine instanceof SupportsHybridSearch) {
-            throw new NotSupportedException('The configured Scout engine does not support hybrid search.');
         }
 
         return $engine;

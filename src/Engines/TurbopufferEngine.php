@@ -6,14 +6,13 @@ use BackedEnum;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
-use Laravel\Scout\Contracts\SupportsHybridSearch;
 use Laravel\Scout\Contracts\SupportsSemanticSearch;
 use Laravel\Scout\Exceptions\NotSupportedException;
 use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Laravel\Scout\Services\Turbopuffer\TurbopufferClient;
 
-class TurbopufferEngine extends Engine implements SupportsHybridSearch, SupportsSemanticSearch
+class TurbopufferEngine extends Engine implements SupportsSemanticSearch
 {
     /**
      * Create a new Turbopuffer engine instance.
