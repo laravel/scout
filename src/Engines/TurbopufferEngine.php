@@ -6,12 +6,14 @@ use BackedEnum;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Contracts\SupportsHybridSearch;
+use Laravel\Scout\Contracts\SupportsSemanticSearch;
 use Laravel\Scout\Exceptions\NotSupportedException;
 use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Laravel\Scout\Services\Turbopuffer\TurbopufferClient;
 
-class TurbopufferEngine extends Engine
+class TurbopufferEngine extends Engine implements SupportsHybridSearch, SupportsSemanticSearch
 {
     /**
      * Create a new Turbopuffer engine instance.
@@ -39,23 +41,30 @@ class TurbopufferEngine extends Engine
             $models->each->pushSoftDeleteMetadata();
         }
 
-        $rows = $models->map(function ($model) {
+        $records = $models->map(function ($model) {
             if (empty($searchableData = $model->toSearchableArray())) {
                 return;
             }
 
-            return array_merge(
-                $searchableData,
-                $model->scoutMetadata(),
-                ['id' => $model->getScoutKey()],
-            );
+            return [
+                'model' => $model,
+                'row' => array_merge(
+                    $searchableData,
+                    $model->scoutMetadata(),
+                    ['id' => $model->getScoutKey()],
+                ),
+            ];
         })->filter()->values()->all();
 
-        if (empty($rows)) {
+        if (empty($records)) {
             return;
         }
 
         $settings = $this->modelSettings($model);
+
+        $rows = isset($settings['embedding'])
+            ? $this->addEmbeddingsToRecords($records, $settings['embedding'])
+            : array_column($records, 'row');
 
         $parameters = ['upsert_rows' => $rows];
 
@@ -65,7 +74,46 @@ class TurbopufferEngine extends Engine
             }
         }
 
+        if (isset($settings['embedding']) && ! isset($parameters['distance_metric'])) {
+            $parameters['distance_metric'] = 'cosine_distance';
+        }
+
         $this->turbopuffer->namespace($model->indexableAs())->write($parameters);
+    }
+
+    /**
+     * Add generated embeddings to searchable records.
+     */
+    protected function addEmbeddingsToRecords(array $records, array $settings): array
+    {
+        $settings = $this->validateEmbeddingSettings($settings);
+
+        $rows = [];
+
+        foreach (array_chunk($records, 100) as $batch) {
+            $inputs = array_map(function ($record) {
+                if (! method_exists($record['model'], 'toSearchableEmbedding')) {
+                    throw new ScoutException('Searchable models using generated embeddings must define a [toSearchableEmbedding] method.');
+                }
+
+                $input = $record['model']->toSearchableEmbedding();
+
+                if (! is_string($input) || trim($input) === '') {
+                    throw new ScoutException('The [toSearchableEmbedding] method must return a non-empty string.');
+                }
+
+                return $input;
+            }, $batch);
+
+            $vectors = $this->generateEmbeddings($inputs, $settings);
+
+            foreach ($batch as $index => $record) {
+                $record['row'][$settings['attribute']] = $vectors[$index];
+                $rows[] = $record['row'];
+            }
+        }
+
+        return $rows;
     }
 
     /**
@@ -119,12 +167,14 @@ class TurbopufferEngine extends Engine
             $perPage
         );
 
-        $parameters = $this->buildSearchParameters($builder, 1);
+        $nativeFilters = $builder->options['filters'] ?? null;
+
+        $filters = $this->combineFilters($nativeFilters, $this->filters($builder));
 
         $count = $this->namespace($builder)->query(array_filter([
             'aggregate_by' => ['count' => ['Count']],
-            'filters' => $parameters['filters'] ?? null,
-            'consistency' => $parameters['consistency'] ?? null,
+            'filters' => $filters,
+            'consistency' => $builder->options['consistency'] ?? null,
         ], fn ($value) => ! is_null($value)));
 
         $results['total'] = min((int) ($count['aggregations']['count'] ?? 0), $maximum);
@@ -141,11 +191,13 @@ class TurbopufferEngine extends Engine
 
         $parameters = $this->buildSearchParameters($builder, $limit);
 
-        if ($builder->callback) {
-            return call_user_func($builder->callback, $namespace, $builder->query, $parameters);
-        }
+        $results = $builder->callback
+            ? call_user_func($builder->callback, $namespace, $builder->query, $parameters)
+            : $namespace->query($parameters);
 
-        $results = $namespace->query($parameters);
+        if (! is_null($builder->hybridSearch)) {
+            $results['rows'] = array_slice($results['results'][0]['rows'] ?? [], 0, $limit);
+        }
 
         $results['total'] = count($results['rows'] ?? []);
 
@@ -161,11 +213,19 @@ class TurbopufferEngine extends Engine
             throw new ScoutException('Turbopuffer multi-query searches are not supported by this Scout engine.');
         }
 
+        if (! is_null($builder->hybridSearch)) {
+            return $this->buildHybridSearchParameters($builder, $limit);
+        }
+
         $parameters = $builder->options;
         $nativeFilters = $parameters['filters'] ?? null;
         $scoutFilters = $this->filters($builder);
 
         unset($parameters['filters']);
+
+        if ($builder->semanticSearch && isset($parameters['rank_by'])) {
+            throw new ScoutException('Turbopuffer semantic searches cannot be combined with a custom ranking expression.');
+        }
 
         if (! isset($parameters['rank_by'])) {
             $parameters['rank_by'] = $this->rankBy($builder);
@@ -177,20 +237,52 @@ class TurbopufferEngine extends Engine
             $parameters['filters'] = $filters;
         }
 
-        if (isset($parameters['include_attributes']) && is_array($parameters['include_attributes'])) {
-            $parameters['include_attributes'] = array_values(array_unique([
-                ...$parameters['include_attributes'],
-                'id',
-            ]));
-        }
-
-        if (isset($parameters['exclude_attributes']) && is_array($parameters['exclude_attributes'])) {
-            $parameters['exclude_attributes'] = array_values(array_diff($parameters['exclude_attributes'], ['id']));
-        }
-
+        $parameters = $this->ensureIdIsReturned($parameters);
         $parameters['limit'] = min(max(1, $limit), 10000);
 
         return $parameters;
+    }
+
+    /**
+     * Build a hybrid full-text and semantic query.
+     */
+    protected function buildHybridSearchParameters(Builder $builder, int $limit): array
+    {
+        if (! empty($builder->orders)) {
+            throw new ScoutException('Turbopuffer order clauses cannot be combined with hybrid search.');
+        }
+
+        foreach (['rank_by', 'rerank_by'] as $option) {
+            if (isset($builder->options[$option])) {
+                throw new ScoutException("Turbopuffer hybrid searches cannot be combined with a custom [{$option}] option.");
+            }
+        }
+
+        $parameters = $builder->options;
+        $nativeFilters = $parameters['filters'] ?? null;
+        $rootParameters = array_intersect_key($parameters, array_flip(['consistency', 'vector_encoding']));
+
+        unset($parameters['consistency'], $parameters['filters'], $parameters['vector_encoding']);
+
+        if ($filters = $this->combineFilters($nativeFilters, $this->filters($builder))) {
+            $parameters['filters'] = $filters;
+        }
+
+        $parameters = $this->ensureIdIsReturned($parameters);
+        $parameters['limit'] = min(max(1, $limit), 10000);
+
+        return array_merge($rootParameters, [
+            'queries' => [
+                array_merge($parameters, ['rank_by' => $this->fullTextRankBy($builder)]),
+                array_merge($parameters, ['rank_by' => $this->semanticRankBy($builder)]),
+            ],
+            'rerank_by' => ['RRF', [
+                'weights' => [
+                    $builder->hybridSearch['text_weight'],
+                    $builder->hybridSearch['semantic_weight'],
+                ],
+            ]],
+        ]);
     }
 
     /**
@@ -198,6 +290,14 @@ class TurbopufferEngine extends Engine
      */
     protected function rankBy(Builder $builder): array
     {
+        if ($builder->semanticSearch) {
+            if (! empty($builder->orders)) {
+                throw new ScoutException('Turbopuffer order clauses cannot be combined with semantic search.');
+            }
+
+            return $this->semanticRankBy($builder);
+        }
+
         if ($builder->query === '' || $builder->query === '*') {
             if (count($builder->orders) > 1) {
                 throw new ScoutException('Turbopuffer supports one order clause per search.');
@@ -212,6 +312,14 @@ class TurbopufferEngine extends Engine
             throw new ScoutException('Turbopuffer order clauses cannot be combined with full-text search.');
         }
 
+        return $this->fullTextRankBy($builder);
+    }
+
+    /**
+     * Build the full-text ranking expression for a query.
+     */
+    protected function fullTextRankBy(Builder $builder): array
+    {
         $attributes = $this->modelSettings($builder->model)['searchable-attributes'] ?? [];
 
         if (empty($attributes)) {
@@ -237,6 +345,20 @@ class TurbopufferEngine extends Engine
         return count($expressions) === 1
             ? $expressions[0]
             : ['Sum', $expressions];
+    }
+
+    /**
+     * Build the semantic ranking expression for a query.
+     */
+    protected function semanticRankBy(Builder $builder): array
+    {
+        $settings = $this->embeddingSettings($builder->model);
+
+        return [
+            $settings['attribute'],
+            'ANN',
+            $this->generateEmbeddings([$builder->query], $settings)[0],
+        ];
     }
 
     /**
@@ -304,6 +426,25 @@ class TurbopufferEngine extends Engine
     protected function filterValue($value)
     {
         return $value instanceof BackedEnum ? $value->value : $value;
+    }
+
+    /**
+     * Ensure the Scout key is returned for model hydration.
+     */
+    protected function ensureIdIsReturned(array $parameters): array
+    {
+        if (isset($parameters['include_attributes']) && is_array($parameters['include_attributes'])) {
+            $parameters['include_attributes'] = array_values(array_unique([
+                ...$parameters['include_attributes'],
+                'id',
+            ]));
+        }
+
+        if (isset($parameters['exclude_attributes']) && is_array($parameters['exclude_attributes'])) {
+            $parameters['exclude_attributes'] = array_values(array_diff($parameters['exclude_attributes'], ['id']));
+        }
+
+        return $parameters;
     }
 
     /**
@@ -417,6 +558,62 @@ class TurbopufferEngine extends Engine
     protected function modelSettings($model): array
     {
         return $this->config['model-settings'][get_class($model)] ?? [];
+    }
+
+    /**
+     * Get the validated embedding settings for a model.
+     */
+    protected function embeddingSettings($model): array
+    {
+        $settings = $this->modelSettings($model)['embedding'] ?? null;
+
+        if (! is_array($settings)) {
+            throw new ScoutException('No Turbopuffer embedding settings have been configured for ['.get_class($model).'].');
+        }
+
+        return $this->validateEmbeddingSettings($settings);
+    }
+
+    /**
+     * Validate embedding configuration shared by indexing and querying.
+     */
+    protected function validateEmbeddingSettings(array $settings): array
+    {
+        if (! isset($settings['attribute']) || ! is_string($settings['attribute']) || trim($settings['attribute']) === '') {
+            throw new ScoutException('Turbopuffer embedding settings must contain an [attribute].');
+        }
+
+        if (! isset($settings['dimensions']) || filter_var($settings['dimensions'], FILTER_VALIDATE_INT) === false || $settings['dimensions'] < 1) {
+            throw new ScoutException('Turbopuffer embedding settings must contain positive [dimensions].');
+        }
+
+        $settings['dimensions'] = (int) $settings['dimensions'];
+
+        return $settings;
+    }
+
+    /**
+     * Generate and validate embeddings using the optional Laravel AI SDK.
+     */
+    protected function generateEmbeddings(array $inputs, array $settings): array
+    {
+        $embeddingsClass = 'Laravel\\Ai\\Embeddings';
+
+        if (! class_exists($embeddingsClass)) {
+            throw new ScoutException('Semantic search requires the Laravel AI SDK. Please install the [laravel/ai] package.');
+        }
+
+        $response = $embeddingsClass::for(array_values($inputs))
+            ->dimensions($settings['dimensions'])
+            ->generate($settings['provider'] ?? null, $settings['model'] ?? null);
+
+        $embeddings = $response->embeddings;
+
+        if (! is_array($embeddings) || count($embeddings) !== count($inputs)) {
+            throw new ScoutException('Laravel AI returned an unexpected number of embeddings.');
+        }
+
+        return $embeddings;
     }
 
     /**

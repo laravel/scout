@@ -231,9 +231,14 @@ return [
             //         'name' => 2,
             //         'email' => 1,
             //     ],
+            //     'embedding' => [
+            //         'attribute' => 'embedding',
+            //         'dimensions' => 1536,
+            //     ],
             //     'schema' => [
             //         'name' => ['type' => 'string', 'full_text_search' => true],
             //         'email' => ['type' => 'string', 'full_text_search' => true],
+            //         'embedding' => ['type' => '[1536]f32', 'ann' => true],
             //     ],
             // ],
         ],

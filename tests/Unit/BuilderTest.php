@@ -5,6 +5,8 @@ namespace Laravel\Scout\Tests\Unit;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\Paginator;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Exceptions\NotSupportedException;
+use Laravel\Scout\Exceptions\ScoutException;
 use Mockery as m;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -145,5 +147,56 @@ class BuilderTest extends TestCase
         $builder = new Builder($model = m::mock(), 'zonda', null, true);
 
         $this->assertSame([['field' => '__soft_deleted', 'operator' => '=', 'value' => 0]], $builder->wheres);
+    }
+
+    public function test_semantic_search_can_be_enabled()
+    {
+        $builder = (new Builder(m::mock(), 'conceptual query'))->semantic();
+
+        $this->assertTrue($builder->semanticSearch);
+        $this->assertNull($builder->hybridSearch);
+    }
+
+    public function test_hybrid_search_can_be_enabled_with_weights()
+    {
+        $builder = (new Builder(m::mock(), 'combined query'))->hybrid(2, 3);
+
+        $this->assertFalse($builder->semanticSearch);
+        $this->assertSame([
+            'text_weight' => 2,
+            'semantic_weight' => 3,
+        ], $builder->hybridSearch);
+    }
+
+    public function test_semantic_and_hybrid_search_require_a_query()
+    {
+        foreach (['semantic', 'hybrid'] as $method) {
+            try {
+                (new Builder(m::mock(), ''))->{$method}();
+
+                $this->fail("Expected [{$method}] to reject an empty query.");
+            } catch (ScoutException $e) {
+                $this->assertStringContainsString('non-empty query', $e->getMessage());
+            }
+        }
+    }
+
+    public function test_hybrid_search_requires_positive_weights()
+    {
+        $this->expectException(ScoutException::class);
+        $this->expectExceptionMessage('positive numbers');
+
+        (new Builder(m::mock(), 'query'))->hybrid(1, 0);
+    }
+
+    public function test_unsupported_engines_reject_semantic_search()
+    {
+        $model = m::mock();
+        $model->shouldReceive('searchableUsing')->andReturn(m::mock());
+
+        $this->expectException(NotSupportedException::class);
+        $this->expectExceptionMessage('does not support semantic search');
+
+        (new Builder($model, 'query'))->semantic()->raw();
     }
 }

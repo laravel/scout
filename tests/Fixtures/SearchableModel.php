@@ -25,4 +25,9 @@ class SearchableModel extends Model
     {
         return 'table';
     }
+
+    public function toSearchableEmbedding()
+    {
+        return $this->name;
+    }
 }
