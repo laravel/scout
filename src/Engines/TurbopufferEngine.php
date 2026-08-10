@@ -61,15 +61,37 @@ class TurbopufferEngine extends Engine implements SupportsSemanticSearch
 
         $settings = $this->modelSettings($model);
 
-        $rows = isset($settings['embedding'])
-            ? $this->addEmbeddingsToRecords($records, $settings['embedding'])
+        $embeddingSettings = isset($settings['embedding'])
+            ? $this->embeddingSettings($model)
+            : null;
+
+        $rows = $embeddingSettings && ! $this->usesNativeEmbeddings($embeddingSettings)
+            ? $this->addEmbeddingsToRecords($records, $embeddingSettings)
             : array_column($records, 'row');
+
+        if ($embeddingSettings && $this->usesNativeEmbeddings($embeddingSettings)) {
+            $rows = array_map(function ($row) use ($embeddingSettings) {
+                unset($row[$embeddingSettings['generated_attribute']]);
+
+                return $row;
+            }, $rows);
+        }
 
         $parameters = ['upsert_rows' => $rows];
 
         foreach (['schema', 'distance_metric'] as $option) {
             if (isset($settings[$option])) {
                 $parameters[$option] = $settings[$option];
+            }
+        }
+
+        if ($embeddingSettings && $this->usesNativeEmbeddings($embeddingSettings)) {
+            $embed = &$parameters['schema'][$embeddingSettings['attribute']]['embed'];
+
+            if (is_array($embed) && isset($embed['dimensions'])) {
+                $embed['dims'] = (int) $embed['dimensions'];
+
+                unset($embed['dimensions']);
             }
         }
 
@@ -371,7 +393,9 @@ class TurbopufferEngine extends Engine implements SupportsSemanticSearch
         return [
             $settings['attribute'],
             'ANN',
-            $this->generateEmbeddings([$builder->query], $settings)[0],
+            $this->usesNativeEmbeddings($settings)
+                ? ['Embed', $builder->query]
+                : $this->generateEmbeddings([$builder->query], $settings)[0],
         ];
     }
 
@@ -579,13 +603,27 @@ class TurbopufferEngine extends Engine implements SupportsSemanticSearch
      */
     protected function embeddingSettings($model): array
     {
-        $settings = $this->modelSettings($model)['embedding'] ?? null;
+        $modelSettings = $this->modelSettings($model);
+
+        $settings = $modelSettings['embedding'] ?? null;
 
         if (! is_array($settings)) {
             throw new ScoutException('No Turbopuffer embedding settings have been configured for ['.get_class($model).'].');
         }
 
-        return $this->validateEmbeddingSettings($settings);
+        $settings = $this->validateEmbeddingSettings($settings);
+
+        if ($this->usesNativeEmbeddings($settings)) {
+            $schema = $modelSettings['schema'][$settings['attribute']] ?? null;
+
+            if (! is_array($schema) || ($schema['type'] ?? null) !== 'string') {
+                throw new ScoutException("Turbopuffer native embeddings require a string schema configuration for the [{$settings['attribute']}] attribute.");
+            }
+
+            $settings['generated_attribute'] = $this->validateNativeEmbeddingSchema($settings['attribute'], $schema['embed'] ?? null);
+        }
+
+        return $settings;
     }
 
     /**
@@ -597,13 +635,59 @@ class TurbopufferEngine extends Engine implements SupportsSemanticSearch
             throw new ScoutException('Turbopuffer embedding settings must contain an [attribute].');
         }
 
-        if (! isset($settings['dimensions']) || filter_var($settings['dimensions'], FILTER_VALIDATE_INT) === false || $settings['dimensions'] < 1) {
+        $driver = $settings['driver'] ?? 'laravel-ai';
+
+        if (! in_array($driver, ['laravel-ai', 'turbopuffer'], true)) {
+            throw new ScoutException("The [{$driver}] Turbopuffer embedding driver is not supported.");
+        }
+
+        $settings['driver'] = $driver;
+
+        if ($this->usesNativeEmbeddings($settings)) {
+            return $settings;
+        }
+
+        if (! isset($settings['dimensions']) ||
+            filter_var($settings['dimensions'], FILTER_VALIDATE_INT) === false ||
+            $settings['dimensions'] < 1) {
             throw new ScoutException('Turbopuffer embedding settings must contain positive [dimensions].');
         }
 
         $settings['dimensions'] = (int) $settings['dimensions'];
 
         return $settings;
+    }
+
+    /**
+     * Determine if Turbopuffer should generate embeddings natively.
+     */
+    protected function usesNativeEmbeddings(array $settings): bool
+    {
+        return ($settings['driver'] ?? null) === 'turbopuffer';
+    }
+
+    /**
+     * Validate a native embedding schema and return its vector attribute.
+     */
+    protected function validateNativeEmbeddingSchema(string $attribute, $embed): string
+    {
+        if (is_string($embed) && trim($embed) !== '') {
+            return 'embed_'.$attribute;
+        }
+
+        if (! is_array($embed) || ! isset($embed['model']) || ! is_string($embed['model']) || trim($embed['model']) === '') {
+            throw new ScoutException("Turbopuffer native embeddings require a valid [embed] schema configuration for the [{$attribute}] attribute.");
+        }
+
+        if (isset($embed['dimensions']) && (filter_var($embed['dimensions'], FILTER_VALIDATE_INT) === false || $embed['dimensions'] < 1)) {
+            throw new ScoutException('Turbopuffer native embedding [dimensions] must be a positive integer.');
+        }
+
+        if (isset($embed['attribute']) && (! is_string($embed['attribute']) || trim($embed['attribute']) === '')) {
+            throw new ScoutException('Turbopuffer native embedding [attribute] must be a non-empty string.');
+        }
+
+        return $embed['attribute'] ?? 'embed_'.$attribute;
     }
 
     /**

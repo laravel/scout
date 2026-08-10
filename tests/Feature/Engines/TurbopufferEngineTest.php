@@ -11,6 +11,7 @@ use Laravel\Scout\Exceptions\NotSupportedException;
 use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Tests\Fixtures\FakeEmbeddings;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use Laravel\Scout\Tests\Fixtures\SearchableModelWithNativeEmbedding;
 use Laravel\Scout\Tests\Fixtures\SearchableModelWithPrecomputedEmbedding;
 use Laravel\Scout\Tests\Fixtures\SearchableModelWithSoftDeletes;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -158,6 +159,39 @@ class TurbopufferEngineTest extends TestCase
         ]);
     }
 
+    public function test_update_can_use_turbopuffer_native_embeddings()
+    {
+        $this->configureNativeEmbeddings();
+        Http::fake(['*' => Http::response(['rows_affected' => 1])]);
+
+        $model = new SearchableModelWithNativeEmbedding([
+            'id' => 10,
+            'name' => 'Native embedding source',
+            'embedding' => [0.1, 0.2],
+        ]);
+
+        $this->engine()->update($model->newCollection([$model]));
+
+        Http::assertSent(function (Request $request) {
+            $this->assertSame([[
+                'id' => 10,
+                'name' => 'Native embedding source',
+            ]], $request['upsert_rows']);
+            $this->assertEquals([
+                'type' => 'string',
+                'full_text_search' => true,
+                'embed' => [
+                    'model' => 'turbopuffer/native-test',
+                    'dims' => 2,
+                    'attribute' => 'embedding',
+                ],
+            ], $request['schema']['name']);
+            $this->assertSame('cosine_distance', $request['distance_metric']);
+
+            return true;
+        });
+    }
+
     public function test_delete_sends_one_batched_request()
     {
         Http::fake(['*' => Http::response(['rows_affected' => 2])]);
@@ -251,6 +285,83 @@ class TurbopufferEngineTest extends TestCase
         Http::assertSent(fn (Request $request) => $request['rank_by'] === ['embedding', 'ANN', [0.25, 0.75]] &&
             $request['filters'] === ['status', 'Eq', 'published'] &&
             $request['limit'] === 10
+        );
+    }
+
+    public function test_semantic_search_can_use_turbopuffer_native_query_embeddings()
+    {
+        $this->configureNativeEmbeddings();
+        Http::fake(['*' => Http::response(['rows' => [['id' => 10, '$dist' => 0.1]]])]);
+
+        $results = $this->engine()->search(
+            (new Builder(new SearchableModelWithNativeEmbedding, 'conceptual query'))
+                ->semantic()
+                ->where('status', 'published')
+                ->take(10)
+        );
+
+        $this->assertSame(10, $results['rows'][0]['id']);
+
+        Http::assertSent(fn (Request $request) => $request['rank_by'] === [
+            'name',
+            'ANN',
+            ['Embed', 'conceptual query'],
+        ] && $request['filters'] === ['status', 'Eq', 'published'] &&
+            $request['limit'] === 10);
+    }
+
+    public function test_hybrid_search_can_use_turbopuffer_native_query_embeddings()
+    {
+        $this->configureNativeEmbeddings();
+        Http::fake(['*' => Http::response(['results' => [['rows' => []]]])]);
+
+        $this->engine()->search(
+            (new Builder(new SearchableModelWithNativeEmbedding, 'combined query'))->hybrid()
+        );
+
+        Http::assertSent(fn (Request $request) => $request['queries'][1]['rank_by'] === [
+            'name',
+            'ANN',
+            ['Embed', 'combined query'],
+        ]);
+    }
+
+    public function test_native_embeddings_accept_a_string_embed_schema()
+    {
+        $this->configureNativeEmbeddings();
+
+        $config = $this->app['config']->get('scout.turbopuffer');
+        $config['model-settings'][SearchableModelWithNativeEmbedding::class]['schema']['name']['embed'] = 'turbopuffer/native-test';
+        $this->app['config']->set('scout.turbopuffer', $config);
+
+        Http::fake(['*' => Http::response(['rows' => []])]);
+
+        $this->engine()->search(
+            (new Builder(new SearchableModelWithNativeEmbedding, 'conceptual query'))->semantic()
+        );
+
+        Http::assertSent(fn (Request $request) => $request['rank_by'] === [
+            'name',
+            'ANN',
+            ['Embed', 'conceptual query'],
+        ]);
+    }
+
+    public function test_native_embeddings_require_an_embed_schema()
+    {
+        $this->configureNativeEmbeddings();
+
+        $config = $this->app['config']->get('scout.turbopuffer');
+        unset($config['model-settings'][SearchableModelWithNativeEmbedding::class]['schema']['name']['embed']);
+        $this->app['config']->set('scout.turbopuffer', $config);
+
+        Http::preventStrayRequests();
+
+        $this->expectException(ScoutException::class);
+        $this->expectExceptionMessage('require a valid [embed] schema configuration');
+
+        $this->engine()->search(
+            (new Builder(new SearchableModelWithNativeEmbedding, 'conceptual query'))->semantic()
         );
     }
 
@@ -431,6 +542,26 @@ class TurbopufferEngineTest extends TestCase
         $settings['schema']['embedding'] = ['type' => '[2]f32', 'ann' => true];
 
         $config['model-settings'][$model] = $settings;
+
+        $this->app['config']->set('scout.turbopuffer', $config);
+    }
+
+    protected function configureNativeEmbeddings(): void
+    {
+        $config = $this->app['config']->get('scout.turbopuffer');
+        $settings = $config['model-settings'][SearchableModel::class];
+
+        $settings['embedding'] = [
+            'driver' => 'turbopuffer',
+            'attribute' => 'name',
+        ];
+        $settings['schema']['name']['embed'] = [
+            'model' => 'turbopuffer/native-test',
+            'dimensions' => '2',
+            'attribute' => 'embedding',
+        ];
+
+        $config['model-settings'][SearchableModelWithNativeEmbedding::class] = $settings;
 
         $this->app['config']->set('scout.turbopuffer', $config);
     }
