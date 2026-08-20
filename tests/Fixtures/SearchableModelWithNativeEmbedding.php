@@ -5,7 +5,7 @@ namespace Laravel\Scout\Tests\Fixtures;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Searchable;
 
-class SearchableModel extends Model
+class SearchableModelWithNativeEmbedding extends Model
 {
     use Searchable;
 
@@ -14,7 +14,7 @@ class SearchableModel extends Model
      *
      * @var array
      */
-    protected $fillable = ['id', 'name'];
+    protected $fillable = ['id', 'name', 'embedding'];
 
     public function searchableAs()
     {
@@ -24,10 +24,5 @@ class SearchableModel extends Model
     public function indexableAs()
     {
         return 'table';
-    }
-
-    public function toSearchableEmbedding()
-    {
-        return $this->name;
     }
 }

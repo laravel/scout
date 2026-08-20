@@ -11,6 +11,9 @@ use Illuminate\Support\Traits\Macroable;
 use Illuminate\Support\Traits\Tappable;
 use Laravel\Scout\Contracts\PaginatesEloquentModels;
 use Laravel\Scout\Contracts\PaginatesEloquentModelsUsingDatabase;
+use Laravel\Scout\Contracts\SupportsSemanticSearch;
+use Laravel\Scout\Exceptions\NotSupportedException;
+use Laravel\Scout\Exceptions\ScoutException;
 
 /**
  * @template TModel of \Illuminate\Database\Eloquent\Model
@@ -95,6 +98,27 @@ class Builder
      * @var array
      */
     public $orders = [];
+
+    /**
+     * Indicates that the query should use semantic search.
+     *
+     * @var bool
+     */
+    public $semanticSearch = false;
+
+    /**
+     * The minimum similarity for semantic search results.
+     *
+     * @var int|float|null
+     */
+    public $minimumSimilarity;
+
+    /**
+     * The hybrid search ranking weights.
+     *
+     * @var array|null
+     */
+    public $hybridSearch;
 
     /**
      * Extra options that should be applied to the search.
@@ -292,6 +316,54 @@ class Builder
         }
 
         return $this->orderBy($column, 'asc');
+    }
+
+    /**
+     * Perform a semantic search for the query expression.
+     *
+     * @param  int|float|null  $minSimilarity
+     * @return $this
+     */
+    public function semantic($minSimilarity = null)
+    {
+        if (trim($this->query) === '') {
+            throw new ScoutException('Semantic searches require a non-empty query.');
+        }
+
+        $this->semanticSearch = true;
+        $this->minimumSimilarity = $minSimilarity;
+        $this->hybridSearch = null;
+
+        return $this;
+    }
+
+    /**
+     * Perform a hybrid full-text and semantic search for the query expression.
+     *
+     * @param  int|float  $textWeight
+     * @param  int|float  $semanticWeight
+     * @param  int|float|null  $minSimilarity
+     * @return $this
+     */
+    public function hybrid($textWeight = 1, $semanticWeight = 1, $minSimilarity = null)
+    {
+        if (trim($this->query) === '') {
+            throw new ScoutException('Hybrid searches require a non-empty query.');
+        }
+
+        if (! is_numeric($textWeight) || $textWeight <= 0 || ! is_numeric($semanticWeight) || $semanticWeight <= 0) {
+            throw new ScoutException('Hybrid search weights must be positive numbers.');
+        }
+
+        $this->semanticSearch = false;
+        $this->minimumSimilarity = $minSimilarity;
+
+        $this->hybridSearch = [
+            'text_weight' => $textWeight,
+            'semantic_weight' => $semanticWeight,
+        ];
+
+        return $this;
     }
 
     /**
@@ -590,7 +662,13 @@ class Builder
      */
     protected function engine()
     {
-        return $this->model->searchableUsing();
+        $engine = $this->model->searchableUsing();
+
+        if ($this->semanticSearch && ! $engine instanceof SupportsSemanticSearch) {
+            throw new NotSupportedException('The configured Scout engine does not support semantic search.');
+        }
+
+        return $engine;
     }
 
     /**
