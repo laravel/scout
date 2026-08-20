@@ -6,10 +6,16 @@ use Illuminate\Support\Arr;
 use Laravel\Scout\Attributes\SearchUsingFullText;
 use Laravel\Scout\Attributes\SearchUsingPrefix;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Contracts\SupportsSemanticSearch;
+use Laravel\Scout\Engines\Concerns\PaginatesDatabaseVectorSearch;
+use Laravel\Scout\Engines\Concerns\PerformsDatabaseVectorSearch;
 use ReflectionMethod;
 
-class DatabaseEngine extends DatabaseModelEngine
+class DatabaseEngine extends DatabaseModelEngine implements SupportsSemanticSearch
 {
+    use PaginatesDatabaseVectorSearch;
+    use PerformsDatabaseVectorSearch;
+
     /**
      * Create a new engine instance.
      *
@@ -18,6 +24,104 @@ class DatabaseEngine extends DatabaseModelEngine
     public function __construct()
     {
         //
+    }
+
+    /**
+     * Update the given model in the index.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
+     * @return void
+     */
+    public function update($models)
+    {
+        $this->updateSearchableEmbeddings($models);
+    }
+
+    /**
+     * Perform the given search on the engine.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return mixed
+     */
+    public function search(Builder $builder)
+    {
+        if (! $this->shouldPerformHybridSearch($builder)) {
+            return parent::search($builder);
+        }
+
+        $models = $this->hybridSearchModels(
+            $builder,
+            min((int) ($builder->limit ?? 1000), 1000)
+        );
+
+        return [
+            'results' => $models,
+            'total' => $models->count(),
+        ];
+    }
+
+    /**
+     * Get the Eloquent models for the given builder.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  int|null  $page
+     * @param  int|null  $perPage
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    protected function searchModels(Builder $builder, $page = null, $perPage = null)
+    {
+        if (! $builder->semanticSearch) {
+            return parent::searchModels($builder, $page, $perPage);
+        }
+
+        return $this->buildSemanticSearchQuery($builder)
+            ->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
+                $query->forPage($page, $perPage);
+            })
+            ->get();
+    }
+
+    /**
+     * Paginate the given search on the engine.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  int  $perPage
+     * @param  string  $pageName
+     * @param  int  $page
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function paginateUsingDatabase(Builder $builder, $perPage, $pageName, $page)
+    {
+        if ($this->shouldPerformHybridSearch($builder)) {
+            return $this->paginateHybridSearch($builder, $perPage, $pageName, $page);
+        }
+
+        if ($builder->semanticSearch) {
+            return $this->paginateSemanticSearch($builder, $perPage, $pageName, $page);
+        }
+
+        return parent::paginateUsingDatabase($builder, $perPage, $pageName, $page);
+    }
+
+    /**
+     * Paginate the given query into a simple paginator.
+     *
+     * @param  int  $perPage
+     * @param  string  $pageName
+     * @param  int|null  $page
+     * @return \Illuminate\Contracts\Pagination\Paginator
+     */
+    public function simplePaginateUsingDatabase(Builder $builder, $perPage, $pageName, $page)
+    {
+        if ($this->shouldPerformHybridSearch($builder)) {
+            return $this->simplePaginateHybridSearch($builder, $perPage, $pageName, $page);
+        }
+
+        if ($builder->semanticSearch) {
+            return $this->simplePaginateSemanticSearch($builder, $perPage, $pageName, $page);
+        }
+
+        return parent::simplePaginateUsingDatabase($builder, $perPage, $pageName, $page);
     }
 
     /**
@@ -50,6 +154,32 @@ class DatabaseEngine extends DatabaseModelEngine
     protected function initializeSearchQuery(Builder $builder, array $columns, array $prefixColumns = [], array $fullTextColumns = [])
     {
         $query = $this->newModelQuery($builder);
+
+        return $this->addTextSearchConstraints(
+            $query, $builder, $columns, $prefixColumns, $fullTextColumns
+        );
+    }
+
+    /**
+     * Create the model query used for a Scout search.
+     */
+    protected function newSearchQuery(Builder $builder)
+    {
+        return $this->newModelQuery($builder);
+    }
+
+    /**
+     * Add text search constraints to the given query.
+     */
+    protected function addTextSearchConstraints($query, Builder $builder, array $columns, array $prefixColumns = [], array $fullTextColumns = [])
+    {
+        if (method_exists($builder->model, 'toSearchableEmbedding')) {
+            $embeddingColumn = $this->embeddingColumn($builder->model);
+
+            $columns = array_values(array_diff($columns, [$embeddingColumn]));
+            $prefixColumns = array_values(array_diff($prefixColumns, [$embeddingColumn]));
+            $fullTextColumns = array_values(array_diff($fullTextColumns, [$embeddingColumn]));
+        }
 
         if (blank($builder->query)) {
             return $query;

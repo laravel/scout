@@ -60,6 +60,7 @@
     },
     "suggest": {
         "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^3.2).",
+        "laravel/ai": "Required to generate embeddings for semantic and hybrid search.",
         "meilisearch/meilisearch-php": "Required to use the Meilisearch engine (^1.0).",
         "typesense/typesense-php": "Required to use the Typesense engine (^4.9)."
     },
