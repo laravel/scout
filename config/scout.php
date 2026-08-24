@@ -141,7 +141,21 @@ return [
         'key' => env('MEILISEARCH_KEY'),
         'index-settings' => [
             // 'users' => [
-            //     'filterableAttributes'=> ['id', 'name', 'email'],
+            //     'filterableAttributes' => ['id', 'name', 'email'],
+            //     'embedders' => [
+            //         'default' => [
+            //             'source' => 'userProvided',
+            //             'dimensions' => 1536,
+            //         ],
+            //     ],
+            // ],
+        ],
+        'model-settings' => [
+            // User::class => [
+            //     'embedding' => [
+            //         'embedder' => 'default',
+            //         'dimensions' => 1536,
+            //     ],
             // ],
         ],
     ],

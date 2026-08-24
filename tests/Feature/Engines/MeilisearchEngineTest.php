@@ -9,6 +9,9 @@ use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\MeilisearchEngine;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Laravel\Scout\Jobs\RemoveFromSearch;
+use Laravel\Scout\Tests\Fixtures\FakeEmbeddings;
+use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use Laravel\Scout\Tests\Fixtures\SearchableModelWithPrecomputedEmbedding;
 use Meilisearch\Client as SearchClient;
 use Meilisearch\Contracts\IndexesResults;
 use Meilisearch\Endpoints\Indexes;
@@ -39,7 +42,11 @@ class MeilisearchEngineTest extends TestCase
         after_resolving($app, EngineManager::class, function ($manager) {
             $this->client = $client = m::spy(SearchClient::class);
 
-            $manager->extend('meilisearch-testing', fn () => new MeilisearchEngine($client, config('scout.soft_delete')));
+            $manager->extend('meilisearch-testing', fn () => new MeilisearchEngine(
+                $client,
+                config('scout.soft_delete'),
+                config('scout.meilisearch')
+            ));
         });
 
         $this->beforeApplicationDestroyed(function () {
@@ -59,6 +66,41 @@ class MeilisearchEngineTest extends TestCase
         );
 
         $engine->update(Collection::make([$model]));
+    }
+
+    public function test_update_adds_precomputed_and_generated_embeddings_to_vectors()
+    {
+        $this->configureEmbeddings(SearchableModelWithPrecomputedEmbedding::class, [
+            'provider' => 'openai',
+            'model' => 'text-embedding-test',
+        ]);
+        $this->fakeEmbeddings([[[0.3, 0.4]]]);
+
+        $precomputed = new SearchableModelWithPrecomputedEmbedding(['id' => 10, 'name' => 'Precomputed']);
+        $precomputed->setAttribute('embedding', [0.1, 0.2]);
+        $precomputed->setAttribute('_vectors', ['other' => [0.9, 0.8]]);
+
+        $generated = new SearchableModelWithPrecomputedEmbedding(['id' => 20, 'name' => 'Generate this']);
+
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('index')->once()->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('addDocuments')->once()->with(m::on(function ($objects) {
+            return $objects[0]['_vectors'] === [
+                'other' => [0.9, 0.8],
+                'default' => [0.1, 0.2],
+            ] && $objects[1]['_vectors'] === ['default' => [0.3, 0.4]];
+        }), 'id');
+
+        $engine->update($precomputed->newCollection([$precomputed, $generated]));
+
+        $this->assertSame([[
+            'inputs' => ['Generate this'],
+            'cache' => null,
+            'dimensions' => 2,
+            'provider' => 'openai',
+            'model' => 'text-embedding-test',
+        ]], FakeEmbeddings::$requests);
     }
 
     public function test_delete_removes_objects_to_index()
@@ -117,6 +159,68 @@ class MeilisearchEngineTest extends TestCase
         });
 
         $engine->search($builder);
+    }
+
+    public function test_semantic_search_generates_a_query_vector()
+    {
+        $this->configureEmbeddings(SearchableModel::class);
+        $this->fakeEmbeddings([[[0.25, 0.75]]]);
+
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('index')->once()->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with('conceptual query', m::on(function ($parameters) {
+            return $parameters === [
+                'filter' => 'status="published"',
+                'hitsPerPage' => 10,
+                'vector' => [0.25, 0.75],
+                'hybrid' => [
+                    'embedder' => 'default',
+                    'semanticRatio' => 1.0,
+                ],
+                'rankingScoreThreshold' => 0,
+            ];
+        }))->andReturn(['hits' => []]);
+
+        $builder = (new Builder(new SearchableModel, 'conceptual query'))
+            ->semantic(minSimilarity: 0)
+            ->where('status', 'published')
+            ->take(10);
+
+        $engine->search($builder);
+
+        $this->assertSame(['conceptual query'], FakeEmbeddings::$requests[0]['inputs']);
+    }
+
+    public function test_hybrid_search_accepts_a_precomputed_query_vector_and_normalizes_weights()
+    {
+        $this->configureEmbeddings(SearchableModel::class);
+        FakeEmbeddings::$requests = [];
+        FakeEmbeddings::$responses = [];
+
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('index')->once()->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with('combined query', m::on(function ($parameters) {
+            return $parameters === [
+                'vector' => [0.4, 0.6],
+                'hitsPerPage' => 5,
+                'page' => 2,
+                'hybrid' => [
+                    'embedder' => 'default',
+                    'semanticRatio' => 2 / 3,
+                ],
+                'rankingScoreThreshold' => 0.5,
+            ];
+        }))->andReturn(['hits' => []]);
+
+        $builder = (new Builder(new SearchableModel, 'combined query'))
+            ->options(['vector' => [0.4, 0.6]])
+            ->hybrid(textWeight: 1, semanticWeight: 2, minSimilarity: 0.5);
+
+        $engine->paginate($builder, 5, 2);
+
+        $this->assertSame([], FakeEmbeddings::$requests);
     }
 
     public function test_search_includes_at_least_scoutKeyName_in_attributesToRetrieve_on_builder_options()
@@ -448,5 +552,25 @@ class MeilisearchEngineTest extends TestCase
         $indexesResults->shouldReceive('getResults')->once();
 
         $engine->deleteAllIndexes();
+    }
+
+    protected function configureEmbeddings(string $model, array $overrides = []): void
+    {
+        $config = $this->app['config']->get('scout.meilisearch');
+        $config['model-settings'][$model]['embedding'] = array_merge([
+            'embedder' => 'default',
+            'dimensions' => 2,
+        ], $overrides);
+
+        $this->app['config']->set('scout.meilisearch', $config);
+    }
+
+    protected function fakeEmbeddings(array $responses): void
+    {
+        if (! class_exists('Laravel\\Ai\\Embeddings')) {
+            class_alias(FakeEmbeddings::class, 'Laravel\\Ai\\Embeddings');
+        }
+
+        FakeEmbeddings::fake($responses);
     }
 }

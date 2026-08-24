@@ -5,8 +5,10 @@ namespace Laravel\Scout\Tests\Integration;
 use Illuminate\Database\Eloquent\Collection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\MeilisearchEngine;
+use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Laravel\Scout\Tests\Fixtures\VersionableModel;
 use Meilisearch\Client;
+use Meilisearch\Contracts\TasksQuery;
 use Meilisearch\Endpoints\Indexes;
 use Mockery as m;
 use Orchestra\Testbench\Attributes\RequiresEnv;
@@ -154,6 +156,82 @@ class MeilisearchSearchableTest extends TestCase
         ], $page2->pluck('name', 'id')->all());
     }
 
+    public function test_it_can_use_user_provided_embeddings_for_semantic_search()
+    {
+        $model = new class extends SearchableModel
+        {
+            public static $index;
+
+            public function searchableAs()
+            {
+                return static::$index;
+            }
+
+            public function indexableAs()
+            {
+                return static::$index;
+            }
+
+            public function toSearchableEmbedding()
+            {
+                return $this->embedding;
+            }
+        };
+
+        $modelClass = get_class($model);
+        $modelClass::$index = config('scout.prefix').'semantic_'.str()->random(12);
+
+        $client = $this->app->make(Client::class);
+        $index = $client->index($modelClass::$index);
+        $task = $index->updateEmbedders([
+            'default' => [
+                'source' => 'userProvided',
+                'dimensions' => 2,
+            ],
+        ]);
+
+        $client->waitForTask($task['taskUid']);
+
+        $engine = new MeilisearchEngine($client, false, [
+            'model-settings' => [
+                $modelClass => [
+                    'embedding' => [
+                        'embedder' => 'default',
+                        'dimensions' => 2,
+                    ],
+                ],
+            ],
+        ]);
+
+        try {
+            $cat = new $modelClass(['id' => 1, 'name' => 'A sleeping cat']);
+            $cat->setAttribute('embedding', [1, 0]);
+
+            $rocket = new $modelClass(['id' => 2, 'name' => 'A rocket launch']);
+            $rocket->setAttribute('embedding', [0, 1]);
+
+            $engine->update($model->newCollection([$cat, $rocket]));
+
+            $tasks = $client->getTasks(
+                (new TasksQuery)->setIndexUids([$modelClass::$index])->setTypes(['documentAdditionOrUpdate'])->setLimit(1)
+            );
+
+            $client->waitForTask($tasks->getResults()[0]['uid']);
+
+            $results = $engine->search(
+                (new Builder($model, 'a relaxed pet'))
+                    ->options(['vector' => [1, 0]])
+                    ->semantic()
+            );
+
+            $this->assertSame(1, $results['hits'][0]['id']);
+        } finally {
+            $task = $client->deleteIndex($modelClass::$index);
+
+            $client->waitForTask($task['taskUid']);
+        }
+    }
+
     public function test_uses_different_indexes()
     {
         $client = m::mock(Client::class);
@@ -247,6 +325,23 @@ class MeilisearchSearchableTest extends TestCase
     public function test_it_can_filter_with_where_comparisons()
     {
         $this->itCanMakeWhereComparisons();
+    }
+
+    protected function importScoutIndexFrom($model = null)
+    {
+        parent::importScoutIndexFrom($model);
+
+        $client = $this->app->make(Client::class);
+        $tasks = $client->getTasks(
+            (new TasksQuery)
+                ->setIndexUids([(new $model)->searchableAs()])
+                ->setTypes(['documentAdditionOrUpdate'])
+                ->setLimit(1)
+        );
+
+        if ($task = $tasks->getResults()[0] ?? null) {
+            $client->waitForTask($task['uid'], 10000);
+        }
     }
 
     protected static function scoutDriver(): string
