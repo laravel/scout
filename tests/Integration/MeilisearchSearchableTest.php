@@ -8,6 +8,7 @@ use Laravel\Scout\Engines\MeilisearchEngine;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Laravel\Scout\Tests\Fixtures\VersionableModel;
 use Meilisearch\Client;
+use Meilisearch\Contracts\TasksQuery;
 use Meilisearch\Endpoints\Indexes;
 use Mockery as m;
 use Orchestra\Testbench\Attributes\RequiresEnv;
@@ -211,7 +212,11 @@ class MeilisearchSearchableTest extends TestCase
 
             $engine->update($model->newCollection([$cat, $rocket]));
 
-            sleep(1);
+            $tasks = $client->getTasks(
+                (new TasksQuery)->setIndexUids([$modelClass::$index])->setTypes(['documentAdditionOrUpdate'])->setLimit(1)
+            );
+
+            $client->waitForTask($tasks->getResults()[0]['uid']);
 
             $results = $engine->search(
                 (new Builder($model, 'a relaxed pet'))
@@ -221,7 +226,9 @@ class MeilisearchSearchableTest extends TestCase
 
             $this->assertSame(1, $results['hits'][0]['id']);
         } finally {
-            $client->deleteIndex($modelClass::$index);
+            $task = $client->deleteIndex($modelClass::$index);
+
+            $client->waitForTask($task['taskUid']);
         }
     }
 
