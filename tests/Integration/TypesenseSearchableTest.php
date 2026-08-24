@@ -2,8 +2,12 @@
 
 namespace Laravel\Scout\Tests\Integration;
 
+use Laravel\Scout\Builder;
+use Laravel\Scout\Engines\TypesenseEngine;
+use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Orchestra\Testbench\Attributes\RequiresEnv;
 use PHPUnit\Framework\Attributes\Group;
+use Typesense\Client;
 use Workbench\App\Models\SearchableUser;
 
 /**
@@ -272,6 +276,88 @@ class TypesenseSearchableTest extends TestCase
     public function test_it_can_filter_with_where_comparisons()
     {
         $this->itCanMakeWhereComparisons();
+    }
+
+    public function test_it_can_use_user_provided_embeddings_for_semantic_search()
+    {
+        $model = new class extends SearchableModel
+        {
+            public static $index;
+
+            public function searchableAs()
+            {
+                return static::$index;
+            }
+
+            public function indexableAs()
+            {
+                return static::$index;
+            }
+
+            public function toSearchableArray()
+            {
+                return [
+                    'id' => (string) $this->id,
+                    'name' => $this->name,
+                ];
+            }
+
+            public function toSearchableEmbedding()
+            {
+                return $this->embedding;
+            }
+        };
+
+        $modelClass = get_class($model);
+        $modelClass::$index = config('scout.prefix').'semantic_'.str()->random(12);
+
+        config()->set('scout.typesense.model-settings.'.$modelClass, [
+            'collection-schema' => [
+                'fields' => [
+                    ['name' => 'id', 'type' => 'string'],
+                    ['name' => 'name', 'type' => 'string'],
+                    ['name' => 'embedding', 'type' => 'float[]', 'num_dim' => 2],
+                ],
+            ],
+            'search-parameters' => [
+                'query_by' => 'name',
+            ],
+        ]);
+
+        $engine = new TypesenseEngine(
+            new Client(config('scout.typesense.client-settings')),
+            1000,
+            [
+                'model-settings' => [
+                    $modelClass => [
+                        'embedding' => [
+                            'attribute' => 'embedding',
+                            'dimensions' => 2,
+                        ],
+                    ],
+                ],
+            ]
+        );
+
+        try {
+            $cat = new $modelClass(['id' => 1, 'name' => 'A sleeping cat']);
+            $cat->setAttribute('embedding', [1, 0]);
+
+            $rocket = new $modelClass(['id' => 2, 'name' => 'A rocket launch']);
+            $rocket->setAttribute('embedding', [0, 1]);
+
+            $engine->update($model->newCollection([$cat, $rocket]));
+
+            $results = $engine->search(
+                (new Builder($model, 'a relaxed pet'))
+                    ->options(['vector' => [1, 0]])
+                    ->semantic()
+            );
+
+            $this->assertSame('1', $results['hits'][0]['document']['id']);
+        } finally {
+            $engine->deleteIndex($modelClass::$index);
+        }
     }
 
     protected static function scoutDriver(): string
