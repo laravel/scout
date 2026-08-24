@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Contracts\SupportsSemanticSearch;
 use Laravel\Scout\Exceptions\NotSupportedException;
 use Laravel\Scout\Exceptions\ScoutException;
 use stdClass;
@@ -18,7 +19,7 @@ use Typesense\Exceptions\ObjectAlreadyExists;
 use Typesense\Exceptions\ObjectNotFound;
 use Typesense\Exceptions\TypesenseClientError;
 
-class TypesenseEngine extends Engine
+class TypesenseEngine extends Engine implements SupportsSemanticSearch
 {
     /**
      * The Typesense client instance.
@@ -445,7 +446,170 @@ class TypesenseEngine extends Engine
             $parameters['sort_by'] .= $this->parseOrderBy($builder->orders);
         }
 
+        return $this->applySemanticSearchParameters($builder, $parameters);
+    }
+
+    /**
+     * Apply semantic and hybrid search parameters to the search parameters.
+     */
+    protected function applySemanticSearchParameters(Builder $builder, array $parameters): array
+    {
+        if (! $builder->semanticSearch && is_null($builder->hybridSearch)) {
+            return $parameters;
+        }
+
+        if (array_key_exists('vector_query', $builder->options)) {
+            throw new ScoutException('Typesense semantic and hybrid searches cannot be combined with a custom [vector_query] option.');
+        }
+
+        $settings = $this->embeddingSettings($builder->model);
+
+        unset($parameters['vector']);
+
+        if ($builder->semanticSearch) {
+            $parameters = $this->usesNativeEmbeddings($settings)
+                ? $this->applyNativeSemanticQueryBy($parameters, $settings['attribute'])
+                : array_merge($parameters, ['q' => '*']);
+        } else {
+            $parameters = $this->applyHybridQueryBy($parameters, $settings);
+        }
+
+        if (! is_null($vectorQuery = $this->vectorQuery($builder, $settings))) {
+            $parameters['vector_query'] = $vectorQuery;
+        }
+
+        $parameters['exclude_fields'] = $this->appendField($parameters['exclude_fields'] ?? '', $settings['attribute']);
+
         return $parameters;
+    }
+
+    /**
+     * Target the embedding field for a semantic search using native embeddings.
+     */
+    protected function applyNativeSemanticQueryBy(array $parameters, string $attribute): array
+    {
+        $parameters['query_by'] = $attribute;
+
+        // Remote embedders reject prefix searches on embedding fields...
+        $parameters['prefix'] = false;
+
+        unset($parameters['query_by_weights']);
+
+        foreach (['num_typos', 'infix'] as $parameter) {
+            if (isset($parameters[$parameter]) && str_contains((string) $parameters[$parameter], ',')) {
+                unset($parameters[$parameter]);
+            }
+        }
+
+        return $parameters;
+    }
+
+    /**
+     * Prepare the "query_by" fields and their per-field parameters for a hybrid search.
+     */
+    protected function applyHybridQueryBy(array $parameters, array $settings): array
+    {
+        $fields = array_filter(array_map('trim', explode(',', (string) ($parameters['query_by'] ?? ''))));
+
+        if (empty(array_diff($fields, [$settings['attribute']]))) {
+            throw new ScoutException('Typesense hybrid searches require at least one keyword field in the [query_by] search parameter.');
+        }
+
+        if (! $this->usesNativeEmbeddings($settings) || in_array($settings['attribute'], $fields, true)) {
+            return $parameters;
+        }
+
+        $parameters['query_by'] = implode(',', [...$fields, $settings['attribute']]);
+
+        if (isset($parameters['query_by_weights']) && $parameters['query_by_weights'] !== '') {
+            $parameters['query_by_weights'] .= ',0';
+        }
+
+        foreach (['num_typos' => '0', 'prefix' => 'false', 'infix' => 'off'] as $parameter => $placeholder) {
+            if (isset($parameters[$parameter]) && str_contains((string) $parameters[$parameter], ',')) {
+                $parameters[$parameter] .= ','.$placeholder;
+            }
+        }
+
+        // Remote embedders reject prefix searches on embedding fields, so a
+        // global prefix must become a per-field list that excludes them...
+        if (($parameters['prefix'] ?? null) === true || ($parameters['prefix'] ?? null) === 'true') {
+            $parameters['prefix'] = implode(',', [...array_fill(0, count($fields), 'true'), 'false']);
+        }
+
+        return $parameters;
+    }
+
+    /**
+     * Build the "vector_query" parameter for the search.
+     */
+    protected function vectorQuery(Builder $builder, array $settings): ?string
+    {
+        if ($this->usesNativeEmbeddings($settings)) {
+            $vector = [];
+        } else {
+            $vector = $builder->options['vector'] ??
+                $this->generateEmbeddings([$builder->query], $settings)[0];
+
+            if (! is_array($vector) || empty($vector)) {
+                throw new ScoutException('The Typesense query [vector] must be a non-empty embedding array.');
+            }
+        }
+
+        $options = [];
+
+        if (! is_null($builder->hybridSearch)) {
+            $options[] = 'alpha: '.($builder->hybridSearch['semantic_weight'] / array_sum($builder->hybridSearch));
+        }
+
+        if (! is_null($builder->minimumSimilarity)) {
+            $options[] = 'distance_threshold: '.$this->distanceThreshold($builder);
+        }
+
+        // Typesense rejects an empty vector query without parameters; native
+        // semantic searches are expressed via "query_by" alone in that case...
+        if (empty($vector) && empty($options)) {
+            return null;
+        }
+
+        return sprintf(
+            '%s:([%s]%s)',
+            $settings['attribute'],
+            implode(', ', $vector),
+            empty($options) ? '' : ', '.implode(', ', $options)
+        );
+    }
+
+    /**
+     * Get the maximum vector distance for the search's minimum similarity.
+     *
+     * This assumes the collection uses the default cosine distance metric. On
+     * hybrid searches, Typesense only applies the threshold to vector search
+     * candidates; keyword matches are returned regardless of their distance.
+     */
+    protected function distanceThreshold(Builder $builder): float
+    {
+        $similarity = $builder->minimumSimilarity;
+
+        if (! is_numeric($similarity) || $similarity < 0 || $similarity > 1) {
+            throw new ScoutException('The minimum similarity must be between 0 and 1.');
+        }
+
+        return 1 - $similarity;
+    }
+
+    /**
+     * Append a field to a comma-separated field list if not already present.
+     */
+    protected function appendField(string $fields, string $field): string
+    {
+        $fields = array_filter(array_map('trim', explode(',', $fields)));
+
+        if (! in_array($field, $fields, true)) {
+            $fields[] = $field;
+        }
+
+        return implode(',', $fields);
     }
 
     /**
