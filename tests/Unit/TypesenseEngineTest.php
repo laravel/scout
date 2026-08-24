@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Facade;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\TypesenseEngine;
+use Laravel\Scout\Tests\Fixtures\FakeEmbeddings;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
+use Laravel\Scout\Tests\Fixtures\SearchableModelWithPrecomputedEmbedding;
 use Mockery as m;
 use Orchestra\Testbench\Concerns\InteractsWithMockery;
 use PHPUnit\Framework\TestCase;
@@ -198,6 +200,113 @@ class TypesenseEngineTest extends TestCase
 
         // Call the update method
         $this->engine->update(collect($models));
+    }
+
+    public function test_update_adds_precomputed_and_generated_embeddings_to_documents(): void
+    {
+        Config::shouldReceive('get')->with('scout.typesense.import_action', m::any())->andReturn('upsert');
+
+        $this->fakeEmbeddings([[[0.3, 0.4]]]);
+
+        $engine = $this->getMockBuilder(TypesenseEngine::class)
+            ->setConstructorArgs([$this->createMock(TypesenseClient::class), 1000, [
+                'model-settings' => [
+                    SearchableModelWithPrecomputedEmbedding::class => [
+                        'embedding' => [
+                            'attribute' => 'embedding',
+                            'dimensions' => 2,
+                            'provider' => 'openai',
+                            'model' => 'text-embedding-test',
+                        ],
+                    ],
+                ],
+            ]])
+            ->onlyMethods(['getOrCreateCollectionFromModel'])
+            ->getMock();
+
+        $precomputed = new SearchableModelWithPrecomputedEmbedding(['id' => 10, 'name' => 'Precomputed']);
+        $precomputed->setAttribute('embedding', [0.1, 0.2]);
+
+        $generated = new SearchableModelWithPrecomputedEmbedding(['id' => 20, 'name' => 'Generate this']);
+
+        $collection = $this->createMock(TypesenseCollection::class);
+        $documents = $this->createMock(Documents::class);
+        $collection->expects($this->once())
+            ->method('getDocuments')
+            ->willReturn($documents);
+        $documents->expects($this->once())
+            ->method('import')
+            ->with(
+                [
+                    ['id' => 10, 'name' => 'Precomputed', 'embedding' => [0.1, 0.2]],
+                    ['id' => 20, 'name' => 'Generate this', 'embedding' => [0.3, 0.4]],
+                ],
+                ['action' => 'upsert'],
+            )
+            ->willReturn([
+                ['success' => true],
+                ['success' => true],
+            ]);
+
+        $engine->expects($this->once())
+            ->method('getOrCreateCollectionFromModel')
+            ->willReturn($collection);
+
+        $engine->update($precomputed->newCollection([$precomputed, $generated]));
+
+        $this->assertSame([[
+            'inputs' => ['Generate this'],
+            'cache' => null,
+            'dimensions' => 2,
+            'provider' => 'openai',
+            'model' => 'text-embedding-test',
+        ]], FakeEmbeddings::$requests);
+    }
+
+    public function test_update_does_not_generate_embeddings_when_using_native_embeddings(): void
+    {
+        Config::shouldReceive('get')->with('scout.typesense.import_action', m::any())->andReturn('upsert');
+
+        $this->fakeEmbeddings([]);
+
+        $engine = $this->getMockBuilder(TypesenseEngine::class)
+            ->setConstructorArgs([$this->createMock(TypesenseClient::class), 1000, [
+                'model-settings' => [
+                    SearchableModel::class => [
+                        'embedding' => [
+                            'attribute' => 'embedding',
+                            'driver' => 'typesense',
+                        ],
+                    ],
+                ],
+            ]])
+            ->onlyMethods(['getOrCreateCollectionFromModel'])
+            ->getMock();
+
+        $model = new SearchableModel(['id' => 1, 'name' => 'Model 1']);
+
+        $collection = $this->createMock(TypesenseCollection::class);
+        $documents = $this->createMock(Documents::class);
+        $collection->expects($this->once())
+            ->method('getDocuments')
+            ->willReturn($documents);
+        $documents->expects($this->once())
+            ->method('import')
+            ->with(
+                [['id' => 1, 'name' => 'Model 1']],
+                ['action' => 'upsert'],
+            )
+            ->willReturn([[
+                'success' => true,
+            ]]);
+
+        $engine->expects($this->once())
+            ->method('getOrCreateCollectionFromModel')
+            ->willReturn($collection);
+
+        $engine->update($model->newCollection([$model]));
+
+        $this->assertSame([], FakeEmbeddings::$requests);
     }
 
     public function test_delete_method(): void
@@ -434,5 +543,17 @@ class TypesenseEngineTest extends TestCase
         // Assert that the soft deleted object is returned
         $this->assertCount(1, $results);
         $this->assertEquals(1, $results->first()->id);
+    }
+
+    /**
+     * Register fake Laravel AI embedding responses.
+     */
+    protected function fakeEmbeddings(array $responses): void
+    {
+        if (! class_exists('Laravel\\Ai\\Embeddings')) {
+            class_alias(FakeEmbeddings::class, 'Laravel\\Ai\\Embeddings');
+        }
+
+        FakeEmbeddings::fake($responses);
     }
 }

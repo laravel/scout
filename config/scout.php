@@ -216,6 +216,10 @@ return [
             //     'search-parameters' => [
             //         'query_by' => 'name'
             //     ],
+            //     'embedding' => [
+            //         'attribute' => 'embedding',
+            //         'dimensions' => 1536,
+            //     ],
             // ],
         ],
         'import_action' => env('TYPESENSE_IMPORT_ACTION', 'upsert'),

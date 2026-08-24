@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Exceptions\NotSupportedException;
+use Laravel\Scout\Exceptions\ScoutException;
 use stdClass;
 use Typesense\Client as Typesense;
 use Typesense\Collection as TypesenseCollection;
@@ -48,14 +49,22 @@ class TypesenseEngine extends Engine
     protected int $maxTotalResults;
 
     /**
+     * The Typesense configuration.
+     *
+     * @var array
+     */
+    protected array $config;
+
+    /**
      * Create new Typesense engine instance.
      *
      * @param  Typesense  $typesense
      */
-    public function __construct(Typesense $typesense, int $maxTotalResults)
+    public function __construct(Typesense $typesense, int $maxTotalResults, array $config = [])
     {
         $this->typesense = $typesense;
         $this->maxTotalResults = $maxTotalResults;
+        $this->config = $config;
     }
 
     /**
@@ -81,26 +90,90 @@ class TypesenseEngine extends Engine
             $models->each->pushSoftDeleteMetadata();
         }
 
-        $objects = $models->map(function ($model) {
+        $records = $models->map(function ($model) {
             if (empty($searchableData = $model->toSearchableArray())) {
                 return null;
             }
 
-            return array_merge(
-                $searchableData,
-                $model->scoutMetadata(),
-            );
+            return [
+                'model' => $model,
+                'object' => array_merge(
+                    $searchableData,
+                    $model->scoutMetadata(),
+                ),
+            ];
         })
             ->filter()
             ->values()
             ->all();
 
-        if (! empty($objects)) {
+        if (! empty($records)) {
+            $settings = $this->modelSettings($models->first());
+
+            $embeddingSettings = isset($settings['embedding'])
+                ? $this->embeddingSettings($models->first())
+                : null;
+
+            $objects = $embeddingSettings && ! $this->usesNativeEmbeddings($embeddingSettings)
+                ? $this->addEmbeddingsToRecords($records, $embeddingSettings)
+                : array_column($records, 'object');
+
             $this->importDocuments(
                 $collection,
                 $objects
             );
         }
+    }
+
+    /**
+     * Add generated embeddings to searchable records.
+     */
+    protected function addEmbeddingsToRecords(array $records, array $settings): array
+    {
+        $objects = [];
+
+        foreach (array_chunk($records, 100) as $batch) {
+            $inputs = [];
+            $vectors = [];
+
+            foreach ($batch as $index => $record) {
+                if (! method_exists($record['model'], 'toSearchableEmbedding')) {
+                    throw new ScoutException('Searchable models using generated embeddings must define a [toSearchableEmbedding] method.');
+                }
+
+                $input = $record['model']->toSearchableEmbedding();
+
+                if (is_array($input)) {
+                    $vectors[$index] = $input;
+
+                    continue;
+                }
+
+                if (! is_string($input) || trim($input) === '') {
+                    throw new ScoutException('The [toSearchableEmbedding] method must return a non-empty string or an embedding array.');
+                }
+
+                $inputs[$index] = $input;
+            }
+
+            if (! empty($inputs)) {
+                $generatedVectors = $this->generateEmbeddings(array_values($inputs), $settings);
+
+                foreach (array_keys($inputs) as $position => $index) {
+                    $vectors[$index] = $generatedVectors[$position];
+                }
+            }
+
+            foreach ($batch as $index => $record) {
+                $object = $record['object'];
+
+                $object[$settings['attribute']] = $vectors[$index];
+
+                $objects[] = $object;
+            }
+        }
+
+        return $objects;
     }
 
     /**
@@ -676,6 +749,85 @@ class TypesenseEngine extends Engine
         $collection->setExists(true);
 
         return $collection;
+    }
+
+    /**
+     * Get the configured settings for a model.
+     */
+    protected function modelSettings($model): array
+    {
+        return $this->config['model-settings'][get_class($model)] ?? [];
+    }
+
+    /**
+     * Get the validated embedding settings for a model.
+     */
+    protected function embeddingSettings($model): array
+    {
+        $settings = $this->modelSettings($model)['embedding'] ?? null;
+
+        if (! is_array($settings)) {
+            throw new ScoutException('No Typesense embedding settings have been configured for ['.get_class($model).'].');
+        }
+
+        if (! isset($settings['attribute']) || ! is_string($settings['attribute']) || trim($settings['attribute']) === '') {
+            throw new ScoutException('Typesense embedding settings must contain an [attribute].');
+        }
+
+        $driver = $settings['driver'] ?? 'laravel-ai';
+
+        if (! in_array($driver, ['laravel-ai', 'typesense'], true)) {
+            throw new ScoutException("The [{$driver}] Typesense embedding driver is not supported.");
+        }
+
+        $settings['driver'] = $driver;
+
+        if ($this->usesNativeEmbeddings($settings)) {
+            return $settings;
+        }
+
+        if (! isset($settings['dimensions']) ||
+            filter_var($settings['dimensions'], FILTER_VALIDATE_INT) === false ||
+            $settings['dimensions'] < 1) {
+            throw new ScoutException('Typesense embedding settings must contain positive [dimensions].');
+        }
+
+        $settings['dimensions'] = (int) $settings['dimensions'];
+
+        return $settings;
+    }
+
+    /**
+     * Determine if Typesense should generate embeddings natively.
+     */
+    protected function usesNativeEmbeddings(array $settings): bool
+    {
+        return ($settings['driver'] ?? null) === 'typesense';
+    }
+
+    /**
+     * Generate and validate embeddings using the optional Laravel AI SDK.
+     */
+    protected function generateEmbeddings(array $inputs, array $settings): array
+    {
+        $embeddingsClass = 'Laravel\\Ai\\Embeddings';
+
+        if (! class_exists($embeddingsClass)) {
+            throw new ScoutException('Semantic search requires the Laravel AI SDK. Please install the [laravel/ai] package.');
+        }
+
+        $response = $embeddingsClass::for(array_values($inputs))
+            ->dimensions($settings['dimensions'])
+            ->cache()
+            ->generate($settings['provider'] ?? null, $settings['model'] ?? null);
+
+        $embeddings = $response->embeddings;
+
+        if (! is_array($embeddings) || count($embeddings) !== count($inputs)) {
+            throw new ScoutException('Laravel AI returned an unexpected number of embeddings.');
+        }
+
+        return $embeddings;
     }
 
     /**
