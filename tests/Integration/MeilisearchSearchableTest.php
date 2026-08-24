@@ -327,6 +327,23 @@ class MeilisearchSearchableTest extends TestCase
         $this->itCanMakeWhereComparisons();
     }
 
+    protected function importScoutIndexFrom($model = null)
+    {
+        parent::importScoutIndexFrom($model);
+
+        $client = $this->app->make(Client::class);
+        $tasks = $client->getTasks(
+            (new TasksQuery)
+                ->setIndexUids([(new $model)->searchableAs()])
+                ->setTypes(['documentAdditionOrUpdate'])
+                ->setLimit(1)
+        );
+
+        if ($task = $tasks->getResults()[0] ?? null) {
+            $client->waitForTask($task['uid'], 10000);
+        }
+    }
+
     protected static function scoutDriver(): string
     {
         return 'meilisearch';
