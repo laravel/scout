@@ -132,7 +132,8 @@ class EngineManager extends Manager
 
         return new MeilisearchEngine(
             $this->container->make(MeilisearchClient::class),
-            config('scout.soft_delete', false)
+            config('scout.soft_delete', false),
+            config('scout.meilisearch', [])
         );
     }
 

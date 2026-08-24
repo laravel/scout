@@ -7,7 +7,9 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
+use Laravel\Scout\Contracts\SupportsSemanticSearch;
 use Laravel\Scout\Contracts\UpdatesIndexSettings;
+use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Meilisearch\Client as MeilisearchClient;
 use Meilisearch\Contracts\IndexesQuery;
@@ -16,7 +18,7 @@ use Meilisearch\Exceptions\ApiException;
 use Meilisearch\Meilisearch;
 use Meilisearch\Search\SearchResult;
 
-class MeilisearchEngine extends Engine implements UpdatesIndexSettings
+class MeilisearchEngine extends Engine implements SupportsSemanticSearch, UpdatesIndexSettings
 {
     /**
      * The Meilisearch client.
@@ -33,15 +35,23 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
     protected $softDelete;
 
     /**
+     * The Meilisearch configuration.
+     *
+     * @var array
+     */
+    protected $config;
+
+    /**
      * Create a new MeilisearchEngine instance.
      *
      * @param  bool  $softDelete
      * @return void
      */
-    public function __construct(MeilisearchClient $meilisearch, $softDelete = false)
+    public function __construct(MeilisearchClient $meilisearch, $softDelete = false, array $config = [])
     {
         $this->meilisearch = $meilisearch;
         $this->softDelete = $softDelete;
+        $this->config = $config;
     }
 
     /**
@@ -64,24 +74,87 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
             $models->each->pushSoftDeleteMetadata();
         }
 
-        $objects = $models->map(function ($model) {
+        $records = $models->map(function ($model) {
             if (empty($searchableData = $model->toSearchableArray())) {
                 return;
             }
 
-            return array_merge(
-                $searchableData,
-                $model->scoutMetadata(),
-                [$model->getScoutKeyName() => $model->getScoutKey()],
-            );
+            return [
+                'model' => $model,
+                'object' => array_merge(
+                    $searchableData,
+                    $model->scoutMetadata(),
+                    [$model->getScoutKeyName() => $model->getScoutKey()],
+                ),
+            ];
         })
             ->filter()
             ->values()
             ->all();
 
-        if (! empty($objects)) {
+        if (! empty($records)) {
+            $settings = $this->modelSettings($models->first());
+
+            $objects = isset($settings['embedding'])
+                ? $this->addEmbeddingsToRecords($records, $this->embeddingSettings($models->first()))
+                : array_column($records, 'object');
+
             $index->addDocuments($objects, $models->first()->getScoutKeyName());
         }
+    }
+
+    /**
+     * Add generated embeddings to searchable records.
+     */
+    protected function addEmbeddingsToRecords(array $records, array $settings): array
+    {
+        $objects = [];
+
+        foreach (array_chunk($records, 100) as $batch) {
+            $inputs = [];
+            $vectors = [];
+
+            foreach ($batch as $index => $record) {
+                if (! method_exists($record['model'], 'toSearchableEmbedding')) {
+                    throw new ScoutException('Searchable models using generated embeddings must define a [toSearchableEmbedding] method.');
+                }
+
+                $input = $record['model']->toSearchableEmbedding();
+
+                if (is_array($input)) {
+                    $vectors[$index] = $input;
+
+                    continue;
+                }
+
+                if (! is_string($input) || trim($input) === '') {
+                    throw new ScoutException('The [toSearchableEmbedding] method must return a non-empty string or an embedding array.');
+                }
+
+                $inputs[$index] = $input;
+            }
+
+            if (! empty($inputs)) {
+                $generatedVectors = $this->generateEmbeddings(array_values($inputs), $settings);
+
+                foreach (array_keys($inputs) as $position => $index) {
+                    $vectors[$index] = $generatedVectors[$position];
+                }
+            }
+
+            foreach ($batch as $index => $record) {
+                $object = $record['object'];
+
+                if (isset($object['_vectors']) && ! is_array($object['_vectors'])) {
+                    throw new ScoutException('The Meilisearch [_vectors] attribute must be an array.');
+                }
+
+                $object['_vectors'][$settings['embedder']] = $vectors[$index];
+                $objects[] = $object;
+            }
+        }
+
+        return $objects;
     }
 
     /**
@@ -112,11 +185,11 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
      */
     public function search(Builder $builder)
     {
-        return $this->performSearch($builder, array_filter([
+        return $this->performSearch($builder, array_merge(array_filter([
             'filter' => $this->filters($builder),
             'hitsPerPage' => $builder->limit,
             'sort' => $this->buildSortFromOrderByClauses($builder),
-        ]));
+        ]), $this->semanticSearchParameters($builder)));
     }
 
     /**
@@ -130,12 +203,53 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
      */
     public function paginate(Builder $builder, $perPage, $page)
     {
-        return $this->performSearch($builder, array_filter([
+        return $this->performSearch($builder, array_merge(array_filter([
             'filter' => $this->filters($builder),
             'hitsPerPage' => (int) $perPage,
             'page' => $page,
             'sort' => $this->buildSortFromOrderByClauses($builder),
-        ]));
+        ]), $this->semanticSearchParameters($builder)));
+    }
+
+    /**
+     * Build semantic and hybrid search parameters.
+     */
+    protected function semanticSearchParameters(Builder $builder): array
+    {
+        if (! $builder->semanticSearch && is_null($builder->hybridSearch)) {
+            return [];
+        }
+
+        if (array_key_exists('hybrid', $builder->options)) {
+            throw new ScoutException('Meilisearch semantic and hybrid searches cannot be combined with a custom [hybrid] option.');
+        }
+
+        $settings = $this->embeddingSettings($builder->model);
+
+        $vector = $builder->options['vector'] ??
+            $this->generateEmbeddings([$builder->query], $settings)[0];
+
+        if (! is_array($vector)) {
+            throw new ScoutException('The Meilisearch query [vector] must be an embedding array.');
+        }
+
+        $semanticRatio = $builder->semanticSearch
+            ? 1.0
+            : $builder->hybridSearch['semantic_weight'] / array_sum($builder->hybridSearch);
+
+        $parameters = [
+            'vector' => $vector,
+            'hybrid' => [
+                'embedder' => $settings['embedder'],
+                'semanticRatio' => $semanticRatio,
+            ],
+        ];
+
+        if (! is_null($builder->minimumSimilarity)) {
+            $parameters['rankingScoreThreshold'] = $builder->minimumSimilarity;
+        }
+
+        return $parameters;
     }
 
     /**
@@ -463,6 +577,65 @@ class MeilisearchEngine extends Engine implements UpdatesIndexSettings
         }
 
         return $tasks;
+    }
+
+    /**
+     * Get the configured settings for a model.
+     */
+    protected function modelSettings($model): array
+    {
+        return $this->config['model-settings'][get_class($model)] ?? [];
+    }
+
+    /**
+     * Get the validated embedding settings for a model.
+     */
+    protected function embeddingSettings($model): array
+    {
+        $settings = $this->modelSettings($model)['embedding'] ?? null;
+
+        if (! is_array($settings)) {
+            throw new ScoutException('No Meilisearch embedding settings have been configured for ['.get_class($model).'].');
+        }
+
+        if (! isset($settings['embedder']) || ! is_string($settings['embedder']) || trim($settings['embedder']) === '') {
+            throw new ScoutException('Meilisearch embedding settings must contain an [embedder].');
+        }
+
+        if (! isset($settings['dimensions']) ||
+            filter_var($settings['dimensions'], FILTER_VALIDATE_INT) === false ||
+            $settings['dimensions'] < 1) {
+            throw new ScoutException('Meilisearch embedding settings must contain positive [dimensions].');
+        }
+
+        $settings['dimensions'] = (int) $settings['dimensions'];
+
+        return $settings;
+    }
+
+    /**
+     * Generate and validate embeddings using the optional Laravel AI SDK.
+     */
+    protected function generateEmbeddings(array $inputs, array $settings): array
+    {
+        $embeddingsClass = 'Laravel\\Ai\\Embeddings';
+
+        if (! class_exists($embeddingsClass)) {
+            throw new ScoutException('Semantic search requires the Laravel AI SDK. Please install the [laravel/ai] package.');
+        }
+
+        $response = $embeddingsClass::for(array_values($inputs))
+            ->dimensions($settings['dimensions'])
+            ->cache()
+            ->generate($settings['provider'] ?? null, $settings['model'] ?? null);
+
+        $embeddings = $response->embeddings;
+
+        if (! is_array($embeddings) || count($embeddings) !== count($inputs)) {
+            throw new ScoutException('Laravel AI returned an unexpected number of embeddings.');
+        }
+
+        return $embeddings;
     }
 
     /**
