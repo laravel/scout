@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/sentinel/compare/v11.5.0...11.x)
+## [Unreleased](https://github.com/laravel/sentinel/compare/v11.6.0...11.x)
+
+## [v11.6.0](https://github.com/laravel/sentinel/compare/v11.5.0...v11.6.0) - 2026-08-25
+
+* Turbopuffer Engine + Semantic/Hybrid Search with Database Support by [@taylorotwell](https://github.com/taylorotwell) in https://github.com/laravel/scout/pull/1007
+* Add semantic and hybrid search to Meilisearch by [@taylorotwell](https://github.com/taylorotwell) in https://github.com/laravel/scout/pull/1008
 
 ## [v11.5.0](https://github.com/laravel/sentinel/compare/v11.4.0...v11.5.0) - 2026-08-04
 
