@@ -1,6 +1,6 @@
 ---
 name: scout-development
-description: "Develops full-text search with Laravel Scout. Activates when installing or configuring Scout; choosing a search engine (Algolia, Meilisearch, Typesense, Database, Collection); adding the Searchable trait to models; customizing toSearchableArray or searchableAs; importing or flushing search indexes; writing search queries with where clauses, pagination, or soft deletes; configuring index settings; troubleshooting search results; or when the user mentions Scout, full-text search, search indexing, or search engines in a Laravel project. Make sure to use this skill whenever the user works with search functionality in Laravel, even if they don't explicitly mention Scout."
+description: "Develops full-text, semantic, and hybrid search with Laravel Scout. Activates when installing or configuring Scout; choosing a search engine (Algolia, Meilisearch, Typesense, Turbopuffer, Database, Collection); adding the Searchable trait to models; customizing toSearchableArray, toSearchableEmbedding, or searchableAs; importing or flushing search indexes; writing search queries with filters, pagination, semantic search, or hybrid search; configuring index or embedding settings; troubleshooting search results; or when the user mentions Scout, full-text search, vector search, embeddings, search indexing, or search engines in a Laravel project. Make sure to use this skill whenever the user works with search functionality in Laravel, even if they don't explicitly mention Scout."
 license: MIT
 metadata:
   author: laravel
@@ -8,14 +8,14 @@ metadata:
 @php
 /** @var \Laravel\Boost\Install\GuidelineAssist $assist */
 @endphp
-# Scout Full-Text Search
+# Scout Search
 
 ## Documentation First
 
 **Always use `search-docs` before writing Scout code.** The documentation covers every engine, configuration option, and edge case in detail. This skill teaches you how to navigate Scout — the docs have the implementation specifics.
 
 ```
-search-docs(queries: ["Scout installation"], packages: ["laravel/framework@12.x"])
+search-docs(queries: ["Scout installation"], packages: ["laravel/framework@13.x"])
 ```
 
 The Scout docs live under the `laravel/framework` package — not `laravel/scout`.
@@ -23,13 +23,13 @@ The Scout docs live under the `laravel/framework` package — not `laravel/scout
 Effective search patterns:
 
 - Installation & setup: `"Scout installation"`, `"Scout queueing"`
-- Engine setup: `"Scout Algolia"`, `"Scout Meilisearch"`, `"Scout Typesense"`
+- Engine setup: `"Scout Algolia"`, `"Scout Meilisearch"`, `"Scout Typesense"`, `"Scout Turbopuffer"`
 - Model configuration: `"Scout configuring searchable data"`, `"Scout configuring model indexes"`
-- Searching: `"Scout searching"`, `"Scout where clauses"`, `"Scout pagination"`
+- Searching: `"Scout searching"`, `"Scout semantic search"`, `"Scout hybrid search"`, `"Scout where clauses"`, `"Scout pagination"`
 - Indexing: `"Scout batch import"`, `"Scout adding records"`, `"Scout removing records"`
 - Advanced: `"Scout soft deleting"`, `"Scout customizing engine searches"`, `"Scout custom engines"`
 
-The docs are organized into these main sections: Installation, Driver Prerequisites, Configuration, Database/Collection Engines, Indexing, Searching, Custom Engines. Use these section names as search anchors.
+The docs are organized into these main sections: Installation, Driver Prerequisites, Configuration, Database/Collection Engines, Third-Party Engine Configuration, Third-Party Engine Indexing, Searching, Custom Engines. Use these section names as search anchors.
 
 ## When to Apply
 
@@ -40,6 +40,7 @@ Activate this skill when:
 - Making Eloquent models searchable
 - Customizing indexed data or index names
 - Writing search queries, filters, or pagination
+- Implementing semantic or hybrid search with embeddings
 - Importing or flushing search indexes
 - Troubleshooting search results or indexing issues
 - Choosing between search engines
@@ -75,7 +76,7 @@ Before presenting engine options, check if Scout is already configured in the ap
 
 1. Check `.env` for `SCOUT_DRIVER` — if set, the application already has a configured engine.
 2. Check `config/scout.php` for the `driver` key and any engine-specific settings.
-3. Check `composer.json` for engine SDKs (`algolia/algoliasearch-client-php`, `meilisearch/meilisearch-php`, `typesense/typesense-php`).
+3. Check `composer.json` for engine SDKs (`algolia/algoliasearch-client-php`, `meilisearch/meilisearch-php`, `typesense/typesense-php`) and `laravel/ai` when Scout generates embeddings.
 
 If an engine is already configured, skip the engine selection step and work with the existing setup. Only present the engine comparison if Scout is not yet installed or the user explicitly wants to switch engines.
 
@@ -87,7 +88,8 @@ When no engine is configured, present these options and let the user decide — 
 | **Collection** | Built-in | Local dev, tiny datasets (<500 records) | Loads all records into memory. Most portable but least efficient. |
 | **Algolia** | Hosted SaaS | Advanced search without managing infra | Typo tolerance, analytics, faceting. Paid service. No self-hosting. |
 | **Meilisearch** | Self-hosted / Cloud | Teams wanting infrastructure control | Fast, open-source. Self-hostable or cloud. Requires filterable attribute config. |
-| **Typesense** | Self-hosted / Cloud | Keyword, semantic, geo, vector search | Open-source. Self-hostable or cloud. Strict schema requirements. |
+| **Typesense** | Self-hosted / Cloud | Keyword, geo, and custom vector search | Open-source. Self-hostable or cloud. Strict schema requirements; Scout's semantic/hybrid APIs are unsupported. |
+| **Turbopuffer** | Hosted SaaS | Full-text, semantic, and hybrid search at scale | Serverless and built for vector search. Paid hosted service. |
 
 After the user chooses, use `search-docs` for that engine's prerequisites and configuration.
 
@@ -97,7 +99,7 @@ Set the engine in `.env`:
 SCOUT_DRIVER=database
 ```
 
-For third-party engines (Algolia, Meilisearch, Typesense): install their PHP SDK and strongly consider enabling queue support in `config/scout.php` for production.
+For third-party engines: install any required client dependency and strongly consider enabling queue support in `config/scout.php` for production.
 
 ## Model Configuration
 
@@ -152,6 +154,46 @@ $results = Model::search('query')->raw();
 
 Use `search-docs` for advanced querying — `whereIn`, `whereNotIn`, soft deletes, custom indexes, and engine-specific options.
 
+## Semantic and Hybrid Search
+
+The database, Meilisearch, and Turbopuffer engines support Scout's semantic and hybrid search APIs. Typesense supports vector search as a service, but Scout's `semantic()` and `hybrid()` methods do not use the Typesense engine.
+
+Always use `search-docs` for the selected engine's embedding setup before writing code. The requirements differ:
+
+- **Database** — requires Laravel 13, PostgreSQL with `pgvector`, a nullable vector column, a `toSearchableEmbedding()` method, and a full-text index for hybrid search.
+- **Meilisearch** — requires compatible `embedders` index settings and model embedding settings, followed by `scout:sync-index-settings`.
+- **Turbopuffer** — supports embeddings generated by Scout or Turbopuffer-native embeddings configured in the model schema.
+
+When Scout generates embeddings, install and configure `laravel/ai`. The model's `toSearchableEmbedding()` method may return source text for Scout to embed or a precomputed embedding array:
+
+```php
+public function toSearchableEmbedding(): string|array
+{
+    return $this->title.' '.$this->body;
+}
+```
+
+After embeddings are configured and existing records have been reindexed, use the query builder APIs:
+
+```php
+// Meaning-based search
+$results = Article::search('how to keep a house comfortable without electricity')
+    ->semantic()
+    ->get();
+
+// Optionally require a minimum similarity when the engine supports it
+$results = Article::search('renewable energy storage')
+    ->semantic(minSimilarity: 0.6)
+    ->get();
+
+// Combine full-text and semantic rankings
+$results = Article::search('renewable energy storage')
+    ->hybrid(textWeight: 1, semanticWeight: 2)
+    ->get();
+```
+
+Do not invent embedding dimensions or model settings. They must match the configured embedding provider and vector schema.
+
 ## Key Artisan Commands
 
 | Command | Purpose |
@@ -183,4 +225,6 @@ Use `search-docs` for detailed testing patterns.
 - **`query()` is not for filtering** — with third-party engines, the `query()` callback runs after results are already retrieved. Use Scout `where` clauses for filtering; use `query()` only for eager-loading or customizing the Eloquent hydration query.
 - **Missing queue configuration** — third-party engines should always have `scout.queue` enabled in production. Without it, indexing runs synchronously and slows down requests.
 - **Typesense schema requirements** — `id` must be cast as `(string)` and timestamps as Unix integers (`$this->created_at->timestamp`).
+- **Embedding dimension mismatch** — the vector column or engine schema dimensions must exactly match the embedding model output. Reindex existing records after changing embedding configuration or `toSearchableEmbedding()`.
+- **Unsupported semantic engine** — Scout's `semantic()` and `hybrid()` methods are supported by the database, Meilisearch, and Turbopuffer engines, not Algolia, Typesense, or Collection.
 - **`shouldBeSearchable()` bypass** — this method only applies via `save()`, `create()`, queries, or relationships. Calling `searchable()` directly on a model or collection bypasses it entirely.
