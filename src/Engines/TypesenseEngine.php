@@ -15,8 +15,13 @@ use Laravel\Scout\Exceptions\ScoutException;
 use stdClass;
 use Typesense\Client as Typesense;
 use Typesense\Collection as TypesenseCollection;
+use Typesense\Documents;
 use Typesense\Exceptions\ObjectAlreadyExists;
 use Typesense\Exceptions\ObjectNotFound;
+use Typesense\Exceptions\ObjectUnprocessable;
+use Typesense\Exceptions\RequestMalformed;
+use Typesense\Exceptions\RequestUnauthorized;
+use Typesense\Exceptions\ServiceUnavailable;
 use Typesense\Exceptions\TypesenseClientError;
 
 class TypesenseEngine extends Engine implements SupportsSemanticSearch
@@ -346,12 +351,70 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
         }
 
         try {
-            return $documents->search($options);
+            return $this->executeSearch($builder, $documents, $options);
         } catch (ObjectNotFound) {
             $this->getOrCreateCollectionFromModel($builder->model, $builder->index, true);
 
+            return $this->executeSearch($builder, $documents, $options);
+        }
+    }
+
+    /**
+     * Execute the given search using the appropriate Typesense endpoint.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  \Typesense\Documents  $documents
+     * @param  array  $options
+     * @return mixed
+     *
+     * @throws \Http\Client\Exception
+     * @throws \Typesense\Exceptions\TypesenseClientError
+     */
+    protected function executeSearch(Builder $builder, Documents $documents, array $options): mixed
+    {
+        if (! isset($options['vector_query'])) {
             return $documents->search($options);
         }
+
+        // Serialized embeddings may exceed Typesense's query string length
+        // limit, so vector queries are sent through the multi-search
+        // endpoint, which accepts the parameters in the request body...
+        $results = $this->typesense->getMultiSearch()->perform([
+            'searches' => [
+                array_merge($options, [
+                    'collection' => $builder->index ?? $builder->model->searchableAs(),
+                ]),
+            ],
+        ]);
+
+        $result = $results['results'][0] ?? [];
+
+        if (isset($result['error'])) {
+            throw $this->multiSearchException($result);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Convert a multi-search error result into a Typesense exception.
+     *
+     * @param  array  $result
+     * @return \Typesense\Exceptions\TypesenseClientError
+     */
+    protected function multiSearchException(array $result): TypesenseClientError
+    {
+        $exception = match ((int) ($result['code'] ?? 500)) {
+            400 => new RequestMalformed,
+            401 => new RequestUnauthorized,
+            404 => new ObjectNotFound,
+            409 => new ObjectAlreadyExists,
+            422 => new ObjectUnprocessable,
+            503 => new ServiceUnavailable,
+            default => new TypesenseClientError,
+        };
+
+        return $exception->setMessage($result['error']);
     }
 
     /**

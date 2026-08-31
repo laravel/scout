@@ -311,12 +311,14 @@ class TypesenseSearchableTest extends TestCase
         $modelClass = get_class($model);
         $modelClass::$index = config('scout.prefix').'semantic_'.str()->random(12);
 
+        $dimensions = 384;
+
         config()->set('scout.typesense.model-settings.'.$modelClass, [
             'collection-schema' => [
                 'fields' => [
                     ['name' => 'id', 'type' => 'string'],
                     ['name' => 'name', 'type' => 'string'],
-                    ['name' => 'embedding', 'type' => 'float[]', 'num_dim' => 2],
+                    ['name' => 'embedding', 'type' => 'float[]', 'num_dim' => $dimensions],
                 ],
             ],
             'search-parameters' => [
@@ -332,7 +334,7 @@ class TypesenseSearchableTest extends TestCase
                     $modelClass => [
                         'embedding' => [
                             'attribute' => 'embedding',
-                            'dimensions' => 2,
+                            'dimensions' => $dimensions,
                         ],
                     ],
                 ],
@@ -340,21 +342,39 @@ class TypesenseSearchableTest extends TestCase
         );
 
         try {
+            $catVector = array_fill(0, $dimensions, 0.001953125);
+            $catVector[0] = 1.0;
+
+            $rocketVector = array_fill(0, $dimensions, 0.001953125);
+            $rocketVector[$dimensions - 1] = 1.0;
+
             $cat = new $modelClass(['id' => 1, 'name' => 'A sleeping cat']);
-            $cat->setAttribute('embedding', [1, 0]);
+            $cat->setAttribute('embedding', $catVector);
 
             $rocket = new $modelClass(['id' => 2, 'name' => 'A rocket launch']);
-            $rocket->setAttribute('embedding', [0, 1]);
+            $rocket->setAttribute('embedding', $rocketVector);
 
             $engine->update($model->newCollection([$cat, $rocket]));
 
+            // The serialized query vector exceeds Typesense's 4,000 character
+            // query string limit, requiring the multi-search endpoint...
+            $this->assertGreaterThan(4000, strlen(implode(', ', $catVector)));
+
             $results = $engine->search(
                 (new Builder($model, 'a relaxed pet'))
-                    ->options(['vector' => [1, 0]])
+                    ->options(['vector' => $catVector])
                     ->semantic()
             );
 
             $this->assertSame('1', $results['hits'][0]['document']['id']);
+
+            $results = $engine->search(
+                (new Builder($model, 'rocket'))
+                    ->options(['vector' => $rocketVector])
+                    ->hybrid()
+            );
+
+            $this->assertSame('2', $results['hits'][0]['document']['id']);
         } finally {
             $engine->deleteIndex($modelClass::$index);
         }

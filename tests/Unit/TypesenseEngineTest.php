@@ -21,7 +21,9 @@ use PHPUnit\Framework\TestCase;
 use Typesense\Client as TypesenseClient;
 use Typesense\Collection as TypesenseCollection;
 use Typesense\Documents;
+use Typesense\Exceptions\RequestMalformed;
 use Typesense\Exceptions\TypesenseClientError;
+use Typesense\MultiSearch;
 
 class TypesenseEngineTest extends TestCase
 {
@@ -496,6 +498,83 @@ class TypesenseEngineTest extends TestCase
         $engine->buildSearchParameters($builder, 1, 10);
     }
 
+    public function test_searches_with_vector_queries_use_the_multi_search_endpoint(): void
+    {
+        $multiSearch = $this->createMock(MultiSearch::class);
+        $engine = $this->multiSearchEngine($multiSearch);
+
+        $engine->expects($this->once())
+            ->method('buildSearchParameters')
+            ->willReturn([
+                'q' => '*',
+                'query_by' => 'name',
+                'vector_query' => 'embedding:([0.1, 0.2])',
+            ]);
+
+        $multiSearch->expects($this->once())
+            ->method('perform')
+            ->with([
+                'searches' => [
+                    [
+                        'q' => '*',
+                        'query_by' => 'name',
+                        'vector_query' => 'embedding:([0.1, 0.2])',
+                        'collection' => 'table',
+                    ],
+                ],
+            ])
+            ->willReturn(['results' => [['found' => 1, 'hits' => [['document' => ['id' => '1']]]]]]);
+
+        $results = $engine->search(new Builder(new SearchableModel, 'conceptual query'));
+
+        $this->assertSame(1, $results['found']);
+        $this->assertSame('1', $results['hits'][0]['document']['id']);
+    }
+
+    public function test_multi_search_errors_are_converted_to_typesense_exceptions(): void
+    {
+        $multiSearch = $this->createMock(MultiSearch::class);
+        $engine = $this->multiSearchEngine($multiSearch);
+
+        $engine->method('buildSearchParameters')->willReturn([
+            'q' => '*',
+            'query_by' => 'name',
+            'vector_query' => 'embedding:([0.1, 0.2])',
+        ]);
+
+        $multiSearch->method('perform')->willReturn([
+            'results' => [['code' => 400, 'error' => 'Query string exceeds max allowed length.']],
+        ]);
+
+        $this->expectException(RequestMalformed::class);
+        $this->expectExceptionMessage('Query string exceeds max allowed length.');
+
+        $engine->search(new Builder(new SearchableModel, 'conceptual query'));
+    }
+
+    public function test_multi_search_creates_missing_collections_and_retries(): void
+    {
+        $multiSearch = $this->createMock(MultiSearch::class);
+        $engine = $this->multiSearchEngine($multiSearch);
+
+        $engine->method('buildSearchParameters')->willReturn([
+            'q' => '*',
+            'query_by' => 'name',
+            'vector_query' => 'embedding:([0.1, 0.2])',
+        ]);
+
+        $multiSearch->expects($this->exactly(2))
+            ->method('perform')
+            ->willReturnOnConsecutiveCalls(
+                ['results' => [['code' => 404, 'error' => 'Not found.']]],
+                ['results' => [['found' => 0, 'hits' => []]]],
+            );
+
+        $results = $engine->search(new Builder(new SearchableModel, 'conceptual query'));
+
+        $this->assertSame(0, $results['found']);
+    }
+
     public function test_delete_method(): void
     {
         // Mock models and their methods
@@ -730,6 +809,29 @@ class TypesenseEngineTest extends TestCase
         // Assert that the soft deleted object is returned
         $this->assertCount(1, $results);
         $this->assertEquals(1, $results->first()->id);
+    }
+
+    /**
+     * Create a partially mocked engine whose client performs multi-searches.
+     */
+    protected function multiSearchEngine(MultiSearch $multiSearch): TypesenseEngine
+    {
+        $client = $this->createMock(TypesenseClient::class);
+        $client->method('getMultiSearch')->willReturn($multiSearch);
+
+        $engine = $this->getMockBuilder(TypesenseEngine::class)
+            ->setConstructorArgs([$client, 1000])
+            ->onlyMethods(['getOrCreateCollectionFromModel', 'buildSearchParameters'])
+            ->getMock();
+
+        $collection = $this->createMock(TypesenseCollection::class);
+        $documents = $this->createMock(Documents::class);
+        $collection->method('getDocuments')->willReturn($documents);
+        $documents->expects($this->never())->method('search');
+
+        $engine->method('getOrCreateCollectionFromModel')->willReturn($collection);
+
+        return $engine;
     }
 
     /**
