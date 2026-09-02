@@ -168,7 +168,8 @@ class EngineManager extends Manager
 
         return new TypesenseEngine(
             new Typesense($config['client-settings']),
-            $config['max_total_results'] ?? 1000
+            $config['max_total_results'] ?? 1000,
+            $config
         );
     }
 
