@@ -376,9 +376,7 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
             return $documents->search($options);
         }
 
-        // Serialized embeddings may exceed Typesense's query string length
-        // limit, so vector queries are sent through the multi-search
-        // endpoint, which accepts the parameters in the request body...
+        // Serialized embeddings may exceed Typesense's query string length, so send through multi-search...
         $results = $this->typesense->getMultiSearch()->perform([
             'searches' => [
                 array_merge($options, [
@@ -390,7 +388,7 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
         $result = $results['results'][0] ?? [];
 
         if (isset($result['error'])) {
-            throw $this->multiSearchException($result);
+            throw $this->marshalMultiSearchException($result);
         }
 
         return $result;
@@ -402,7 +400,7 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
      * @param  array  $result
      * @return \Typesense\Exceptions\TypesenseClientError
      */
-    protected function multiSearchException(array $result): TypesenseClientError
+    protected function marshalMultiSearchException(array $result): TypesenseClientError
     {
         $exception = match ((int) ($result['code'] ?? 500)) {
             400 => new RequestMalformed,
@@ -537,7 +535,7 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
             $parameters = $this->applyHybridQueryBy($parameters, $settings);
         }
 
-        if (! is_null($vectorQuery = $this->vectorQuery($builder, $settings))) {
+        if (! is_null($vectorQuery = $this->buildVectorQueryParameter($builder, $settings))) {
             $parameters['vector_query'] = $vectorQuery;
         }
 
@@ -594,8 +592,7 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
             }
         }
 
-        // Remote embedders reject prefix searches on embedding fields, so a
-        // global prefix must become a per-field list that excludes them...
+        // Remote embedders reject prefix searches on embedding fields, so global prefix must become per-field...
         if (($parameters['prefix'] ?? null) === true || ($parameters['prefix'] ?? null) === 'true') {
             $parameters['prefix'] = implode(',', [...array_fill(0, count($fields), 'true'), 'false']);
         }
@@ -606,7 +603,7 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
     /**
      * Build the "vector_query" parameter for the search.
      */
-    protected function vectorQuery(Builder $builder, array $settings): ?string
+    protected function buildVectorQueryParameter(Builder $builder, array $settings): ?string
     {
         if ($this->usesNativeEmbeddings($settings)) {
             $vector = [];
@@ -629,8 +626,6 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
             $options[] = 'distance_threshold: '.$this->distanceThreshold($builder);
         }
 
-        // Typesense rejects an empty vector query without parameters; native
-        // semantic searches are expressed via "query_by" alone in that case...
         if (empty($vector) && empty($options)) {
             return null;
         }
@@ -645,10 +640,6 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
 
     /**
      * Get the maximum vector distance for the search's minimum similarity.
-     *
-     * This assumes the collection uses the default cosine distance metric. On
-     * hybrid searches, Typesense only applies the threshold to vector search
-     * candidates; keyword matches are returned regardless of their distance.
      */
     protected function distanceThreshold(Builder $builder): float
     {
