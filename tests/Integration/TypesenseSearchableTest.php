@@ -2,8 +2,12 @@
 
 namespace Laravel\Scout\Tests\Integration;
 
+use Laravel\Scout\Builder;
+use Laravel\Scout\Engines\TypesenseEngine;
+use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Orchestra\Testbench\Attributes\RequiresEnv;
 use PHPUnit\Framework\Attributes\Group;
+use Typesense\Client;
 use Workbench\App\Models\SearchableUser;
 
 /**
@@ -272,6 +276,108 @@ class TypesenseSearchableTest extends TestCase
     public function test_it_can_filter_with_where_comparisons()
     {
         $this->itCanMakeWhereComparisons();
+    }
+
+    public function test_it_can_use_user_provided_embeddings_for_semantic_search()
+    {
+        $model = new class extends SearchableModel
+        {
+            public static $index;
+
+            public function searchableAs()
+            {
+                return static::$index;
+            }
+
+            public function indexableAs()
+            {
+                return static::$index;
+            }
+
+            public function toSearchableArray()
+            {
+                return [
+                    'id' => (string) $this->id,
+                    'name' => $this->name,
+                ];
+            }
+
+            public function toSearchableEmbedding()
+            {
+                return $this->embedding;
+            }
+        };
+
+        $modelClass = get_class($model);
+        $modelClass::$index = config('scout.prefix').'semantic_'.str()->random(12);
+
+        $dimensions = 384;
+
+        config()->set('scout.typesense.model-settings.'.$modelClass, [
+            'collection-schema' => [
+                'fields' => [
+                    ['name' => 'id', 'type' => 'string'],
+                    ['name' => 'name', 'type' => 'string'],
+                    ['name' => 'embedding', 'type' => 'float[]', 'num_dim' => $dimensions],
+                ],
+            ],
+            'search-parameters' => [
+                'query_by' => 'name',
+            ],
+        ]);
+
+        $engine = new TypesenseEngine(
+            new Client(config('scout.typesense.client-settings')),
+            1000,
+            [
+                'model-settings' => [
+                    $modelClass => [
+                        'embedding' => [
+                            'attribute' => 'embedding',
+                            'dimensions' => $dimensions,
+                        ],
+                    ],
+                ],
+            ]
+        );
+
+        try {
+            $catVector = array_fill(0, $dimensions, 0.001953125);
+            $catVector[0] = 1.0;
+
+            $rocketVector = array_fill(0, $dimensions, 0.001953125);
+            $rocketVector[$dimensions - 1] = 1.0;
+
+            $cat = new $modelClass(['id' => 1, 'name' => 'A sleeping cat']);
+            $cat->setAttribute('embedding', $catVector);
+
+            $rocket = new $modelClass(['id' => 2, 'name' => 'A rocket launch']);
+            $rocket->setAttribute('embedding', $rocketVector);
+
+            $engine->update($model->newCollection([$cat, $rocket]));
+
+            // The serialized query vector exceeds Typesense's 4,000 character
+            // query string limit, requiring the multi-search endpoint...
+            $this->assertGreaterThan(4000, strlen(implode(', ', $catVector)));
+
+            $results = $engine->search(
+                (new Builder($model, 'a relaxed pet'))
+                    ->options(['vector' => $catVector])
+                    ->semantic()
+            );
+
+            $this->assertSame('1', $results['hits'][0]['document']['id']);
+
+            $results = $engine->search(
+                (new Builder($model, 'rocket'))
+                    ->options(['vector' => $rocketVector])
+                    ->hybrid()
+            );
+
+            $this->assertSame('2', $results['hits'][0]['document']['id']);
+        } finally {
+            $engine->deleteIndex($modelClass::$index);
+        }
     }
 
     protected static function scoutDriver(): string
