@@ -28,6 +28,7 @@
         "algolia/algoliasearch-client-php": "^3.2|^4.0",
         "typesense/typesense-php": "^4.9.3",
         "meilisearch/meilisearch-php": "^1.0",
+        "elasticsearch/elasticsearch": "^8.0",
         "mockery/mockery": "^1.0",
         "orchestra/testbench": "^7.31|^8.36|^9.15|^10.8|^11.0",
         "php-http/guzzle7-adapter": "^1.0",
@@ -60,6 +61,7 @@
     },
     "suggest": {
         "algolia/algoliasearch-client-php": "Required to use the Algolia engine (^3.2).",
+        "elasticsearch/elasticsearch": "Required to use the Elasticsearch engine (^8.0).",
         "laravel/ai": "Required to generate embeddings for semantic and hybrid search.",
         "meilisearch/meilisearch-php": "Required to use the Meilisearch engine (^1.0).",
         "typesense/typesense-php": "Required to use the Typesense engine (^4.9)."

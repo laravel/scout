@@ -12,7 +12,7 @@ return [
     | to the search service. You should adjust this based on your needs.
     |
     | Supported: "algolia", "meilisearch", "typesense", "turbopuffer",
-    |            "database", "collection", "null"
+    |            "elasticsearch", "database", "collection", "null"
     |
     */
 
@@ -257,6 +257,41 @@ return [
             //         'name' => ['type' => 'string', 'full_text_search' => true],
             //         'email' => ['type' => 'string', 'full_text_search' => true],
             //         'embedding' => ['type' => '[1536]f32', 'ann' => true],
+            //     ],
+            // ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Elasticsearch Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure your Elasticsearch connection. Elasticsearch is
+    | a distributed, RESTful search and analytics engine. Below, you can
+    | state the host(s) and credentials for your Elasticsearch cluster.
+    |
+    | See: https://www.elastic.co/guide/en/elasticsearch/client/php-api/current
+    |
+    */
+
+    'elasticsearch' => [
+        'hosts' => [
+            env('ELASTICSEARCH_HOST', 'http://localhost:9200'),
+        ],
+        'user' => env('ELASTICSEARCH_USER'),
+        'password' => env('ELASTICSEARCH_PASSWORD'),
+        'index-settings' => [
+            // 'users' => [
+            //     'settings' => [
+            //         'number_of_shards' => 1,
+            //         'number_of_replicas' => 0,
+            //     ],
+            //     'mappings' => [
+            //         'properties' => [
+            //             'id' => ['type' => 'keyword'],
+            //             'name' => ['type' => 'text'],
+            //         ],
             //     ],
             // ],
         ],

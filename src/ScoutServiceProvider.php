@@ -2,6 +2,8 @@
 
 namespace Laravel\Scout;
 
+use Elastic\Elasticsearch\Client as ElasticsearchClient;
+use Elastic\Elasticsearch\ClientBuilder;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Scout\Console\DeleteAllIndexesCommand;
@@ -34,6 +36,20 @@ class ScoutServiceProvider extends ServiceProvider
                     $config['key'],
                     clientAgents: [sprintf('Meilisearch Laravel Scout (v%s)', Scout::VERSION)],
                 );
+            });
+        }
+
+        if (class_exists(ElasticsearchClient::class)) {
+            $this->app->singleton(ElasticsearchClient::class, function ($app) {
+                $config = $app['config']->get('scout.elasticsearch');
+
+                $builder = ClientBuilder::create()->setHosts($config['hosts']);
+
+                if (! empty($config['user'])) {
+                    $builder->setBasicAuthentication($config['user'], $config['password']);
+                }
+
+                return $builder->build();
             });
         }
 

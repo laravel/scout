@@ -113,6 +113,56 @@ jobs:
           MEILISEARCH_KEY: 'masterKey'
           DB_CONNECTION: 'testing'
 
+  tests-using-elasticsearch:
+    runs-on: ubuntu-22.04
+
+    services:
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.19.0
+        ports:
+          - 9200:9200
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: false
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+          cluster.routing.allocation.disk.threshold_enabled: false
+
+    strategy:
+      fail-fast: true
+      matrix:
+          php: ['8.0', 8.1, 8.2, 8.3, 8.4]
+
+    name: PHP ${{ matrix.php }} using Elasticsearch
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Wait for Elasticsearch
+        run: |
+          timeout 120 bash -c 'until curl -s -o /dev/null http://localhost:9200; do sleep 2; done'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip
+          ini-values: error_reporting=E_ALL
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: |
+           composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Execute tests
+        run: vendor/bin/phpunit --no-configuration --no-coverage --color --bootstrap vendor/autoload.php --group elasticsearch tests/Integration
+        env:
+          ELASTICSEARCH_HOST: 'http://localhost:9200'
+          DB_CONNECTION: 'testing'
+
   tests-using-typesense:
     runs-on: ubuntu-22.04
 

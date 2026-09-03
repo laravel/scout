@@ -5,12 +5,14 @@ namespace Laravel\Scout;
 use Algolia\AlgoliaSearch\Algolia;
 use Algolia\AlgoliaSearch\Support\AlgoliaAgent as Algolia4UserAgent;
 use Algolia\AlgoliaSearch\Support\UserAgent as Algolia3UserAgent;
+use Elastic\Elasticsearch\Client as ElasticsearchClient;
 use Exception;
 use Illuminate\Support\Manager;
 use Laravel\Scout\Engines\Algolia3Engine;
 use Laravel\Scout\Engines\Algolia4Engine;
 use Laravel\Scout\Engines\CollectionEngine;
 use Laravel\Scout\Engines\DatabaseEngine;
+use Laravel\Scout\Engines\ElasticsearchEngine;
 use Laravel\Scout\Engines\MeilisearchEngine;
 use Laravel\Scout\Engines\NullEngine;
 use Laravel\Scout\Engines\TurbopufferEngine;
@@ -119,6 +121,37 @@ class EngineManager extends Manager
         }
 
         return $headers;
+    }
+
+    /**
+     * Create an Elasticsearch engine instance.
+     *
+     * @return \Laravel\Scout\Engines\ElasticsearchEngine
+     */
+    public function createElasticsearchDriver()
+    {
+        $this->ensureElasticsearchClientIsInstalled();
+
+        return new ElasticsearchEngine(
+            $this->container->make(ElasticsearchClient::class),
+            config('scout.soft_delete', false)
+        );
+    }
+
+    /**
+     * Ensure the Elasticsearch client is installed.
+     *
+     * @return void
+     *
+     * @throws \Exception
+     */
+    protected function ensureElasticsearchClientIsInstalled()
+    {
+        if (class_exists(ElasticsearchClient::class)) {
+            return;
+        }
+
+        throw new Exception('Please install the suggested Elasticsearch client: elasticsearch/elasticsearch.');
     }
 
     /**
