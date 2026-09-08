@@ -1,6 +1,10 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/sentinel/compare/v11.6.1...11.x)
+## [Unreleased](https://github.com/laravel/sentinel/compare/v11.7.0...11.x)
+
+## [v11.7.0](https://github.com/laravel/sentinel/compare/v11.6.1...v11.7.0) - 2026-09-08
+
+* feat(typesense): add semantic and hybrid search by [@tharropoulos](https://github.com/tharropoulos) in https://github.com/laravel/scout/pull/1009
 
 ## [v11.6.1](https://github.com/laravel/sentinel/compare/v11.6.0...v11.6.1) - 2026-08-25
 
