@@ -125,7 +125,7 @@ class CollectionEngine extends Engine
                 return false;
             }
 
-            if (! $builder->query) {
+            if (is_null($builder->query) || $builder->query === '') {
                 return true;
             }
 
