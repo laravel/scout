@@ -41,6 +41,45 @@ class CollectionEngineTest extends TestCase
         $this->assertCount(2, $models);
     }
 
+    public function test_it_can_retrieve_results_with_null_search()
+    {
+        $this->assertCount(2, SearchableUser::search(null)->get());
+    }
+
+    public function test_it_searches_for_whitespace_literally()
+    {
+        $this->assertCount(0, SearchableUser::search('  ')->get());
+    }
+
+    public function test_it_can_retrieve_results_for_zero()
+    {
+        $user = UserFactory::new()->create([
+            'name' => 'Agent 0',
+            'email' => 'agent@example.com',
+        ]);
+
+        $models = SearchableUser::search('0')->get();
+
+        $this->assertSame([$user->id], $models->modelKeys());
+    }
+
+    public function test_it_can_paginate_results_for_zero()
+    {
+        UserFactory::new()->create([
+            'name' => 'Agent 0',
+            'email' => 'first@example.com',
+        ]);
+        $second = UserFactory::new()->create([
+            'name' => 'Agent 00',
+            'email' => 'second@example.com',
+        ]);
+
+        $page = SearchableUser::search('0')->orderBy('id')->paginate(1, 'page', 2);
+
+        $this->assertSame(2, $page->total());
+        $this->assertSame([$second->id], $page->getCollection()->modelKeys());
+    }
+
     public function test_it_can_retrieve_results()
     {
         $models = SearchableUser::search('Taylor')->where('email', 'taylor@laravel.com')->get();
