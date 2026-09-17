@@ -149,12 +149,30 @@ return [
             //         ],
             //     ],
             // ],
+            // Native embeddings: Meilisearch generates vectors from documentTemplate.
+            // 'users' => [
+            //     'embedders' => [
+            //         'default' => [
+            //             'source' => 'openAi',
+            //             'apiKey' => env('OPENAI_API_KEY'),
+            //             'model' => 'text-embedding-3-small',
+            //             'documentTemplate' => 'A document titled {{ doc.name }}: {{ doc.email }}',
+            //         ],
+            //     ],
+            // ],
         ],
         'model-settings' => [
             // User::class => [
             //     'embedding' => [
             //         'embedder' => 'default',
             //         'dimensions' => 1536,
+            //     ],
+            // ],
+            // Native embeddings ignore toSearchableEmbedding(); the text to embed comes from documentTemplate.
+            // User::class => [
+            //     'embedding' => [
+            //         'embedder' => 'default',
+            //         'driver' => 'meilisearch',
             //     ],
             // ],
         ],
