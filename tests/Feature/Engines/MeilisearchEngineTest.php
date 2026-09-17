@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\MeilisearchEngine;
+use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Jobs\RemoveableScoutCollection;
 use Laravel\Scout\Jobs\RemoveFromSearch;
 use Laravel\Scout\Tests\Fixtures\FakeEmbeddings;
@@ -103,6 +104,59 @@ class MeilisearchEngineTest extends TestCase
         ]], FakeEmbeddings::$requests);
     }
 
+    public function test_update_does_not_add_vectors_when_using_native_embeddings()
+    {
+        $this->configureNativeEmbeddings(SearchableModel::class);
+        $this->fakeEmbeddings([]);
+
+        $model = new SearchableModel(['id' => 1, 'name' => 'Model 1']);
+
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('index')->once()->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('addDocuments')->once()->with([
+            ['id' => 1, 'name' => 'Model 1'],
+        ], 'id');
+
+        $engine->update($model->newCollection([$model]));
+
+        $this->assertSame([], FakeEmbeddings::$requests);
+    }
+
+    public function test_update_preserves_user_provided_vectors_when_using_native_embeddings()
+    {
+        $this->configureNativeEmbeddings(SearchableModel::class);
+        $this->fakeEmbeddings([]);
+
+        $model = new SearchableModel(['id' => 1, 'name' => 'Model 1']);
+        $model->setAttribute('_vectors', [
+            'default' => [
+                'embeddings' => [0.1, 0.2],
+                'regenerate' => false,
+            ],
+        ]);
+
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('index')->once()->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('addDocuments')->once()->with([
+            [
+                'id' => 1,
+                'name' => 'Model 1',
+                '_vectors' => [
+                    'default' => [
+                        'embeddings' => [0.1, 0.2],
+                        'regenerate' => false,
+                    ],
+                ],
+            ],
+        ], 'id');
+
+        $engine->update($model->newCollection([$model]));
+
+        $this->assertSame([], FakeEmbeddings::$requests);
+    }
+
     public function test_delete_removes_objects_to_index()
     {
         $model = SearchableUserFactory::new()->createQuietly();
@@ -190,6 +244,78 @@ class MeilisearchEngineTest extends TestCase
         $engine->search($builder);
 
         $this->assertSame(['conceptual query'], FakeEmbeddings::$requests[0]['inputs']);
+    }
+
+    public function test_semantic_search_with_native_embeddings_omits_the_query_vector()
+    {
+        $this->configureNativeEmbeddings(SearchableModel::class);
+        $this->fakeEmbeddings([]);
+
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('index')->once()->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with('conceptual query', m::on(function ($parameters) {
+            return $parameters === [
+                'hitsPerPage' => 10,
+                'hybrid' => [
+                    'embedder' => 'default',
+                    'semanticRatio' => 1.0,
+                ],
+            ];
+        }))->andReturn(['hits' => []]);
+
+        $builder = (new Builder(new SearchableModel, 'conceptual query'))
+            ->semantic()
+            ->take(10);
+
+        $engine->search($builder);
+
+        $this->assertSame([], FakeEmbeddings::$requests);
+    }
+
+    public function test_hybrid_search_with_native_embeddings_accepts_a_precomputed_query_vector()
+    {
+        $this->configureNativeEmbeddings(SearchableModel::class);
+        $this->fakeEmbeddings([]);
+
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $this->client->shouldReceive('index')->once()->with('table')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with('combined query', m::on(function ($parameters) {
+            return $parameters === [
+                'vector' => [0.4, 0.6],
+                'hitsPerPage' => 5,
+                'page' => 2,
+                'hybrid' => [
+                    'embedder' => 'default',
+                    'semanticRatio' => 2 / 3,
+                ],
+            ];
+        }))->andReturn(['hits' => []]);
+
+        $builder = (new Builder(new SearchableModel, 'combined query'))
+            ->options(['vector' => [0.4, 0.6]])
+            ->hybrid(textWeight: 1, semanticWeight: 2);
+
+        $engine->paginate($builder, 5, 2);
+
+        $this->assertSame([], FakeEmbeddings::$requests);
+    }
+
+    public function test_semantic_search_rejects_an_unsupported_embedding_driver()
+    {
+        $this->configureEmbeddings(SearchableModel::class, [
+            'driver' => 'foo',
+        ]);
+
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $builder = (new Builder(new SearchableModel, 'conceptual query'))->semantic();
+
+        $this->expectException(ScoutException::class);
+        $this->expectExceptionMessage('The [foo] Meilisearch embedding driver is not supported.');
+
+        $engine->search($builder);
     }
 
     public function test_hybrid_search_accepts_a_precomputed_query_vector_and_normalizes_weights()
@@ -562,6 +688,16 @@ class MeilisearchEngineTest extends TestCase
             'dimensions' => 2,
         ], $overrides);
 
+        $this->app['config']->set('scout.meilisearch', $config);
+    }
+
+    protected function configureNativeEmbeddings(string $model): void
+    {
+        $config = $this->app['config']->get('scout.meilisearch');
+        $config['model-settings'][$model]['embedding'] = [
+            'embedder' => 'default',
+            'driver' => 'meilisearch',
+        ];
         $this->app['config']->set('scout.meilisearch', $config);
     }
 
