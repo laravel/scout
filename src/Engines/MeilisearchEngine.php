@@ -95,8 +95,12 @@ class MeilisearchEngine extends Engine implements SupportsSemanticSearch, Update
         if (! empty($records)) {
             $settings = $this->modelSettings($models->first());
 
-            $objects = isset($settings['embedding'])
-                ? $this->addEmbeddingsToRecords($records, $this->embeddingSettings($models->first()))
+            $embedding = isset($settings['embedding'])
+                ? $this->embeddingSettings($models->first())
+                : null;
+
+            $objects = $embedding && ! $this->usesNativeEmbeddings($embedding)
+                ? $this->addEmbeddingsToRecords($records, $embedding)
                 : array_column($records, 'object');
 
             $index->addDocuments($objects, $models->first()->getScoutKeyName());
@@ -226,11 +230,10 @@ class MeilisearchEngine extends Engine implements SupportsSemanticSearch, Update
 
         $settings = $this->embeddingSettings($builder->model);
 
-        $vector = $builder->options['vector'] ??
-            $this->generateEmbeddings([$builder->query], $settings)[0];
+        $vector = $builder->options['vector'] ?? null;
 
-        if (! is_array($vector)) {
-            throw new ScoutException('The Meilisearch query [vector] must be an embedding array.');
+        if (! $this->usesNativeEmbeddings($settings)) {
+            $vector ??= $this->generateEmbeddings([$builder->query], $settings)[0];
         }
 
         $semanticRatio = $builder->semanticSearch
@@ -238,12 +241,21 @@ class MeilisearchEngine extends Engine implements SupportsSemanticSearch, Update
             : $builder->hybridSearch['semantic_weight'] / array_sum($builder->hybridSearch);
 
         $parameters = [
-            'vector' => $vector,
             'hybrid' => [
                 'embedder' => $settings['embedder'],
                 'semanticRatio' => $semanticRatio,
             ],
         ];
+
+        if (! is_null($vector)) {
+            if (! is_array($vector) || $vector === []) {
+                throw new ScoutException('The Meilisearch query [vector] must be a non-empty embedding array.');
+            }
+
+            $parameters = [
+                'vector' => $vector,
+            ] + $parameters;
+        }
 
         if (! is_null($builder->minimumSimilarity)) {
             $parameters['rankingScoreThreshold'] = $builder->minimumSimilarity;
@@ -602,6 +614,18 @@ class MeilisearchEngine extends Engine implements SupportsSemanticSearch, Update
             throw new ScoutException('Meilisearch embedding settings must contain an [embedder].');
         }
 
+        $driver = $settings['driver'] ?? 'laravel-ai';
+
+        if (! in_array($driver, ['laravel-ai', 'meilisearch'], true)) {
+            throw new ScoutException("The [{$driver}] Meilisearch embedding driver is not supported.");
+        }
+
+        $settings['driver'] = $driver;
+
+        if ($this->usesNativeEmbeddings($settings)) {
+            return $settings;
+        }
+
         if (! isset($settings['dimensions']) ||
             filter_var($settings['dimensions'], FILTER_VALIDATE_INT) === false ||
             $settings['dimensions'] < 1) {
@@ -611,6 +635,14 @@ class MeilisearchEngine extends Engine implements SupportsSemanticSearch, Update
         $settings['dimensions'] = (int) $settings['dimensions'];
 
         return $settings;
+    }
+
+    /**
+     * Determine if Meilisearch should generate embeddings natively.
+     */
+    protected function usesNativeEmbeddings(array $settings): bool
+    {
+        return ($settings['driver'] ?? null) === 'meilisearch';
     }
 
     /**
