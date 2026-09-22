@@ -1,6 +1,11 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/sentinel/compare/v11.7.0...11.x)
+## [Unreleased](https://github.com/laravel/sentinel/compare/v11.8.0...11.x)
+
+## [v11.8.0](https://github.com/laravel/sentinel/compare/v11.7.0...v11.8.0) - 2026-09-22
+
+* [11.x] Fix collection searches for zero by [@fouteox](https://github.com/fouteox) in https://github.com/laravel/scout/pull/1011
+* feat(meilisearch): add native embeddings driver by [@Strift](https://github.com/Strift) in https://github.com/laravel/scout/pull/1012
 
 ## [v11.7.0](https://github.com/laravel/sentinel/compare/v11.6.1...v11.7.0) - 2026-09-08
 
