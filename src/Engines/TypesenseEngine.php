@@ -954,7 +954,7 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
         }
 
         if (! isset($schema['name'])) {
-            $schema['name'] = $model->searchableAs();
+            $schema['name'] = $collectionName;
         }
 
         try {

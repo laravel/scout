@@ -15,12 +15,15 @@ use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Tests\Fixtures\FakeEmbeddings;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Laravel\Scout\Tests\Fixtures\SearchableModelWithPrecomputedEmbedding;
+use Laravel\Scout\Tests\Fixtures\VersionableModel;
 use Mockery as m;
 use Orchestra\Testbench\Concerns\InteractsWithMockery;
 use PHPUnit\Framework\TestCase;
 use Typesense\Client as TypesenseClient;
 use Typesense\Collection as TypesenseCollection;
+use Typesense\Collections;
 use Typesense\Documents;
+use Typesense\Exceptions\ObjectNotFound;
 use Typesense\Exceptions\RequestMalformed;
 use Typesense\Exceptions\TypesenseClientError;
 use Typesense\MultiSearch;
@@ -719,6 +722,51 @@ class TypesenseEngineTest extends TestCase
 
         // Call the flush method
         $this->engine->flush($model);
+    }
+
+    public function test_missing_collection_is_created_using_the_indexable_name(): void
+    {
+        Container::getInstance()->instance('config', new Repository([]));
+
+        $collection = $this->createMock(TypesenseCollection::class);
+        $collection->method('retrieve')->willThrowException(new ObjectNotFound('Not Found'));
+        $collection->expects($this->once())->method('setExists')->with(true);
+
+        $collections = new class($collection) extends Collections
+        {
+            public array $created = [];
+
+            public array $accessed = [];
+
+            public function __construct(protected TypesenseCollection $collection)
+            {
+                //
+            }
+
+            public function __get($collectionName)
+            {
+                $this->accessed[] = $collectionName;
+
+                return $this->collection;
+            }
+
+            public function create(array $schema): array
+            {
+                $this->created[] = $schema;
+
+                return $schema;
+            }
+        };
+
+        $typesenseClient = $this->createMock(TypesenseClient::class);
+        $typesenseClient->method('getCollections')->willReturn($collections);
+
+        $engine = new TypesenseEngine($typesenseClient, 1000);
+
+        $this->invokeMethod($engine, 'getOrCreateCollectionFromModel', [new VersionableModel]);
+
+        $this->assertSame(['table_v2'], $collections->accessed);
+        $this->assertSame('table_v2', $collections->created[0]['name']);
     }
 
     public function test_create_index_method_throws_exception(): void
