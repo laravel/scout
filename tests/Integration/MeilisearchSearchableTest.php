@@ -38,7 +38,7 @@ class MeilisearchSearchableTest extends TestCase
     {
         $this->defineScoutEnvironment($app);
 
-        $app['config']->set('scout.meilisearch.index-settings.'.SearchableUser::class.'.filterableAttributes', ['age']);
+        $app['config']->set('scout.meilisearch.index-settings.'.SearchableUser::class.'.filterableAttributes', ['age', 'name']);
     }
 
     /**
@@ -325,6 +325,21 @@ class MeilisearchSearchableTest extends TestCase
     public function test_it_can_filter_with_where_comparisons()
     {
         $this->itCanMakeWhereComparisons();
+    }
+
+    public function test_where_in_and_where_not_in_values_are_escaped()
+    {
+        $injection = 'x"] OR name IS NOT NULL OR name IN ["y';
+
+        $this->assertSame(
+            [1 => 'Laravel Framework'],
+            SearchableUser::search()->whereIn('name', ['Laravel Framework', $injection])->get()->pluck('name', 'id')->all()
+        );
+
+        $this->assertNotContains(
+            1,
+            SearchableUser::search()->whereNotIn('name', ['Laravel Framework', $injection])->take(100)->keys()->all()
+        );
     }
 
     protected function importScoutIndexFrom($model = null)

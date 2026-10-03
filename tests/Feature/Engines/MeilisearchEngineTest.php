@@ -669,6 +669,23 @@ class MeilisearchEngineTest extends TestCase
         $engine->search($builder);
     }
 
+    public function test_where_in_and_where_not_in_values_are_escaped()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $builder = new Builder(new SearchableUser, '');
+        $builder->whereIn('category', ['12" pipe', 'back\slash']);
+        $builder->whereNotIn('tag', ['a"] OR team_id = 2 OR tag IN ["b']);
+
+        $this->client->shouldReceive('index')->once()->with('users')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter' => 'category IN ["12\" pipe", "back\\\\slash"] AND tag NOT IN ["a\"] OR team_id = 2 OR tag IN [\"b"]',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine->search($builder);
+    }
+
     public function test_delete_all_indexes_works_with_pagination()
     {
         $engine = $this->app->make(EngineManager::class)->engine();
