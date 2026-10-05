@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Jobs\MakeRangeSearchable;
+use Laravel\Scout\Jobs\MakeSearchable;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -457,6 +458,26 @@ class QueueImportCommandTest extends TestCase
         Queue::assertPushedOn('custom-queue', MakeRangeSearchable::class, function ($job) {
             return $job->start == 1 && $job->end == 10;
         });
+    }
+
+    public function test_it_uses_custom_queue_for_make_searchable_jobs()
+    {
+        $user = SearchableUserFactory::new()->create();
+
+        config(['scout.queue' => ['connection' => 'sync', 'queue' => 'scout']]);
+
+        Queue::fake([MakeSearchable::class]);
+
+        $this->artisan('scout:queue-import', [
+            'model' => SearchableUser::class,
+            '--queue' => 'custom-queue',
+        ])->assertSuccessful();
+
+        Queue::assertPushedOn('custom-queue', MakeSearchable::class, function ($job) use ($user) {
+            return $job->models->modelKeys() === [$user->id];
+        });
+
+        Queue::assertPushed(MakeSearchable::class, 1);
     }
 
     public function test_it_can_accept_all_options()

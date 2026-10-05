@@ -3,7 +3,9 @@
 namespace Laravel\Scout\Tests\Feature\Jobs;
 
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Scout\Jobs\MakeRangeSearchable;
+use Laravel\Scout\Jobs\MakeSearchable;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -42,6 +44,46 @@ class MakeRangeSearchableTest extends TestCase
         $this->app->make('scout.spied')->shouldReceive('update')->once();
 
         $job->handle();
+    }
+
+    public function test_handle_passes_queue_and_connection_to_make_searchable_job()
+    {
+        $user = SearchableUserFactory::new()->create();
+
+        config(['scout.queue' => ['connection' => 'sync', 'queue' => 'scout']]);
+
+        Queue::fake();
+
+        $job = (new MakeRangeSearchable(SearchableUser::class, $user->id, $user->id))
+            ->onQueue('imports')
+            ->onConnection('redis');
+
+        $job->handle();
+
+        Queue::assertPushedOn('imports', MakeSearchable::class, function ($job) use ($user) {
+            return $job->connection === 'redis' && $job->models->modelKeys() === [$user->id];
+        });
+
+        Queue::assertPushed(MakeSearchable::class, 1);
+    }
+
+    public function test_handle_uses_model_queue_and_connection_when_neither_is_set()
+    {
+        $user = SearchableUserFactory::new()->create();
+
+        config(['scout.queue' => ['connection' => 'sync', 'queue' => 'scout']]);
+
+        Queue::fake();
+
+        $job = new MakeRangeSearchable(SearchableUser::class, $user->id, $user->id);
+
+        $job->handle();
+
+        Queue::assertPushedOn('scout', MakeSearchable::class, function ($job) use ($user) {
+            return $job->connection === 'sync' && $job->models->modelKeys() === [$user->id];
+        });
+
+        Queue::assertPushed(MakeSearchable::class, 1);
     }
 
     public function test_handle_with_no_models_in_range()
