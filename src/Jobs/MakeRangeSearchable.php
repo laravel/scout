@@ -73,7 +73,7 @@ class MakeRangeSearchable implements ShouldQueue
         }
 
         dispatch(new Scout::$makeSearchableJob($models))
-            ->onQueue($model->syncWithSearchUsingQueue())
-            ->onConnection($model->syncWithSearchUsing());
+            ->onQueue($this->queue ?? $model->syncWithSearchUsingQueue())
+            ->onConnection($this->connection ?? $model->syncWithSearchUsing());
     }
 }
