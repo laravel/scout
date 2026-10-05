@@ -380,6 +380,61 @@ class TypesenseSearchableTest extends TestCase
         }
     }
 
+    public function test_it_creates_missing_collections_using_the_indexable_name()
+    {
+        $model = new class extends SearchableModel
+        {
+            public static $index;
+
+            public function searchableAs()
+            {
+                return static::$index;
+            }
+
+            public function indexableAs()
+            {
+                return static::$index.'_v2';
+            }
+
+            public function toSearchableArray()
+            {
+                return [
+                    'id' => (string) $this->id,
+                    'name' => $this->name,
+                ];
+            }
+        };
+
+        $modelClass = get_class($model);
+        $modelClass::$index = config('scout.prefix').'versioned_'.str()->random(12);
+
+        config()->set('scout.typesense.model-settings.'.$modelClass, [
+            'collection-schema' => [
+                'fields' => [
+                    ['name' => 'id', 'type' => 'string'],
+                    ['name' => 'name', 'type' => 'string'],
+                ],
+            ],
+        ]);
+
+        $client = new Client(config('scout.typesense.client-settings'));
+
+        $engine = new TypesenseEngine($client, 1000);
+
+        try {
+            $engine->update($model->newCollection([
+                new $modelClass(['id' => 1, 'name' => 'Laravel Scout']),
+                new $modelClass(['id' => 2, 'name' => 'Laravel Framework']),
+            ]));
+
+            $this->assertSame(2, $client->getCollections()->{$model->indexableAs()}->retrieve()['num_documents']);
+            $this->assertFalse(rescue(fn () => $client->getCollections()->{$model->searchableAs()}->retrieve(), false, false));
+        } finally {
+            rescue(fn () => $engine->deleteIndex($model->indexableAs()), report: false);
+            rescue(fn () => $engine->deleteIndex($model->searchableAs()), report: false);
+        }
+    }
+
     protected static function scoutDriver(): string
     {
         return 'typesense';
