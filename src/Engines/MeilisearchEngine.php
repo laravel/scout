@@ -345,7 +345,7 @@ class MeilisearchEngine extends Engine implements SupportsSemanticSearch, Update
 
                         return filter_var($value, FILTER_VALIDATE_INT) !== false
                             ? sprintf('%s', $value)
-                            : sprintf('"%s"', $value);
+                            : sprintf('"%s"', addcslashes((string) $value, '"\\'));
                     })->values()->implode(', ')));
                 }
             }
