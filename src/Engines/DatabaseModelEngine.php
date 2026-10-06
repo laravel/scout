@@ -131,7 +131,7 @@ abstract class DatabaseModelEngine extends Engine implements PaginatesEloquentMo
         $results = $results['results'];
 
         return count($results) > 0
-            ? $results->map(fn ($model) => $model->getScoutKey())->values()
+            ? collect($results->modelKeys())
             : collect();
     }
 

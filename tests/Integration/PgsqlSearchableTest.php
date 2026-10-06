@@ -194,6 +194,43 @@ class PgsqlSearchableTest extends TestCase
         $this->assertSame([], PgsqlSearchPost::search('laravle')->get()->pluck('title')->all());
     }
 
+    public function test_trigram_does_not_bypass_websearch_negation()
+    {
+        if (! env('PGSQL_TEST_TRIGRAM', false)) {
+            $this->markTestSkipped('Set PGSQL_TEST_TRIGRAM=true to run pg_trgm integration coverage.');
+        }
+
+        $this->app['config']->set('scout.pgsql.query_function', 'websearch_to_tsquery');
+        $this->app['config']->set('scout.pgsql.trigram.enabled', true);
+        $this->app['config']->set('scout.pgsql.trigram.columns', ['title']);
+
+        $this->createPostsTable(true);
+
+        PgsqlSearchPost::query()->create(['title' => 'Coca-Cola', 'body' => 'Classic']);
+        PgsqlSearchPost::query()->create(['title' => 'Coca-Cola Light', 'body' => 'Diet']);
+
+        $this->assertSame(['Coca-Cola'], PgsqlSearchPost::search('coca cola -light')->get()->pluck('title')->all());
+    }
+
+    public function test_trigram_threshold_does_not_persist_on_a_fresh_session()
+    {
+        if (! env('PGSQL_TEST_TRIGRAM', false)) {
+            $this->markTestSkipped('Set PGSQL_TEST_TRIGRAM=true to run pg_trgm integration coverage.');
+        }
+
+        $this->app['config']->set('scout.pgsql.trigram.enabled', true);
+        $this->app['config']->set('scout.pgsql.trigram.threshold', 0.7);
+        $this->app['config']->set('scout.pgsql.trigram.columns', ['title']);
+
+        $this->createPostsTable(true);
+
+        DB::reconnect();
+
+        PgsqlSearchPost::search('laravle')->get();
+
+        $this->assertSame('0.3', $this->currentTrigramThreshold());
+    }
+
     public function test_trigram_threshold_does_not_leak_between_searches()
     {
         if (! env('PGSQL_TEST_TRIGRAM', false)) {

@@ -81,22 +81,7 @@ class Trigram
     }
 
     /**
-     * Get the current trigram threshold for the connection.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @return string|null
-     */
-    public function currentThreshold(Builder $builder)
-    {
-        $result = $builder->model->getConnection()->selectOne(
-            "select current_setting('pg_trgm.similarity_threshold', true) as threshold"
-        );
-
-        return $result->threshold ?? null;
-    }
-
-    /**
-     * Apply the configured trigram threshold for the connection.
+     * Apply the configured trigram threshold for the current transaction.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @return void
@@ -104,27 +89,8 @@ class Trigram
     public function applyThreshold(Builder $builder)
     {
         $builder->model->getConnection()->select(
-            "select set_config('pg_trgm.similarity_threshold', ?::text, false)",
+            "select set_config('pg_trgm.similarity_threshold', ?::text, true)",
             [$this->threshold()]
-        );
-    }
-
-    /**
-     * Restore the previous trigram threshold for the connection.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @param  string|null  $threshold
-     * @return void
-     */
-    public function restoreThreshold(Builder $builder, $threshold)
-    {
-        if (is_null($threshold)) {
-            return;
-        }
-
-        $builder->model->getConnection()->select(
-            "select set_config('pg_trgm.similarity_threshold', ?::text, false)",
-            [$threshold]
         );
     }
 
@@ -136,10 +102,6 @@ class Trigram
      */
     public function similarityExpression(array $columns)
     {
-        if (empty($columns)) {
-            return '0';
-        }
-
         return sprintf('greatest(%s)', collect($columns)->map(function ($column) {
             return sprintf("similarity(coalesce(cast(%s as text), ''), ?)", $column);
         })->implode(', '));
@@ -153,32 +115,20 @@ class Trigram
      */
     public function predicateExpression(array $columns)
     {
-        return empty($columns) ? 'false' : sprintf(
+        return sprintf(
             '(%s)',
             collect($columns)->map(fn ($column) => sprintf('%s %% ?', $column))->implode(' or ')
         );
     }
 
     /**
-     * Get the indexable trigram predicate bindings for the query.
+     * Get the bindings for the trigram predicate and similarity expressions.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  array  $columns
      * @return array
      */
-    public function predicateBindings(Builder $builder, array $columns)
-    {
-        return array_fill(0, count($columns), $builder->query);
-    }
-
-    /**
-     * Get the trigram similarity bindings for the query.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @param  array  $columns
-     * @return array
-     */
-    public function similarityBindings(Builder $builder, array $columns)
+    public function bindings(Builder $builder, array $columns)
     {
         return array_fill(0, count($columns), $builder->query);
     }

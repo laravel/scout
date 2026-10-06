@@ -86,7 +86,18 @@ class PgsqlEngine extends DatabaseModelEngine
     }
 
     /**
-     * Run the callback with the configured trigram threshold, then restore it.
+     * Pluck and return the Scout keys of the given results.
+     *
+     * @param  mixed  $results
+     * @return \Illuminate\Support\Collection
+     */
+    public function mapIds($results)
+    {
+        return $results['results']->map(fn ($model) => $model->getScoutKey())->values();
+    }
+
+    /**
+     * Run the callback with the configured trigram threshold.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  callable  $callback
@@ -98,15 +109,11 @@ class PgsqlEngine extends DatabaseModelEngine
             return $callback();
         }
 
-        $previousThreshold = $this->trigram()->currentThreshold($builder);
+        return $builder->model->getConnection()->transaction(function () use ($builder, $callback) {
+            $this->trigram()->applyThreshold($builder);
 
-        $this->trigram()->applyThreshold($builder);
-
-        try {
             return $callback();
-        } finally {
-            $this->trigram()->restoreThreshold($builder, $previousThreshold);
-        }
+        });
     }
 
     /**
@@ -117,7 +124,9 @@ class PgsqlEngine extends DatabaseModelEngine
      */
     protected function shouldApplyTrigramThreshold(Builder $builder)
     {
-        return $this->trigram()->uses($builder) && ! empty($this->trigramColumns($builder));
+        return $this->queryFunction() === 'plainto_tsquery' &&
+            $this->trigram()->uses($builder) &&
+            ! empty($this->trigramColumns($builder));
     }
 
     /**
@@ -150,7 +159,7 @@ class PgsqlEngine extends DatabaseModelEngine
             return $query;
         }
 
-        $usesTrigram = $this->trigram()->uses($builder);
+        $usesTrigram = $this->queryFunction() === 'plainto_tsquery' && $this->trigram()->uses($builder);
         $trigramColumns = $usesTrigram ? $this->wrappedTrigramColumns($builder) : [];
         $usesTrigram = $usesTrigram && ! empty($trigramColumns);
 
@@ -176,7 +185,7 @@ class PgsqlEngine extends DatabaseModelEngine
             if ($usesTrigram) {
                 $query->orWhereRaw(
                     $this->trigram()->predicateExpression($trigramColumns),
-                    $this->trigram()->predicateBindings($builder, $trigramColumns)
+                    $this->trigram()->bindings($builder, $trigramColumns)
                 );
             }
         });
@@ -206,11 +215,11 @@ class PgsqlEngine extends DatabaseModelEngine
                     sprintf(
                         '((%s * ?) + (%s * ?)) desc',
                         $this->rankExpression($builder),
-                        $this->trigramSimilarityExpression($trigramColumns)
+                        $this->trigram()->similarityExpression($trigramColumns)
                     ),
                     array_merge(
                         [$this->language(), $builder->query, $this->trigram()->scoreWeight('full_text', 1.0)],
-                        $this->trigram()->similarityBindings($builder, $trigramColumns),
+                        $this->trigram()->bindings($builder, $trigramColumns),
                         [$this->trigram()->scoreWeight('trigram', 0.25)]
                     )
                 );
@@ -250,17 +259,6 @@ class PgsqlEngine extends DatabaseModelEngine
     protected function searchableColumns(Builder $builder)
     {
         return array_keys($builder->model->toSearchableArray());
-    }
-
-    /**
-     * Get the trigram similarity expression for the query.
-     *
-     * @param  array  $columns
-     * @return string
-     */
-    protected function trigramSimilarityExpression(array $columns)
-    {
-        return $this->trigram()->similarityExpression($columns);
     }
 
     /**

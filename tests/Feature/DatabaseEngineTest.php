@@ -2,8 +2,13 @@
 
 namespace Laravel\Scout\Tests\Feature;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Laravel\Scout\Builder as ScoutBuilder;
+use Laravel\Scout\EngineManager;
+use Laravel\Scout\Engines\DatabaseEngine;
 use Laravel\Scout\Exceptions\NotSupportedException;
 use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -314,5 +319,35 @@ class DatabaseEngineTest extends TestCase
         $this->assertCount(2, Chirp::search()->withTrashed()->get());
         $this->assertCount(1, Chirp::search()->onlyTrashed()->get());
         $this->assertSame($deleted->getKey(), Chirp::search()->onlyTrashed()->first()->getKey());
+    }
+
+    public function test_text_search_uses_overridden_new_search_query()
+    {
+        $this->app->make(EngineManager::class)->extend('scoped-database', fn () => new class extends DatabaseEngine
+        {
+            protected function newSearchQuery(ScoutBuilder $builder)
+            {
+                return parent::newSearchQuery($builder)->where('name', 'Taylor Otwell');
+            }
+        });
+
+        $this->app->make('config')->set('scout.driver', 'scoped-database');
+
+        $this->assertSame(['Taylor Otwell'], SearchableUser::search('laravel')->get()->pluck('name')->all());
+    }
+
+    public function test_map_ids_returns_primary_keys()
+    {
+        $model = new class extends Model
+        {
+            public function getScoutKey()
+            {
+                return 'scout-'.$this->getKey();
+            }
+        };
+
+        $results = ['results' => new EloquentCollection([(clone $model)->forceFill(['id' => 1]), (clone $model)->forceFill(['id' => 2])])];
+
+        $this->assertSame([1, 2], (new DatabaseEngine)->mapIds($results)->all());
     }
 }

@@ -87,19 +87,24 @@ class PgsqlSchemaHelperTest extends TestCase
         $this->assertContains('create index "posts_document_vector_index" on "posts" using gin ("document_vector")', $sql);
     }
 
-    public function test_searchable_helper_ignores_per_call_vector_column_and_language_options()
+    public function test_searchable_helper_rejects_per_call_vector_column_option()
     {
-        $sql = $this->compilePgsqlBlueprint(function ($table) {
-            $table->searchable(['title'], [
-                'language' => 'simple',
-                'vector_column' => 'document_vector',
-            ]);
-        });
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper [vector_column] option must be configured in [scout.pgsql.vector_column] so the engine and schema stay in sync.');
 
-        $this->assertContains('alter table "posts" add column "search_vector" tsvector not null generated always as (setweight(to_tsvector(\'english\', coalesce(cast("title" as text), \'\')), \'D\')) stored', $sql);
-        $this->assertContains('create index "posts_search_vector_index" on "posts" using gin ("search_vector")', $sql);
-        $this->assertStringNotContainsString('document_vector', implode('\n', $sql));
-        $this->assertStringNotContainsString('simple', implode('\n', $sql));
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->searchable(['title'], ['vector_column' => 'document_vector']);
+        });
+    }
+
+    public function test_drop_searchable_helper_rejects_per_call_language_option()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('The [pgsql] Scout schema helper [language] option must be configured in [scout.pgsql.language] so the engine and schema stay in sync.');
+
+        $this->compilePgsqlBlueprint(function ($table) {
+            $table->dropSearchable(['language' => 'simple']);
+        });
     }
 
     public function test_searchable_helper_uses_configured_column_weights()

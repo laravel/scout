@@ -219,7 +219,7 @@ class EngineManager extends Manager
      */
     public function createPgsqlDriver()
     {
-        return new PgsqlEngine(config('scout.pgsql'));
+        return new PgsqlEngine(config('scout.pgsql', []));
     }
 
     /**

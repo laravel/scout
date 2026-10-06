@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 use Laravel\Scout\Builder;
+use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\PgsqlEngine;
 use Laravel\Scout\Pgsql\Trigram;
 use Laravel\Scout\Searchable;
@@ -365,6 +366,26 @@ class PgsqlEngineTest extends TestCase
             'english', 'laravle', 1.0, 'laravle', 'laravle', 0.25,
         ], $query->getBindings());
         $this->assertSame([], $engine->appliedThresholds());
+    }
+
+    public function test_trigram_does_not_match_when_query_function_supports_operators()
+    {
+        $this->app->make('config')->set('scout.pgsql.query_function', 'websearch_to_tsquery');
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
+
+        $engine = $this->pgsqlEngine(true);
+        $query = $engine->buildOrderedSearchQueryForTest(SearchableUser::search('coca cola -light'));
+
+        $this->assertStringNotContainsString('"users"."name" % ?', $query->toSql());
+        $this->assertStringContainsString('similarity(coalesce(cast("users"."name" as text), \'\'), ?)', $query->toSql());
+    }
+
+    public function test_engine_can_be_created_without_published_pgsql_config()
+    {
+        $this->app->make('config')->set('scout', array_diff_key($this->app->make('config')->get('scout'), ['pgsql' => true]));
+
+        $this->assertInstanceOf(PgsqlEngine::class, $this->app->make(EngineManager::class)->createPgsqlDriver());
     }
 
     public function test_trigram_threshold_is_not_applied_while_building_the_query()

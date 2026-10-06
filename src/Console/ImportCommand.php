@@ -136,7 +136,10 @@ class ImportCommand extends Command
      */
     protected function searchableDatabaseColumns($model, $schema, $vectorColumn, $class)
     {
-        $databaseColumns = array_flip($schema->getColumnListing($model->getTable()));
+        $databaseColumns = array_diff_key(
+            array_flip($schema->getColumnListing($model->getTable())),
+            array_flip($this->nonImmutableTextColumns($model))
+        );
 
         $columns = array_values(array_filter(array_keys($model->toSearchableArray()), function ($column) use ($databaseColumns, $vectorColumn) {
             return $column !== $vectorColumn && array_key_exists($column, $databaseColumns);
@@ -149,6 +152,22 @@ class ImportCommand extends Command
         }
 
         return $columns;
+    }
+
+    /**
+     * Get the table columns whose text casts are not immutable and cannot be used in a generated column.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return array
+     */
+    protected function nonImmutableTextColumns($model)
+    {
+        $connection = $model->getConnection();
+
+        return array_column($connection->select(
+            "select attname from pg_attribute where attrelid = to_regclass(?) and attnum > 0 and not attisdropped and atttypid in ('date'::regtype, 'time'::regtype, 'timetz'::regtype, 'timestamp'::regtype, 'timestamptz'::regtype, 'interval'::regtype, 'money'::regtype)",
+            [$connection->getQueryGrammar()->wrapTable($model->getTable())]
+        ), 'attname');
     }
 
     /**
@@ -178,9 +197,9 @@ class ImportCommand extends Command
      */
     protected function preparePgsqlIndexes($connection, $schema, SearchableSchema $helper, $table, $vectorColumn, array $trigramColumns)
     {
-        $missingVectorIndex = ! $this->schemaHasIndex($schema, $table, [$vectorColumn], 'gin');
-        $missingTrigramColumns = array_values(array_filter($trigramColumns, function ($column) use ($connection, $schema, $helper, $table) {
-            return ! $this->schemaHasIndex($schema, $table, $helper->indexName($connection, $table, [$column], 'trigram_index'), 'gin');
+        $missingVectorIndex = ! $this->indexExists($connection, $helper->indexName($connection, $table, [$vectorColumn], 'index'));
+        $missingTrigramColumns = array_values(array_filter($trigramColumns, function ($column) use ($connection, $helper, $table) {
+            return ! $this->indexExists($connection, $helper->indexName($connection, $table, [$column], 'trigram_index'));
         }));
 
         if (! $missingVectorIndex && empty($missingTrigramColumns)) {
@@ -206,16 +225,14 @@ class ImportCommand extends Command
     }
 
     /**
-     * Determine if the schema builder can find the given index.
+     * Determine if the given PostgreSQL index exists.
      *
-     * @param  \Illuminate\Database\Schema\Builder  $schema
-     * @param  string  $table
-     * @param  string|array  $index
-     * @param  string|null  $type
+     * @param  \Illuminate\Database\Connection  $connection
+     * @param  string  $index
      * @return bool
      */
-    protected function schemaHasIndex($schema, $table, $index, $type = null)
+    protected function indexExists($connection, $index)
     {
-        return method_exists($schema, 'hasIndex') && $schema->hasIndex($table, $index, $type);
+        return ! is_null($connection->selectOne('select to_regclass(?) as name', [$index])->name);
     }
 }

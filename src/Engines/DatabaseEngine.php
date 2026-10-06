@@ -153,7 +153,7 @@ class DatabaseEngine extends DatabaseModelEngine implements SupportsSemanticSear
      */
     protected function initializeSearchQuery(Builder $builder, array $columns, array $prefixColumns = [], array $fullTextColumns = [])
     {
-        $query = $this->newModelQuery($builder);
+        $query = $this->newSearchQuery($builder);
 
         return $this->addTextSearchConstraints(
             $query, $builder, $columns, $prefixColumns, $fullTextColumns

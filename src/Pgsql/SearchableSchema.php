@@ -59,6 +59,7 @@ class SearchableSchema
 
                 $connection = $helper->connection($this);
                 $helper->ensurePostgresqlConnection($connection);
+                $helper->ensureSupportedOptions($options);
 
                 $columns = Arr::wrap($columns);
                 $vectorColumn = $helper->vectorColumn();
@@ -89,6 +90,7 @@ class SearchableSchema
 
                 $connection = $helper->connection($this);
                 $helper->ensurePostgresqlConnection($connection);
+                $helper->ensureSupportedOptions($options);
 
                 $vectorColumn = $helper->vectorColumn();
 
@@ -123,6 +125,25 @@ class SearchableSchema
     {
         if ($connection->getDriverName() !== 'pgsql') {
             throw new InvalidArgumentException('The [pgsql] Scout schema helper may only be used with PostgreSQL connections.');
+        }
+    }
+
+    /**
+     * Ensure the given options do not override values the engine only reads from config.
+     *
+     * @param  array  $options
+     * @return void
+     */
+    public function ensureSupportedOptions(array $options)
+    {
+        foreach (['vector_column', 'language'] as $option) {
+            if (array_key_exists($option, $options)) {
+                throw new InvalidArgumentException(sprintf(
+                    'The [pgsql] Scout schema helper [%s] option must be configured in [scout.pgsql.%s] so the engine and schema stay in sync.',
+                    $option,
+                    $option
+                ));
+            }
         }
     }
 

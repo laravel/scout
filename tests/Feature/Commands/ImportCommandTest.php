@@ -107,11 +107,6 @@ class ImportCommandTest extends TestCase
         $schema->shouldReceive('getColumnListing')->once()->with('users')->andReturn(['id', 'name', 'email', 'age', 'search_vector']);
         $schema->shouldReceive('hasColumn')->once()->with('users', 'search_vector')->andReturn(true);
 
-        if (method_exists(Builder::class, 'hasIndex')) {
-            $schema->shouldReceive('hasIndex')->once()->with('users', ['search_vector'], 'gin')->andReturn(false);
-            $schema->shouldReceive('hasIndex')->once()->with('users', 'users_name_trigram_index', 'gin')->andReturn(false);
-        }
-
         $schema->shouldReceive('table')->once()->with('users', Mockery::on(function ($callback) {
             $table = Mockery::mock();
             $index = Mockery::mock();
@@ -194,6 +189,62 @@ class ImportCommandTest extends TestCase
             ->assertSuccessful();
     }
 
+    public function test_prepare_pgsql_option_skips_existing_indexes()
+    {
+        config(['scout.driver' => 'pgsql']);
+        config(['scout.pgsql.trigram.columns' => ['name']]);
+
+        $class = ImportCommandPgsqlSearchableUser::class;
+
+        $schema = Mockery::mock(Builder::class);
+        $schema->shouldReceive('getColumnListing')->once()->with('users')->andReturn(['id', 'name', 'email', 'age', 'search_vector']);
+        $schema->shouldReceive('hasColumn')->once()->with('users', 'search_vector')->andReturn(true);
+        $schema->shouldNotReceive('table');
+
+        $this->useSchemaBuilder($schema);
+        $this->app['db']->connection('pgsql_schema')->existingIndexes = ['users_search_vector_index', 'users_name_trigram_index'];
+
+        $this->artisan('scout:import', [
+            'model' => $class,
+            '--prepare-pgsql' => true,
+        ])
+            ->expectsOutput("PostgreSQL search schema already exists for [{$class}].")
+            ->expectsOutput("All [{$class}] records have been imported.")
+            ->assertSuccessful();
+    }
+
+    public function test_prepare_pgsql_option_skips_date_columns()
+    {
+        config(['scout.driver' => 'pgsql']);
+
+        $class = ImportCommandPgsqlSearchableUserWithDates::class;
+
+        $schema = Mockery::mock(Builder::class);
+        $schema->shouldReceive('getColumnListing')->once()->with('users')->andReturn(['id', 'name', 'birthday', 'created_at']);
+        $schema->shouldReceive('hasColumn')->once()->with('users', 'search_vector')->andReturn(false);
+        $schema->shouldReceive('table')->once()->with('users', Mockery::on(function ($callback) {
+            $table = Mockery::mock();
+
+            $table->shouldReceive('searchable')->once()->with(['id', 'name'], [
+                'trigram' => [
+                    'columns' => [],
+                ],
+            ]);
+
+            $callback($table);
+
+            return true;
+        }));
+
+        $this->useSchemaBuilder($schema);
+        $this->app['db']->connection('pgsql_schema')->nonImmutableTextColumns = ['birthday', 'created_at'];
+
+        $this->artisan('scout:import', [
+            'model' => $class,
+            '--prepare-pgsql' => true,
+        ])->assertSuccessful();
+    }
+
     protected function useSchemaBuilder($schema)
     {
         $this->app['db']->connection('pgsql_schema')->schemaBuilder = $schema;
@@ -230,6 +281,19 @@ class ImportCommandPgsqlSearchableUser extends Model
     }
 }
 
+class ImportCommandPgsqlSearchableUserWithDates extends ImportCommandPgsqlSearchableUser
+{
+    public function toSearchableArray()
+    {
+        return [
+            'id' => null,
+            'name' => null,
+            'birthday' => null,
+            'created_at' => null,
+        ];
+    }
+}
+
 class ImportCommandModelSpecificPgsqlSearchableUser extends ImportCommandPgsqlSearchableUser
 {
     public function searchableUsing()
@@ -249,6 +313,28 @@ class ImportCommandModelSpecificCollectionSearchableUser extends ImportCommandPg
 class ImportCommandPgsqlTestingConnection extends SQLiteConnection
 {
     public $schemaBuilder;
+
+    public $existingIndexes = [];
+
+    public $nonImmutableTextColumns = [];
+
+    public function select($query, $bindings = [], $useReadPdo = true, array $fetchUsing = [])
+    {
+        if (str_contains($query, 'pg_attribute')) {
+            return array_map(fn ($column) => (object) ['attname' => $column], $this->nonImmutableTextColumns);
+        }
+
+        return parent::select($query, $bindings, $useReadPdo, $fetchUsing);
+    }
+
+    public function selectOne($query, $bindings = [], $useReadPdo = true)
+    {
+        if (str_contains($query, 'to_regclass')) {
+            return (object) ['name' => in_array($bindings[0], $this->existingIndexes, true) ? $bindings[0] : null];
+        }
+
+        return parent::selectOne($query, $bindings, $useReadPdo);
+    }
 
     public function getDriverName()
     {
