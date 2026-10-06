@@ -1,6 +1,12 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/sentinel/compare/v11.8.0...11.x)
+## [Unreleased](https://github.com/laravel/sentinel/compare/v11.9.0...11.x)
+
+## [v11.9.0](https://github.com/laravel/sentinel/compare/v11.8.0...v11.9.0) - 2026-10-06
+
+* [11.x] Preserve queue and connection for queued imports by [@stevebauman](https://github.com/stevebauman) in https://github.com/laravel/scout/pull/1015
+* [11.x] Create missing Typesense collections using the indexable name by [@xurshudyan](https://github.com/xurshudyan) in https://github.com/laravel/scout/pull/1013
+* [11.x] Escape values in Meilisearch whereIn and whereNotIn filters by [@xurshudyan](https://github.com/xurshudyan) in https://github.com/laravel/scout/pull/1014
 
 ## [v11.8.0](https://github.com/laravel/sentinel/compare/v11.7.0...v11.8.0) - 2026-09-22
 
