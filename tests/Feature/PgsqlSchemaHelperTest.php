@@ -65,7 +65,7 @@ class PgsqlSchemaHelperTest extends TestCase
     {
         $sql = $this->compilePgsqlBlueprint(function ($table) {
             $table->searchable(['title', 'body'], [
-                'weights' => [
+                'column_weights' => [
                     'title' => 'A',
                 ],
             ]);
@@ -247,7 +247,7 @@ class PgsqlSchemaHelperTest extends TestCase
 
         $this->compilePgsqlBlueprint(function ($table) {
             $table->searchable(['title'], [
-                'weights' => 'invalid',
+                'column_weights' => 'invalid',
             ]);
         });
     }
@@ -259,7 +259,7 @@ class PgsqlSchemaHelperTest extends TestCase
 
         $this->compilePgsqlBlueprint(function ($table) {
             $table->searchable(['title'], [
-                'weights' => [
+                'column_weights' => [
                     'title' => 'Z',
                 ],
             ]);
@@ -273,7 +273,7 @@ class PgsqlSchemaHelperTest extends TestCase
 
         $this->compilePgsqlBlueprint(function ($table) {
             $table->searchable(['title'], [
-                'weights' => [
+                'column_weights' => [
                     'posts.title' => 'A',
                 ],
             ]);

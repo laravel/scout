@@ -3,6 +3,7 @@
 namespace Laravel\Scout\Pgsql;
 
 use Illuminate\Database\Connection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Builder as SchemaBuilder;
@@ -10,6 +11,7 @@ use Illuminate\Database\Schema\Grammars\PostgresGrammar;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Fluent;
 use InvalidArgumentException;
+use Laravel\Scout\Exceptions\ScoutException;
 
 class SearchableSchema
 {
@@ -19,11 +21,11 @@ class SearchableSchema
     protected const COLUMN_WEIGHTS = ['A', 'B', 'C', 'D'];
 
     /**
-     * The PostgreSQL identifier helper instance.
+     * The PostgreSQL configuration reader instance.
      *
-     * @var \Laravel\Scout\Pgsql\Identifiers|null
+     * @var \Laravel\Scout\Pgsql\Configuration|null
      */
-    protected $identifiers;
+    protected $configuration;
 
     /**
      * Create a new searchable schema helper instance.
@@ -64,23 +66,17 @@ class SearchableSchema
                 $columns = Arr::wrap($columns);
                 $vectorColumn = $helper->vectorColumn();
 
+                $trigramColumns = $helper->trigramColumns($options);
+
                 if ($helper->shouldCreateTrigramExtension($options)) {
-                    /** @phpstan-ignore method.protected */
-                    $this->addCommand('scoutPgsqlExtension', ['extension' => 'pg_trgm']);
+                    $helper->addTrigramExtension($this);
                 }
 
                 $this->tsvector($vectorColumn)->storedAs(new Expression(
                     $helper->searchVectorExpression($connection, $columns, $options)
                 ));
 
-                $this->index($vectorColumn, $options['index'] ?? null, 'gin');
-
-                foreach ($helper->trigramColumns($options) as $column) {
-                    $this->rawIndex(
-                        sprintf('%s gin_trgm_ops', $connection->getSchemaGrammar()->wrap($column)),
-                        $helper->indexName($connection, $this->getTable(), [$column], 'trigram_index')
-                    )->algorithm('gin');
-                }
+                $helper->addIndexes($this, $connection, $this->getTable(), $vectorColumn, $trigramColumns, $options['index'] ?? null);
             });
         }
 
@@ -115,6 +111,161 @@ class SearchableSchema
                 return sprintf('create extension if not exists %s', $this->wrap($command->extension));
             });
         }
+    }
+
+    /**
+     * Create any missing search vector column and indexes for the model's table.
+     *
+     * Returns "created" when the vector column was added, "indexed" when only indexes were added, or null when nothing changed.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return string|null
+     *
+     * @throws \Laravel\Scout\Exceptions\ScoutException
+     */
+    public function prepare(Model $model)
+    {
+        $connection = $model->getConnection();
+        $schema = $connection->getSchemaBuilder();
+        $table = $model->getTable();
+        $vectorColumn = $this->vectorColumn();
+        $tableColumns = $schema->getColumnListing($table);
+
+        if (! $schema->hasColumn($table, $vectorColumn)) {
+            $columns = $this->generatableColumns($model, $tableColumns, $vectorColumn);
+            $trigramColumns = array_values(array_intersect($this->trigramColumns(), $columns));
+
+            $schema->table($table, function ($table) use ($columns, $trigramColumns) {
+                $table->searchable($columns, ['trigram' => ['columns' => $trigramColumns]]);
+            });
+
+            return 'created';
+        }
+
+        $trigramColumns = array_values(array_intersect($this->trigramColumns(), $tableColumns));
+        $createExtension = $this->shouldCreateTrigramExtension() && ! empty($trigramColumns);
+        $missingVectorIndex = ! $this->hasGinIndex($connection, $table, $vectorColumn);
+        $missingTrigramColumns = array_values(array_filter(
+            $trigramColumns, fn ($column) => ! $this->hasGinIndex($connection, $table, $column, 'gin_trgm_ops')
+        ));
+
+        if (! $createExtension && ! $missingVectorIndex && empty($missingTrigramColumns)) {
+            return null;
+        }
+
+        $schema->table($table, function ($blueprint) use ($connection, $table, $vectorColumn, $createExtension, $missingVectorIndex, $missingTrigramColumns) {
+            if ($createExtension) {
+                $this->addTrigramExtension($blueprint);
+            }
+
+            $this->addIndexes($blueprint, $connection, $table, $missingVectorIndex ? $vectorColumn : null, $missingTrigramColumns);
+        });
+
+        return 'indexed';
+    }
+
+    /**
+     * Add the search vector and trigram indexes to the blueprint.
+     *
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @param  \Illuminate\Database\Connection  $connection
+     * @param  string  $table
+     * @param  string|null  $vectorColumn
+     * @param  array  $trigramColumns
+     * @param  string|null  $index
+     * @return void
+     */
+    public function addIndexes($blueprint, Connection $connection, $table, $vectorColumn, array $trigramColumns, $index = null)
+    {
+        if (! is_null($vectorColumn)) {
+            $blueprint->index($vectorColumn, $index, 'gin');
+        }
+
+        foreach ($trigramColumns as $column) {
+            $blueprint->rawIndex(
+                sprintf('%s gin_trgm_ops', $connection->getSchemaGrammar()->wrap($column)),
+                $this->indexName($connection, $table, [$column], 'trigram_index')
+            )->algorithm('gin');
+        }
+    }
+
+    /**
+     * Add the pg_trgm extension command to the blueprint.
+     *
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @return void
+     */
+    public function addTrigramExtension($blueprint)
+    {
+        (fn () => $this->addCommand('scoutPgsqlExtension', ['extension' => 'pg_trgm']))->call($blueprint);
+    }
+
+    /**
+     * Get the searchable payload keys that can be used in a generated column.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  array  $tableColumns
+     * @param  string  $vectorColumn
+     * @return array
+     *
+     * @throws \Laravel\Scout\Exceptions\ScoutException
+     */
+    protected function generatableColumns(Model $model, array $tableColumns, $vectorColumn)
+    {
+        $databaseColumns = array_diff($tableColumns, $this->nonImmutableTextColumns($model), [$vectorColumn]);
+
+        $searchableModel = $model->newQuery()->first() ?? $model;
+
+        $columns = array_values(array_intersect(array_keys($searchableModel->toSearchableArray()), $databaseColumns));
+
+        if (empty($columns)) {
+            throw new ScoutException(sprintf(
+                'No database columns from [%s::toSearchableArray()] exist on [%s]. Add the search vector with the [searchable] schema helper in a migration instead.',
+                get_class($model),
+                $model->getTable()
+            ));
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Get the table columns whose text output is not immutable and cannot be used in a generated column.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return array
+     */
+    protected function nonImmutableTextColumns(Model $model)
+    {
+        $connection = $model->getConnection();
+
+        return array_column($connection->select(
+            "select a.attname from pg_attribute a join pg_type t on t.oid = a.atttypid join pg_proc p on p.oid = t.typoutput where a.attrelid = to_regclass(?) and a.attnum > 0 and not a.attisdropped and p.provolatile <> 'i'",
+            [$connection->getQueryGrammar()->wrapTable($model->getTable())]
+        ), 'attname');
+    }
+
+    /**
+     * Determine if the column already has a GIN index, optionally using the given operator class.
+     *
+     * @param  \Illuminate\Database\Connection  $connection
+     * @param  string  $table
+     * @param  string  $column
+     * @param  string|null  $operatorClass
+     * @return bool
+     */
+    protected function hasGinIndex(Connection $connection, $table, $column, $operatorClass = null)
+    {
+        $bindings = [$connection->getQueryGrammar()->wrapTable($table), $column];
+
+        $sql = 'select exists (select 1 from pg_index i join pg_class c on c.oid = i.indexrelid join pg_am am on am.oid = c.relam join pg_attribute a on a.attrelid = i.indrelid and a.attnum = any(i.indkey) where i.indrelid = to_regclass(?) and a.attname = ? and am.amname = \'gin\'';
+
+        if (! is_null($operatorClass)) {
+            $sql .= ' and exists (select 1 from pg_opclass o where o.oid = any(i.indclass) and o.opcname = ?)';
+            $bindings[] = $operatorClass;
+        }
+
+        return (bool) $connection->selectOne($sql.') as "exists"', $bindings)->exists;
     }
 
     /**
@@ -245,13 +396,7 @@ class SearchableSchema
      */
     public function vectorColumn()
     {
-        $column = $this->config['vector_column'] ?? 'search_vector';
-
-        if (! $this->identifiers()->isColumnName($column)) {
-            throw new InvalidArgumentException('The [pgsql] Scout schema helper vector column must be a valid column name.');
-        }
-
-        return $column;
+        return $this->configuration()->vectorColumn();
     }
 
     /**
@@ -324,13 +469,7 @@ class SearchableSchema
      */
     protected function language()
     {
-        $language = $this->config['language'] ?? 'english';
-
-        if (! $this->identifiers()->isConfigurationName($language)) {
-            throw new InvalidArgumentException('The [pgsql] Scout schema helper language must be a valid PostgreSQL text search configuration name.');
-        }
-
-        return $language;
+        return $this->configuration()->language();
     }
 
     /**
@@ -358,7 +497,7 @@ class SearchableSchema
      */
     protected function columnWeights(array $options = [])
     {
-        $weights = $options['weights'] ?? $options['column_weights'] ?? $this->config['column_weights'] ?? [];
+        $weights = $options['column_weights'] ?? $this->config['column_weights'] ?? [];
 
         if (! is_array($weights)) {
             throw new InvalidArgumentException('The [pgsql] Scout schema helper column weights must be an array.');
@@ -388,20 +527,16 @@ class SearchableSchema
      */
     protected function column($column, $type)
     {
-        if (! $this->identifiers()->isColumnName($column)) {
-            throw new InvalidArgumentException(sprintf('The [pgsql] Scout schema helper %s column [%s] must be a valid column name.', $type, $column));
-        }
-
-        return $column;
+        return $this->configuration()->column($column, $type);
     }
 
     /**
-     * Get the PostgreSQL identifier helper instance.
+     * Get the PostgreSQL configuration reader instance.
      *
-     * @return \Laravel\Scout\Pgsql\Identifiers
+     * @return \Laravel\Scout\Pgsql\Configuration
      */
-    protected function identifiers()
+    protected function configuration()
     {
-        return $this->identifiers ??= new Identifiers;
+        return $this->configuration ??= new Configuration($this->config, 'schema helper');
     }
 }

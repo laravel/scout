@@ -32,32 +32,15 @@ class ImportCommandTest extends TestCase
         });
     }
 
-    public function test_pgsql_import_warns_that_search_schema_must_be_created_with_migrations()
+    public function test_import_without_prepare_option_does_not_resolve_the_engine()
     {
         config(['scout.driver' => 'pgsql']);
 
-        $class = ImportCommandPgsqlSearchableUser::class;
+        $class = ImportCommandUnresolvableEngineUser::class;
 
         $this->artisan('scout:import', [
             'model' => $class,
         ])
-            ->expectsOutput('Using the [pgsql] Scout engine does not create PostgreSQL search columns or indexes.')
-            ->expectsOutput('Add the PostgreSQL search vector and any trigram indexes through a migration before importing.')
-            ->expectsOutput("All [{$class}] records have been imported.")
-            ->assertSuccessful();
-    }
-
-    public function test_model_specific_pgsql_engine_imports_without_schema_mutation()
-    {
-        config(['scout.driver' => 'collection']);
-
-        $class = ImportCommandModelSpecificPgsqlSearchableUser::class;
-
-        $this->artisan('scout:import', [
-            'model' => $class,
-        ])
-            ->expectsOutput('Using the [pgsql] Scout engine does not create PostgreSQL search columns or indexes.')
-            ->expectsOutput('Add the PostgreSQL search vector and any trigram indexes through a migration before importing.')
             ->expectsOutput("All [{$class}] records have been imported.")
             ->assertSuccessful();
     }
@@ -174,21 +157,6 @@ class ImportCommandTest extends TestCase
             ->assertSuccessful();
     }
 
-    public function test_model_specific_non_pgsql_engine_imports_without_pgsql_warning()
-    {
-        config(['scout.driver' => 'pgsql']);
-
-        $class = ImportCommandModelSpecificCollectionSearchableUser::class;
-
-        $this->artisan('scout:import', [
-            'model' => $class,
-        ])
-            ->doesntExpectOutput('Using the [pgsql] Scout engine does not create PostgreSQL search columns or indexes.')
-            ->doesntExpectOutput('Add the PostgreSQL search vector and any trigram indexes through a migration before importing.')
-            ->expectsOutput("All [{$class}] records have been imported.")
-            ->assertSuccessful();
-    }
-
     public function test_prepare_pgsql_option_skips_existing_indexes()
     {
         config(['scout.driver' => 'pgsql']);
@@ -202,7 +170,7 @@ class ImportCommandTest extends TestCase
         $schema->shouldNotReceive('table');
 
         $this->useSchemaBuilder($schema);
-        $this->app['db']->connection('pgsql_schema')->existingIndexes = ['users_search_vector_index', 'users_name_trigram_index'];
+        $this->app['db']->connection('pgsql_schema')->ginIndexes = ['search_vector', 'name:gin_trgm_ops'];
 
         $this->artisan('scout:import', [
             'model' => $class,
@@ -210,6 +178,74 @@ class ImportCommandTest extends TestCase
         ])
             ->expectsOutput("PostgreSQL search schema already exists for [{$class}].")
             ->expectsOutput("All [{$class}] records have been imported.")
+            ->assertSuccessful();
+    }
+
+    public function test_prepare_pgsql_option_creates_trigram_index_when_column_only_has_a_plain_gin_index()
+    {
+        config(['scout.driver' => 'pgsql']);
+        config(['scout.pgsql.trigram.columns' => ['name']]);
+
+        $class = ImportCommandPgsqlSearchableUser::class;
+
+        $schema = Mockery::mock(Builder::class);
+        $schema->shouldReceive('getColumnListing')->once()->with('users')->andReturn(['id', 'name', 'search_vector']);
+        $schema->shouldReceive('hasColumn')->once()->with('users', 'search_vector')->andReturn(true);
+        $schema->shouldReceive('table')->once()->with('users', Mockery::on(function ($callback) {
+            $table = Mockery::mock();
+            $index = Mockery::mock();
+
+            $table->shouldNotReceive('index');
+            $table->shouldReceive('rawIndex')->once()->with('"name" gin_trgm_ops', 'users_name_trigram_index')->andReturn($index);
+            $index->shouldReceive('algorithm')->once()->with('gin');
+
+            $callback($table);
+
+            return true;
+        }));
+
+        $this->useSchemaBuilder($schema);
+        $this->app['db']->connection('pgsql_schema')->ginIndexes = ['search_vector', 'name'];
+
+        $this->artisan('scout:import', [
+            'model' => $class,
+            '--prepare-pgsql' => true,
+        ])
+            ->expectsOutput("Prepared PostgreSQL search indexes for [{$class}].")
+            ->assertSuccessful();
+    }
+
+    public function test_prepare_pgsql_option_creates_trigram_extension_when_indexes_exist()
+    {
+        config(['scout.driver' => 'pgsql']);
+        config(['scout.pgsql.trigram.columns' => ['name']]);
+        config(['scout.pgsql.trigram.create_extension' => true]);
+
+        $class = ImportCommandPgsqlSearchableUser::class;
+
+        $schema = Mockery::mock(Builder::class);
+        $schema->shouldReceive('getColumnListing')->once()->with('users')->andReturn(['id', 'name', 'search_vector']);
+        $schema->shouldReceive('hasColumn')->once()->with('users', 'search_vector')->andReturn(true);
+        $schema->shouldReceive('table')->once()->with('users', Mockery::on(function ($callback) {
+            $table = Mockery::mock();
+
+            $table->shouldReceive('addCommand')->once()->with('scoutPgsqlExtension', ['extension' => 'pg_trgm']);
+            $table->shouldNotReceive('index');
+            $table->shouldNotReceive('rawIndex');
+
+            $callback($table);
+
+            return true;
+        }));
+
+        $this->useSchemaBuilder($schema);
+        $this->app['db']->connection('pgsql_schema')->ginIndexes = ['search_vector', 'name:gin_trgm_ops'];
+
+        $this->artisan('scout:import', [
+            'model' => $class,
+            '--prepare-pgsql' => true,
+        ])
+            ->expectsOutput("Prepared PostgreSQL search indexes for [{$class}].")
             ->assertSuccessful();
     }
 
@@ -336,6 +372,14 @@ class ImportCommandPgsqlDefaultSearchableUser extends ImportCommandPgsqlSearchab
     }
 }
 
+class ImportCommandUnresolvableEngineUser extends ImportCommandPgsqlSearchableUser
+{
+    public function searchableUsing()
+    {
+        throw new \RuntimeException('The engine should not be resolved.');
+    }
+}
+
 class ImportCommandModelSpecificPgsqlSearchableUser extends ImportCommandPgsqlSearchableUser
 {
     public function searchableUsing()
@@ -356,7 +400,7 @@ class ImportCommandPgsqlTestingConnection extends SQLiteConnection
 {
     public $schemaBuilder;
 
-    public $existingIndexes = [];
+    public $ginIndexes = [];
 
     public $nonImmutableTextColumns = [];
 
@@ -378,7 +422,10 @@ class ImportCommandPgsqlTestingConnection extends SQLiteConnection
     public function selectOne($query, $bindings = [], $useReadPdo = true)
     {
         if (str_contains($query, 'pg_index')) {
-            return (object) ['exists' => in_array($bindings[1], $this->existingIndexes, true)];
+            $index = isset($bindings[2]) ? "{$bindings[1]}:{$bindings[2]}" : $bindings[1];
+
+            return (object) ['exists' => in_array($index, $this->ginIndexes, true)
+                || (! isset($bindings[2]) && in_array("{$bindings[1]}:gin_trgm_ops", $this->ginIndexes, true))];
         }
 
         return parent::selectOne($query, $bindings, $useReadPdo);

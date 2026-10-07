@@ -378,7 +378,7 @@ class PgsqlEngineTest extends TestCase
         $query = $engine->buildOrderedSearchQueryForTest(SearchableUser::search('coca cola -light'));
 
         $this->assertStringNotContainsString('"users"."name" % ?', $query->toSql());
-        $this->assertStringContainsString('similarity(coalesce(cast("users"."name" as text), \'\'), ?)', $query->toSql());
+        $this->assertStringNotContainsString('similarity(', $query->toSql());
     }
 
     public function test_engine_can_be_created_without_published_pgsql_config()
@@ -422,32 +422,53 @@ class PgsqlEngineTest extends TestCase
         $this->assertStringNotContainsString('similarity(coalesce(cast("users"."age" as text)', $query->toSql());
     }
 
-    public function test_trigram_columns_excluded_from_the_searchable_payload_are_ignored()
+    public function test_trigram_columns_missing_from_the_table_are_ignored()
     {
-        $_ENV['user.toSearchableArray'] = fn () => [
-            'name' => 'Taylor Otwell',
-        ];
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name', 'title']);
+
+        $engine = $this->pgsqlEngine(true);
+        $sql = $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'))->toSql();
+
+        $this->assertStringContainsString('("users"."name" % ?)', $sql);
+        $this->assertStringNotContainsString('"users"."title"', $sql);
+
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['title']);
+
+        $engine = $this->pgsqlEngine(true);
+        $sql = $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'))->toSql();
+
+        $this->assertStringNotContainsString('% ?', $sql);
+        $this->assertStringNotContainsString('similarity(', $sql);
+        $this->assertStringContainsString('order by ts_rank("users"."search_vector", plainto_tsquery(?::regconfig, ?)) desc', $sql);
+        $this->assertFalse($engine->usesTrigramForTest(SearchableUser::search('laravle')));
+    }
+
+    public function test_trigram_columns_do_not_depend_on_the_searchable_payload()
+    {
+        $_ENV['user.toSearchableArray'] = fn ($user) => $user->toArray();
 
         try {
             $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
-            $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name', 'email']);
+            $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
 
-            $engine = $this->pgsqlEngine(true);
-            $sql = $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'))->toSql();
+            $sql = $this->pgsqlEngine(true)->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'))->toSql();
 
             $this->assertStringContainsString('("users"."name" % ?)', $sql);
-            $this->assertStringContainsString('similarity(coalesce(cast("users"."name" as text), \'\'), ?)', $sql);
-            $this->assertStringNotContainsString('"users"."email"', $sql);
+        } finally {
+            unset($_ENV['user.toSearchableArray']);
+        }
+    }
 
-            $this->app->make('config')->set('scout.pgsql.trigram.columns', ['email']);
+    public function test_text_searches_do_not_build_the_searchable_payload()
+    {
+        $_ENV['user.toSearchableArray'] = fn () => throw new \RuntimeException('The searchable payload should not be built.');
 
-            $engine = $this->pgsqlEngine(true);
-            $sql = $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'))->toSql();
-
-            $this->assertStringNotContainsString('% ?', $sql);
-            $this->assertStringNotContainsString('similarity(', $sql);
-            $this->assertStringContainsString('order by ts_rank("users"."search_vector", plainto_tsquery(?::regconfig, ?)) desc', $sql);
-            $this->assertFalse($engine->shouldApplyTrigramThresholdForTest(SearchableUser::search('laravle')));
+        try {
+            $this->assertStringContainsString(
+                '"users"."search_vector" @@ plainto_tsquery(?::regconfig, ?)',
+                $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravel'))->toSql()
+            );
         } finally {
             unset($_ENV['user.toSearchableArray']);
         }
@@ -545,8 +566,8 @@ class PgsqlEngineTest extends TestCase
     {
         $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
         $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name', 'email']);
-        $this->app->make('config')->set('scout.pgsql.weights.full_text', 1.5);
-        $this->app->make('config')->set('scout.pgsql.weights.trigram', 0.5);
+        $this->app->make('config')->set('scout.pgsql.score_weights.full_text', 1.5);
+        $this->app->make('config')->set('scout.pgsql.score_weights.trigram', 0.5);
 
         $query = $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
 
@@ -566,7 +587,7 @@ class PgsqlEngineTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The [pgsql] Scout driver trigram threshold must be numeric and between 0 and 1.');
 
-        $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+        $this->pgsqlEngine(true)->search(SearchableUser::search('laravle'));
     }
 
     public function test_trigram_threshold_accepts_zero()
@@ -604,7 +625,7 @@ class PgsqlEngineTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The [pgsql] Scout driver trigram threshold must be numeric and between 0 and 1.');
 
-        $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+        $this->pgsqlEngine(true)->search(SearchableUser::search('laravle'));
     }
 
     public function test_trigram_threshold_rejects_values_above_one()
@@ -616,14 +637,14 @@ class PgsqlEngineTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The [pgsql] Scout driver trigram threshold must be numeric and between 0 and 1.');
 
-        $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true);
+        $this->pgsqlEngine(true)->search(SearchableUser::search('laravle'));
     }
 
     public function test_invalid_full_text_score_weight_fails_clearly()
     {
         $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
         $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
-        $this->app->make('config')->set('scout.pgsql.weights.full_text', 'invalid');
+        $this->app->make('config')->set('scout.pgsql.score_weights.full_text', 'invalid');
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The [pgsql] Scout driver score weight [full_text] must be numeric.');
@@ -635,7 +656,7 @@ class PgsqlEngineTest extends TestCase
     {
         $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
         $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
-        $this->app->make('config')->set('scout.pgsql.weights.trigram', 'invalid');
+        $this->app->make('config')->set('scout.pgsql.score_weights.trigram', 'invalid');
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The [pgsql] Scout driver score weight [trigram] must be numeric.');
@@ -707,9 +728,9 @@ class InspectablePgsqlEngine extends PgsqlEngine
         return $this->orderSearchQuery($builder, $this->buildSearchQuery($builder));
     }
 
-    public function shouldApplyTrigramThresholdForTest(Builder $builder)
+    public function usesTrigramForTest(Builder $builder)
     {
-        return $this->shouldApplyTrigramThreshold($builder);
+        return $this->usesTrigram($builder);
     }
 
     public function appliedThresholds()

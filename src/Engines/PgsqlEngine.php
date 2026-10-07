@@ -4,7 +4,7 @@ namespace Laravel\Scout\Engines;
 
 use InvalidArgumentException;
 use Laravel\Scout\Builder;
-use Laravel\Scout\Pgsql\Identifiers;
+use Laravel\Scout\Pgsql\Configuration;
 use Laravel\Scout\Pgsql\Trigram;
 
 class PgsqlEngine extends DatabaseModelEngine
@@ -29,11 +29,18 @@ class PgsqlEngine extends DatabaseModelEngine
     protected $trigram;
 
     /**
-     * The PostgreSQL identifier helper instance.
+     * The PostgreSQL configuration reader instance.
      *
-     * @var \Laravel\Scout\Pgsql\Identifiers|null
+     * @var \Laravel\Scout\Pgsql\Configuration|null
      */
-    protected $identifiers;
+    protected $configuration;
+
+    /**
+     * The cached table column listings.
+     *
+     * @var array
+     */
+    protected array $tableColumns = [];
 
     /**
      * Create a new engine instance.
@@ -105,7 +112,7 @@ class PgsqlEngine extends DatabaseModelEngine
      */
     protected function withTrigramThreshold(Builder $builder, callable $callback)
     {
-        if (! $this->shouldApplyTrigramThreshold($builder)) {
+        if (! $this->usesTrigram($builder)) {
             return $callback();
         }
 
@@ -121,7 +128,7 @@ class PgsqlEngine extends DatabaseModelEngine
             $result = $callback();
 
             if ($previous !== false) {
-                $this->trigram()->restoreThreshold($builder, $previous);
+                $this->trigram()->setThreshold($builder, $previous);
             }
 
             return $result;
@@ -129,12 +136,14 @@ class PgsqlEngine extends DatabaseModelEngine
     }
 
     /**
-     * Determine if the search needs a trigram threshold during execution.
+     * Determine if trigram matching and ranking apply to the search.
+     *
+     * Trigram matching is limited to plainto_tsquery so it cannot bypass operators such as negation.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @return bool
      */
-    protected function shouldApplyTrigramThreshold(Builder $builder)
+    protected function usesTrigram(Builder $builder)
     {
         return $this->queryFunction() === 'plainto_tsquery' &&
             $this->trigram()->uses($builder) &&
@@ -151,7 +160,7 @@ class PgsqlEngine extends DatabaseModelEngine
     {
         $this->ensurePostgresqlConnection($builder);
 
-        $query = $this->initializeSearchQuery($builder, $this->searchableColumns($builder));
+        $query = $this->initializeSearchQuery($builder);
 
         return $this->finalizeSearchQuery($builder, $query);
     }
@@ -160,35 +169,24 @@ class PgsqlEngine extends DatabaseModelEngine
      * Build the initial text search database query for all searchable columns.
      *
      * @param  \Laravel\Scout\Builder  $builder
-     * @param  array  $columns
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function initializeSearchQuery(Builder $builder, array $columns)
+    protected function initializeSearchQuery(Builder $builder)
     {
-        $query = $this->newModelQuery($builder);
+        $query = $this->newSearchQuery($builder);
 
         if (blank($builder->query)) {
             return $query;
         }
 
-        $usesTrigram = $this->queryFunction() === 'plainto_tsquery' && $this->trigram()->uses($builder);
-        $trigramColumns = $usesTrigram ? $this->wrappedTrigramColumns($builder) : [];
-        $usesTrigram = $usesTrigram && ! empty($trigramColumns);
-
-        if ($usesTrigram) {
-            $this->trigram()->threshold();
-        }
-
-        return $query->where(function ($query) use ($builder, $columns, $trigramColumns, $usesTrigram) {
+        return $query->where(function ($query) use ($builder) {
             $canSearchPrimaryKey = $this->isBigintString($builder->query) &&
                 in_array($builder->model->getScoutKeyType(), ['int', 'integer']) &&
-                in_array($builder->model->getScoutKeyName(), $columns);
+                in_array($builder->model->getScoutKeyName(), $this->searchableColumns($builder));
 
             if ($canSearchPrimaryKey) {
                 $query->orWhereRaw(
-                    sprintf('%s = ?::bigint', $builder->model->getConnection()->getQueryGrammar()->wrap(
-                        $builder->model->qualifyColumn($builder->model->getScoutKeyName())
-                    )),
+                    sprintf('%s = ?::bigint', $this->wrapColumn($builder, $builder->model->getScoutKeyName())),
                     [$builder->query]
                 );
             }
@@ -198,7 +196,9 @@ class PgsqlEngine extends DatabaseModelEngine
                 [$this->language(), $builder->query]
             );
 
-            if ($usesTrigram) {
+            if ($this->usesTrigram($builder)) {
+                $trigramColumns = $this->wrappedTrigramColumns($builder);
+
                 $query->orWhereRaw(
                     $this->trigram()->predicateExpression($trigramColumns),
                     $this->trigram()->bindings($builder, $trigramColumns)
@@ -239,12 +239,11 @@ class PgsqlEngine extends DatabaseModelEngine
                 $query->orderBy($order['column'], $order['direction']);
             }
         })->when(empty($builder->orders) && blank($builder->query), function ($query) use ($builder) {
-            $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
+            $query->orderBy($builder->model->qualifyColumn($builder->model->getScoutKeyName()), 'desc');
         })->when(empty($builder->orders) && filled($builder->query), function ($query) use ($builder) {
-            $usesTrigram = $this->trigram()->uses($builder);
-            $trigramColumns = $usesTrigram ? $this->wrappedTrigramColumns($builder) : [];
+            if ($this->usesTrigram($builder)) {
+                $trigramColumns = $this->wrappedTrigramColumns($builder);
 
-            if ($usesTrigram && ! empty($trigramColumns)) {
                 $query->orderByRaw(
                     sprintf(
                         '((%s * ?) + (%s * ?)) desc',
@@ -307,7 +306,7 @@ class PgsqlEngine extends DatabaseModelEngine
     }
 
     /**
-     * Get the configured trigram columns present in the model's searchable columns.
+     * Get the configured trigram columns present on the model's table.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @return array
@@ -320,15 +319,23 @@ class PgsqlEngine extends DatabaseModelEngine
             throw new InvalidArgumentException('The [pgsql] Scout driver trigram columns must be an array.');
         }
 
-        $searchableColumns = array_flip($this->searchableColumns($builder));
+        $columns = array_map(fn ($column) => $this->configuration()->column($column, 'trigram'), $columns);
 
-        return array_values(array_filter($columns, function ($column) use ($searchableColumns) {
-            if (! $this->identifiers()->isColumnName($column)) {
-                throw new InvalidArgumentException(sprintf('The [pgsql] Scout driver trigram column [%s] must be a valid column name.', $column));
-            }
+        return array_values(array_intersect($columns, $this->tableColumns($builder)));
+    }
 
-            return array_key_exists($column, $searchableColumns);
-        }));
+    /**
+     * Get the column listing for the model's table.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return array
+     */
+    protected function tableColumns(Builder $builder)
+    {
+        $connection = $builder->model->getConnection();
+        $table = $builder->model->getTable();
+
+        return $this->tableColumns[spl_object_id($connection)][$table] ??= $connection->getSchemaBuilder()->getColumnListing($table);
     }
 
     /**
@@ -342,13 +349,13 @@ class PgsqlEngine extends DatabaseModelEngine
     }
 
     /**
-     * Get the PostgreSQL identifier helper instance.
+     * Get the PostgreSQL configuration reader instance.
      *
-     * @return \Laravel\Scout\Pgsql\Identifiers
+     * @return \Laravel\Scout\Pgsql\Configuration
      */
-    protected function identifiers()
+    protected function configuration()
     {
-        return $this->identifiers ??= new Identifiers;
+        return $this->configuration ??= new Configuration($this->config, 'driver');
     }
 
     /**
@@ -358,13 +365,7 @@ class PgsqlEngine extends DatabaseModelEngine
      */
     protected function language()
     {
-        $language = $this->config['language'] ?? 'english';
-
-        if (! $this->identifiers()->isConfigurationName($language)) {
-            throw new InvalidArgumentException('The [pgsql] Scout driver language must be a valid PostgreSQL text search configuration name.');
-        }
-
-        return $language;
+        return $this->configuration()->language();
     }
 
     /**
@@ -375,15 +376,7 @@ class PgsqlEngine extends DatabaseModelEngine
      */
     protected function vectorColumn(Builder $builder)
     {
-        $column = $this->config['vector_column'] ?? 'search_vector';
-
-        if (! $this->identifiers()->isColumnName($column)) {
-            throw new InvalidArgumentException('The [pgsql] Scout driver vector column must be a valid column name.');
-        }
-
-        return $builder->model->getConnection()->getQueryGrammar()->wrap(
-            $builder->model->qualifyColumn($column)
-        );
+        return $this->wrapColumn($builder, $this->configuration()->vectorColumn());
     }
 
     /**
@@ -395,10 +388,18 @@ class PgsqlEngine extends DatabaseModelEngine
      */
     protected function searchableColumn(Builder $builder, $column)
     {
-        if (! $this->identifiers()->isColumnName($column)) {
-            throw new InvalidArgumentException(sprintf('The [pgsql] Scout driver searchable column [%s] must be a valid column name.', $column));
-        }
+        return $this->wrapColumn($builder, $this->configuration()->column($column, 'searchable'));
+    }
 
+    /**
+     * Wrap the qualified column name for the model's connection.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  string  $column
+     * @return string
+     */
+    protected function wrapColumn(Builder $builder, $column)
+    {
         return $builder->model->getConnection()->getQueryGrammar()->wrap(
             $builder->model->qualifyColumn($column)
         );

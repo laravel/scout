@@ -161,14 +161,6 @@ class DatabaseEngine extends DatabaseModelEngine implements SupportsSemanticSear
     }
 
     /**
-     * Create the model query used for a Scout search.
-     */
-    protected function newSearchQuery(Builder $builder)
-    {
-        return $this->newModelQuery($builder);
-    }
-
-    /**
      * Add text search constraints to the given query.
      */
     protected function addTextSearchConstraints($query, Builder $builder, array $columns, array $prefixColumns = [], array $fullTextColumns = [])

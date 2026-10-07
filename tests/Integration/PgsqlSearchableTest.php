@@ -433,7 +433,7 @@ class PgsqlSearchableTest extends TestCase
             $table->string('title');
             $table->text('body');
             $table->searchable(['title', 'body'], [
-                'weights' => [
+                'column_weights' => [
                     'title' => 'A',
                     'body' => 'D',
                 ],

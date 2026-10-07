@@ -209,12 +209,12 @@ abstract class DatabaseModelEngine extends Engine implements PaginatesEloquentMo
     }
 
     /**
-     * Start the model query for the given Scout builder.
+     * Create the model query used for a Scout search.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function newModelQuery(Builder $builder)
+    protected function newSearchQuery(Builder $builder)
     {
         return method_exists($builder->model, 'newScoutQuery')
             ? $builder->model->newScoutQuery($builder)

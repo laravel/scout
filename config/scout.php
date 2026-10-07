@@ -248,7 +248,7 @@ return [
             'columns' => [],
             'create_extension' => false,
         ],
-        'weights' => [
+        'score_weights' => [
             'full_text' => 1.0,
             'trigram' => 0.25,
         ],

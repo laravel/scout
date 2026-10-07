@@ -88,20 +88,17 @@ class Trigram
      */
     public function applyThreshold(Builder $builder)
     {
-        $builder->model->getConnection()->select(
-            "select set_config('pg_trgm.similarity_threshold', ?::text, true)",
-            [$this->threshold()]
-        );
+        $this->setThreshold($builder, $this->threshold());
     }
 
     /**
-     * Restore a previously captured trigram threshold for the current transaction.
+     * Set the trigram threshold for the current transaction.
      *
      * @param  \Laravel\Scout\Builder  $builder
-     * @param  string|null  $threshold
+     * @param  float|int|string|null  $threshold
      * @return void
      */
-    public function restoreThreshold(Builder $builder, $threshold)
+    public function setThreshold(Builder $builder, $threshold)
     {
         $builder->model->getConnection()->select(
             "select set_config('pg_trgm.similarity_threshold', ?::text, true)",
@@ -186,7 +183,7 @@ class Trigram
      */
     public function scoreWeight($key, $default)
     {
-        $weight = $this->config['weights'][$key] ?? $default;
+        $weight = $this->config['score_weights'][$key] ?? $default;
 
         if (! is_numeric($weight)) {
             throw new InvalidArgumentException(sprintf('The [pgsql] Scout driver score weight [%s] must be numeric.', $key));
