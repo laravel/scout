@@ -109,10 +109,22 @@ class PgsqlEngine extends DatabaseModelEngine
             return $callback();
         }
 
-        return $builder->model->getConnection()->transaction(function () use ($builder, $callback) {
+        $connection = $builder->model->getConnection();
+
+        $previous = $connection->transactionLevel() > 0
+            ? $this->trigram()->currentThreshold($builder)
+            : false;
+
+        return $connection->transaction(function () use ($builder, $callback, $previous) {
             $this->trigram()->applyThreshold($builder);
 
-            return $callback();
+            $result = $callback();
+
+            if ($previous !== false) {
+                $this->trigram()->restoreThreshold($builder, $previous);
+            }
+
+            return $result;
         });
     }
 
@@ -168,13 +180,17 @@ class PgsqlEngine extends DatabaseModelEngine
         }
 
         return $query->where(function ($query) use ($builder, $columns, $trigramColumns, $usesTrigram) {
-            $canSearchPrimaryKey = ctype_digit($builder->query) &&
+            $canSearchPrimaryKey = $this->isBigintString($builder->query) &&
                 in_array($builder->model->getScoutKeyType(), ['int', 'integer']) &&
-                $builder->query <= PHP_INT_MAX &&
                 in_array($builder->model->getScoutKeyName(), $columns);
 
             if ($canSearchPrimaryKey) {
-                $query->orWhere($builder->model->qualifyColumn($builder->model->getScoutKeyName()), $builder->query);
+                $query->orWhereRaw(
+                    sprintf('%s = ?::bigint', $builder->model->getConnection()->getQueryGrammar()->wrap(
+                        $builder->model->qualifyColumn($builder->model->getScoutKeyName())
+                    )),
+                    [$builder->query]
+                );
             }
 
             $query->orWhereRaw(
@@ -189,6 +205,24 @@ class PgsqlEngine extends DatabaseModelEngine
                 );
             }
         });
+    }
+
+    /**
+     * Determine if the given value is a decimal string within PostgreSQL's bigint range.
+     *
+     * @param  mixed  $value
+     * @return bool
+     */
+    protected function isBigintString($value)
+    {
+        if (! is_string($value) || ! ctype_digit($value)) {
+            return false;
+        }
+
+        $digits = ltrim($value, '0');
+
+        return strlen($digits) < 19 ||
+            (strlen($digits) === 19 && strcmp($digits, '9223372036854775807') <= 0);
     }
 
     /**
@@ -223,14 +257,14 @@ class PgsqlEngine extends DatabaseModelEngine
                         [$this->trigram()->scoreWeight('trigram', 0.25)]
                     )
                 );
-
-                return;
+            } else {
+                $query->orderByRaw(
+                    sprintf('%s desc', $this->rankExpression($builder)),
+                    [$this->language(), $builder->query]
+                );
             }
 
-            $query->orderByRaw(
-                sprintf('%s desc', $this->rankExpression($builder)),
-                [$this->language(), $builder->query]
-            );
+            $query->orderBy($builder->model->qualifyColumn($builder->model->getScoutKeyName()), 'desc');
         });
     }
 

@@ -245,6 +245,40 @@ class ImportCommandTest extends TestCase
         ])->assertSuccessful();
     }
 
+    public function test_prepare_pgsql_option_discovers_default_searchable_array_from_a_stored_record()
+    {
+        config(['scout.driver' => 'pgsql']);
+
+        $class = ImportCommandPgsqlDefaultSearchableUser::class;
+
+        $schema = Mockery::mock(Builder::class);
+        $schema->shouldReceive('getColumnListing')->once()->with('users')->andReturn(['id', 'name', 'email']);
+        $schema->shouldReceive('hasColumn')->once()->with('users', 'search_vector')->andReturn(false);
+        $schema->shouldReceive('table')->once()->with('users', Mockery::on(function ($callback) {
+            $table = Mockery::mock();
+
+            $table->shouldReceive('searchable')->once()->with(['id', 'name', 'email'], [
+                'trigram' => [
+                    'columns' => [],
+                ],
+            ]);
+
+            $callback($table);
+
+            return true;
+        }));
+
+        $this->useSchemaBuilder($schema);
+        $this->app['db']->connection('pgsql_schema')->rows = [(object) ['id' => 1, 'name' => 'Taylor', 'email' => 'taylor@laravel.com']];
+
+        $this->artisan('scout:import', [
+            'model' => $class,
+            '--prepare-pgsql' => true,
+        ])
+            ->expectsOutput("Prepared PostgreSQL search columns and indexes for [{$class}].")
+            ->assertSuccessful();
+    }
+
     protected function useSchemaBuilder($schema)
     {
         $this->app['db']->connection('pgsql_schema')->schemaBuilder = $schema;
@@ -294,6 +328,14 @@ class ImportCommandPgsqlSearchableUserWithDates extends ImportCommandPgsqlSearch
     }
 }
 
+class ImportCommandPgsqlDefaultSearchableUser extends ImportCommandPgsqlSearchableUser
+{
+    public function toSearchableArray()
+    {
+        return $this->toArray();
+    }
+}
+
 class ImportCommandModelSpecificPgsqlSearchableUser extends ImportCommandPgsqlSearchableUser
 {
     public function searchableUsing()
@@ -318,10 +360,16 @@ class ImportCommandPgsqlTestingConnection extends SQLiteConnection
 
     public $nonImmutableTextColumns = [];
 
+    public $rows = [];
+
     public function select($query, $bindings = [], $useReadPdo = true, array $fetchUsing = [])
     {
         if (str_contains($query, 'pg_attribute')) {
             return array_map(fn ($column) => (object) ['attname' => $column], $this->nonImmutableTextColumns);
+        }
+
+        if (str_contains($query, 'from "users"')) {
+            return $this->rows;
         }
 
         return parent::select($query, $bindings, $useReadPdo, $fetchUsing);
@@ -329,8 +377,8 @@ class ImportCommandPgsqlTestingConnection extends SQLiteConnection
 
     public function selectOne($query, $bindings = [], $useReadPdo = true)
     {
-        if (str_contains($query, 'to_regclass')) {
-            return (object) ['name' => in_array($bindings[0], $this->existingIndexes, true) ? $bindings[0] : null];
+        if (str_contains($query, 'pg_index')) {
+            return (object) ['exists' => in_array($bindings[1], $this->existingIndexes, true)];
         }
 
         return parent::selectOne($query, $bindings, $useReadPdo);

@@ -62,9 +62,9 @@ class Trigram
         }
 
         try {
-            $result = $connection->selectOne(
+            $result = $connection->transaction(fn () => $connection->selectOne(
                 "select exists (select 1 from pg_extension where extname = 'pg_trgm') as available"
-            );
+            ));
         } catch (QueryException) {
             Log::warning(self::MISSING_EXTENSION_WARNING);
 
@@ -92,6 +92,34 @@ class Trigram
             "select set_config('pg_trgm.similarity_threshold', ?::text, true)",
             [$this->threshold()]
         );
+    }
+
+    /**
+     * Restore a previously captured trigram threshold for the current transaction.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  string|null  $threshold
+     * @return void
+     */
+    public function restoreThreshold(Builder $builder, $threshold)
+    {
+        $builder->model->getConnection()->select(
+            "select set_config('pg_trgm.similarity_threshold', ?::text, true)",
+            [$threshold]
+        );
+    }
+
+    /**
+     * Get the trigram threshold currently in effect, or null if it has not been set.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @return string|null
+     */
+    public function currentThreshold(Builder $builder)
+    {
+        return $builder->model->getConnection()->selectOne(
+            "select current_setting('pg_trgm.similarity_threshold', true) as threshold"
+        )->threshold;
     }
 
     /**

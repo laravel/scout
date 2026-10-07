@@ -92,10 +92,11 @@ class ImportCommand extends Command
         $helper = new SearchableSchema(config('scout.pgsql', []));
         $table = $model->getTable();
         $vectorColumn = $helper->vectorColumn();
-        $columns = $this->searchableDatabaseColumns($model, $schema, $vectorColumn, $class);
-        $trigramColumns = $this->trigramDatabaseColumns($helper, $columns);
 
         if (! $schema->hasColumn($table, $vectorColumn)) {
+            $columns = $this->searchableDatabaseColumns($model, $schema, $vectorColumn, $class);
+            $trigramColumns = $this->trigramDatabaseColumns($helper, $columns);
+
             $schema->table($table, function ($table) use ($columns, $trigramColumns) {
                 $table->searchable($columns, [
                     'trigram' => [
@@ -109,6 +110,7 @@ class ImportCommand extends Command
             return;
         }
 
+        $trigramColumns = $this->trigramDatabaseColumns($helper, $schema->getColumnListing($table));
         $createdExtension = false;
 
         if ($helper->shouldCreateTrigramExtension() && ! empty($trigramColumns)) {
@@ -141,14 +143,16 @@ class ImportCommand extends Command
             array_flip($this->nonImmutableTextColumns($model))
         );
 
-        $columns = array_values(array_filter(array_keys($model->toSearchableArray()), function ($column) use ($databaseColumns, $vectorColumn) {
+        $searchableModel = $model->newQuery()->first() ?? $model;
+
+        $columns = array_values(array_filter(array_keys($searchableModel->toSearchableArray()), function ($column) use ($databaseColumns, $vectorColumn) {
             return $column !== $vectorColumn && array_key_exists($column, $databaseColumns);
         }));
 
         if (empty($columns)) {
             $table = $model->getTable();
 
-            throw new ScoutException("No database columns from [{$class}::toSearchableArray()] exist on [{$table}].");
+            throw new ScoutException("No database columns from [{$class}::toSearchableArray()] exist on [{$table}]. Add the search vector with the [searchable] schema helper in a migration instead.");
         }
 
         return $columns;
@@ -197,9 +201,9 @@ class ImportCommand extends Command
      */
     protected function preparePgsqlIndexes($connection, $schema, SearchableSchema $helper, $table, $vectorColumn, array $trigramColumns)
     {
-        $missingVectorIndex = ! $this->indexExists($connection, $helper->indexName($connection, $table, [$vectorColumn], 'index'));
+        $missingVectorIndex = ! $this->indexExists($connection, $table, $helper->indexName($connection, $table, [$vectorColumn], 'index'));
         $missingTrigramColumns = array_values(array_filter($trigramColumns, function ($column) use ($connection, $helper, $table) {
-            return ! $this->indexExists($connection, $helper->indexName($connection, $table, [$column], 'trigram_index'));
+            return ! $this->indexExists($connection, $table, $helper->indexName($connection, $table, [$column], 'trigram_index'));
         }));
 
         if (! $missingVectorIndex && empty($missingTrigramColumns)) {
@@ -225,14 +229,18 @@ class ImportCommand extends Command
     }
 
     /**
-     * Determine if the given PostgreSQL index exists.
+     * Determine if the given PostgreSQL index exists on the table.
      *
      * @param  \Illuminate\Database\Connection  $connection
+     * @param  string  $table
      * @param  string  $index
      * @return bool
      */
-    protected function indexExists($connection, $index)
+    protected function indexExists($connection, $table, $index)
     {
-        return ! is_null($connection->selectOne('select to_regclass(?) as name', [$index])->name);
+        return (bool) $connection->selectOne(
+            'select exists (select 1 from pg_index i join pg_class c on c.oid = i.indexrelid where i.indrelid = to_regclass(?) and c.relname = ?) as "exists"',
+            [$connection->getQueryGrammar()->wrapTable($table), $index]
+        )->exists;
     }
 }

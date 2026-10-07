@@ -47,6 +47,8 @@ class PgsqlSearchableTest extends TestCase
             Schema::connection('pgsql_testing')->dropIfExists('scout_pgsql_custom_vector_posts');
             Schema::connection('pgsql_testing')->dropIfExists('scout_pgsql_language_posts');
             Schema::connection('pgsql_testing')->dropIfExists('scout_pgsql_named_connection_posts');
+            Schema::connection('pgsql_testing')->dropIfExists('scout_pgsql_integer_posts');
+            DB::connection('pgsql_testing')->statement('drop schema if exists scout_tenant cascade');
         }
 
         parent::tearDown();
@@ -254,6 +256,145 @@ class PgsqlSearchableTest extends TestCase
         $this->assertSame('0.11', $this->currentTrigramThreshold());
     }
 
+    public function test_equally_ranked_results_paginate_without_duplicates()
+    {
+        $this->createPostsTable();
+
+        foreach (range(1, 40) as $i) {
+            PgsqlSearchPost::query()->create(['title' => 'Laravel Scout', 'body' => 'Same body']);
+        }
+
+        $ids = collect(range(1, 8))->flatMap(
+            fn ($page) => PgsqlSearchPost::search('laravel')->paginate(5, 'page', $page)->getCollection()->modelKeys()
+        );
+
+        $this->assertCount(40, $ids->unique());
+    }
+
+    public function test_numeric_queries_outside_the_key_range_fall_back_to_full_text_search()
+    {
+        $this->createPostsTable();
+
+        $post = PgsqlKeyedPost::query()->create(['title' => 'Release 9223372036854775808', 'body' => 'Laravel Scout']);
+
+        $this->assertSame([$post->id], PgsqlKeyedPost::search((string) $post->id)->get()->modelKeys());
+        $this->assertSame([$post->id], PgsqlKeyedPost::search('9223372036854775808')->get()->modelKeys());
+
+        Schema::create('scout_pgsql_integer_posts', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('title');
+            $table->searchable(['title']);
+        });
+
+        $integerPost = PgsqlIntegerKeyPost::query()->create(['title' => 'Release 9999999999']);
+
+        $this->assertSame([$integerPost->id], PgsqlIntegerKeyPost::search('9999999999')->get()->modelKeys());
+        $this->assertSame([$integerPost->id], PgsqlIntegerKeyPost::search((string) $integerPost->id)->get()->modelKeys());
+    }
+
+    public function test_trigram_threshold_applies_to_pagination()
+    {
+        if (! env('PGSQL_TEST_TRIGRAM', false)) {
+            $this->markTestSkipped('Set PGSQL_TEST_TRIGRAM=true to run pg_trgm integration coverage.');
+        }
+
+        // "laravle" scores ~0.29 against "Laravel Scout": below the 0.3 default, above the configured threshold...
+        $this->app['config']->set('scout.pgsql.trigram.enabled', true);
+        $this->app['config']->set('scout.pgsql.trigram.threshold', 0.15);
+        $this->app['config']->set('scout.pgsql.trigram.columns', ['title']);
+
+        $this->createPostsTable(true);
+
+        PgsqlSearchPost::query()->create(['title' => 'Laravel Scout', 'body' => 'Native PostgreSQL search driver']);
+        PgsqlSearchPost::query()->create(['title' => 'Queues', 'body' => 'Background jobs']);
+
+        $page = PgsqlSearchPost::search('laravle')->paginate(10);
+
+        $this->assertSame(1, $page->total());
+        $this->assertSame(['Laravel Scout'], $page->getCollection()->pluck('title')->all());
+
+        $page = PgsqlSearchPost::search('laravle')->simplePaginate(1);
+
+        $this->assertSame(['Laravel Scout'], $page->getCollection()->pluck('title')->all());
+        $this->assertFalse($page->hasMorePages());
+        $this->assertSame('0.3', $this->currentTrigramThreshold());
+    }
+
+    public function test_trigram_threshold_is_restored_inside_an_outer_transaction()
+    {
+        if (! env('PGSQL_TEST_TRIGRAM', false)) {
+            $this->markTestSkipped('Set PGSQL_TEST_TRIGRAM=true to run pg_trgm integration coverage.');
+        }
+
+        $this->app['config']->set('scout.pgsql.trigram.enabled', true);
+        $this->app['config']->set('scout.pgsql.trigram.threshold', 0.7);
+        $this->app['config']->set('scout.pgsql.trigram.columns', ['title']);
+
+        $this->createPostsTable(true);
+
+        DB::transaction(function () {
+            DB::select("select set_config('pg_trgm.similarity_threshold', ?::text, true)", ['0.11']);
+
+            PgsqlSearchPost::search('laravle')->get();
+            PgsqlSearchPost::search('laravle')->paginate();
+
+            $this->assertSame('0.11', $this->currentTrigramThreshold());
+        });
+    }
+
+    public function test_failed_trigram_probe_does_not_abort_an_outer_transaction()
+    {
+        $this->app['config']->set('scout.pgsql.trigram.enabled', true);
+        $this->app['config']->set('scout.pgsql.trigram.columns', ['title']);
+
+        $this->createPostsTable();
+
+        PgsqlSearchPost::query()->create(['title' => 'Laravel Scout', 'body' => 'Native PostgreSQL search driver']);
+
+        DB::statement('drop role if exists scout_no_catalog');
+        DB::statement('create role scout_no_catalog');
+        DB::statement('grant select on scout_pgsql_posts to scout_no_catalog');
+        DB::statement('revoke select on pg_extension from public');
+
+        try {
+            $titles = DB::transaction(function () {
+                DB::statement('set local role scout_no_catalog');
+
+                return PgsqlSearchPost::search('laravel')->get()->pluck('title')->all();
+            });
+
+            $this->assertSame(['Laravel Scout'], $titles);
+        } finally {
+            DB::statement('grant select on pg_extension to public');
+            DB::statement('drop owned by scout_no_catalog');
+            DB::statement('drop role scout_no_catalog');
+        }
+    }
+
+    public function test_schema_qualified_tables_can_be_prepared_repeatedly_and_dropped()
+    {
+        $withTrigram = (bool) env('PGSQL_TEST_TRIGRAM', false);
+
+        $this->app['config']->set('scout.pgsql.trigram.columns', $withTrigram ? ['title'] : []);
+
+        DB::statement('create schema scout_tenant');
+
+        Schema::create('scout_tenant.posts', function (Blueprint $table) use ($withTrigram) {
+            $table->id();
+            $table->string('title');
+            $table->searchable(['title'], ['trigram' => ['create_extension' => $withTrigram]]);
+        });
+
+        $this->artisan('scout:import', ['model' => PgsqlTenantPost::class, '--prepare-pgsql' => true])
+            ->expectsOutput('PostgreSQL search schema already exists for ['.PgsqlTenantPost::class.'].')
+            ->assertSuccessful();
+
+        Schema::table('scout_tenant.posts', fn (Blueprint $table) => $table->dropSearchable());
+
+        $this->assertFalse(DB::table('pg_indexes')->where('schemaname', 'scout_tenant')->where('indexname', 'like', '%search_vector%')->exists());
+        $this->assertFalse(DB::table('pg_indexes')->where('schemaname', 'scout_tenant')->where('indexname', 'like', '%trigram%')->exists());
+    }
+
     public function test_drop_searchable_removes_generated_vector_column_and_indexes()
     {
         $withTrigram = (bool) env('PGSQL_TEST_TRIGRAM', false);
@@ -371,6 +512,27 @@ class PgsqlSearchPost extends Model
             'body' => $this->body,
         ];
     }
+}
+
+class PgsqlKeyedPost extends PgsqlSearchPost
+{
+    public function toSearchableArray()
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+        ];
+    }
+}
+
+class PgsqlIntegerKeyPost extends PgsqlKeyedPost
+{
+    protected $table = 'scout_pgsql_integer_posts';
+}
+
+class PgsqlTenantPost extends PgsqlKeyedPost
+{
+    protected $table = 'scout_tenant.posts';
 }
 
 class PgsqlCustomVectorPost extends PgsqlSearchPost

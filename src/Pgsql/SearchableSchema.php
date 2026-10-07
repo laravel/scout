@@ -94,14 +94,16 @@ class SearchableSchema
 
                 $vectorColumn = $helper->vectorColumn();
 
-                if (array_key_exists('index', $options)) {
-                    $this->dropIndex($options['index']);
-                } else {
-                    $this->dropIndex([$vectorColumn]);
-                }
+                $this->dropIndex($helper->qualifiedIndexName(
+                    $this->getTable(),
+                    $options['index'] ?? $helper->indexName($connection, $this->getTable(), [$vectorColumn], 'index')
+                ));
 
                 foreach ($helper->trigramColumns($options) as $column) {
-                    $this->dropIndex($helper->indexName($connection, $this->getTable(), [$column], 'trigram_index'));
+                    $this->dropIndex($helper->qualifiedIndexName(
+                        $this->getTable(),
+                        $helper->indexName($connection, $this->getTable(), [$column], 'trigram_index')
+                    ));
                 }
 
                 $this->dropColumn($vectorColumn);
@@ -297,6 +299,22 @@ class SearchableSchema
         $index = strtolower($table.'_'.implode('_', $columns).'_'.$type);
 
         return str_replace(['-', '.'], '_', $index);
+    }
+
+    /**
+     * Qualify the index name with the table's schema so drops do not depend on the search path.
+     *
+     * @param  string  $table
+     * @param  string  $index
+     * @return string
+     */
+    public function qualifiedIndexName($table, $index)
+    {
+        if (! str_contains($table, '.') || str_contains($index, '.')) {
+            return $index;
+        }
+
+        return substr($table, 0, strrpos($table, '.') + 1).$index;
     }
 
     /**

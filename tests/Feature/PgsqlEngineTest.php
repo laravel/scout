@@ -422,6 +422,54 @@ class PgsqlEngineTest extends TestCase
         $this->assertStringNotContainsString('similarity(coalesce(cast("users"."age" as text)', $query->toSql());
     }
 
+    public function test_trigram_columns_excluded_from_the_searchable_payload_are_ignored()
+    {
+        $_ENV['user.toSearchableArray'] = fn () => [
+            'name' => 'Taylor Otwell',
+        ];
+
+        try {
+            $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+            $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name', 'email']);
+
+            $engine = $this->pgsqlEngine(true);
+            $sql = $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'))->toSql();
+
+            $this->assertStringContainsString('("users"."name" % ?)', $sql);
+            $this->assertStringContainsString('similarity(coalesce(cast("users"."name" as text), \'\'), ?)', $sql);
+            $this->assertStringNotContainsString('"users"."email"', $sql);
+
+            $this->app->make('config')->set('scout.pgsql.trigram.columns', ['email']);
+
+            $engine = $this->pgsqlEngine(true);
+            $sql = $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'))->toSql();
+
+            $this->assertStringNotContainsString('% ?', $sql);
+            $this->assertStringNotContainsString('similarity(', $sql);
+            $this->assertStringContainsString('order by ts_rank("users"."search_vector", plainto_tsquery(?::regconfig, ?)) desc', $sql);
+            $this->assertFalse($engine->shouldApplyTrigramThresholdForTest(SearchableUser::search('laravle')));
+        } finally {
+            unset($_ENV['user.toSearchableArray']);
+        }
+    }
+
+    public function test_relevance_ordering_breaks_ties_by_scout_key()
+    {
+        $this->assertStringEndsWith(', "users"."id" desc', $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravel'))->toSql());
+
+        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
+        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
+
+        $this->assertStringEndsWith(', "users"."id" desc', $this->buildOrderedPgsqlSearchQuery(SearchableUser::search('laravle'), true)->toSql());
+    }
+
+    public function test_numeric_queries_outside_the_bigint_range_skip_the_key_predicate()
+    {
+        $this->assertStringContainsString('"users"."id" = ?::bigint', $this->buildPgsqlSearchQuery(SearchableUser::search('9223372036854775807'))->toSql());
+        $this->assertStringNotContainsString('"users"."id" =', $this->buildPgsqlSearchQuery(SearchableUser::search('9223372036854775808'))->toSql());
+        $this->assertStringNotContainsString('"users"."id" =', $this->buildPgsqlSearchQuery(SearchableUser::search('99999999999999999999'))->toSql());
+    }
+
     public function test_trigram_search_rejects_schema_qualified_columns()
     {
         $_ENV['user.toSearchableArray'] = fn () => [
@@ -657,6 +705,11 @@ class InspectablePgsqlEngine extends PgsqlEngine
     public function buildOrderedSearchQueryForTest(Builder $builder)
     {
         return $this->orderSearchQuery($builder, $this->buildSearchQuery($builder));
+    }
+
+    public function shouldApplyTrigramThresholdForTest(Builder $builder)
+    {
+        return $this->shouldApplyTrigramThreshold($builder);
     }
 
     public function appliedThresholds()
