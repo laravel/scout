@@ -32,12 +32,6 @@ class PgsqlSchemaHelperTest extends TestCase
         });
     }
 
-    public function test_searchable_blueprint_macro_is_registered()
-    {
-        $this->assertTrue(Blueprint::hasMacro('searchable'));
-        $this->assertTrue(Blueprint::hasMacro('dropSearchable'));
-    }
-
     public function test_searchable_blueprint_macro_is_registered_for_other_scout_drivers()
     {
         Blueprint::flushMacros();

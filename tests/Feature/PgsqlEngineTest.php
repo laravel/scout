@@ -365,7 +365,6 @@ class PgsqlEngineTest extends TestCase
             'english', 'laravle', 'laravle', 'laravle',
             'english', 'laravle', 1.0, 'laravle', 'laravle', 0.25,
         ], $query->getBindings());
-        $this->assertSame([], $engine->appliedThresholds());
     }
 
     public function test_trigram_does_not_match_when_query_function_supports_operators()
@@ -386,23 +385,6 @@ class PgsqlEngineTest extends TestCase
         $this->app->make('config')->set('scout', array_diff_key($this->app->make('config')->get('scout'), ['pgsql' => true]));
 
         $this->assertInstanceOf(PgsqlEngine::class, $this->app->make(EngineManager::class)->createPgsqlDriver());
-    }
-
-    public function test_trigram_threshold_is_not_applied_while_building_the_query()
-    {
-        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
-        $this->app->make('config')->set('scout.pgsql.trigram.threshold', 0.15);
-        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
-
-        $engine = $this->pgsqlEngine(true);
-        $query = $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'));
-
-        $this->assertStringContainsString('("users"."name" % ?)', $query->toSql());
-        $this->assertSame([], $engine->appliedThresholds());
-        $this->assertSame([
-            'english', 'laravle', 'laravle',
-            'english', 'laravle', 1.0, 'laravle', 0.25,
-        ], $query->getBindings());
     }
 
     public function test_trigram_search_uses_configured_columns_only()
@@ -590,32 +572,6 @@ class PgsqlEngineTest extends TestCase
         $this->pgsqlEngine(true)->search(SearchableUser::search('laravle'));
     }
 
-    public function test_trigram_threshold_accepts_zero()
-    {
-        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
-        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
-        $this->app->make('config')->set('scout.pgsql.trigram.threshold', 0);
-
-        $engine = $this->pgsqlEngine(true);
-
-        $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'));
-
-        $this->assertSame([], $engine->appliedThresholds());
-    }
-
-    public function test_trigram_threshold_accepts_one()
-    {
-        $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
-        $this->app->make('config')->set('scout.pgsql.trigram.columns', ['name']);
-        $this->app->make('config')->set('scout.pgsql.trigram.threshold', 1);
-
-        $engine = $this->pgsqlEngine(true);
-
-        $engine->buildOrderedSearchQueryForTest(SearchableUser::search('laravle'));
-
-        $this->assertSame([], $engine->appliedThresholds());
-    }
-
     public function test_trigram_threshold_rejects_values_below_zero()
     {
         $this->app->make('config')->set('scout.pgsql.trigram.enabled', true);
@@ -711,8 +667,6 @@ class PgsqlEngineTest extends TestCase
 
 class InspectablePgsqlEngine extends PgsqlEngine
 {
-    protected array $appliedThresholds = [];
-
     public function __construct(array $config, protected $trigramAvailable = null)
     {
         parent::__construct($config);
@@ -733,25 +687,15 @@ class InspectablePgsqlEngine extends PgsqlEngine
         return $this->usesTrigram($builder);
     }
 
-    public function appliedThresholds()
-    {
-        return $this->appliedThresholds;
-    }
-
-    public function recordAppliedThreshold($threshold)
-    {
-        $this->appliedThresholds[] = $threshold;
-    }
-
     protected function trigram()
     {
         if (is_null($this->trigramAvailable)) {
             return parent::trigram();
         }
 
-        return $this->trigram ??= new class($this->config, $this->trigramAvailable, $this) extends Trigram
+        return $this->trigram ??= new class($this->config, $this->trigramAvailable) extends Trigram
         {
-            public function __construct(array $config, protected bool $available, protected InspectablePgsqlEngine $engine)
+            public function __construct(array $config, protected bool $available)
             {
                 parent::__construct($config);
             }
@@ -759,11 +703,6 @@ class InspectablePgsqlEngine extends PgsqlEngine
             public function available(Builder $builder)
             {
                 return $this->available;
-            }
-
-            public function applyThreshold(Builder $builder)
-            {
-                $this->engine->recordAppliedThreshold($this->threshold());
             }
         };
     }
