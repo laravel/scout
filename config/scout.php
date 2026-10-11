@@ -103,6 +103,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Database Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure your database engine settings. Settings are keyed
+    | by database driver and only apply to models on a matching connection.
+    | Options given to #[SearchUsingFullText] override any of these values.
+    |
+    | PostgreSQL: "language", "mode" (plain, phrase, websearch), "rank"
+    |
+    */
+
+    'database' => [
+        'pgsql' => [
+            // 'language' => 'english',
+            // 'mode' => 'websearch',
+            // 'rank' => 'ts_rank_cd',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Algolia Configuration
     |--------------------------------------------------------------------------
     |

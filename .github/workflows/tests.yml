@@ -158,3 +158,63 @@ jobs:
           TYPESENSE_PORT: 8108
           TYPESENSE_API_KEY: 'masterKey'
           DB_CONNECTION: 'testing'
+
+  tests-using-postgres:
+    runs-on: ubuntu-22.04
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: scout_testing
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - php: '8.0'
+            laravel: 9
+          - php: 8.2
+            laravel: 10
+          - php: 8.3
+            laravel: 11
+          - php: 8.4
+            laravel: 12
+          - php: 8.4
+            laravel: 13
+
+    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }} using PostgreSQL
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pdo_pgsql
+          ini-values: error_reporting=E_ALL
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: |
+          composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts:^${{ matrix.laravel }}"
+
+      - name: Execute tests
+        run: vendor/bin/phpunit --group pgsql
+        env:
+          PGSQL_TEST_DATABASE: scout_testing
+          PGSQL_TEST_PASSWORD: postgres
