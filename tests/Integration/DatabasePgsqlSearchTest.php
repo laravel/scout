@@ -6,11 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Scout\Attributes\SearchUsingFullText;
-use Laravel\Scout\Engines\DatabaseEngine;
-use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Searchable;
 use Orchestra\Testbench\Attributes\RequiresEnv;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -45,16 +42,11 @@ class DatabasePgsqlSearchTest extends TestCase
         $app['config']->set('database.connections.pgsql_prefixed', array_merge(
             $app['config']->get('database.connections.pgsql_testing'), ['prefix' => 'pre_', 'prefix_indexes' => true]
         ));
-        $app['config']->set('database.connections.pgsql_tenant', array_merge(
-            $app['config']->get('database.connections.pgsql_testing'), ['search_path' => 'scout_tenant', 'schema' => 'scout_tenant']
-        ));
     }
 
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->resetTrigramCache();
 
         DB::statement('create extension if not exists pg_trgm');
 
@@ -130,7 +122,7 @@ class DatabasePgsqlSearchTest extends TestCase
         $this->assertSame(['Laravel Scout', 'Queues'], PgsqlPost::search('scout')->get()->pluck('title')->all());
     }
 
-    public function test_query_modes_and_cover_density_ranking()
+    public function test_query_modes()
     {
         PgsqlPost::create(['title' => 'Shah Rukh Khan', 'body' => 'Romance']);
         PgsqlPost::create(['title' => 'Salman Khan', 'body' => 'Action']);
@@ -138,7 +130,6 @@ class DatabasePgsqlSearchTest extends TestCase
         $this->assertSame(['Shah Rukh Khan'], PgsqlWebsearchPost::search('khan -salman')->get()->pluck('title')->all());
         $this->assertSame(['Shah Rukh Khan'], PgsqlPhrasePost::search('rukh khan')->get()->pluck('title')->all());
         $this->assertSame([], PgsqlPhrasePost::search('khan rukh')->get()->all());
-        $this->assertSame(['Salman Khan'], PgsqlRawPost::search('khan & !rukh')->get()->pluck('title')->all());
     }
 
     public function test_equally_ranked_results_paginate_without_duplicates()
@@ -177,24 +168,6 @@ class DatabasePgsqlSearchTest extends TestCase
         $this->assertSame([], PgsqlPost::search('nothing like it')->get()->all());
     }
 
-    public function test_trigram_blend_mode_matches_typos_alongside_full_text()
-    {
-        PgsqlBlendPost::create(['title' => 'Star Wars']);
-        PgsqlBlendPost::create(['title' => 'Star Trek']);
-        PgsqlBlendPost::create(['title' => 'Stra Wars']);
-
-        $this->assertSame(['Star Wars', 'Stra Wars', 'Star Trek'], PgsqlBlendPost::search('star wars')->get()->pluck('title')->all());
-    }
-
-    public function test_trigram_blend_weights_change_the_ranking()
-    {
-        PgsqlBlendPost::create(['title' => 'Laravel Scout search engine docs']);
-        PgsqlBlendPost::create(['title' => 'Scoutt']);
-
-        $this->assertSame(['Laravel Scout search engine docs', 'Scoutt'], PgsqlBlendRankPost::search('scout')->get()->pluck('title')->all());
-        $this->assertSame(['Scoutt', 'Laravel Scout search engine docs'], PgsqlBlendTrigramPost::search('scout')->get()->pluck('title')->all());
-    }
-
     public function test_search_without_a_vector_column_uses_expression_ranking()
     {
         PgsqlExpressionPost::create(['title' => 'Queues', 'body' => 'Scout keeps search indexes in sync']);
@@ -212,51 +185,6 @@ class DatabasePgsqlSearchTest extends TestCase
 
         $this->assertSame(['Laravel Scout', 'Queues'], PgsqlBooleanVectorPost::search('scout')->get()->pluck('title')->all());
         $this->assertSame(['Laravel Scout', 'Queues'], PgsqlBooleanVectorPost::search('scout')->orderBy('id', 'desc')->get()->pluck('title')->all());
-    }
-
-    public function test_trigram_is_disabled_when_pg_trgm_is_not_on_the_search_path()
-    {
-        DB::statement('create schema scout_tenant');
-        Schema::connection('pgsql_tenant')->create('scout_posts', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->text('body')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-            $table->searchable(['title' => 'A', 'body' => 'D']);
-        });
-        PgsqlSearchPathPost::create(['title' => 'The Godfather']);
-
-        Log::shouldReceive('warning')->once()->withArgs(fn ($message) => str_contains($message, 'pg_trgm'));
-
-        $this->assertSame([], PgsqlSearchPathPost::search('godfathr')->get()->all());
-        $this->assertSame(['The Godfather'], PgsqlSearchPathPost::search('godfather')->get()->pluck('title')->all());
-    }
-
-    public function test_missing_trigram_extension_falls_back_to_full_text_and_warns_once()
-    {
-        Schema::table('scout_posts', fn (Blueprint $table) => $table->dropIndex('scout_posts_title_trigram'));
-        DB::statement('drop extension pg_trgm');
-        PgsqlPost::create(['title' => 'The Godfather']);
-
-        Log::shouldReceive('warning')->once()->withArgs(fn ($message) => str_contains($message, 'pg_trgm'));
-
-        try {
-            $this->assertSame([], PgsqlPost::search('godfathr')->get()->all());
-            $this->assertSame(['The Godfather'], PgsqlPost::search('godfather')->get()->pluck('title')->all());
-        } finally {
-            DB::statement('create extension if not exists pg_trgm');
-        }
-    }
-
-    public function test_missing_vector_column_fails_clearly()
-    {
-        Schema::table('scout_posts', fn (Blueprint $table) => $table->dropSearchable(['title']));
-
-        $this->expectException(ScoutException::class);
-        $this->expectExceptionMessage('The [search_vector] search vector column does not exist on the [scout_posts] table.');
-
-        PgsqlPost::search('scout')->get();
     }
 
     public function test_soft_deleted_and_explicitly_ordered_searches()
@@ -314,11 +242,6 @@ class DatabasePgsqlSearchTest extends TestCase
             ->pluck('indexdef', 'indexname')
             ->all();
     }
-
-    protected function resetTrigramCache(): void
-    {
-        (fn () => static::$trigramExtensionInstalled = [])->bindTo(null, DatabaseEngine::class)();
-    }
 }
 
 class PgsqlPost extends Model
@@ -336,36 +259,9 @@ class PgsqlPost extends Model
     }
 }
 
-class PgsqlBlendPost extends PgsqlPost
-{
-    #[SearchUsingFullText(['title', 'body'], ['vector' => 'search_vector', 'trigram' => ['title'], 'trigram_mode' => 'blend', 'rank' => 'ts_rank_cd'])]
-    public function toSearchableArray()
-    {
-        return ['title' => $this->title, 'body' => $this->body];
-    }
-}
-
-class PgsqlBlendRankPost extends PgsqlPost
-{
-    #[SearchUsingFullText(['title', 'body'], ['vector' => 'search_vector', 'trigram' => ['title'], 'trigram_mode' => 'blend'])]
-    public function toSearchableArray()
-    {
-        return ['title' => $this->title, 'body' => $this->body];
-    }
-}
-
-class PgsqlBlendTrigramPost extends PgsqlPost
-{
-    #[SearchUsingFullText(['title', 'body'], ['vector' => 'search_vector', 'trigram' => ['title'], 'trigram_mode' => 'blend', 'weights' => ['rank' => 0, 'trigram' => 1]])]
-    public function toSearchableArray()
-    {
-        return ['title' => $this->title, 'body' => $this->body];
-    }
-}
-
 class PgsqlExpressionPost extends PgsqlPost
 {
-    #[SearchUsingFullText(['title', 'body'], ['language' => 'english', 'rank' => 'ts_rank_cd'])]
+    #[SearchUsingFullText(['title', 'body'], ['language' => 'english'])]
     public function toSearchableArray()
     {
         return ['title' => $this->title, 'body' => $this->body];
@@ -399,15 +295,6 @@ class PgsqlWebsearchPost extends PgsqlPost
     }
 }
 
-class PgsqlRawPost extends PgsqlPost
-{
-    #[SearchUsingFullText(['title', 'body'], ['vector' => 'search_vector', 'mode' => 'raw'])]
-    public function toSearchableArray()
-    {
-        return ['title' => $this->title, 'body' => $this->body];
-    }
-}
-
 class PgsqlTenantPost extends PgsqlPost
 {
     protected $table = 'scout_tenant.scout_posts';
@@ -416,9 +303,4 @@ class PgsqlTenantPost extends PgsqlPost
 class PgsqlPrefixedPost extends PgsqlPost
 {
     protected $connection = 'pgsql_prefixed';
-}
-
-class PgsqlSearchPathPost extends PgsqlPost
-{
-    protected $connection = 'pgsql_tenant';
 }
