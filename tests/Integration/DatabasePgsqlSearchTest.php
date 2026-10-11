@@ -204,6 +204,16 @@ class DatabasePgsqlSearchTest extends TestCase
         $this->assertSame(['Laravel Scout', 'Queues'], PgsqlExpressionPost::search('scout')->get()->pluck('title')->all());
     }
 
+    public function test_boolean_vector_option_searches_tsvector_columns_directly()
+    {
+        PgsqlBooleanVectorPost::create(['title' => 'Queues', 'body' => 'Scout keeps search indexes in sync']);
+        PgsqlBooleanVectorPost::create(['title' => 'Laravel Scout', 'body' => null]);
+        PgsqlBooleanVectorPost::create(['title' => 'Horizon', 'body' => 'Queue dashboard']);
+
+        $this->assertSame(['Laravel Scout', 'Queues'], PgsqlBooleanVectorPost::search('scout')->get()->pluck('title')->all());
+        $this->assertSame(['Laravel Scout', 'Queues'], PgsqlBooleanVectorPost::search('scout')->orderBy('id', 'desc')->get()->pluck('title')->all());
+    }
+
     public function test_trigram_is_disabled_when_pg_trgm_is_not_on_the_search_path()
     {
         DB::statement('create schema scout_tenant');
@@ -359,6 +369,15 @@ class PgsqlExpressionPost extends PgsqlPost
     public function toSearchableArray()
     {
         return ['title' => $this->title, 'body' => $this->body];
+    }
+}
+
+class PgsqlBooleanVectorPost extends PgsqlPost
+{
+    #[SearchUsingFullText(['search_vector'], ['vector' => true])]
+    public function toSearchableArray()
+    {
+        return ['search_vector' => null];
     }
 }
 

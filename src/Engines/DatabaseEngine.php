@@ -442,7 +442,8 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     {
         $vector = $this->getFullTextOptions($builder)['vector'] ?? null;
 
-        return $vector && $builder->modelConnectionType() === 'pgsql' ? $vector : null;
+        // A boolean "vector" keeps Laravel's meaning: the full-text columns are tsvectors themselves...
+        return is_string($vector) && $vector !== '' && $builder->modelConnectionType() === 'pgsql' ? $vector : null;
     }
 
     /**
@@ -542,10 +543,12 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             $vectors = $this->wrapColumn($builder, $vectorColumn);
             $bindings = [];
         } else {
-            $vectors = collect($this->getFullTextColumns($builder))->map(function ($column) use ($builder) {
-                return sprintf("coalesce(to_tsvector(?::regconfig, %s), ''::tsvector)", $this->wrapColumn($builder, $column));
+            $isVector = ! empty($options['vector']);
+
+            $vectors = collect($this->getFullTextColumns($builder))->map(function ($column) use ($builder, $isVector) {
+                return sprintf($isVector ? "coalesce(%s, ''::tsvector)" : "coalesce(to_tsvector(?::regconfig, %s), ''::tsvector)", $this->wrapColumn($builder, $column));
             })->implode(' || ');
-            $bindings = array_fill(0, count($this->getFullTextColumns($builder)), $options['language'] ?? 'english');
+            $bindings = $isVector ? [] : array_fill(0, count($this->getFullTextColumns($builder)), $options['language'] ?? 'english');
         }
 
         $score = sprintf('%s(%s, %s)', $rank, $vectors, $this->tsQueryExpression($builder));
