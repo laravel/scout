@@ -3,33 +3,35 @@
 namespace Laravel\Scout\Tests\Feature;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 use Laravel\Scout\Attributes\SearchUsingFullText;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\DatabaseEngine;
+use Laravel\Scout\SearchableSchema;
 use Orchestra\Testbench\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use RuntimeException;
 
 class DatabaseEngineFullTextOptionsTest extends TestCase
 {
-    public function test_config_defaults_are_overridden_by_attribute_options()
+    public function test_options_on_other_drivers_are_passed_through_unvalidated()
     {
-        config(['scout.database.pgsql' => ['language' => 'simple', 'rank' => 'ts_rank_cd', 'mode' => 'phrase']]);
-
         $this->assertSame(
-            ['language' => 'simple', 'rank' => 'ts_rank_cd', 'mode' => 'websearch', 'vector' => 'search_vector'],
-            $this->fullTextOptions(new FullTextOptionsModel)
+            ['mode' => 'natural', 'rank' => 'foo', 'expand' => true],
+            $this->fullTextOptions(new LegacyFullTextOptionsModel)
         );
     }
 
-    public function test_config_defaults_only_apply_to_postgres_connections()
+    public function test_searchable_schema_requires_postgres()
     {
-        config(['scout.database.pgsql' => ['language' => 'simple']]);
+        SearchableSchema::register();
 
-        $this->assertSame(
-            ['mode' => 'websearch', 'vector' => 'search_vector'],
-            $this->fullTextOptions((new FullTextOptionsModel)->setConnection('testing'))
-        );
+        // Laravel's native tsvector type throws its own message on newer versions...
+        $this->expectException(RuntimeException::class);
+
+        Schema::connection('testing')->create('posts', fn (Blueprint $table) => $table->searchable(['title']));
     }
 
     /** @dataProvider invalidOptions */
@@ -45,11 +47,10 @@ class DatabaseEngineFullTextOptionsTest extends TestCase
     public static function invalidOptions(): array
     {
         return [
-            'unknown key' => [['trigram_mod' => 'blend'], 'unknown [trigram_mod]'],
             'rank' => [['rank' => 'foo'], '[rank] must be one of'],
             'trigram mode' => [['trigram_mode' => 'always'], '[trigram_mode] must be one of'],
             'weights' => [['weights' => ['trigam' => 1]], '[weights] accepts'],
-            'raw without vector' => [['mode' => 'raw'], '[mode] "raw" requires the [vector] option'],
+            'trigram with websearch' => [['mode' => 'websearch', 'trigram' => ['title']], '[trigram] requires the "plain" [mode]'],
         ];
     }
 
@@ -59,11 +60,11 @@ class DatabaseEngineFullTextOptionsTest extends TestCase
     }
 }
 
-class FullTextOptionsModel extends Model
+class LegacyFullTextOptionsModel extends Model
 {
-    protected $connection = 'pgsql';
+    protected $connection = 'testing';
 
-    #[SearchUsingFullText(['title'], ['mode' => 'websearch', 'vector' => 'search_vector'])]
+    #[SearchUsingFullText(['title'], ['mode' => 'natural', 'rank' => 'foo', 'expand' => true])]
     public function toSearchableArray()
     {
         return [];

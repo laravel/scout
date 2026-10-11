@@ -70,6 +70,7 @@ class SearchableSchema
     /**
      * Build the weighted tsvector expression for the given columns.
      *
+     * @internal
      * @param  array<int|string, string>  $columns  Column names, optionally keyed by column with an A-D weight value.
      */
     public static function vectorExpression(array $columns, string $language): string
@@ -97,6 +98,8 @@ class SearchableSchema
 
     /**
      * Ensure the given column name is a plain identifier.
+     *
+     * @internal
      */
     public static function ensureValidIdentifier(string $column): void
     {
@@ -107,6 +110,8 @@ class SearchableSchema
 
     /**
      * Ensure the given grammar targets PostgreSQL.
+     *
+     * @internal
      */
     public static function ensurePostgres($grammar): void
     {

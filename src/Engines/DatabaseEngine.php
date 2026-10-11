@@ -32,7 +32,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     protected $searchingWithTrigramFallback = false;
 
     /**
-     * The pg_trgm extension availability, keyed by connection name.
+     * The pg_trgm extension availability, keyed by connection name, database, and search path.
      *
      * @var array<string, bool>
      */
@@ -326,12 +326,10 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      * @param  \Closure  $search
      * @param  \Closure  $isEmpty
      * @return mixed
-     *
-     * @throws \Laravel\Scout\Exceptions\ScoutException
      */
     protected function searchWithTrigramFallback(Builder $builder, Closure $search, Closure $isEmpty)
     {
-        try {
+        return $this->rescueMissingVectorColumn($builder, function () use ($builder, $search, $isEmpty) {
             $results = $search();
 
             if (! $this->shouldFallbackToTrigram($builder) || ! $isEmpty($results)) {
@@ -345,6 +343,22 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             } finally {
                 $this->searchingWithTrigramFallback = false;
             }
+        });
+    }
+
+    /**
+     * Run the given search, explaining a missing search vector column.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  \Closure  $search
+     * @return mixed
+     *
+     * @throws \Laravel\Scout\Exceptions\ScoutException
+     */
+    protected function rescueMissingVectorColumn(Builder $builder, Closure $search)
+    {
+        try {
+            return $search();
         } catch (QueryException $e) {
             // undefined_column: point developers at the migration helper instead of a raw SQL error...
             if (($vectorColumn = $this->getVectorColumn($builder)) &&
@@ -391,29 +405,31 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function trigramIsSupported(Builder $builder): bool
     {
-        $options = $this->getFullTextOptions($builder);
-
-        // Operator-aware modes (phrase, websearch, raw) must not have their negations bypassed by fuzzy matches...
         return ! blank($builder->query) &&
-            ! empty($options['trigram']) &&
-            $this->tsQueryFunction($builder) === 'plainto_tsquery' &&
+            ! empty($this->getFullTextOptions($builder)['trigram']) &&
             $builder->modelConnectionType() === 'pgsql' &&
             $this->trigramExtensionIsInstalled($builder);
     }
 
     /**
-     * Determine if the pg_trgm extension is installed on the model's connection.
+     * Determine if the pg_trgm functions are reachable on the model's connection search path.
      */
     protected function trigramExtensionIsInstalled(Builder $builder): bool
     {
         $connection = $builder->model->getConnection();
 
-        // ponytail: cached for the life of the process, so installing pg_trgm later needs a worker restart...
-        return static::$trigramExtensionInstalled[$connection->getName()] ??= tap(
-            (bool) $connection->selectOne("select exists(select 1 from pg_extension where extname = 'pg_trgm') as installed")->installed,
+        // Cached per process, so installing pg_trgm later requires restarting long-running workers...
+        $key = implode('|', [
+            $connection->getName(),
+            $connection->getDatabaseName(),
+            json_encode($connection->getConfig('search_path') ?? $connection->getConfig('schema')),
+        ]);
+
+        return static::$trigramExtensionInstalled[$key] ??= tap(
+            (bool) $connection->selectOne("select to_regprocedure('similarity(text,text)') is not null as installed")->installed,
             function ($installed) use ($connection) {
                 if (! $installed) {
-                    Log::warning("Scout trigram search is disabled because the pg_trgm extension is not installed on the [{$connection->getName()}] connection.");
+                    Log::warning("Scout trigram search is disabled because the pg_trgm extension is not available on the [{$connection->getName()}] connection's search path.");
                 }
             }
         );
@@ -434,7 +450,15 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function tsQueryFunction(Builder $builder): string
     {
-        return match ($this->getFullTextOptions($builder)['mode'] ?? null) {
+        return $this->tsQueryFunctionFor($this->getFullTextOptions($builder));
+    }
+
+    /**
+     * Get the tsquery function for the given full-text options.
+     */
+    protected function tsQueryFunctionFor(array $options): string
+    {
+        return match ($options['mode'] ?? null) {
             'phrase' => 'phraseto_tsquery',
             'websearch' => 'websearch_to_tsquery',
             'raw' => 'to_tsquery',
@@ -482,7 +506,9 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
         })->when(! $this->getFullTextColumns($builder), function ($query) use ($builder) {
             $query->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
         })->when($this->shouldOrderByRelevance($builder), function ($query) use ($builder) {
-            $this->orderByRelevance($builder, $query)->orderBy($builder->model->getQualifiedKeyName(), 'desc');
+            $this->orderByRelevance($builder, $query);
+
+            $query->orderBy($builder->model->getQualifiedKeyName(), 'desc');
         });
     }
 
@@ -652,43 +678,36 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             $options = array_merge($options, Arr::wrap($arguments));
         }
 
-        if ($builder->model->getConnection()->getDriverName() === 'pgsql') {
-            $options = array_merge(config('scout.database.pgsql', []), $options);
+        if ($builder->modelConnectionType() === 'pgsql') {
+            $this->ensureValidFullTextOptions($options);
         }
-
-        $this->ensureValidFullTextOptions($options);
 
         return $options;
     }
 
     /**
-     * Ensure the given full-text options are supported.
+     * Ensure the given PostgreSQL full-text options are supported.
      *
      * @throws \InvalidArgumentException
      */
     protected function ensureValidFullTextOptions(array $options): void
     {
-        $fail = fn ($message) => throw new InvalidArgumentException("Invalid full-text search option: {$message}.");
-
-        if ($unknown = array_diff(array_keys($options), ['language', 'mode', 'expanded', 'vector', 'rank', 'trigram', 'trigram_mode', 'weights'])) {
-            $fail('unknown ['.implode(', ', $unknown).']');
+        if (isset($options['rank']) && ! in_array($options['rank'], ['ts_rank', 'ts_rank_cd'], true)) {
+            throw new InvalidArgumentException('Invalid full-text search option: [rank] must be one of [ts_rank, ts_rank_cd].');
         }
 
-        foreach (['mode' => ['plain', 'phrase', 'websearch', 'raw', 'boolean'], 'rank' => ['ts_rank', 'ts_rank_cd'], 'trigram_mode' => ['fallback', 'blend']] as $key => $allowed) {
-            if (isset($options[$key]) && ! in_array($options[$key], $allowed, true)) {
-                $fail("[{$key}] must be one of [".implode(', ', $allowed).']');
-            }
-        }
-
-        // Laravel < 12.50 has no "raw" full-text mode, so only the vector path can run it consistently...
-        if (($options['mode'] ?? null) === 'raw' && ! isset($options['vector'])) {
-            $fail('[mode] "raw" requires the [vector] option');
+        if (isset($options['trigram_mode']) && ! in_array($options['trigram_mode'], ['fallback', 'blend'], true)) {
+            throw new InvalidArgumentException('Invalid full-text search option: [trigram_mode] must be one of [fallback, blend].');
         }
 
         foreach ($options['weights'] ?? [] as $key => $weight) {
             if (! in_array($key, ['rank', 'trigram'], true) || ! is_numeric($weight)) {
-                $fail('[weights] accepts numeric [rank] and [trigram] values');
+                throw new InvalidArgumentException('Invalid full-text search option: [weights] accepts numeric [rank] and [trigram] values.');
             }
+        }
+
+        if (! empty($options['trigram']) && $this->tsQueryFunctionFor($options) !== 'plainto_tsquery') {
+            throw new InvalidArgumentException('Invalid full-text search option: [trigram] requires the "plain" [mode].');
         }
     }
 
