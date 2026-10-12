@@ -524,7 +524,6 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             return $query->orderByRaw("{$score} desc", $bindings);
         }
 
-        // Trigram similarity only nudges the order, so full-text matches stay on top...
         $similarity = collect($trigramColumns)->map(fn ($column) => "similarity({$this->wrapColumn($builder, $column)}, ?)")->implode(', ');
 
         $score = "{$score} + (coalesce(greatest({$similarity}), 0) * 0.25)";
