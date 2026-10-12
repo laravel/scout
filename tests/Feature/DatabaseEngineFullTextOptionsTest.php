@@ -46,7 +46,8 @@ class DatabaseEngineFullTextOptionsTest extends TestCase
     public static function invalidOptions(): array
     {
         return [
-            'trigram with websearch' => [['mode' => 'websearch', 'trigram' => ['title']], '[trigram] requires the "plain" [mode]'],
+            'rank' => [['rank' => 'pg_sleep(1) + ts_rank'], '[rank] must be one of'],
+            'trigram mode' => [['trigram_mode' => 'off'], '[trigram_mode] must be one of'],
         ];
     }
 

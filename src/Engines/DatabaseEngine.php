@@ -5,7 +5,6 @@ namespace Laravel\Scout\Engines;
 use Closure;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\LazyCollection;
 use InvalidArgumentException;
 use Laravel\Scout\Attributes\SearchUsingFullText;
@@ -15,7 +14,9 @@ use Laravel\Scout\Contracts\PaginatesEloquentModelsUsingDatabase;
 use Laravel\Scout\Contracts\SupportsSemanticSearch;
 use Laravel\Scout\Engines\Concerns\PaginatesDatabaseVectorSearch;
 use Laravel\Scout\Engines\Concerns\PerformsDatabaseVectorSearch;
+use Laravel\Scout\SearchableSchema;
 use ReflectionMethod;
+use RuntimeException;
 
 class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatabase, SupportsSemanticSearch
 {
@@ -23,9 +24,9 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     use PerformsDatabaseVectorSearch;
 
     /**
-     * The pg_trgm extension availability, keyed by connection name, database, and search path.
+     * The connections known to have the pg_trgm extension, keyed by connection name, database, and search path.
      *
-     * @var array<string, bool>
+     * @var array<string, true>
      */
     protected static $trigramExtensionInstalled = [];
 
@@ -188,8 +189,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
         return $this->searchWithTrigramFallback($builder, function (Builder $builder) use ($perPage, $pageName, $page) {
             return $this->orderSearchQuery($builder, $this->buildSearchQuery($builder))
                 ->simplePaginate($perPage, ['*'], $pageName, $page);
-        }, fn ($paginator) => $paginator->isEmpty() &&
-            ($paginator->onFirstPage() || ! $this->buildSearchQuery($builder)->exists()));
+        }, fn ($paginator) => $paginator->isEmpty());
     }
 
     /**
@@ -296,6 +296,11 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                         $this->tsQueryBindings($builder)
                     );
                 }
+            } elseif (count($fullTextColumns) > 0 && $connectionType === 'pgsql') {
+                $query->orWhereRaw(
+                    '('.collect($fullTextColumns)->map(fn ($column) => $this->tsVectorExpression($builder, $column))->implode(' || ').") @@ {$this->tsQueryExpression($builder)}",
+                    $this->tsQueryBindings($builder)
+                );
             } elseif (count($fullTextColumns) > 0) {
                 $query->orWhereFullText(
                     array_map(fn ($column) => $builder->model->qualifyColumn($column), $fullTextColumns),
@@ -320,9 +325,15 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function searchWithTrigramFallback(Builder $builder, Closure $search, Closure $isEmpty)
     {
+        if ($builder->modelConnectionType() === 'pgsql') {
+            $this->ensureValidFullTextOptions($this->getFullTextOptions($builder));
+        }
+
+        $fallback = $this->shouldFallbackToTrigram($builder);
+
         $results = $search($builder);
 
-        if (! $this->shouldFallbackToTrigram($builder) || ! $isEmpty($results)) {
+        if (! $fallback || ! $isEmpty($results)) {
             return $results;
         }
 
@@ -337,7 +348,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
         $options = $this->getFullTextOptions($builder);
 
         return ($options['trigram_mode'] ?? 'fallback') === 'fallback' &&
-            $this->trigramIsSupported($builder);
+            $this->usesTrigram($builder);
     }
 
     /**
@@ -347,31 +358,35 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     {
         $options = $this->getFullTextOptions($builder);
 
-        if (($options['trigram_mode'] ?? 'fallback') === 'fallback') {
+        if (($options['trigram_mode'] ?? 'fallback') !== 'blend') {
             return [];
         }
 
-        return $this->trigramIsSupported($builder) ? Arr::wrap($options['trigram']) : [];
+        return $this->usesTrigram($builder) ? Arr::wrap($options['trigram']) : [];
     }
 
     /**
-     * Determine if trigram matching is configured and usable for the given search.
+     * Determine if the given search should use trigram matching.
      */
-    protected function trigramIsSupported(Builder $builder): bool
+    protected function usesTrigram(Builder $builder): bool
     {
-        $options = $this->getFullTextOptions($builder);
+        if (blank($builder->query) ||
+            empty($this->getFullTextOptions($builder)['trigram']) ||
+            $builder->modelConnectionType() !== 'pgsql') {
+            return false;
+        }
 
-        return ! blank($builder->query) &&
-            ! empty($options['trigram']) &&
-            $this->tsQueryFunction($options) === 'plainto_tsquery' &&
-            $builder->modelConnectionType() === 'pgsql' &&
-            $this->trigramExtensionIsInstalled($builder);
+        $this->ensureTrigramExtensionIsInstalled($builder);
+
+        return true;
     }
 
     /**
-     * Determine if the pg_trgm functions are reachable on the model's connection search path.
+     * Ensure the pg_trgm functions are reachable on the model's connection search path.
+     *
+     * @throws \RuntimeException
      */
-    protected function trigramExtensionIsInstalled(Builder $builder): bool
+    protected function ensureTrigramExtensionIsInstalled(Builder $builder): void
     {
         $connection = $builder->model->getConnection();
 
@@ -382,16 +397,14 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
         ]);
 
         if (isset(static::$trigramExtensionInstalled[$key])) {
-            return static::$trigramExtensionInstalled[$key];
+            return;
         }
 
-        $installed = (bool) $connection->selectOne("select to_regprocedure('similarity(text,text)') is not null as installed")->installed;
-
-        if (! $installed) {
-            Log::warning("Scout trigram search is disabled because the pg_trgm extension is not available on the [{$connection->getName()}] connection's search path.");
+        if (! $connection->selectOne("select to_regprocedure('similarity(text,text)') is not null as installed")->installed) {
+            throw new RuntimeException("Scout trigram search requires the pg_trgm extension on the [{$connection->getName()}] connection's search path.");
         }
 
-        return static::$trigramExtensionInstalled[$key] = $installed;
+        static::$trigramExtensionInstalled[$key] = true;
     }
 
     /**
@@ -403,16 +416,19 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     }
 
     /**
-     * Get the tsquery function for the given full-text options.
+     * Get the tsvector SQL expression for the given full-text column.
      */
-    protected function tsQueryFunction(array $options): string
+    protected function tsVectorExpression(Builder $builder, string $column): string
     {
-        return match ($options['mode'] ?? null) {
-            'phrase' => 'phraseto_tsquery',
-            'websearch' => 'websearch_to_tsquery',
-            'raw' => 'to_tsquery',
-            default => 'plainto_tsquery',
-        };
+        if ($this->searchesStoredVectors($builder)) {
+            return $this->wrapColumn($builder, $column);
+        }
+
+        $language = $this->getFullTextOptions($builder)['language'] ?? 'english';
+
+        SearchableSchema::ensureValidLanguage($language);
+
+        return "to_tsvector('{$language}', {$this->wrapColumn($builder, $column)})";
     }
 
     /**
@@ -420,7 +436,14 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function tsQueryExpression(Builder $builder): string
     {
-        return "{$this->tsQueryFunction($this->getFullTextOptions($builder))}(?::regconfig, ?)";
+        $function = match ($this->getFullTextOptions($builder)['mode'] ?? null) {
+            'phrase' => 'phraseto_tsquery',
+            'websearch' => 'websearch_to_tsquery',
+            'raw' => 'to_tsquery',
+            default => 'plainto_tsquery',
+        };
+
+        return "{$function}(?::regconfig, ?)";
     }
 
     /**
@@ -490,20 +513,12 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             default => 'ts_rank',
         };
 
-        $columns = $this->getFullTextColumns($builder);
-
-        if (! empty($options['vector'])) {
-            $vector = "coalesce(%s, ''::tsvector)";
-            $bindings = [];
-        } else {
-            $vector = "coalesce(to_tsvector(?::regconfig, %s), ''::tsvector)";
-            $bindings = array_fill(0, count($columns), $options['language'] ?? 'english');
-        }
-
-        $vectors = collect($columns)->map(fn ($column) => sprintf($vector, $this->wrapColumn($builder, $column)))->implode(' || ');
+        $vectors = collect($this->getFullTextColumns($builder))
+            ->map(fn ($column) => "coalesce({$this->tsVectorExpression($builder, $column)}, ''::tsvector)")
+            ->implode(' || ');
 
         $score = "{$rank}({$vectors}, {$this->tsQueryExpression($builder)})";
-        $bindings = array_merge($bindings, $this->tsQueryBindings($builder));
+        $bindings = $this->tsQueryBindings($builder);
 
         $trigramColumns = $this->getTrigramColumns($builder);
 
@@ -511,13 +526,10 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             return $query->orderByRaw("{$score} desc", $bindings);
         }
 
-        $score = sprintf(
-            '(%s * %F) + (coalesce(greatest(%s), 0) * %F)',
-            $score,
-            (float) ($options['weights']['rank'] ?? 1.0),
-            collect($trigramColumns)->map(fn ($column) => "similarity({$this->wrapColumn($builder, $column)}, ?)")->implode(', '),
-            (float) ($options['weights']['trigram'] ?? 0.25),
-        );
+        // Trigram similarity only nudges the order, so full-text matches stay on top...
+        $similarity = collect($trigramColumns)->map(fn ($column) => "similarity({$this->wrapColumn($builder, $column)}, ?)")->implode(', ');
+
+        $score = "{$score} + (coalesce(greatest({$similarity}), 0) * 0.25)";
 
         $bindings = array_merge($bindings, array_fill(0, count($trigramColumns), $builder->query));
 
@@ -637,11 +649,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             $options = array_merge($options, Arr::wrap($arguments));
         }
 
-        if ($builder->modelConnectionType() === 'pgsql') {
-            $this->ensureValidFullTextOptions($options);
-        }
-
-        return array_merge($options, $builder->options);
+        return array_merge($options, Arr::only($builder->options, ['mode', 'language', 'trigram', 'trigram_mode', 'rank', 'expanded']));
     }
 
     /**
@@ -657,16 +665,6 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
 
         if (isset($options['trigram_mode']) && ! in_array($options['trigram_mode'], ['fallback', 'blend'], true)) {
             throw new InvalidArgumentException('Invalid full-text search option: [trigram_mode] must be one of [fallback, blend].');
-        }
-
-        foreach ($options['weights'] ?? [] as $key => $weight) {
-            if (! in_array($key, ['rank', 'trigram'], true) || ! is_numeric($weight)) {
-                throw new InvalidArgumentException('Invalid full-text search option: [weights] accepts numeric [rank] and [trigram] values.');
-            }
-        }
-
-        if (! empty($options['trigram']) && $this->tsQueryFunction($options) !== 'plainto_tsquery') {
-            throw new InvalidArgumentException('Invalid full-text search option: [trigram] requires the "plain" [mode].');
         }
     }
 

@@ -28,10 +28,9 @@ class SearchUsingFullText
      *     mode?: 'plain'|'phrase'|'websearch'|'raw'|'natural'|'boolean',
      *     language?: string,
      *     vector?: bool,
-     *     trigram?: array<int, string>,
+     *     trigram?: string|array<int, string>,
      *     trigram_mode?: 'fallback'|'blend',
      *     rank?: 'ts_rank'|'ts_rank_cd',
-     *     weights?: array{rank?: float|int, trigram?: float|int},
      *     expanded?: bool,
      *     ...
      * }  $options

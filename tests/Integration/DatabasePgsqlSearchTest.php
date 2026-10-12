@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use InvalidArgumentException;
 use Laravel\Scout\Attributes\SearchUsingFullText;
 use Laravel\Scout\Searchable;
 use Orchestra\Testbench\Attributes\RequiresEnv;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use PHPUnit\Framework\Attributes\Group;
+use RuntimeException;
 
 /**
  * @group pgsql
@@ -132,17 +134,66 @@ class DatabasePgsqlSearchTest extends TestCase
         $this->assertSame([], PgsqlPhrasePost::search('khan rukh')->get()->all());
     }
 
-    public function test_per_query_mode_overrides_the_model_mode_and_skips_the_trigram_fallback()
+    public function test_per_query_options_override_the_model_options()
     {
         PgsqlPost::create(['title' => 'Shah Rukh Khan', 'body' => 'Romance']);
         PgsqlPost::create(['title' => 'Salman Khan', 'body' => 'Action']);
 
         $this->assertSame(['Shah Rukh Khan'], PgsqlPost::search('khan -salman')->options(['mode' => 'websearch'])->get()->pluck('title')->all());
-        $this->assertSame([], PgsqlPost::search('khan rukh')->options(['mode' => 'phrase'])->get()->all());
         $this->assertSame(['Salman Khan'], PgsqlPhrasePost::search('salman')->options(['mode' => 'plain'])->get()->pluck('title')->all());
-        $this->assertSame([], PgsqlPost::search('salman khn')->options(['mode' => 'websearch'])->get()->all());
-        $this->assertSame(['Salman Khan'], PgsqlPost::search('salman khn')->get()->pluck('title')->all());
-        $this->assertCount(2, PgsqlPost::search('khan')->options(['rank' => 'pg_sleep(1) + ts_rank'])->get());
+        $this->assertSame(['Salman Khan'], PgsqlPost::search('salman khn')->options(['mode' => 'websearch'])->get()->pluck('title')->all());
+        $this->assertCount(2, PgsqlPost::search('khan')->options(['vector' => [0.1, 0.2], 'hybrid' => ['semanticRatio' => 0.5]])->get());
+        $this->assertCount(2, PgsqlExpressionPost::search('khan')->options(['vector' => [0.1, 0.2]])->get());
+    }
+
+    public function test_invalid_per_query_options_throw()
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        PgsqlPost::search('khan')->options(['rank' => 'pg_sleep(1) + ts_rank'])->get();
+    }
+
+    public function test_expression_search_uses_a_custom_text_search_config()
+    {
+        DB::statement('drop text search configuration if exists public.scout_simple');
+        DB::statement('create text search configuration public.scout_simple (copy = simple)');
+
+        PgsqlExpressionPost::create(['title' => 'The Godfather', 'body' => 'Crime']);
+
+        $this->assertSame([], PgsqlExpressionPost::search('the')->get()->all());
+        $this->assertSame(['The Godfather'], PgsqlExpressionPost::search('the')->options(['language' => 'public.scout_simple'])->get()->pluck('title')->all());
+    }
+
+    public function test_missing_trigram_extension_throws()
+    {
+        DB::statement('create schema scout_tenant');
+        config(['database.connections.pgsql_tenant' => array_merge(config('database.connections.pgsql_testing'), ['search_path' => 'scout_tenant'])]);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('requires the pg_trgm extension');
+
+        PgsqlSearchPathPost::search('godfather')->get();
+    }
+
+    public function test_blend_mode_and_ts_rank_cd()
+    {
+        PgsqlPost::create(['title' => 'The Godfather']);
+        PgsqlPost::create(['title' => 'Godfather cameo']);
+        PgsqlPost::create(['title' => 'Godzilla']);
+
+        // Equal full-text ranks fall back to the newest row, unless trigram similarity breaks the tie...
+        $this->assertSame(['Godfather cameo', 'The Godfather'], PgsqlPost::search('godfather')->get()->pluck('title')->all());
+        $this->assertSame(['The Godfather', 'Godfather cameo'], PgsqlPost::search('godfather')->options(['trigram_mode' => 'blend'])->get()->pluck('title')->all());
+        $this->assertCount(2, PgsqlPost::search('godfather')->options(['rank' => 'ts_rank_cd'])->get());
+        $this->assertSame(['The Godfather', 'Godfather cameo'], PgsqlPost::search('godfathr')->options(['trigram_mode' => 'blend'])->get()->pluck('title')->all());
+    }
+
+    public function test_simple_pagination_keeps_falling_back_on_later_pages()
+    {
+        PgsqlPost::create(['title' => 'The Godfather']);
+        PgsqlPost::create(['title' => 'The Godfather Part II']);
+
+        $this->assertSame(['The Godfather Part II'], PgsqlPost::search('godfathr')->simplePaginate(1, 'page', 2)->pluck('title')->all());
     }
 
     public function test_equally_ranked_results_paginate_without_duplicates()
@@ -305,6 +356,11 @@ class PgsqlWebsearchPost extends PgsqlPost
 class PgsqlTenantPost extends PgsqlPost
 {
     protected $table = 'scout_tenant.scout_posts';
+}
+
+class PgsqlSearchPathPost extends PgsqlPost
+{
+    protected $connection = 'pgsql_tenant';
 }
 
 class PgsqlPrefixedPost extends PgsqlPost

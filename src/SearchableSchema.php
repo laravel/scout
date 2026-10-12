@@ -81,9 +81,7 @@ class SearchableSchema
             throw new InvalidArgumentException('At least one searchable column is required.');
         }
 
-        if (! preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $language)) {
-            throw new InvalidArgumentException("Invalid full-text search language [{$language}].");
-        }
+        static::ensureValidLanguage($language);
 
         return collect($columns)->map(function ($weight, $column) use ($language) {
             [$column, $weight] = is_int($column) ? [$weight, 'D'] : [$column, strtoupper($weight)];
@@ -96,6 +94,18 @@ class SearchableSchema
 
             return "setweight(to_tsvector('{$language}', coalesce(\"{$column}\"::text, '')), '{$weight}')";
         })->implode(' || ');
+    }
+
+    /**
+     * Ensure the given text search config name is a plain, optionally schema-qualified, identifier.
+     *
+     * @internal
+     */
+    public static function ensureValidLanguage(string $language): void
+    {
+        if (! preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $language)) {
+            throw new InvalidArgumentException("Invalid full-text search language [{$language}].");
+        }
     }
 
     /**
