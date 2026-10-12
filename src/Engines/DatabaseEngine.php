@@ -23,13 +23,6 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     use PerformsDatabaseVectorSearch;
 
     /**
-     * Indicates if an empty search is being retried using trigram matching.
-     *
-     * @var bool
-     */
-    protected $searchingWithTrigramFallback = false;
-
-    /**
      * The pg_trgm extension availability, keyed by connection name, database, and search path.
      *
      * @var array<string, bool>
@@ -114,7 +107,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 ->get();
         }
 
-        return $this->searchWithTrigramFallback($builder, function () use ($builder, $page, $perPage) {
+        return $this->searchWithTrigramFallback($builder, function (Builder $builder) use ($page, $perPage) {
             return $this->orderSearchQuery($builder, $this->buildSearchQuery($builder))
                 ->when(! is_null($page) && ! is_null($perPage), function ($query) use ($page, $perPage) {
                     $query->forPage($page, $perPage);
@@ -155,7 +148,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             return $this->paginateSemanticSearch($builder, $perPage, $pageName, $page);
         }
 
-        return $this->searchWithTrigramFallback($builder, function () use ($builder, $perPage, $pageName, $page) {
+        return $this->searchWithTrigramFallback($builder, function (Builder $builder) use ($perPage, $pageName, $page) {
             return $this->orderSearchQuery($builder, $this->buildSearchQuery($builder))
                 ->paginate($perPage, ['*'], $pageName, $page);
         }, fn ($paginator) => $paginator->total() === 0);
@@ -192,7 +185,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             return $this->simplePaginateSemanticSearch($builder, $perPage, $pageName, $page);
         }
 
-        return $this->searchWithTrigramFallback($builder, function () use ($builder, $perPage, $pageName, $page) {
+        return $this->searchWithTrigramFallback($builder, function (Builder $builder) use ($perPage, $pageName, $page) {
             return $this->orderSearchQuery($builder, $this->buildSearchQuery($builder))
                 ->simplePaginate($perPage, ['*'], $pageName, $page);
         }, fn ($paginator) => $paginator->isEmpty() &&
@@ -330,19 +323,14 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function searchWithTrigramFallback(Builder $builder, Closure $search, Closure $isEmpty)
     {
-        $results = $search();
+        $results = $search($builder);
 
         if (! $this->shouldFallbackToTrigram($builder) || ! $isEmpty($results)) {
             return $results;
         }
 
-        $this->searchingWithTrigramFallback = true;
-
-        try {
-            return $search();
-        } finally {
-            $this->searchingWithTrigramFallback = false;
-        }
+        // Retrying in "blend" mode adds the trigram matches the first search left out...
+        return $search((clone $builder)->options(array_merge($builder->options, ['trigram_mode' => 'blend'])));
     }
 
     /**
@@ -352,8 +340,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     {
         $options = $this->getFullTextOptions($builder);
 
-        return ! $this->searchingWithTrigramFallback &&
-            ($options['trigram_mode'] ?? 'fallback') === 'fallback' &&
+        return ($options['trigram_mode'] ?? 'fallback') === 'fallback' &&
             $this->trigramIsSupported($builder);
     }
 
@@ -364,7 +351,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     {
         $options = $this->getFullTextOptions($builder);
 
-        if (($options['trigram_mode'] ?? 'fallback') === 'fallback' && ! $this->searchingWithTrigramFallback) {
+        if (($options['trigram_mode'] ?? 'fallback') === 'fallback') {
             return [];
         }
 

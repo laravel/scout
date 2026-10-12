@@ -88,7 +88,7 @@ trait PerformsDatabaseVectorSearch
 
         $baseQuery = $this->newSearchQuery($builder);
 
-        $textResults = $this->searchWithTrigramFallback($builder, function () use ($builder, $baseQuery) {
+        $textResults = $this->searchWithTrigramFallback($builder, function (Builder $builder) use ($baseQuery) {
             $textQuery = $this->constrainSearchQuery($builder, $this->addTextSearchConstraints(
                 clone $baseQuery,
                 $builder,
