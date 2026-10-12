@@ -370,9 +370,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function usesTrigram(Builder $builder): bool
     {
-        if (blank($builder->query) ||
-            empty($this->getFullTextOptions($builder)['trigram']) ||
-            $builder->modelConnectionType() !== 'pgsql') {
+        if (blank($builder->query) || empty($this->getFullTextOptions($builder)['trigram']) || $builder->modelConnectionType() !== 'pgsql') {
             return false;
         }
 
