@@ -407,6 +407,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     {
         return ! blank($builder->query) &&
             ! empty($this->getFullTextOptions($builder)['trigram']) &&
+            $this->tsQueryFunction($builder) === 'plainto_tsquery' &&
             $builder->modelConnectionType() === 'pgsql' &&
             $this->trigramExtensionIsInstalled($builder);
     }
@@ -439,9 +440,9 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function getVectorColumn(Builder $builder): ?string
     {
-        $vector = $this->getFullTextOptions($builder)['vector'] ?? null;
+        $tsvector = $this->getFullTextOptions($builder)['tsvector'] ?? null;
 
-        return is_string($vector) && $vector !== '' && $builder->modelConnectionType() === 'pgsql' ? $vector : null;
+        return is_string($tsvector) && $tsvector !== '' && $builder->modelConnectionType() === 'pgsql' ? $tsvector : null;
     }
 
     /**
@@ -535,7 +536,8 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     {
         $options = $this->getFullTextOptions($builder);
 
-        $rank = $options['rank'] ?? 'ts_rank';
+        // Per-query options skip validation, so never interpolate the raw value...
+        $rank = ($options['rank'] ?? null) === 'ts_rank_cd' ? 'ts_rank_cd' : 'ts_rank';
 
         if ($vectorColumn = $this->getVectorColumn($builder)) {
             $vectors = $this->wrapColumn($builder, $vectorColumn);
@@ -683,7 +685,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             $this->ensureValidFullTextOptions($options);
         }
 
-        return $options;
+        return array_merge($options, $builder->options);
     }
 
     /**

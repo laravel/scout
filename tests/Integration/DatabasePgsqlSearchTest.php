@@ -142,6 +142,7 @@ class DatabasePgsqlSearchTest extends TestCase
         $this->assertSame(['Salman Khan'], PgsqlPhrasePost::search('salman')->options(['mode' => 'plain'])->get()->pluck('title')->all());
         $this->assertSame([], PgsqlPost::search('salman khn')->options(['mode' => 'websearch'])->get()->all());
         $this->assertSame(['Salman Khan'], PgsqlPost::search('salman khn')->get()->pluck('title')->all());
+        $this->assertCount(2, PgsqlPost::search('khan')->options(['rank' => 'pg_sleep(1) + ts_rank'])->get());
     }
 
     public function test_equally_ranked_results_paginate_without_duplicates()
@@ -264,7 +265,7 @@ class PgsqlPost extends Model
 
     protected $guarded = [];
 
-    #[SearchUsingFullText(['title', 'body'], ['vector' => 'search_vector', 'trigram' => ['title']])]
+    #[SearchUsingFullText(['title', 'body'], ['tsvector' => 'search_vector', 'trigram' => ['title']])]
     public function toSearchableArray()
     {
         return ['title' => $this->title, 'body' => $this->body];
@@ -291,7 +292,7 @@ class PgsqlBooleanVectorPost extends PgsqlPost
 
 class PgsqlPhrasePost extends PgsqlPost
 {
-    #[SearchUsingFullText(['title', 'body'], ['vector' => 'search_vector', 'mode' => 'phrase'])]
+    #[SearchUsingFullText(['title', 'body'], ['tsvector' => 'search_vector', 'mode' => 'phrase'])]
     public function toSearchableArray()
     {
         return ['title' => $this->title, 'body' => $this->body];
@@ -300,7 +301,7 @@ class PgsqlPhrasePost extends PgsqlPost
 
 class PgsqlWebsearchPost extends PgsqlPost
 {
-    #[SearchUsingFullText(['title', 'body'], ['vector' => 'search_vector', 'mode' => 'websearch'])]
+    #[SearchUsingFullText(['title', 'body'], ['tsvector' => 'search_vector', 'mode' => 'websearch'])]
     public function toSearchableArray()
     {
         return ['title' => $this->title, 'body' => $this->body];

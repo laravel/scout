@@ -33,12 +33,12 @@ class SearchableSchema
             return 'create extension if not exists pg_trgm';
         });
 
-        Blueprint::macro('searchable', function (array $columns, string $language = 'english', array $trigram = [], string $vector = 'search_vector') {
-            $this->addColumn('tsvector', $vector)->storedAs(
+        Blueprint::macro('searchable', function (array $columns, string $language = 'english', array $trigram = [], string $tsvector = 'search_vector') {
+            $this->addColumn('tsvector', $tsvector)->storedAs(
                 SearchableSchema::vectorExpression($columns, $language)
             );
 
-            $this->index($vector, null, 'gin');
+            $this->index($tsvector, null, 'gin');
 
             if ($trigram !== []) {
                 // @phpstan-ignore-next-line (macros are bound to the blueprint, so protected methods are accessible)
@@ -53,7 +53,7 @@ class SearchableSchema
             }
         });
 
-        Blueprint::macro('dropSearchable', function (array $trigram = [], string $vector = 'search_vector') {
+        Blueprint::macro('dropSearchable', function (array $trigram = [], string $tsvector = 'search_vector') {
             // Postgres resolves unqualified index names against the search path...
             $schema = str_contains($this->getTable(), '.') ? Str::beforeLast($this->getTable(), '.').'.' : '';
 
@@ -63,7 +63,7 @@ class SearchableSchema
             }
 
             // Dropping the column also drops its GIN index...
-            $this->dropColumn($vector);
+            $this->dropColumn($tsvector);
         });
     }
 
