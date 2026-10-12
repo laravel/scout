@@ -4,7 +4,6 @@ namespace Laravel\Scout\Engines;
 
 use Closure;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\LazyCollection;
@@ -16,7 +15,6 @@ use Laravel\Scout\Contracts\PaginatesEloquentModelsUsingDatabase;
 use Laravel\Scout\Contracts\SupportsSemanticSearch;
 use Laravel\Scout\Engines\Concerns\PaginatesDatabaseVectorSearch;
 use Laravel\Scout\Engines\Concerns\PerformsDatabaseVectorSearch;
-use Laravel\Scout\Exceptions\ScoutException;
 use ReflectionMethod;
 
 class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatabase, SupportsSemanticSearch
@@ -300,11 +298,14 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 }
             }
 
-            if (count($fullTextColumns) > 0 && $vectorColumn = $this->getVectorColumn($builder)) {
-                $query->orWhereRaw(
-                    sprintf('%s @@ %s', $this->wrapColumn($builder, $vectorColumn), $this->tsQueryExpression($builder)),
-                    $this->tsQueryBindings($builder)
-                );
+            // Laravel's grammar swaps custom text search configs for "english", so match stored vectors ourselves...
+            if (count($fullTextColumns) > 0 && $this->searchesStoredVectors($builder)) {
+                foreach ($fullTextColumns as $column) {
+                    $query->orWhereRaw(
+                        sprintf('%s @@ %s', $this->wrapColumn($builder, $column), $this->tsQueryExpression($builder)),
+                        $this->tsQueryBindings($builder)
+                    );
+                }
             } elseif (count($fullTextColumns) > 0) {
                 $query->orWhereFullText(
                     array_map(fn ($column) => $builder->model->qualifyColumn($column), $fullTextColumns),
@@ -329,48 +330,18 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function searchWithTrigramFallback(Builder $builder, Closure $search, Closure $isEmpty)
     {
-        return $this->rescueMissingVectorColumn($builder, function () use ($builder, $search, $isEmpty) {
-            $results = $search();
+        $results = $search();
 
-            if (! $this->shouldFallbackToTrigram($builder) || ! $isEmpty($results)) {
-                return $results;
-            }
+        if (! $this->shouldFallbackToTrigram($builder) || ! $isEmpty($results)) {
+            return $results;
+        }
 
-            $this->searchingWithTrigramFallback = true;
+        $this->searchingWithTrigramFallback = true;
 
-            try {
-                return $search();
-            } finally {
-                $this->searchingWithTrigramFallback = false;
-            }
-        });
-    }
-
-    /**
-     * Run the given search, explaining a missing search vector column.
-     *
-     * @param  \Laravel\Scout\Builder  $builder
-     * @param  \Closure  $search
-     * @return mixed
-     *
-     * @throws \Laravel\Scout\Exceptions\ScoutException
-     */
-    protected function rescueMissingVectorColumn(Builder $builder, Closure $search)
-    {
         try {
             return $search();
-        } catch (QueryException $e) {
-            // undefined_column: point developers at the migration helper instead of a raw SQL error...
-            if (($vectorColumn = $this->getVectorColumn($builder)) &&
-                $e->getCode() === '42703' &&
-                str_contains($e->getMessage(), $vectorColumn)) {
-                throw new ScoutException(sprintf(
-                    'The [%s] search vector column does not exist on the [%s] table. Add it using $table->searchable([...]) in a migration.',
-                    $vectorColumn, $builder->model->getTable()
-                ), 0, $e);
-            }
-
-            throw $e;
+        } finally {
+            $this->searchingWithTrigramFallback = false;
         }
     }
 
@@ -436,13 +407,11 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     }
 
     /**
-     * Get the stored tsvector column used for full-text matching, if any (Postgres only).
+     * Determine if the full-text columns are stored tsvector columns (Postgres only).
      */
-    protected function getVectorColumn(Builder $builder): ?string
+    protected function searchesStoredVectors(Builder $builder): bool
     {
-        $tsvector = $this->getFullTextOptions($builder)['tsvector'] ?? null;
-
-        return is_string($tsvector) && $tsvector !== '' && $builder->modelConnectionType() === 'pgsql' ? $tsvector : null;
+        return ! empty($this->getFullTextOptions($builder)['vector']) && $builder->modelConnectionType() === 'pgsql';
     }
 
     /**
@@ -539,17 +508,12 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
         // Per-query options skip validation, so never interpolate the raw value...
         $rank = ($options['rank'] ?? null) === 'ts_rank_cd' ? 'ts_rank_cd' : 'ts_rank';
 
-        if ($vectorColumn = $this->getVectorColumn($builder)) {
-            $vectors = $this->wrapColumn($builder, $vectorColumn);
-            $bindings = [];
-        } else {
-            $isVector = ! empty($options['vector']);
+        $isVector = ! empty($options['vector']);
 
-            $vectors = collect($this->getFullTextColumns($builder))->map(function ($column) use ($builder, $isVector) {
-                return sprintf($isVector ? "coalesce(%s, ''::tsvector)" : "coalesce(to_tsvector(?::regconfig, %s), ''::tsvector)", $this->wrapColumn($builder, $column));
-            })->implode(' || ');
-            $bindings = $isVector ? [] : array_fill(0, count($this->getFullTextColumns($builder)), $options['language'] ?? 'english');
-        }
+        $vectors = collect($this->getFullTextColumns($builder))->map(function ($column) use ($builder, $isVector) {
+            return sprintf($isVector ? "coalesce(%s, ''::tsvector)" : "coalesce(to_tsvector(?::regconfig, %s), ''::tsvector)", $this->wrapColumn($builder, $column));
+        })->implode(' || ');
+        $bindings = $isVector ? [] : array_fill(0, count($this->getFullTextColumns($builder)), $options['language'] ?? 'english');
 
         $score = sprintf('%s(%s, %s)', $rank, $vectors, $this->tsQueryExpression($builder));
         $bindings = array_merge($bindings, $this->tsQueryBindings($builder));

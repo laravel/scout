@@ -190,14 +190,17 @@ class DatabasePgsqlSearchTest extends TestCase
         $this->assertSame(['Laravel Scout', 'Queues'], PgsqlExpressionPost::search('scout')->get()->pluck('title')->all());
     }
 
-    public function test_boolean_vector_option_searches_tsvector_columns_directly()
+    public function test_vector_columns_match_with_a_custom_text_search_config()
     {
-        PgsqlBooleanVectorPost::create(['title' => 'Queues', 'body' => 'Scout keeps search indexes in sync']);
-        PgsqlBooleanVectorPost::create(['title' => 'Laravel Scout', 'body' => null]);
-        PgsqlBooleanVectorPost::create(['title' => 'Horizon', 'body' => 'Queue dashboard']);
+        DB::statement('drop text search configuration if exists public.scout_simple');
+        DB::statement('create text search configuration public.scout_simple (copy = simple)');
+        Schema::table('scout_posts', fn (Blueprint $table) => $table->dropSearchable(['title']));
+        Schema::table('scout_posts', fn (Blueprint $table) => $table->searchable(['title'], 'public.scout_simple'));
 
-        $this->assertSame(['Laravel Scout', 'Queues'], PgsqlBooleanVectorPost::search('scout')->get()->pluck('title')->all());
-        $this->assertSame(['Laravel Scout', 'Queues'], PgsqlBooleanVectorPost::search('scout')->orderBy('id', 'desc')->get()->pluck('title')->all());
+        PgsqlPost::create(['title' => 'Running fast']);
+
+        // The "english" config would stem the query to "run" and miss the unstemmed "running" lexeme...
+        $this->assertSame(['Running fast'], PgsqlPost::search('running')->options(['language' => 'public.scout_simple'])->get()->pluck('title')->all());
     }
 
     public function test_soft_deleted_and_explicitly_ordered_searches()
@@ -265,10 +268,10 @@ class PgsqlPost extends Model
 
     protected $guarded = [];
 
-    #[SearchUsingFullText(['title', 'body'], ['tsvector' => 'search_vector', 'trigram' => ['title']])]
+    #[SearchUsingFullText(['search_vector'], ['vector' => true, 'trigram' => ['title']])]
     public function toSearchableArray()
     {
-        return ['title' => $this->title, 'body' => $this->body];
+        return ['search_vector' => null];
     }
 }
 
@@ -281,30 +284,21 @@ class PgsqlExpressionPost extends PgsqlPost
     }
 }
 
-class PgsqlBooleanVectorPost extends PgsqlPost
+class PgsqlPhrasePost extends PgsqlPost
 {
-    #[SearchUsingFullText(['search_vector'], ['vector' => true])]
+    #[SearchUsingFullText(['search_vector'], ['vector' => true, 'mode' => 'phrase'])]
     public function toSearchableArray()
     {
         return ['search_vector' => null];
     }
 }
 
-class PgsqlPhrasePost extends PgsqlPost
-{
-    #[SearchUsingFullText(['title', 'body'], ['tsvector' => 'search_vector', 'mode' => 'phrase'])]
-    public function toSearchableArray()
-    {
-        return ['title' => $this->title, 'body' => $this->body];
-    }
-}
-
 class PgsqlWebsearchPost extends PgsqlPost
 {
-    #[SearchUsingFullText(['title', 'body'], ['tsvector' => 'search_vector', 'mode' => 'websearch'])]
+    #[SearchUsingFullText(['search_vector'], ['vector' => true, 'mode' => 'websearch'])]
     public function toSearchableArray()
     {
-        return ['title' => $this->title, 'body' => $this->body];
+        return ['search_vector' => null];
     }
 }
 
