@@ -28,7 +28,6 @@ class DatabaseEngineFullTextOptionsTest extends TestCase
     {
         SearchableSchema::register();
 
-        // Laravel's native tsvector type throws its own message on newer versions...
         $this->expectException(RuntimeException::class);
 
         Schema::connection('testing')->create('posts', fn (Blueprint $table) => $table->searchable(['title']));

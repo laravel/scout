@@ -44,7 +44,7 @@ class SearchableSchema
                 return;
             }
 
-            // @phpstan-ignore-next-line (macros are bound to the blueprint, so protected methods are accessible)
+            // @phpstan-ignore-next-line
             $this->addCommand('scoutTrigramExtension');
 
             foreach ($trigram as $column) {
@@ -56,15 +56,14 @@ class SearchableSchema
         });
 
         Blueprint::macro('dropSearchable', function (array $trigram = [], string $tsvector = 'search_vector') {
-            // Postgres resolves unqualified index names against the search path...
-            $schema = str_contains($this->getTable(), '.') ? Str::beforeLast($this->getTable(), '.').'.' : '';
+            $table = $this->getTable();
+            $schema = str_contains($table, '.') ? Str::beforeLast($table, '.').'.' : '';
 
             foreach ($trigram as $column) {
                 // @phpstan-ignore-next-line
                 $this->dropIndex($schema.$this->createIndexName('trigram', [$column]));
             }
 
-            // Dropping the column also drops its GIN index...
             $this->dropColumn($tsvector);
         });
     }
