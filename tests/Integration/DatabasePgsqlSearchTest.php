@@ -132,6 +132,18 @@ class DatabasePgsqlSearchTest extends TestCase
         $this->assertSame([], PgsqlPhrasePost::search('khan rukh')->get()->all());
     }
 
+    public function test_per_query_mode_overrides_the_model_mode_and_skips_the_trigram_fallback()
+    {
+        PgsqlPost::create(['title' => 'Shah Rukh Khan', 'body' => 'Romance']);
+        PgsqlPost::create(['title' => 'Salman Khan', 'body' => 'Action']);
+
+        $this->assertSame(['Shah Rukh Khan'], PgsqlPost::search('khan -salman')->options(['mode' => 'websearch'])->get()->pluck('title')->all());
+        $this->assertSame([], PgsqlPost::search('khan rukh')->options(['mode' => 'phrase'])->get()->all());
+        $this->assertSame(['Salman Khan'], PgsqlPhrasePost::search('salman')->options(['mode' => 'plain'])->get()->pluck('title')->all());
+        $this->assertSame([], PgsqlPost::search('salman khn')->options(['mode' => 'websearch'])->get()->all());
+        $this->assertSame(['Salman Khan'], PgsqlPost::search('salman khn')->get()->pluck('title')->all());
+    }
+
     public function test_equally_ranked_results_paginate_without_duplicates()
     {
         foreach (range(1, 5) as $i) {
