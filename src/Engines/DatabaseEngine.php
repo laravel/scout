@@ -273,8 +273,6 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
 
             $likeOperator = $connectionType == 'pgsql' ? 'ilike' : 'like';
 
-            $trigramColumns = $this->getTrigramColumns($builder);
-
             foreach ($columns as $column) {
                 if (in_array($column, $fullTextColumns)) {
                     continue;
@@ -292,7 +290,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             }
 
             // Laravel's grammar swaps custom text search configs for "english", so match stored vectors ourselves...
-            if (count($fullTextColumns) > 0 && $this->searchesStoredVectors($builder)) {
+            if ($this->searchesStoredVectors($builder)) {
                 foreach ($fullTextColumns as $column) {
                     $query->orWhereRaw(
                         sprintf('%s @@ %s', $this->wrapColumn($builder, $column), $this->tsQueryExpression($builder)),
@@ -307,7 +305,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 );
             }
 
-            foreach ($trigramColumns as $column) {
+            foreach ($this->getTrigramColumns($builder) as $column) {
                 $query->orWhereRaw($this->wrapColumn($builder, $column).' % ?', [$builder->query]);
             }
         });
@@ -363,9 +361,11 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function trigramIsSupported(Builder $builder): bool
     {
+        $options = $this->getFullTextOptions($builder);
+
         return ! blank($builder->query) &&
-            ! empty($this->getFullTextOptions($builder)['trigram']) &&
-            $this->tsQueryFunction($builder) === 'plainto_tsquery' &&
+            ! empty($options['trigram']) &&
+            $this->tsQueryFunction($options) === 'plainto_tsquery' &&
             $builder->modelConnectionType() === 'pgsql' &&
             $this->trigramExtensionIsInstalled($builder);
     }
@@ -383,14 +383,17 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             json_encode($connection->getConfig('search_path') ?? $connection->getConfig('schema')),
         ]);
 
-        return static::$trigramExtensionInstalled[$key] ??= tap(
-            (bool) $connection->selectOne("select to_regprocedure('similarity(text,text)') is not null as installed")->installed,
-            function ($installed) use ($connection) {
-                if (! $installed) {
-                    Log::warning("Scout trigram search is disabled because the pg_trgm extension is not available on the [{$connection->getName()}] connection's search path.");
-                }
-            }
-        );
+        if (isset(static::$trigramExtensionInstalled[$key])) {
+            return static::$trigramExtensionInstalled[$key];
+        }
+
+        $installed = (bool) $connection->selectOne("select to_regprocedure('similarity(text,text)') is not null as installed")->installed;
+
+        if (! $installed) {
+            Log::warning("Scout trigram search is disabled because the pg_trgm extension is not available on the [{$connection->getName()}] connection's search path.");
+        }
+
+        return static::$trigramExtensionInstalled[$key] = $installed;
     }
 
     /**
@@ -402,17 +405,9 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     }
 
     /**
-     * Get the tsquery function for the configured full-text mode.
-     */
-    protected function tsQueryFunction(Builder $builder): string
-    {
-        return $this->tsQueryFunctionFor($this->getFullTextOptions($builder));
-    }
-
-    /**
      * Get the tsquery function for the given full-text options.
      */
-    protected function tsQueryFunctionFor(array $options): string
+    protected function tsQueryFunction(array $options): string
     {
         return match ($options['mode'] ?? null) {
             'phrase' => 'phraseto_tsquery',
@@ -427,7 +422,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function tsQueryExpression(Builder $builder): string
     {
-        return $this->tsQueryFunction($builder).'(?::regconfig, ?)';
+        return $this->tsQueryFunction($this->getFullTextOptions($builder)).'(?::regconfig, ?)';
     }
 
     /**
@@ -495,12 +490,17 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
         // Per-query options skip validation, so never interpolate the raw value...
         $rank = ($options['rank'] ?? null) === 'ts_rank_cd' ? 'ts_rank_cd' : 'ts_rank';
 
-        $isVector = ! empty($options['vector']);
+        $columns = $this->getFullTextColumns($builder);
 
-        $vectors = collect($this->getFullTextColumns($builder))->map(function ($column) use ($builder, $isVector) {
-            return sprintf($isVector ? "coalesce(%s, ''::tsvector)" : "coalesce(to_tsvector(?::regconfig, %s), ''::tsvector)", $this->wrapColumn($builder, $column));
-        })->implode(' || ');
-        $bindings = $isVector ? [] : array_fill(0, count($this->getFullTextColumns($builder)), $options['language'] ?? 'english');
+        if (! empty($options['vector'])) {
+            $vector = "coalesce(%s, ''::tsvector)";
+            $bindings = [];
+        } else {
+            $vector = "coalesce(to_tsvector(?::regconfig, %s), ''::tsvector)";
+            $bindings = array_fill(0, count($columns), $options['language'] ?? 'english');
+        }
+
+        $vectors = collect($columns)->map(fn ($column) => sprintf($vector, $this->wrapColumn($builder, $column)))->implode(' || ');
 
         $score = sprintf('%s(%s, %s)', $rank, $vectors, $this->tsQueryExpression($builder));
         $bindings = array_merge($bindings, $this->tsQueryBindings($builder));
@@ -660,7 +660,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             }
         }
 
-        if (! empty($options['trigram']) && $this->tsQueryFunctionFor($options) !== 'plainto_tsquery') {
+        if (! empty($options['trigram']) && $this->tsQueryFunction($options) !== 'plainto_tsquery') {
             throw new InvalidArgumentException('Invalid full-text search option: [trigram] requires the "plain" [mode].');
         }
     }
