@@ -32,7 +32,8 @@ class SearchUsingFullText
      *     trigram_mode?: 'fallback'|'blend',
      *     rank?: 'ts_rank'|'ts_rank_cd',
      *     weights?: array{rank?: float|int, trigram?: float|int},
-     *     expanded?: bool
+     *     expanded?: bool,
+     *     ...
      * }  $options
      * @return void
      */

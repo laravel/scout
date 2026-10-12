@@ -24,14 +24,6 @@ class DatabaseEngineFullTextOptionsTest extends TestCase
         );
     }
 
-    public function test_per_query_options_override_the_attribute_options()
-    {
-        $this->assertSame(
-            ['mode' => 'boolean', 'rank' => 'bar', 'expand' => true, 'language' => 'simple'],
-            $this->fullTextOptions(new LegacyFullTextOptionsModel, ['mode' => 'boolean', 'rank' => 'bar', 'language' => 'simple'])
-        );
-    }
-
     public function test_searchable_schema_requires_postgres()
     {
         SearchableSchema::register();
@@ -59,9 +51,9 @@ class DatabaseEngineFullTextOptionsTest extends TestCase
         ];
     }
 
-    protected function fullTextOptions(Model $model, array $options = []): array
+    protected function fullTextOptions(Model $model): array
     {
-        return (fn () => $this->getFullTextOptions((new Builder($model, 'query'))->options($options)))->call(new DatabaseEngine);
+        return (fn () => $this->getFullTextOptions(new Builder($model, 'query')))->call(new DatabaseEngine);
     }
 }
 

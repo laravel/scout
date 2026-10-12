@@ -40,16 +40,18 @@ class SearchableSchema
 
             $this->index($tsvector, null, 'gin');
 
-            if ($trigram !== []) {
-                // @phpstan-ignore-next-line (macros are bound to the blueprint, so protected methods are accessible)
-                $this->addCommand('scoutTrigramExtension');
+            if ($trigram === []) {
+                return;
             }
+
+            // @phpstan-ignore-next-line (macros are bound to the blueprint, so protected methods are accessible)
+            $this->addCommand('scoutTrigramExtension');
 
             foreach ($trigram as $column) {
                 SearchableSchema::ensureValidIdentifier($column);
 
                 // @phpstan-ignore-next-line
-                $this->rawIndex('"'.$column.'" gin_trgm_ops', $this->createIndexName('trigram', [$column]))->algorithm('gin');
+                $this->rawIndex("\"{$column}\" gin_trgm_ops", $this->createIndexName('trigram', [$column]))->algorithm('gin');
             }
         });
 
@@ -93,7 +95,7 @@ class SearchableSchema
                 throw new InvalidArgumentException("Invalid full-text weight [{$weight}] for column [{$column}]. Use A, B, C, or D.");
             }
 
-            return sprintf("setweight(to_tsvector('%s', coalesce(\"%s\"::text, '')), '%s')", $language, $column, $weight);
+            return "setweight(to_tsvector('{$language}', coalesce(\"{$column}\"::text, '')), '{$weight}')";
         })->implode(' || ');
     }
 

@@ -289,11 +289,10 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
                 }
             }
 
-            // Laravel's grammar swaps custom text search configs for "english", so match stored vectors ourselves...
             if ($this->searchesStoredVectors($builder)) {
                 foreach ($fullTextColumns as $column) {
                     $query->orWhereRaw(
-                        sprintf('%s @@ %s', $this->wrapColumn($builder, $column), $this->tsQueryExpression($builder)),
+                        "{$this->wrapColumn($builder, $column)} @@ {$this->tsQueryExpression($builder)}",
                         $this->tsQueryBindings($builder)
                     );
                 }
@@ -306,7 +305,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             }
 
             foreach ($this->getTrigramColumns($builder) as $column) {
-                $query->orWhereRaw($this->wrapColumn($builder, $column).' % ?', [$builder->query]);
+                $query->orWhereRaw("{$this->wrapColumn($builder, $column)} % ?", [$builder->query]);
             }
         });
     }
@@ -327,7 +326,6 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
             return $results;
         }
 
-        // Retrying in "blend" mode adds the trigram matches the first search left out...
         return $search((clone $builder)->options(array_merge($builder->options, ['trigram_mode' => 'blend'])));
     }
 
@@ -422,7 +420,7 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
      */
     protected function tsQueryExpression(Builder $builder): string
     {
-        return $this->tsQueryFunction($this->getFullTextOptions($builder)).'(?::regconfig, ?)';
+        return "{$this->tsQueryFunction($this->getFullTextOptions($builder))}(?::regconfig, ?)";
     }
 
     /**
@@ -487,8 +485,10 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
     {
         $options = $this->getFullTextOptions($builder);
 
-        // Per-query options skip validation, so never interpolate the raw value...
-        $rank = ($options['rank'] ?? null) === 'ts_rank_cd' ? 'ts_rank_cd' : 'ts_rank';
+        $rank = match ($options['rank'] ?? null) {
+            'ts_rank_cd' => 'ts_rank_cd',
+            default => 'ts_rank',
+        };
 
         $columns = $this->getFullTextColumns($builder);
 
@@ -502,21 +502,26 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
 
         $vectors = collect($columns)->map(fn ($column) => sprintf($vector, $this->wrapColumn($builder, $column)))->implode(' || ');
 
-        $score = sprintf('%s(%s, %s)', $rank, $vectors, $this->tsQueryExpression($builder));
+        $score = "{$rank}({$vectors}, {$this->tsQueryExpression($builder)})";
         $bindings = array_merge($bindings, $this->tsQueryBindings($builder));
 
-        if ($trigramColumns = $this->getTrigramColumns($builder)) {
-            $score = sprintf(
-                '(%s * %F) + (coalesce(greatest(%s), 0) * %F)',
-                $score,
-                (float) ($options['weights']['rank'] ?? 1.0),
-                collect($trigramColumns)->map(fn ($column) => sprintf('similarity(%s, ?)', $this->wrapColumn($builder, $column)))->implode(', '),
-                (float) ($options['weights']['trigram'] ?? 0.25),
-            );
-            $bindings = array_merge($bindings, array_fill(0, count($trigramColumns), $builder->query));
+        $trigramColumns = $this->getTrigramColumns($builder);
+
+        if (! $trigramColumns) {
+            return $query->orderByRaw("{$score} desc", $bindings);
         }
 
-        return $query->orderByRaw($score.' desc', $bindings);
+        $score = sprintf(
+            '(%s * %F) + (coalesce(greatest(%s), 0) * %F)',
+            $score,
+            (float) ($options['weights']['rank'] ?? 1.0),
+            collect($trigramColumns)->map(fn ($column) => "similarity({$this->wrapColumn($builder, $column)}, ?)")->implode(', '),
+            (float) ($options['weights']['trigram'] ?? 0.25),
+        );
+
+        $bindings = array_merge($bindings, array_fill(0, count($trigramColumns), $builder->query));
+
+        return $query->orderByRaw("{$score} desc", $bindings);
     }
 
     /**
