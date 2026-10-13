@@ -18,6 +18,7 @@ use Laravel\Scout\Tests\Fixtures\SearchableModelWithPrecomputedEmbedding;
 use Laravel\Scout\Tests\Fixtures\VersionableModel;
 use Mockery as m;
 use Orchestra\Testbench\Concerns\InteractsWithMockery;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 use Typesense\Client as TypesenseClient;
 use Typesense\Collection as TypesenseCollection;
@@ -69,11 +70,11 @@ class TypesenseEngineTest extends TestCase
     {
         $reflection = new \ReflectionClass(get_class($object));
         $method = $reflection->getMethod($methodName);
-        $method->setAccessible(true);
 
         return $method->invokeArgs($object, $parameters);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_filters_method()
     {
         $builder = m::mock(Builder::class);
@@ -94,6 +95,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_parse_filter_value_method()
     {
         $this->assertEquals('true', $this->invokeMethod($this->engine, 'parseFilterValue', [true]));
@@ -109,6 +111,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals($expectedNested, $this->invokeMethod($this->engine, 'parseFilterValue', [$nestedArray]));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_parse_where_filter_method()
     {
         $this->assertEquals('status:=active', $this->invokeMethod($this->engine, 'parseWhereFilter', ['active', 'status']));
@@ -116,18 +119,21 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals('tags:tag1tag2tag3', $this->invokeMethod($this->engine, 'parseWhereFilter', [['tag1', 'tag2', 'tag3'], 'tags']));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_parse_where_in_filter_method()
     {
         $this->assertEquals('category:=[electronics, books]', $this->invokeMethod($this->engine, 'parseWhereInFilter', [['electronics', 'books'], 'category']));
         $this->assertEquals('id:=[1, 2, 3]', $this->invokeMethod($this->engine, 'parseWhereInFilter', [[1, 2, 3], 'id']));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_parse_where_not_in_filter_metheod()
     {
         $this->assertEquals('category:!=[electronics, books]', $this->invokeMethod($this->engine, 'parseWhereNotInFilter', [['electronics', 'books'], 'category']));
         $this->assertEquals('id:!=[1, 2, 3]', $this->invokeMethod($this->engine, 'parseWhereNotInFilter', [[1, 2, 3], 'id']));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_update_method(): void
     {
         Config::shouldReceive('get')->with('scout.typesense.import_action', m::any())->andReturn('upsert');
@@ -168,6 +174,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->update(collect($models));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_update_method_with_emplace_action(): void
     {
         // Override config for this specific test
@@ -209,6 +216,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->update(collect($models));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_update_adds_precomputed_and_generated_embeddings_to_documents(): void
     {
         Config::shouldReceive('get')->with('scout.typesense.import_action', m::any())->andReturn('upsert');
@@ -270,6 +278,7 @@ class TypesenseEngineTest extends TestCase
         ]], FakeEmbeddings::$requests);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_update_does_not_generate_embeddings_when_using_native_embeddings(): void
     {
         Config::shouldReceive('get')->with('scout.typesense.import_action', m::any())->andReturn('upsert');
@@ -316,6 +325,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertSame([], FakeEmbeddings::$requests);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_semantic_search_generates_a_query_vector(): void
     {
         $engine = $this->semanticEngine([
@@ -338,6 +348,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertSame(['conceptual query'], FakeEmbeddings::$requests[0]['inputs']);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_hybrid_search_accepts_a_precomputed_query_vector_and_normalizes_weights(): void
     {
         $engine = $this->semanticEngine([
@@ -361,6 +372,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertSame([], FakeEmbeddings::$requests);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_semantic_search_with_native_embeddings_queries_the_embedding_field(): void
     {
         $engine = $this->semanticEngine([
@@ -382,6 +394,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertSame([], FakeEmbeddings::$requests);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_semantic_search_with_native_embeddings_applies_a_distance_threshold(): void
     {
         $engine = $this->semanticEngine([
@@ -397,6 +410,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertSame('embedding:([], distance_threshold: 0.5)', $parameters['vector_query']);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_semantic_search_with_native_embeddings_drops_per_field_parameters(): void
     {
         $engine = $this->semanticEngine([
@@ -417,6 +431,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertSame('off', $parameters['infix']);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_hybrid_search_with_native_embeddings_appends_the_embedding_field_to_query_by(): void
     {
         $engine = $this->semanticEngine([
@@ -435,6 +450,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertSame('embedding', $parameters['exclude_fields']);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_hybrid_search_with_native_embeddings_extends_per_field_parameters(): void
     {
         $engine = $this->semanticEngine([
@@ -455,6 +471,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertSame('off', $parameters['infix']);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_hybrid_search_requires_a_keyword_field_in_query_by(): void
     {
         $engine = $this->semanticEngine([
@@ -470,6 +487,7 @@ class TypesenseEngineTest extends TestCase
         $engine->buildSearchParameters($builder, 1, 10);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_semantic_search_cannot_be_combined_with_a_custom_vector_query_option(): void
     {
         $engine = $this->semanticEngine([
@@ -487,6 +505,7 @@ class TypesenseEngineTest extends TestCase
         $engine->buildSearchParameters($builder, 1, 10);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_semantic_search_requires_embedding_settings(): void
     {
         Container::getInstance()->instance('config', new Repository(['scout' => []]));
@@ -501,6 +520,7 @@ class TypesenseEngineTest extends TestCase
         $engine->buildSearchParameters($builder, 1, 10);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_searches_with_vector_queries_use_the_multi_search_endpoint(): void
     {
         $multiSearch = $this->createMock(MultiSearch::class);
@@ -534,6 +554,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertSame('1', $results['hits'][0]['document']['id']);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_multi_search_errors_are_converted_to_typesense_exceptions(): void
     {
         $multiSearch = $this->createMock(MultiSearch::class);
@@ -555,6 +576,7 @@ class TypesenseEngineTest extends TestCase
         $engine->search(new Builder(new SearchableModel, 'conceptual query'));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_multi_search_creates_missing_collections_and_retries(): void
     {
         $multiSearch = $this->createMock(MultiSearch::class);
@@ -578,6 +600,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertSame(0, $results['found']);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_delete_method(): void
     {
         // Mock models and their methods
@@ -604,6 +627,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->delete(collect($models));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_search_method(): void
     {
         // Mock the Builder
@@ -634,6 +658,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->search($builder);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_paginate_method(): void
     {
         // Mock the Builder
@@ -664,6 +689,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->paginate($builder, 10, 2);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_map_ids_method(): void
     {
         // Sample search results
@@ -685,6 +711,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals([1, 2, 3], $mappedIds->toArray());
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_get_total_count_method(): void
     {
         // Sample search results with 'found' key
@@ -704,6 +731,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals(0, $totalCountWithoutFound);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_flush_method(): void
     {
         // Mock a model instance
@@ -724,6 +752,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->flush($model);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_missing_collection_is_created_using_the_indexable_name(): void
     {
         Container::getInstance()->instance('config', new Repository([]));
@@ -769,6 +798,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertSame('table_v2', $collections->created[0]['name']);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_create_index_method_throws_exception(): void
     {
         // Define the expected exception class and message
@@ -787,6 +817,7 @@ class TypesenseEngineTest extends TestCase
      * @throws Exception
      * @throws TypesenseClientError
      */
+    #[AllowMockObjectsWithoutExpectations]
     public function test_set_search_params_method(): void
     {
         // Mock the Builder
@@ -819,6 +850,7 @@ class TypesenseEngineTest extends TestCase
         $this->engine->search($builder);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_soft_deleted_objects_are_returned_with_only_trashed_method()
     {
         // Create a mock of SearchableModel
@@ -839,6 +871,7 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals(1, $results->first()->id);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function test_soft_deleted_objects_are_returned_with_with_trashed_method()
     {
         // Create a mock of SearchableModel
