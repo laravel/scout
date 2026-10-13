@@ -48,8 +48,7 @@ jobs:
           - php: 8.1
             laravel: 13
 
-    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
-
+    ame: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }} ${{ matrix.experimental == true && '(experimental)' || '' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
