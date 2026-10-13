@@ -29,6 +29,8 @@ use Typesense\Exceptions\RequestMalformed;
 use Typesense\Exceptions\TypesenseClientError;
 use Typesense\MultiSearch;
 
+use function Orchestra\Testbench\php_version_compare;
+
 class TypesenseEngineTest extends TestCase
 {
     use InteractsWithMockery;
@@ -70,6 +72,11 @@ class TypesenseEngineTest extends TestCase
     {
         $reflection = new \ReflectionClass(get_class($object));
         $method = $reflection->getMethod($methodName);
+
+        if (php_version_compare('8.1', '<')) {
+            $method->setAccessible(true);
+        }
+        }
 
         return $method->invokeArgs($object, $parameters);
     }
