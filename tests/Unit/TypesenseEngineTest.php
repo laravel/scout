@@ -76,7 +76,6 @@ class TypesenseEngineTest extends TestCase
         if (php_version_compare('8.1', '<')) {
             $method->setAccessible(true);
         }
-        }
 
         return $method->invokeArgs($object, $parameters);
     }
