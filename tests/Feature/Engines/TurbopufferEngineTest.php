@@ -9,6 +9,7 @@ use Laravel\Scout\EngineManager;
 use Laravel\Scout\Engines\TurbopufferEngine;
 use Laravel\Scout\Exceptions\NotSupportedException;
 use Laravel\Scout\Exceptions\ScoutException;
+use Laravel\Scout\Scout;
 use Laravel\Scout\Tests\Fixtures\FakeEmbeddings;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Laravel\Scout\Tests\Fixtures\SearchableModelWithNativeEmbedding;
@@ -65,7 +66,7 @@ class TurbopufferEngineTest extends TestCase
             return $request->method() === 'POST' &&
                 $request->url() === 'https://turbopuffer.test/v2/namespaces/table' &&
                 $request->hasHeader('Authorization', 'Bearer tpuf-test-key') &&
-                $request->hasHeader('X-Laravel-Scout', '11.5.0') &&
+                $request->hasHeader('X-Laravel-Scout', Scout::VERSION) &&
                 $request['upsert_rows'] === [['id' => 10, 'name' => 'Taylor']] &&
                 $request['schema'] === [
                     'name' => ['type' => 'string', 'full_text_search' => true],
