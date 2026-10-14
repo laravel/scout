@@ -56,6 +56,8 @@ class ScoutServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        SearchableSchema::register();
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 QueueImportCommand::class,

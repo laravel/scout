@@ -88,23 +88,25 @@ trait PerformsDatabaseVectorSearch
 
         $baseQuery = $this->newSearchQuery($builder);
 
-        // Build the text query...
-        $textQuery = $this->constrainSearchQuery($builder, $this->addTextSearchConstraints(
-            clone $baseQuery,
-            $builder,
-            array_keys($builder->model->toSearchableArray()),
-            $this->getPrefixColumns($builder),
-            $this->getFullTextColumns($builder)
-        )->take(1000));
+        $textResults = $this->searchWithTrigramFallback($builder, function (Builder $builder) use ($baseQuery) {
+            $textQuery = $this->constrainSearchQuery($builder, $this->addTextSearchConstraints(
+                clone $baseQuery,
+                $builder,
+                array_keys($builder->model->toSearchableArray()),
+                $this->getPrefixColumns($builder),
+                $this->getFullTextColumns($builder)
+            )->take(1000));
 
-        // Order the text query...
-        if (! $this->getFullTextColumns($builder)) {
-            $textQuery->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
-        } elseif ($this->shouldOrderByRelevance($builder)) {
-            $this->orderByRelevance($builder, $textQuery);
+            if (! $this->getFullTextColumns($builder)) {
+                $textQuery->orderBy($builder->model->getTable().'.'.$builder->model->getScoutKeyName(), 'desc');
+            } elseif ($this->shouldOrderByRelevance($builder)) {
+                $this->orderByRelevance($builder, $textQuery);
 
-            $textQuery->orderBy($builder->model->getQualifiedKeyName());
-        }
+                $textQuery->orderBy($builder->model->getQualifiedKeyName());
+            }
+
+            return $textQuery->get();
+        }, fn ($models) => $models->isEmpty());
 
         // Build the semantic query...
         $semanticQuery = $this->constrainSearchQuery($builder, (clone $baseQuery)
@@ -115,7 +117,7 @@ trait PerformsDatabaseVectorSearch
 
         return $this->fuseSearchResults(
             $builder,
-            $textQuery->get(),
+            $textResults,
             $semanticQuery->get()
         )->take($limit)->values();
     }
