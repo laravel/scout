@@ -2,13 +2,19 @@
 
 namespace Laravel\Scout\Tests\Feature;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Laravel\Scout\Builder as ScoutBuilder;
+use Laravel\Scout\EngineManager;
+use Laravel\Scout\Engines\DatabaseEngine;
 use Laravel\Scout\Exceptions\NotSupportedException;
 use Orchestra\Testbench\Concerns\WithLaravelMigrations;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use Workbench\App\Models\Bookmark;
+use Workbench\App\Models\Chirp;
 use Workbench\App\Models\SearchableUser;
 use Workbench\Database\Factories\BookmarkFactory;
 use Workbench\Database\Factories\ChirpFactory;
@@ -286,5 +292,62 @@ class DatabaseEngineTest extends TestCase
 
         $this->assertCount(1, $models);
         $this->assertEquals('Abigail Otwell', $models[0]->name);
+    }
+
+    public function test_it_can_filter_with_where_in_and_where_not_in()
+    {
+        $models = SearchableUser::search()
+            ->whereIn('email', ['taylor@laravel.com', 'abigail@laravel.com'])
+            ->whereNotIn('name', ['Abigail Otwell'])
+            ->get();
+
+        $this->assertCount(1, $models);
+        $this->assertEquals('Taylor Otwell', $models[0]->name);
+    }
+
+    public function test_it_applies_soft_delete_constraints()
+    {
+        $this->app->make('config')->set('scout.soft_delete', true);
+
+        $active = ChirpFactory::new()->create(['content' => 'laravel scout search']);
+        $deleted = ChirpFactory::new()->create(['content' => 'laravel scout search']);
+
+        $deleted->delete();
+
+        $this->assertCount(1, Chirp::search()->get());
+        $this->assertSame($active->getKey(), Chirp::search()->first()->getKey());
+        $this->assertCount(2, Chirp::search()->withTrashed()->get());
+        $this->assertCount(1, Chirp::search()->onlyTrashed()->get());
+        $this->assertSame($deleted->getKey(), Chirp::search()->onlyTrashed()->first()->getKey());
+    }
+
+    public function test_text_search_uses_overridden_new_search_query()
+    {
+        $this->app->make(EngineManager::class)->extend('scoped-database', fn () => new class extends DatabaseEngine
+        {
+            protected function newSearchQuery(ScoutBuilder $builder)
+            {
+                return parent::newSearchQuery($builder)->where('name', 'Taylor Otwell');
+            }
+        });
+
+        $this->app->make('config')->set('scout.driver', 'scoped-database');
+
+        $this->assertSame(['Taylor Otwell'], SearchableUser::search('laravel')->get()->pluck('name')->all());
+    }
+
+    public function test_map_ids_returns_primary_keys()
+    {
+        $model = new class extends Model
+        {
+            public function getScoutKey()
+            {
+                return 'scout-'.$this->getKey();
+            }
+        };
+
+        $results = ['results' => new EloquentCollection([(clone $model)->forceFill(['id' => 1]), (clone $model)->forceFill(['id' => 2])])];
+
+        $this->assertSame([1, 2], (new DatabaseEngine)->mapIds($results)->all());
     }
 }

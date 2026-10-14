@@ -11,6 +11,7 @@ use Laravel\Scout\Console\ImportCommand;
 use Laravel\Scout\Console\IndexCommand;
 use Laravel\Scout\Console\QueueImportCommand;
 use Laravel\Scout\Console\SyncIndexSettingsCommand;
+use Laravel\Scout\Pgsql\SearchableSchema;
 use Laravel\Scout\Services\Turbopuffer\TurbopufferClient;
 use Meilisearch\Client as Meilisearch;
 
@@ -56,6 +57,8 @@ class ScoutServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        SearchableSchema::register();
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 QueueImportCommand::class,

@@ -1,0 +1,71 @@
+name: PostgreSQL
+
+on:
+  push:
+    branches:
+      - master
+      - '*.x'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pgsql:
+    name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }} PostgreSQL
+    runs-on: ubuntu-22.04
+
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - php: 8.0
+            laravel: 9
+          - php: 8.1
+            laravel: 10
+          - php: 8.2
+            laravel: 11
+          - php: 8.2
+            laravel: 12
+          - php: 8.3
+            laravel: 13
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: scout_testing
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PGSQL_TEST_DATABASE: scout_testing
+      PGSQL_TEST_PASSWORD: postgres
+      PGSQL_TEST_TRIGRAM: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pdo_pgsql
+          tools: composer:v2
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts:^${{ matrix.laravel }}"
+
+      - name: Run PostgreSQL tests
+        run: vendor/bin/phpunit --group pgsql
