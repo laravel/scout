@@ -63,6 +63,13 @@ class CollectionEngineTest extends TestCase
         $this->assertSame([$user->id], $models->modelKeys());
     }
 
+    public function test_it_does_not_match_null_attributes()
+    {
+        $this->assertCount(0, SearchableUser::search('null')->get());
+        $this->assertCount(0, SearchableUser::search('u')->get());
+        $this->assertSame(0, SearchableUser::search('null')->paginate()->total());
+    }
+
     public function test_it_can_paginate_results_for_zero()
     {
         UserFactory::new()->create([

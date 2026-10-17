@@ -132,6 +132,10 @@ class CollectionEngine extends Engine
             $searchables = $model->toSearchableArray();
 
             foreach ($searchables as $value) {
+                if (is_null($value)) {
+                    continue;
+                }
+
                 if (! is_scalar($value)) {
                     $value = json_encode($value);
                 }
