@@ -13,8 +13,10 @@ use Laravel\Scout\Engines\CollectionEngine;
 use Laravel\Scout\Engines\DatabaseEngine;
 use Laravel\Scout\Engines\MeilisearchEngine;
 use Laravel\Scout\Engines\NullEngine;
+use Laravel\Scout\Engines\QdrantEngine;
 use Laravel\Scout\Engines\TurbopufferEngine;
 use Laravel\Scout\Engines\TypesenseEngine;
+use Laravel\Scout\Services\Qdrant\QdrantClient;
 use Laravel\Scout\Services\Turbopuffer\TurbopufferClient;
 use Meilisearch\Client as MeilisearchClient;
 use Meilisearch\Meilisearch;
@@ -183,6 +185,20 @@ class EngineManager extends Manager
         return new TurbopufferEngine(
             $this->container->make(TurbopufferClient::class),
             config('scout.turbopuffer', []),
+            config('scout.soft_delete', false),
+        );
+    }
+
+    /**
+     * Create a Qdrant engine instance.
+     *
+     * @return \Laravel\Scout\Engines\QdrantEngine
+     */
+    public function createQdrantDriver()
+    {
+        return new QdrantEngine(
+            $this->container->make(QdrantClient::class),
+            config('scout.qdrant', []),
             config('scout.soft_delete', false),
         );
     }

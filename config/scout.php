@@ -12,7 +12,7 @@ return [
     | to the search service. You should adjust this based on your needs.
     |
     | Supported: "algolia", "meilisearch", "typesense", "turbopuffer",
-    |            "database", "collection", "null"
+    |            "qdrant", "database", "collection", "null"
     |
     */
 
@@ -257,6 +257,39 @@ return [
             //         'name' => ['type' => 'string', 'full_text_search' => true],
             //         'email' => ['type' => 'string', 'full_text_search' => true],
             //         'embedding' => ['type' => '[1536]f32', 'ann' => true],
+            //     ],
+            // ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Qdrant Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure your Qdrant connection and the settings for
+    | each of your application's models. Qdrant is an open-source engine
+    | with full-text + vector search.
+    |
+    */
+
+    'qdrant' => [
+        'host' => env('QDRANT_HOST', 'http://localhost:6333'),
+        'api_key' => env('QDRANT_API_KEY'),
+        'timeout' => env('QDRANT_TIMEOUT', 60),
+        'connect_timeout' => env('QDRANT_CONNECT_TIMEOUT', 5),
+        'retries' => env('QDRANT_RETRIES', 3),
+        'max_results' => env('QDRANT_MAX_RESULTS', 1000),
+        'model-settings' => [
+            // User::class => [
+            //     'searchable-attributes' => ['name', 'email'],
+            //     'embedding' => [
+            //         'attribute' => 'embedding',
+            //         'dimensions' => 1536,
+            //     ],
+            //     'payload-indexes' => [
+            //         'status' => 'keyword',
+            //         'created_at' => 'integer',
             //     ],
             // ],
         ],

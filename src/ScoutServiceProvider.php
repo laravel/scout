@@ -11,6 +11,7 @@ use Laravel\Scout\Console\ImportCommand;
 use Laravel\Scout\Console\IndexCommand;
 use Laravel\Scout\Console\QueueImportCommand;
 use Laravel\Scout\Console\SyncIndexSettingsCommand;
+use Laravel\Scout\Services\Qdrant\QdrantClient;
 use Laravel\Scout\Services\Turbopuffer\TurbopufferClient;
 use Meilisearch\Client as Meilisearch;
 
@@ -41,6 +42,13 @@ class ScoutServiceProvider extends ServiceProvider
             return new TurbopufferClient(
                 $app->make(HttpFactory::class),
                 $app['config']->get('scout.turbopuffer', []),
+            );
+        });
+
+        $this->app->singleton(QdrantClient::class, function ($app) {
+            return new QdrantClient(
+                $app->make(HttpFactory::class),
+                $app['config']->get('scout.qdrant', []),
             );
         });
 
