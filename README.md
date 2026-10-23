@@ -14,6 +14,9 @@ Laravel Scout provides a simple, driver-based solution for adding full-text sear
 - [Algolia](https://www.algolia.com/)
 - [Meilisearch](https://github.com/meilisearch/meilisearch)
 - [Typesense](https://github.com/typesense/typesense)
+- [Turbopuffer](https://turbopuffer.com/)
+
+Scout also includes database and collection engines, which search your existing database without an external service. Additional engines are available as separate packages, such as [Qdrant](https://github.com/qdrant-labs/qdrant-laravel-scout) for full-text, semantic, and hybrid search.
 
 ## Official Documentation
 
