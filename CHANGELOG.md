@@ -1,6 +1,19 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/sentinel/compare/v11.9.0...11.x)
+## [Unreleased](https://github.com/laravel/sentinel/compare/v11.10.0...11.x)
+
+## [v11.10.0](https://github.com/laravel/sentinel/compare/v11.9.0...v11.10.0) - 2026-11-10
+
+### What's Changed
+
+* Remove security policy in favor of the org-wide default by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/scout/pull/1018
+* Experimental supports for PHP 8.6 by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/scout/pull/1017
+* Bump shivammathur/setup-php from 2.37.2 to 2.40.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/scout/pull/1019
+* Add native PostgreSQL full-text search to the database engine by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/scout/pull/1016
+* Dependency floor bump by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/scout/pull/1024
+* Quote Typesense filter values that contain special characters by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/scout/pull/1023
+
+**Full Changelog**: https://github.com/laravel/scout/compare/v11.9.0...v11.10.0
 
 ## [v11.9.0](https://github.com/laravel/sentinel/compare/v11.8.0...v11.9.0) - 2026-10-06
 
