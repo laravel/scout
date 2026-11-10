@@ -20,32 +20,14 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: [8.1, 8.2, 8.3, 8.4]
-        laravel: [10, 11, 12, 13]
+        php: [8.2, 8.3, 8.4]
+        laravel: [12, 13]
         include:
-          - php: 8.2
-            laravel: 9
-          - php: 8.1
-            laravel: 9
-          - php: '8.0'
-            laravel: 9
           - php: 8.6
             laravel: 13
             experimental: true
         exclude:
-          - php: 8.5
-            laravel: 10
-          - php: 8.5
-            laravel: 11
-          - php: 8.4
-            laravel: 10
           - php: 8.2
-            laravel: 13
-          - php: 8.1
-            laravel: 11
-          - php: 8.1
-            laravel: 12
-          - php: 8.1
             laravel: 13
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }} ${{ matrix.experimental == true && '(experimental)' || '' }}
@@ -87,7 +69,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: ['8.0', 8.1, 8.2, 8.3, 8.4]
+        php: [8.2, 8.3, 8.4]
 
     name: PHP ${{ matrix.php }} using Meilisearch
 
@@ -123,7 +105,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-          php: ['8.0', 8.1, 8.2, 8.3, 8.4]
+          php: [8.2, 8.3, 8.4]
 
     name: PHP ${{ matrix.php }} using Typesense
 
@@ -185,12 +167,6 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - php: '8.0'
-            laravel: 9
-          - php: 8.2
-            laravel: 10
-          - php: 8.3
-            laravel: 11
           - php: 8.4
             laravel: 12
           - php: 8.4
