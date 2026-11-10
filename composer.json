@@ -14,22 +14,22 @@
         }
     ],
     "require": {
-        "php": "^8.0",
-        "illuminate/bus": "^9.0|^10.0|^11.0|^12.0|^13.0",
-        "illuminate/contracts": "^9.0|^10.0|^11.0|^12.0|^13.0",
-        "illuminate/database": "^9.0|^10.0|^11.0|^12.0|^13.0",
-        "illuminate/http": "^9.0|^10.0|^11.0|^12.0|^13.0",
-        "illuminate/pagination": "^9.0|^10.0|^11.0|^12.0|^13.0",
-        "illuminate/queue": "^9.0|^10.0|^11.0|^12.0|^13.0",
-        "illuminate/support": "^9.0|^10.0|^11.0|^12.0|^13.0",
-        "symfony/console": "^6.0|^7.0|^8.0"
+        "php": "^8.2",
+        "illuminate/bus": "^12.0|^13.0",
+        "illuminate/contracts": "^12.0|^13.0",
+        "illuminate/database": "^12.0|^13.0",
+        "illuminate/http": "^12.0|^13.0",
+        "illuminate/pagination": "^12.0|^13.0",
+        "illuminate/queue": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0",
+        "symfony/console": "^7.0|^8.0"
     },
     "require-dev": {
         "algolia/algoliasearch-client-php": "^3.2|^4.0",
         "typesense/typesense-php": "^4.9.3",
         "meilisearch/meilisearch-php": "^1.0",
         "mockery/mockery": "^1.0",
-        "orchestra/testbench": "^7.58|^8.39|^9.18|^10.12|^11.3",
+        "orchestra/testbench": "^10.12|^11.3",
         "php-http/guzzle7-adapter": "^1.0",
         "phpstan/phpstan": "^1.10"
     },
