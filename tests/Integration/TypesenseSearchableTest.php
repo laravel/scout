@@ -280,18 +280,31 @@ class TypesenseSearchableTest extends TestCase
 
     public function test_it_can_filter_with_values_containing_special_characters()
     {
-        $this->assertSame([], SearchableUser::search('*')->where('name', 'Rock || Roll')->get()->all());
-        $this->assertSame([], SearchableUser::search('*')->where('name', 'Acme (UK)')->get()->all());
+        SearchableUser::find(2)->update(['name' => 'Rock || Roll']);
+        SearchableUser::find(3)->update(['name' => 'Acme (UK)']);
+        SearchableUser::find(4)->update(['name' => 'Acme, Inc']);
+        SearchableUser::find(5)->update(['name' => 'Acme']);
 
         $this->assertSame(
-            [1 => 'Laravel Framework'],
-            SearchableUser::search('*')->whereIn('name', ['Laravel Framework', 'Acme (UK)'])->get()->pluck('name', 'id')->all()
+            [2 => 'Rock || Roll'],
+            SearchableUser::search('*')->where('name', 'Rock || Roll')->get()->pluck('name', 'id')->all()
         );
 
-        $this->assertNotContains(
-            1,
-            SearchableUser::search('*')->whereNotIn('name', ['Laravel Framework', 'Rock || Roll'])->take(100)->keys()->all()
+        $this->assertSame(
+            [3 => 'Acme (UK)'],
+            SearchableUser::search('*')->where('name', 'Acme (UK)')->get()->pluck('name', 'id')->all()
         );
+
+        $this->assertSame(
+            [1 => 'Laravel Framework', 4 => 'Acme, Inc'],
+            SearchableUser::search('*')->whereIn('name', ['Laravel Framework', 'Acme, Inc'])->get()->pluck('name', 'id')->sortKeys()->all()
+        );
+
+        $names = SearchableUser::search('*')->whereNotIn('name', ['Rock || Roll', 'Acme, Inc'])->take(100)->get()->pluck('name')->all();
+
+        $this->assertNotContains('Rock || Roll', $names);
+        $this->assertNotContains('Acme, Inc', $names);
+        $this->assertContains('Acme', $names);
     }
 
     public function test_it_can_use_user_provided_embeddings_for_semantic_search()
