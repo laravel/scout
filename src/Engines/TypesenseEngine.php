@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
+use Illuminate\Support\Str;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Contracts\SupportsSemanticSearch;
 use Laravel\Scout\Exceptions\NotSupportedException;
@@ -716,6 +717,22 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
     }
 
     /**
+     * Wrap the given filter value in backticks if it contains any of the given characters.
+     *
+     * @param  mixed  $value
+     * @param  array  $characters
+     * @return mixed
+     */
+    protected function quoteFilterValue(mixed $value, array $characters): mixed
+    {
+        if (! is_string($value) || ! Str::contains($value, $characters)) {
+            return $value;
+        }
+
+        return '`'.Str::remove('`', $value).'`';
+    }
+
+    /**
      * Create a "where" filter string.
      *
      * @param  array|string  $value
@@ -726,7 +743,9 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
     protected function parseWhereFilter(array|string $value, string $key, string $operator = '='): string
     {
         if (is_array($value)) {
-            return sprintf('%s:%s', $key, implode('', $value));
+            return sprintf('%s:%s', $key, collect($value)
+                ->map(fn ($value) => $this->quoteFilterValue($value, ['&&', '||', '`']))
+                ->implode(''));
         }
 
         $operator = match ($operator) {
@@ -739,7 +758,7 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
             default => ':=',
         };
 
-        return sprintf('%s%s%s', $key, $operator, $value);
+        return sprintf('%s%s%s', $key, $operator, $this->quoteFilterValue($value, ['&&', '||', '`', '(', ')']));
     }
 
     /**
@@ -751,7 +770,9 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
      */
     protected function parseWhereInFilter(array $value, string $key): string
     {
-        return sprintf('%s:=[%s]', $key, implode(', ', $value));
+        return sprintf('%s:=[%s]', $key, collect($value)
+            ->map(fn ($value) => $this->quoteFilterValue($value, ['&&', '||', '`', '(', ')', ',']))
+            ->implode(', '));
     }
 
     /**
@@ -763,7 +784,9 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
      */
     protected function parseWhereNotInFilter(array $value, string $key): string
     {
-        return sprintf('%s:!=[%s]', $key, implode(', ', $value));
+        return sprintf('%s:!=[%s]', $key, collect($value)
+            ->map(fn ($value) => $this->quoteFilterValue($value, ['&&', '||', '`', '(', ')', ',']))
+            ->implode(', '));
     }
 
     /**

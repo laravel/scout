@@ -669,6 +669,23 @@ class MeilisearchEngineTest extends TestCase
         $engine->search($builder);
     }
 
+    public function test_where_values_are_escaped()
+    {
+        $engine = $this->app->make(EngineManager::class)->engine();
+
+        $builder = new Builder(new SearchableUser, '');
+        $builder->where('size', '12" pipe');
+        $builder->where('path', 'C:\\dir\\');
+
+        $this->client->shouldReceive('index')->once()->with('users')->andReturn($index = m::mock(Indexes::class));
+        $index->shouldReceive('rawSearch')->once()->with($builder->query, array_filter([
+            'filter' => 'size="12\" pipe" AND path="C:\\\\dir\\\\"',
+            'hitsPerPage' => $builder->limit,
+        ]))->andReturn([]);
+
+        $engine->search($builder);
+    }
+
     public function test_where_in_and_where_not_in_values_are_escaped()
     {
         $engine = $this->app->make(EngineManager::class)->engine();

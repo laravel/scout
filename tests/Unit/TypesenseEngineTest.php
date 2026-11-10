@@ -102,6 +102,35 @@ class TypesenseEngineTest extends TestCase
     }
 
     #[AllowMockObjectsWithoutExpectations]
+    public function test_filter_values_with_special_characters_are_quoted()
+    {
+        $builder = m::mock(Builder::class);
+        $builder->wheres = [
+            ['field' => 'band', 'value' => 'Rock || Roll', 'operator' => '='],
+            ['field' => 'company', 'value' => 'Acme (UK)', 'operator' => '!='],
+            ['field' => 'title', 'value' => 'It`s R&&D', 'operator' => '='],
+            ['field' => 'name', 'value' => 'New*', 'operator' => '='],
+            ['field' => 'price', 'value' => '[10..100]', 'operator' => '='],
+            ['field' => 'location', 'value' => ['(48.85, 2.34, 5 km)'], 'operator' => '='],
+            ['field' => 'status', 'value' => ['Rock || Roll'], 'operator' => '='],
+        ];
+        $builder->whereIns = [
+            'company' => ['Laravel', 'Acme (UK)', 'Acme, Inc'],
+        ];
+        $builder->whereNotIns = [
+            'band' => ['Rock || Roll'],
+        ];
+
+        $result = $this->invokeMethod($this->engine, 'filters', [$builder]);
+
+        $this->assertSame(
+            'band:=`Rock || Roll` && company:!=`Acme (UK)` && title:=`Its R&&D` && name:=New* && price:=[10..100] && location:(48.85, 2.34, 5 km)'
+            .' && status:`Rock || Roll` && company:=[Laravel, `Acme (UK)`, `Acme, Inc`] && band:!=[`Rock || Roll`]',
+            $result
+        );
+    }
+
+    #[AllowMockObjectsWithoutExpectations]
     public function test_parse_filter_value_method()
     {
         $this->assertEquals('true', $this->invokeMethod($this->engine, 'parseFilterValue', [true]));
