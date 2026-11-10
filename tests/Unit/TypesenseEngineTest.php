@@ -102,6 +102,30 @@ class TypesenseEngineTest extends TestCase
     }
 
     #[AllowMockObjectsWithoutExpectations]
+    public function test_filter_values_with_special_characters_are_quoted()
+    {
+        $builder = m::mock(Builder::class);
+        $builder->wheres = [
+            ['field' => 'band', 'value' => 'Rock || Roll', 'operator' => '='],
+            ['field' => 'company', 'value' => 'Acme (UK)', 'operator' => '!='],
+            ['field' => 'title', 'value' => 'It`s R&&D', 'operator' => '='],
+        ];
+        $builder->whereIns = [
+            'company' => ['Laravel', 'Acme (UK)'],
+        ];
+        $builder->whereNotIns = [
+            'band' => ['Rock || Roll'],
+        ];
+
+        $result = $this->invokeMethod($this->engine, 'filters', [$builder]);
+
+        $this->assertSame(
+            'band:=`Rock || Roll` && company:!=`Acme (UK)` && title:=`Its R&&D` && company:=[Laravel, `Acme (UK)`] && band:!=[`Rock || Roll`]',
+            $result
+        );
+    }
+
+    #[AllowMockObjectsWithoutExpectations]
     public function test_parse_filter_value_method()
     {
         $this->assertEquals('true', $this->invokeMethod($this->engine, 'parseFilterValue', [true]));
@@ -111,6 +135,9 @@ class TypesenseEngineTest extends TestCase
         $this->assertEquals('test', $this->invokeMethod($this->engine, 'parseFilterValue', ['test']));
         $this->assertEquals('test "quoted"', $this->invokeMethod($this->engine, 'parseFilterValue', ['test "quoted"']));
         $this->assertEquals('`special value`', $this->invokeMethod($this->engine, 'parseFilterValue', ['`special value`']));
+        $this->assertEquals('New*', $this->invokeMethod($this->engine, 'parseFilterValue', ['New*']));
+        $this->assertEquals('[10..100]', $this->invokeMethod($this->engine, 'parseFilterValue', ['[10..100]']));
+        $this->assertEquals('`Acme (UK)`', $this->invokeMethod($this->engine, 'parseFilterValue', ['Acme (UK)']));
 
         $nestedArray = ['a', ['b', 'c'], 'd'];
         $expectedNested = ['a', ['b', 'c'], 'd'];

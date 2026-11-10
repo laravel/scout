@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\LazyCollection;
+use Illuminate\Support\Str;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Contracts\SupportsSemanticSearch;
 use Laravel\Scout\Exceptions\NotSupportedException;
@@ -710,6 +711,10 @@ class TypesenseEngine extends Engine implements SupportsSemanticSearch
 
         if (gettype($value) == 'boolean') {
             return $value ? 'true' : 'false';
+        }
+
+        if (is_string($value) && Str::contains($value, ['&&', '||', '(', ')', '`'])) {
+            return '`'.Str::remove('`', $value).'`';
         }
 
         return $value;

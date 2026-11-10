@@ -278,6 +278,22 @@ class TypesenseSearchableTest extends TestCase
         $this->itCanMakeWhereComparisons();
     }
 
+    public function test_it_can_filter_with_values_containing_special_characters()
+    {
+        $this->assertSame([], SearchableUser::search('*')->where('name', 'Rock || Roll')->get()->all());
+        $this->assertSame([], SearchableUser::search('*')->where('name', 'Acme (UK)')->get()->all());
+
+        $this->assertSame(
+            [1 => 'Laravel Framework'],
+            SearchableUser::search('*')->whereIn('name', ['Laravel Framework', 'Acme (UK)'])->get()->pluck('name', 'id')->all()
+        );
+
+        $this->assertNotContains(
+            1,
+            SearchableUser::search('*')->whereNotIn('name', ['Laravel Framework', 'Rock || Roll'])->take(100)->keys()->all()
+        );
+    }
+
     public function test_it_can_use_user_provided_embeddings_for_semantic_search()
     {
         $model = new class extends SearchableModel
