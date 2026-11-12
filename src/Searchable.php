@@ -5,6 +5,8 @@ namespace Laravel\Scout;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
+use Laravel\Scout\Attributes\SearchableAs;
+use ReflectionClass;
 
 trait Searchable
 {
@@ -382,7 +384,27 @@ trait Searchable
      */
     public function searchableAs()
     {
-        return config('scout.prefix').$this->getTable();
+        return config('scout.prefix').($this->resolveSearchableAsFromAttribute() ?? $this->getTable());
+    }
+
+    /**
+     * Resolve the index name from the SearchableAs attribute.
+     *
+     * @return string|null
+     */
+    public function resolveSearchableAsFromAttribute()
+    {
+        $reflection = new ReflectionClass(static::class);
+
+        do {
+            $attributes = $reflection->getAttributes(SearchableAs::class);
+
+            if ($attributes !== []) {
+                return $attributes[0]->newInstance()->index;
+            }
+        } while ($reflection = $reflection->getParentClass());
+
+        return null;
     }
 
     /**

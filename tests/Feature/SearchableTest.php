@@ -3,12 +3,16 @@
 namespace Laravel\Scout\Tests\Feature;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Scout\Jobs\MakeSearchable;
 use Laravel\Scout\Jobs\RemoveFromSearch;
 use Laravel\Scout\Scout;
+use Laravel\Scout\Searchable;
 use Laravel\Scout\Tests\Fixtures\OverriddenMakeSearchable;
 use Laravel\Scout\Tests\Fixtures\OverriddenRemoveFromSearch;
+use Laravel\Scout\Tests\Fixtures\SearchableAsChildModel;
+use Laravel\Scout\Tests\Fixtures\SearchableAsModel;
 use Laravel\Scout\Tests\Fixtures\SearchableModel;
 use Laravel\Scout\Tests\Fixtures\SearchableModelWithSoftDeletes;
 use Mockery as m;
@@ -197,6 +201,36 @@ class SearchableTest extends TestCase
     public function test_make_all_searchable_uses_order_by()
     {
         ModelStubForMakeAllSearchable::makeAllSearchable();
+    }
+
+    public function test_searchable_as_defaults_to_the_table_name()
+    {
+        $model = new class extends Model
+        {
+            use Searchable;
+
+            protected $table = 'posts';
+        };
+
+        $this->assertSame('posts', $model->searchableAs());
+    }
+
+    public function test_searchable_as_uses_the_searchable_as_attribute()
+    {
+        $this->assertSame('posts_index', (new SearchableAsModel)->searchableAs());
+        $this->assertSame('posts_index', (new SearchableAsModel)->indexableAs());
+    }
+
+    public function test_searchable_as_attribute_is_prefixed()
+    {
+        config(['scout.prefix' => 'prod_']);
+
+        $this->assertSame('prod_posts_index', (new SearchableAsModel)->searchableAs());
+    }
+
+    public function test_searchable_as_attribute_is_inherited()
+    {
+        $this->assertSame('posts_index', (new SearchableAsChildModel)->searchableAs());
     }
 }
 
