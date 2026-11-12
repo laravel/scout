@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection as BaseCollection;
 use Laravel\Scout\Attributes\SearchableAs;
+use Laravel\Scout\Attributes\SearchableWith;
 use ReflectionClass;
 
 trait Searchable
@@ -216,6 +217,12 @@ trait Searchable
      */
     public function makeSearchableUsing(BaseCollection $models)
     {
+        $relations = $this->resolveSearchableWithFromAttribute();
+
+        if (! empty($relations)) {
+            $this->newCollection($models->all())->loadMissing($relations);
+        }
+
         return $models;
     }
 
@@ -227,7 +234,27 @@ trait Searchable
      */
     protected function makeAllSearchableUsing(EloquentBuilder $query)
     {
-        return $query;
+        return $query->with($this->resolveSearchableWithFromAttribute() ?? []);
+    }
+
+    /**
+     * Resolve the relationships to load from the SearchableWith attribute.
+     *
+     * @return array<int, string>|null
+     */
+    public function resolveSearchableWithFromAttribute()
+    {
+        $reflection = new ReflectionClass(static::class);
+
+        do {
+            $attributes = $reflection->getAttributes(SearchableWith::class);
+
+            if ($attributes !== []) {
+                return $attributes[0]->newInstance()->relations;
+            }
+        } while ($reflection = $reflection->getParentClass());
+
+        return null;
     }
 
     /**
