@@ -263,12 +263,12 @@ class DatabaseEngine extends Engine implements PaginatesEloquentModelsUsingDatab
 
         return $query->where(function ($query) use ($connectionType, $builder, $columns, $prefixColumns, $fullTextColumns) {
             $canSearchPrimaryKey = ctype_digit($builder->query) &&
-                                   in_array($builder->model->getKeyType(), ['int', 'integer']) &&
+                                   in_array($builder->model->getScoutKeyType(), ['int', 'integer']) &&
                                    ($connectionType != 'pgsql' || $builder->query <= PHP_INT_MAX) &&
                                    in_array($builder->model->getScoutKeyName(), $columns);
 
             if ($canSearchPrimaryKey) {
-                $query->orWhere($builder->model->getQualifiedKeyName(), $builder->query);
+                $query->orWhere($builder->model->qualifyColumn($builder->model->getScoutKeyName()), $builder->query);
             }
 
             $likeOperator = $connectionType == 'pgsql' ? 'ilike' : 'like';

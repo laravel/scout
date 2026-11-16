@@ -73,6 +73,61 @@ class DatabaseEngineTest extends TestCase
         })->get();
     }
 
+    public function test_it_matches_the_primary_key_exactly_for_a_numeric_search()
+    {
+        SearchableUser::search('1')->query(function ($builder) {
+            $this->assertSame('select * from "users" where ("users"."id" = ? or "users"."name" like ? or "users"."email" like ? or "users"."age" like ?)', $builder->toSql());
+        })->get();
+    }
+
+    public function test_it_searches_a_custom_string_scout_key_with_like_for_a_numeric_search()
+    {
+        SearchableUserFactory::new()->create(['email' => 'user123@laravel.com']);
+
+        $model = new class extends SearchableUser
+        {
+            public function getScoutKey()
+            {
+                return $this->email;
+            }
+
+            public function getScoutKeyName()
+            {
+                return 'email';
+            }
+
+            public function getScoutKeyType()
+            {
+                return 'string';
+            }
+        };
+
+        $models = $model::search('123')->get();
+
+        $this->assertCount(1, $models);
+        $this->assertSame('user123@laravel.com', $models->first()->email);
+    }
+
+    public function test_it_matches_a_custom_integer_scout_key_exactly_for_a_numeric_search()
+    {
+        $model = new class extends SearchableUser
+        {
+            public function getScoutKeyName()
+            {
+                return 'age';
+            }
+
+            public function getScoutKeyType()
+            {
+                return 'int';
+            }
+        };
+
+        $model::search('30')->query(function ($builder) {
+            $this->assertSame('select * from "users" where ("users"."age" = ? or "users"."id" like ? or "users"."name" like ? or "users"."email" like ?)', $builder->toSql());
+        })->get();
+    }
+
     public function test_it_can_retrieve_results()
     {
         $models = SearchableUser::search('Taylor')->where('email', 'taylor@laravel.com')->get();
