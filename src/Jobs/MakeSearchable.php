@@ -4,6 +4,7 @@ namespace Laravel\Scout\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Queue\SerializesModels;
 use Laravel\Scout\Traits\ConfiguresJobOptions;
 
@@ -38,10 +39,31 @@ class MakeSearchable implements ShouldQueue
      */
     public function handle()
     {
-        if ($this->models->isEmpty()) {
+        $models = $this->withoutTrashedModels($this->models);
+
+        if ($models->isEmpty()) {
             return;
         }
 
-        $this->models->first()->makeSearchableUsing($this->models)->first()->searchableUsing()->update($this->models);
+        $models->first()->makeSearchableUsing($models)->first()->searchableUsing()->update($models);
+    }
+
+    /**
+     * Remove the models that were soft deleted after the job was dispatched.
+     *
+     * Queued models are restored without global scopes, so soft deleted models are restored as well.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    protected function withoutTrashedModels($models)
+    {
+        if ($models->isEmpty() ||
+            config('scout.soft_delete', false) ||
+            ! in_array(SoftDeletes::class, class_uses_recursive($models->first()))) {
+            return $models;
+        }
+
+        return $models->reject->trashed()->values();
     }
 }
