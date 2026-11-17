@@ -13,7 +13,7 @@ class Scout
      *
      * @var string
      */
-    const VERSION = '11.10.0';
+    const VERSION = '11.11.0';
 
     /**
      * The job class that should make models searchable.
