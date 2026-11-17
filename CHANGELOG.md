@@ -1,6 +1,22 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/sentinel/compare/v11.10.0...11.x)
+## [Unreleased](https://github.com/laravel/sentinel/compare/v11.11.0...11.x)
+
+## [v11.11.0](https://github.com/laravel/sentinel/compare/v11.10.0...v11.11.0) - 2026-11-17
+
+### What's Changed
+
+* Bump shivammathur/setup-php from 2.37.2 to 2.40.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/scout/pull/1025
+* [11.x] Add SearchableAs attribute for configuring a model's index name by [@chr15k](https://github.com/chr15k) in https://github.com/laravel/scout/pull/1026
+* [11.x] Use the Scout key when the database engine matches a numeric search exactly by [@chr15k](https://github.com/chr15k) in https://github.com/laravel/scout/pull/1028
+* [11.x] Skip models soft deleted after a `MakeSearchable` job was dispatched by [@ybert](https://github.com/ybert) in https://github.com/laravel/scout/pull/1029
+
+### New Contributors
+
+* [@chr15k](https://github.com/chr15k) made their first contribution in https://github.com/laravel/scout/pull/1026
+* [@ybert](https://github.com/ybert) made their first contribution in https://github.com/laravel/scout/pull/1029
+
+**Full Changelog**: https://github.com/laravel/scout/compare/v11.10.0...v11.11.0
 
 ## [v11.10.0](https://github.com/laravel/sentinel/compare/v11.9.0...v11.10.0) - 2026-11-10
 
