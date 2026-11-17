@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Queue;
 use Laravel\Scout\Exceptions\ScoutException;
 use Laravel\Scout\Jobs\MakeRangeSearchable;
 use Laravel\Scout\Jobs\MakeSearchable;
+use Laravel\Scout\Tests\Fixtures\SearchableUserWithJoin;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -438,6 +439,21 @@ class QueueImportCommandTest extends TestCase
         // Should dispatch one job for range -5 to 2
         Queue::assertPushed(MakeRangeSearchable::class, function ($job) {
             return $job->start == -5 && $job->end == 2;
+        });
+    }
+
+    public function test_it_handles_an_import_query_with_a_join()
+    {
+        Queue::fake();
+
+        SearchableUserFactory::new()->count(3)->create();
+
+        $this->artisan('scout:queue-import', ['model' => SearchableUserWithJoin::class])
+            ->expectsOutputToContain('models up to ID: 3')
+            ->assertSuccessful();
+
+        Queue::assertPushed(MakeRangeSearchable::class, function ($job) {
+            return $job->start == 1 && $job->end == 3;
         });
     }
 

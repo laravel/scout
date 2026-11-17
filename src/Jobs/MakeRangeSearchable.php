@@ -63,7 +63,7 @@ class MakeRangeSearchable implements ShouldQueue
         $model = new $this->class;
 
         $models = $model::makeAllSearchableQuery()
-            ->whereBetween($model->getScoutKeyName(), [$this->start, $this->end])
+            ->whereBetween($model->qualifyColumn($model->getScoutKeyName()), [$this->start, $this->end])
             ->get()
             ->filter
             ->shouldBeSearchable();

@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Scout\Jobs\MakeRangeSearchable;
 use Laravel\Scout\Jobs\MakeSearchable;
+use Laravel\Scout\Tests\Fixtures\SearchableUserWithJoin;
 use Orchestra\Testbench\Attributes\WithConfig;
 use Orchestra\Testbench\Attributes\WithMigration;
 use Orchestra\Testbench\Concerns\WithWorkbench;
@@ -40,6 +41,17 @@ class MakeRangeSearchableTest extends TestCase
 
         $model = new SearchableUser;
         $job = new MakeRangeSearchable($model, 2, 2);
+
+        $this->app->make('scout.spied')->shouldReceive('update')->once();
+
+        $job->handle();
+    }
+
+    public function test_handle_with_an_import_query_with_a_join()
+    {
+        SearchableUserFactory::new()->count(3)->create();
+
+        $job = new MakeRangeSearchable(SearchableUserWithJoin::class, 1, 3);
 
         $this->app->make('scout.spied')->shouldReceive('update')->once();
 

@@ -51,8 +51,8 @@ class QueueImportCommand extends Command
 
         $order = $this->option('order') ?: 'asc';
 
-        $min = $this->option('min') ?? $query->min($model->getScoutKeyName());
-        $max = $this->option('max') ?? $query->max($model->getScoutKeyName());
+        $min = $this->option('min') ?? $query->min($model->qualifyColumn($model->getScoutKeyName()));
+        $max = $this->option('max') ?? $query->max($model->qualifyColumn($model->getScoutKeyName()));
 
         $chunk = max(1, (int) ($this->option('chunk') ?? config('scout.chunk.searchable', 500)));
 
