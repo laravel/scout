@@ -442,6 +442,24 @@ class QueueImportCommandTest extends TestCase
         });
     }
 
+    public function test_it_accepts_a_min_option_of_zero()
+    {
+        Queue::fake();
+
+        SearchableUserFactory::new()->count(3)->create();
+
+        $this->artisan('scout:queue-import', [
+            'model' => SearchableUser::class,
+            '--min' => 0,
+        ])
+            ->expectsOutputToContain('models up to ID: 3')
+            ->assertSuccessful();
+
+        Queue::assertPushed(MakeRangeSearchable::class, function ($job) {
+            return $job->start == 0 && $job->end == 3;
+        });
+    }
+
     public function test_it_handles_an_import_query_with_a_join()
     {
         Queue::fake();

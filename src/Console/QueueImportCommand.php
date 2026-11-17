@@ -62,7 +62,7 @@ class QueueImportCommand extends Command
             return;
         }
 
-        if (! $min || ! $max) {
+        if (is_null($min) || is_null($max)) {
             $this->info('No records found for ['.$class.'].');
 
             return;
